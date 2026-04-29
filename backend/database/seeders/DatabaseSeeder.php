@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             TrainingPeriodsSeeder::class,
             TrainingSitesSeeder::class,
             HebronGovernmentSchoolsXlsxSeeder::class,
+            UpdateSchoolsClassificationSeeder::class, // تحديث تصنيف المدارس (ذكور/إناث/مختلطة ودنيا/عليا)
             RolePermissionSeeder::class,
             UsersSeeder::class,
             StudentsSeeder::class,

@@ -171,24 +171,16 @@ class TrainingRequestService
     public function sendToSchool(TrainingRequest $trainingRequest, int $directorateUserId, array $letterData): void
     {
         DB::transaction(function () use ($trainingRequest, $directorateUserId, $letterData) {
-            // Auto-generate letter number if not provided
-            $letterNumber = $letterData['letter_number'] ?? null;
-            if (empty($letterNumber)) {
-                $letterNumber = $this->generateLetterNumber($trainingRequest->governing_body);
-            }
-
             $trainingRequest->update([
                 'book_status' => BookStatus::SENT_TO_SCHOOL->value,
                 'sent_to_school_at' => now(),
                 'status' => 'pending',
-                'letter_number' => $letterNumber,
-                'letter_date' => $letterData['letter_date'] ?? now()->toDateString(),
             ]);
 
             OfficialLetter::create([
                 'training_request_id' => $trainingRequest->id,
-                'letter_number' => $letterNumber,
-                'letter_date' => $letterData['letter_date'] ?? now()->toDateString(),
+                'letter_number' => $letterData['letter_number'],
+                'letter_date' => $letterData['letter_date'],
                 'type' => OfficialLetterType::TO_SCHOOL->value,
                 'content' => $letterData['content'],
                 'sent_by' => $directorateUserId,
@@ -577,29 +569,9 @@ class TrainingRequestService
         ]);
     }
 
-    private function generateLetterNumber(?string $governingBody = null): string
+    private function generateLetterNumber(): string
     {
-        $year = date('Y');
-        $prefix = match ($governingBody) {
-            'ministry_of_health' => 'HLTH',
-            'directorate_of_education' => 'EDU',
-            default => 'TR',
-        };
-
-        // Get the latest letter number for this prefix and year
-        $latest = TrainingRequest::query()
-            ->where('letter_number', 'like', "{$prefix}/{$year}/%")
-            ->orderByDesc('id')
-            ->value('letter_number');
-
-        $sequence = 1;
-        if ($latest) {
-            $parts = explode('/', $latest);
-            $lastSequence = (int) end($parts);
-            $sequence = $lastSequence + 1;
-        }
-
-        return sprintf("{$prefix}/{$year}/%03d", $sequence);
+        return 'LET-' . date('Ymd') . '-' . rand(100, 999);
     }
 
     private function resolveWorkflowTemplateId(): ?int

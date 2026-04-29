@@ -34,7 +34,7 @@ const getApiErrorMessage = (error, fallbackMessage) => {
 const OfficialLetters = ({ siteType = "school" }) => {
   const labels = siteLabels(siteType);
   const isHealth = siteType === "health_center";
-
+  
   const governingBody = labels.governingBody;
   const directorateName = labels.directorateName;
   const pageSubtitle = isHealth
@@ -51,38 +51,6 @@ const OfficialLetters = ({ siteType = "school" }) => {
   const [requestReason, setRequestReason] = useState({});
   const [requestSavingId, setRequestSavingId] = useState(null);
   const [letterFormMap, setLetterFormMap] = useState({});
-  const [nextLetterNumber, setNextLetterNumber] = useState("");
-
-  // Generate next letter number based on existing requests
-  const generateNextLetterNumber = () => {
-    const year = new Date().getFullYear();
-    const prefix = isHealth ? "HLTH" : "EDU";
-
-    // Find the highest sequence number from existing requests
-    let maxSequence = 0;
-    const allRequests = [...incomingRequests, ...sentRequests, ...rejectedRequests];
-
-    allRequests.forEach((req) => {
-      const letterNum = req.letter_number || "";
-      const match = letterNum.match(new RegExp(`${prefix}/${year}/(\\d+)`));
-      if (match) {
-        const seq = parseInt(match[1], 10);
-        if (seq > maxSequence) {
-          maxSequence = seq;
-        }
-      }
-    });
-
-    const nextSeq = (maxSequence + 1).toString().padStart(3, "0");
-    return `${prefix}/${year}/${nextSeq}`;
-  };
-
-  // Update next letter number when requests change
-  useEffect(() => {
-    if (incomingRequests.length > 0 || sentRequests.length > 0 || rejectedRequests.length > 0) {
-      setNextLetterNumber(generateNextLetterNumber());
-    }
-  }, [incomingRequests, sentRequests, rejectedRequests]);
 
   useEffect(() => {
     fetchTrainingRequests();
@@ -269,21 +237,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
                       </td>
                       <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
                         <select value={decision}
-                          onChange={(e) => {
-                            const newDecision = e.target.value;
-                            setRequestDecision((prev) => ({ ...prev, [request.id]: newDecision }));
-                            // Auto-fill letter number when selecting "approved"
-                            if (newDecision === "approved" && nextLetterNumber) {
-                              setLetterFormMap((prev) => ({
-                                ...prev,
-                                [request.id]: {
-                                  letter_number: nextLetterNumber,
-                                  letter_date: prev[request.id]?.letter_date || new Date().toISOString().slice(0, 10),
-                                  content: prev[request.id]?.content || "",
-                                },
-                              }));
-                            }
-                          }}
+                          onChange={(e) => setRequestDecision((prev) => ({ ...prev, [request.id]: e.target.value }))}
                           style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: "0.8rem", background: "#f8fafc" }}
                         >
                           <option value="">{"اختر القرار"}</option>
@@ -301,25 +255,10 @@ const OfficialLetters = ({ siteType = "school" }) => {
                       <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
                         {showLetterFields ? (
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                              <input
-                                type="text"
-                                value={letterFormMap[request.id]?.letter_number || ""}
-                                readOnly
-                                style={{
-                                  flex: 1,
-                                  padding: "0.375rem 0.5rem",
-                                  borderRadius: 6,
-                                  border: "1px solid #10b981",
-                                  fontSize: "0.8rem",
-                                  background: "#f0fdf4",
-                                  color: "#059669",
-                                  fontWeight: 600,
-                                  cursor: "default",
-                                }}
-                              />
-                              <span style={{ fontSize: "0.7rem", color: "#059669", whiteSpace: "nowrap" }}>توليد تلقائي</span>
-                            </div>
+                            <input type="text" placeholder={"رقم كتاب الإرسال"} value={letterFormMap[request.id]?.letter_number || ""}
+                              onChange={(e) => handleLetterFieldChange(request.id, "letter_number", e.target.value)}
+                              style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #10b981", fontSize: "0.8rem", background: "#f0fdf4" }}
+                            />
                             <input type="date" value={letterFormMap[request.id]?.letter_date || new Date().toISOString().slice(0, 10)}
                               onChange={(e) => handleLetterFieldChange(request.id, "letter_date", e.target.value)}
                               style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #10b981", fontSize: "0.8rem", background: "#f0fdf4" }}

@@ -412,7 +412,7 @@ export default function StudentAttendance() {
               </div>
             </div>
             <div className="form-field">
-              <label className="field-label">ساعة الحضور <span style={{ fontSize: "0.78rem", color: "var(--text-faint)", fontWeight: 400 }}>(8:00 - 14:00)</span></label>
+              <label className="field-label">ساعة الحضور</label>
               <input
                 type="time"
                 name="check_in"
@@ -425,7 +425,7 @@ export default function StudentAttendance() {
               />
             </div>
             <div className="form-field">
-              <label className="field-label">ساعة المغادرة <span style={{ fontSize: "0.78rem", color: "var(--text-faint)", fontWeight: 400 }}>(8:00 - 14:00)</span></label>
+              <label className="field-label">ساعة المغادرة</label>
               <input
                 type="time"
                 name="check_out"

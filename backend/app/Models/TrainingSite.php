@@ -23,7 +23,6 @@ class TrainingSite extends Model
         'site_type',
         'governing_body',
         'school_type',
-        'gender',
         'gender_classification',
         'school_level',
     ];
