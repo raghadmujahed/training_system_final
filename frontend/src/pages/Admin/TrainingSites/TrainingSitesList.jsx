@@ -43,8 +43,13 @@ export default function TrainingSitesList() {
           <tr>
             <th>الاسم</th>
             <th>الموقع</th>
+            <th>الهاتف</th>
+            <th>البريد</th>
+            <th>المحمول</th>
             <th>المديرية</th>
-            <th>النوع</th>
+            <th>نوع المدرسة</th>
+            <th>التصنيف</th>
+            <th>المرحلة</th>
             <th>السعة</th>
             <th>إجراءات</th>
           </tr>
@@ -54,8 +59,13 @@ export default function TrainingSitesList() {
             <tr key={s.id}>
               <td>{s.name}</td>
               <td>{s.location}</td>
+              <td>{s.phone}</td>
+              <td>{s.email}</td>
+              <td>{s.mobile}</td>
               <td>{s.directorate_label || s.directorate}</td>
-              <td>{s.site_type_label || s.site_type}</td>
+              <td>{s.school_type === 'private' ? 'خاصة' : 'حكومية'}</td>
+              <td>{s.gender_classification === 'boys' ? 'ذكور' : s.gender_classification === 'girls' ? 'إناث' : s.gender_classification === 'mixed' ? 'مختلطة' : '-'}</td>
+              <td>{s.school_level === 'lower' ? 'دنيا' : s.school_level === 'upper' ? 'عليا' : '-'}</td>
               <td>{s.capacity}</td>
               <td>
                 <Link to={`/admin/training-sites/edit/${s.id}`} className="btn-sm">تعديل</Link>
@@ -65,7 +75,7 @@ export default function TrainingSitesList() {
           ))}
           {sites.length === 0 && (
             <tr>
-              <td colSpan="6" className="text-center">لا توجد مواقع تدريب</td>
+              <td colSpan="11" className="text-center">لا توجد مواقع تدريب</td>
             </tr>
           )}
         </tbody>

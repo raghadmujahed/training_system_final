@@ -55,22 +55,42 @@ class BackupController extends Controller
 
     public function show($id)
     {
-        $backup = Backup::findOrFail($id);
+        $backup = Backup::with('user')->findOrFail($id);
         $tables = [];
 
-        // Try to parse SQL file to extract table names (simplified)
+        // Try to parse SQL file to extract table names
         if ($backup->file_path && Storage::exists($backup->file_path)) {
             $content = Storage::get($backup->file_path);
-            // Extract CREATE TABLE statements
-            preg_match_all('/CREATE TABLE\s+[`\']?(\w+)[`\']?\s*\(/i', $content, $matches);
+            $fileSize = strlen($content);
+            
+            // Extract CREATE TABLE statements - handle various formats
+            preg_match_all('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?[`\']?([a-zA-Z0-9_]+)[`\']?\s*\(/i', $content, $matches);
+            
             if (!empty($matches[1])) {
                 foreach ($matches[1] as $tableName) {
-                    // Count INSERT statements for this table
-                    preg_match_all('/INSERT INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*VALUES/i', $content, $insertMatches);
+                    // Count INSERT statements for this table - more flexible pattern
+                    preg_match_all('/INSERT\s+INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(/i', $content, $insertMatches);
                     $tables[] = [
                         'name' => $tableName,
                         'count' => count($insertMatches[0] ?? []),
                     ];
+                }
+            } else {
+                // If no CREATE TABLE found, try alternative patterns
+                // Check if file has any content
+                if ($fileSize > 0) {
+                    // Try to find INSERT statements directly
+                    preg_match_all('/INSERT\s+INTO\s+[`\']?([a-zA-Z0-9_]+)[`\']?\s*\(/i', $content, $insertTables);
+                    if (!empty($insertTables[1])) {
+                        $uniqueTables = array_unique($insertTables[1]);
+                        foreach ($uniqueTables as $tableName) {
+                            preg_match_all('/INSERT\s+INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(/i', $content, $countMatches);
+                            $tables[] = [
+                                'name' => $tableName,
+                                'count' => count($countMatches[0] ?? []),
+                            ];
+                        }
+                    }
                 }
             }
         }
@@ -82,7 +102,10 @@ class BackupController extends Controller
             'size' => $backup->size,
             'type' => $backup->type,
             'notes' => $backup->notes,
+            'user' => $backup->user,
             'tables' => $tables,
+            'file_exists' => $backup->file_path && Storage::exists($backup->file_path),
+            'file_path' => $backup->file_path,
         ]);
     }
 
@@ -97,28 +120,46 @@ class BackupController extends Controller
         $content = Storage::get($backup->file_path);
 
         // Extract INSERT statements for this table and parse them
-        $pattern = '/INSERT INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*VALUES\s*\(([^)]+)\)/i';
+        $pattern = '/INSERT INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(([^)]+)\)\s*VALUES/i';
         preg_match_all($pattern, $content, $matches);
 
         $rows = [];
         if (!empty($matches[1])) {
-            foreach ($matches[1] as $values) {
-                // Simple parsing - split by comma and clean values
-                $values = explode(',', $values);
-                $row = [];
-                foreach ($values as $idx => $val) {
-                    $val = trim($val);
-                    // Remove quotes
-                    $val = preg_replace('/^[\'"`]+|[\'"`]+$/', '', $val);
-                    $row['col_' . $idx] = $val;
+            // Extract column names from the first INSERT statement
+            $columnNames = array_map('trim', explode(',', $matches[1][0]));
+            
+            foreach ($matches[1] as $valuesString) {
+                // Extract VALUES part
+                $valuesPattern = '/INSERT INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\([^)]+\)\s*VALUES\s*\(([^)]+)\)/i';
+                preg_match($valuesPattern, $content, $valueMatch);
+                
+                if (!empty($valueMatch[1])) {
+                    // Parse values
+                    $values = array_map('trim', explode(',', $valueMatch[1]));
+                    $row = [];
+                    
+                    foreach ($columnNames as $idx => $colName) {
+                        $colName = trim($colName, '`\'"');
+                        if (isset($values[$idx])) {
+                            $val = trim($values[$idx]);
+                            // Remove quotes
+                            $val = preg_replace('/^[\'"`]+|[\'"`]+$/', '', $val);
+                            // Handle NULL values
+                            if (strtoupper($val) === 'NULL') {
+                                $val = null;
+                            }
+                            $row[$colName] = $val;
+                        }
+                    }
+                    $rows[] = $row;
                 }
-                $rows[] = $row;
             }
         }
 
         return response()->json([
             'data' => $rows,
             'count' => count($rows),
+            'columns' => !empty($rows) ? array_keys($rows[0]) : [],
         ]);
     }
 
@@ -129,19 +170,19 @@ class BackupController extends Controller
         return response()->json(['message' => 'تم حذف النسخة الاحتياطية']);
     }
 
-    public function restore(RestoreBackupRequest $request)
+    public function restore(Request $request, $backup_id)
     {
-        $backup = Backup::findOrFail($request->backup_id);
+        $backup = Backup::findOrFail($backup_id);
         $filepath = storage_path('app/' . $backup->file_path);
-        
+
         // تنفيذ استعادة (mysql)
         $db = config('database.connections.mysql.database');
         $user = config('database.connections.mysql.username');
         $password = config('database.connections.mysql.password');
-        $command = sprintf('mysql --user=%s --password=%s %s < %s', 
+        $command = sprintf('mysql --user=%s --password=%s %s < %s',
             escapeshellarg($user), escapeshellarg($password), escapeshellarg($db), escapeshellarg($filepath));
         system($command, $output);
-        
+
         return response()->json(['message' => 'تم استعادة النسخة الاحتياطية بنجاح']);
     }
 }

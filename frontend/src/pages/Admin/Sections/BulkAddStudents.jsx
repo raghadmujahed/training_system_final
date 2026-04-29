@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getSections, getUsers, createUser, createEnrollment } from "../../../services/api";
@@ -11,10 +11,14 @@ export default function BulkAddStudents() {
   const [loading, setLoading] = useState(false);
   const [sections, setSections] = useState([]);
   const [selectedSectionId, setSelectedSectionId] = useState(preselectedSectionId || "");
-  const [manualStudent, setManualStudent] = useState({ name: "", email: "", university_id: "" });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [studentsList, setStudentsList] = useState([]);
   const [results, setResults] = useState(null);
   const [step, setStep] = useState("form"); // form, preview, results
+  const searchTimeout = useRef(null);
 
   // تحميل قائمة الشعب
   useEffect(() => {
@@ -29,18 +33,44 @@ export default function BulkAddStudents() {
     fetchSections();
   }, []);
 
-  // إضافة طالب يدوي (لشعبة واحدة محددة)
-  const handleAddManualStudent = () => {
+  // البحث عن طالب بالاسم أو الرقم الجامعي
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setSelectedStudent(null);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await getUsers({ role: 'student', search: query.trim(), per_page: 20 });
+        setSearchResults(res.data || []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+  };
+
+  // إضافة الطالب المختار إلى القائمة
+  const handleAddSelectedStudent = () => {
     if (!selectedSectionId) {
       alert("يرجى اختيار الشعبة أولاً");
       return;
     }
-    if (!manualStudent.name || !manualStudent.email || !manualStudent.university_id) {
-      alert("املأ جميع حقول الطالب");
+    if (!selectedStudent) return;
+    // التأكد من عدم إضافة نفس الطالب مرتين
+    if (studentsList.some(s => s.user_id === selectedStudent.id)) {
+      alert("الطالب مضاف بالفعل إلى القائمة");
       return;
     }
-    setStudentsList([...studentsList, { ...manualStudent, section_id: selectedSectionId }]);
-    setManualStudent({ name: "", email: "", university_id: "" });
+    setStudentsList([...studentsList, { user_id: selectedStudent.id, name: selectedStudent.name, university_id: selectedStudent.university_id, section_id: selectedSectionId }]);
+    setSelectedStudent(null);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   // رفع ملف Excel (يدعم عمود "رقم الشعبة" أو "اسم الشعبة")
@@ -105,24 +135,31 @@ export default function BulkAddStudents() {
       }
 
       try {
-        // البحث عن المستخدم أو إنشاؤه
-        let userId = null;
-        const existing = await getUsers({ email: student.email });
-        if (existing.data && existing.data.length > 0) {
-          userId = existing.data[0].id;
-        } else {
-          const newUser = await createUser({
-            name: student.name,
-            email: student.email,
-            university_id: student.university_id,
-            password: "12345678",
-            password_confirmation: "12345678",
-            role_id: 2,
-            status: "active",
-          });
-          userId = newUser.data.id;
+        // إذا كان الطالب مضافاً بالبحث (لديه user_id مباشرة)
+        let userId = student.user_id || null;
+        if (!userId) {
+          // طلاب Excel - البحث عن طالب موجود بالرقم الجامعي
+          const bySearch = await getUsers({ role: 'student', search: student.university_id, per_page: 5 });
+          const existingList = bySearch.data || [];
+          const match = existingList.find(u => u.university_id === student.university_id || u.email === student.email);
+          if (match) {
+            userId = match.id;
+          } else if (student.email) {
+            const newUser = await createUser({
+              name: student.name,
+              email: student.email,
+              university_id: student.university_id,
+              password: "12345678",
+              password_confirmation: "12345678",
+              role_id: 2,
+              status: "active",
+            });
+            userId = newUser.data.id;
+          } else {
+            errors.push(`الطالب ${student.name}: غير موجود في النظام`);
+            continue;
+          }
         }
-        // استخدام createEnrollment بدلاً من enrollStudentInSection
         await createEnrollment({
           user_id: userId,
           section_id: sectionId,
@@ -144,7 +181,9 @@ export default function BulkAddStudents() {
   const resetForm = () => {
     setStudentsList([]);
     setSelectedSectionId(preselectedSectionId || "");
-    setManualStudent({ name: "", email: "", university_id: "" });
+    setSearchQuery("");
+    setSelectedStudent(null);
+    setSearchResults([]);
     setStep("form");
     setResults(null);
   };
@@ -209,7 +248,7 @@ export default function BulkAddStudents() {
       <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
         {/* قسم الإضافة اليدوية لشعبة محددة */}
         <div style={{ flex: 1, border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-          <h3>إضافة طالب يدوي</h3>
+          <h3>تسجيل طالب في الشعبة</h3>
           <div className="form-group">
             <label>اختر الشعبة</label>
             <select value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
@@ -220,15 +259,41 @@ export default function BulkAddStudents() {
             </select>
           </div>
           <div className="form-group">
-            <input type="text" placeholder="الاسم الكامل" value={manualStudent.name} onChange={(e) => setManualStudent({ ...manualStudent, name: e.target.value })} />
+            <label>البحث بالاسم أو الرقم الجامعي</label>
+            <input
+              type="text"
+              placeholder="اكتب اسم الطالب أو رقمه الجامعي..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              style={{ width: "100%" }}
+            />
+            {searching && <p style={{ color: "#666", fontSize: "0.85rem" }}>جاري البحث...</p>}
+            {searchResults.length > 0 && !selectedStudent && (
+              <div style={{ border: "1px solid #ddd", maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
+                {searchResults.map(student => (
+                  <div
+                    key={student.id}
+                    onClick={() => { setSelectedStudent(student); setSearchQuery(student.name); setSearchResults([]); }}
+                    style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #eee" }}
+                    onMouseEnter={e => e.target.style.background = "#f0f0f0"}
+                    onMouseLeave={e => e.target.style.background = ""}
+                  >
+                    <strong>{student.name}</strong> — {student.university_id} {student.department?.name ? `| ${student.department.name}` : ""}
+                  </div>
+                ))}
+              </div>
+            )}
+            {searchQuery && searchResults.length === 0 && !searching && !selectedStudent && (
+              <p style={{ color: "#999", fontSize: "0.85rem" }}>لا توجد نتائج</p>
+            )}
           </div>
-          <div className="form-group">
-            <input type="email" placeholder="البريد الإلكتروني" value={manualStudent.email} onChange={(e) => setManualStudent({ ...manualStudent, email: e.target.value })} />
-          </div>
-          <div className="form-group">
-            <input type="text" placeholder="الرقم الجامعي" value={manualStudent.university_id} onChange={(e) => setManualStudent({ ...manualStudent, university_id: e.target.value })} />
-          </div>
-          <button onClick={handleAddManualStudent} className="btn-primary">إضافة طالب إلى القائمة</button>
+          {selectedStudent && (
+            <div style={{ background: "#f8f9fa", padding: "0.75rem", borderRadius: "8px", marginTop: "0.5rem" }}>
+              <p><strong>الطالب:</strong> {selectedStudent.name} ({selectedStudent.university_id})</p>
+              <button onClick={handleAddSelectedStudent} className="btn-primary">إضافة إلى القائمة</button>
+              <button onClick={() => { setSelectedStudent(null); setSearchQuery(""); }} className="btn-secondary" style={{ marginRight: "0.5rem" }}>إلغاء</button>
+            </div>
+          )}
         </div>
 
         {/* قسم رفع ملف Excel */}
@@ -251,13 +316,12 @@ export default function BulkAddStudents() {
           <h3>قائمة الطلاب المضافة ({studentsList.length})</h3>
           <table className="data-table">
             <thead>
-              <tr><th>الاسم</th><th>البريد</th><th>الرقم الجامعي</th><th>الشعبة (ID)</th><th></th></tr>
+              <tr><th>الاسم</th><th>الرقم الجامعي</th><th>الشعبة (ID)</th><th></th></tr>
             </thead>
             <tbody>
               {studentsList.map((s, idx) => (
                 <tr key={idx}>
                   <td>{s.name}</td>
-                  <td>{s.email}</td>
                   <td>{s.university_id}</td>
                   <td>{s.section_id || s.section_identifier}</td>
                   <td><button onClick={() => setStudentsList(studentsList.filter((_, i) => i !== idx))}>حذف</button></td>

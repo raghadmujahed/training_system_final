@@ -14,9 +14,12 @@ export default function TableData() {
     const fetchData = async () => {
       try {
         const result = await getBackupTableData(id, tableName);
-        if (result.data && result.data.length > 0) {
-          setColumns(Object.keys(result.data[0]));
-          setData(result.data);
+        // التعامل مع هيكل استجابة Laravel Resource
+        const tableData = result?.data || result;
+        
+        if (tableData && tableData.length > 0) {
+          setColumns(Object.keys(tableData[0]));
+          setData(tableData);
         } else {
           setColumns([]);
           setData([]);
@@ -37,38 +40,57 @@ export default function TableData() {
   return (
     <div>
       <div className="page-header">
-        <h1>بيانات الجدول: {tableName}</h1>
-        <button onClick={() => navigate(-1)} className="btn-secondary">رجوع</button>
+        <h1>بيانات الجدول: {decodeURIComponent(tableName)}</h1>
+        <div>
+          <button onClick={() => navigate(-1)} className="btn-secondary">رجوع</button>
+          <button onClick={() => navigate(`/admin/backups/${id}`)} className="btn-primary">
+            تفاصيل النسخة
+          </button>
+        </div>
       </div>
 
-      {data.length === 0 ? (
-        <p>لا توجد بيانات في هذا الجدول</p>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table className="data-table">
-            <thead>
-              <tr>
-                {columns.map((col, i) => (
-                  <th key={i}>{col}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row, idx) => (
-                <tr key={idx}>
+      <div className="section-card">
+        <div style={{ marginBottom: "1rem" }}>
+          <strong>عدد السجلات:</strong> {data.length}
+        </div>
+
+        {data.length === 0 ? (
+          <p>لا توجد بيانات في هذا الجدول</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
                   {columns.map((col, i) => (
-                    <td key={i}>
-                      {typeof row[col] === "object"
-                        ? JSON.stringify(row[col])
-                        : row[col]}
-                    </td>
+                    <th key={i}>{col}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {data.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    {columns.map((col, i) => (
+                      <td key={i}>
+                        {row[col] === null || row[col] === undefined ? (
+                          <span style={{ color: "#999" }}>NULL</span>
+                        ) : typeof row[col] === "object" ? (
+                          <code style={{ fontSize: "0.85rem" }}>
+                            {JSON.stringify(row[col])}
+                          </code>
+                        ) : (
+                          row[col]
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

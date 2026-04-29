@@ -39,9 +39,13 @@ class UpdateTrainingSiteRequest extends FormRequest
                 ],
                 'location' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|max:255',
+                'mobile' => 'nullable|string|max:20',
                 'description' => 'nullable|string',
                 'directorate' => 'sometimes|in:وسط,شمال,جنوب,يطا',
                 'school_type' => 'sometimes|in:public,private',
+                'gender_classification' => 'nullable|in:boys,girls,mixed',
+                'school_level' => 'nullable|in:lower,upper',
             ];
         }
 
@@ -54,12 +58,15 @@ class UpdateTrainingSiteRequest extends FormRequest
             ],
             'location' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'mobile' => 'nullable|string|max:20',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'capacity' => 'sometimes|integer|min:1',
-
             'directorate' => 'sometimes|in:وسط,شمال,جنوب,يطا',
             'school_type' => 'sometimes|in:public,private',
+            'gender_classification' => 'nullable|in:boys,girls,mixed',
+            'school_level' => 'nullable|in:lower,upper',
             'site_type' => 'sometimes|in:school,health_center',
             'governing_body' => 'sometimes|in:directorate_of_education,ministry_of_health,health_directorate,education_directorate',
         ];

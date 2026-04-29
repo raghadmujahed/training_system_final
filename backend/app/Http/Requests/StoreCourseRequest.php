@@ -19,16 +19,24 @@ class StoreCourseRequest extends FormRequest
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'credit_hours' => 'required|integer|min:1|max:6',
-            'training_hours' => 'nullable|integer|min:0|max:500',
+            'training_hours' => 'required|integer|min:0|max:500',
             'type' => 'required|in:practical,theoretical,both',
-            'department_id' => 'sometimes|exists:departments,id',
+            'department_id' => 'required|exists:departments,id',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'code.required' => 'كود المساق مطلوب.',
+            'code.unique' => 'كود المساق مستخدم مسبقاً.',
+            'name.required' => 'اسم المساق مطلوب.',
+            'credit_hours.required' => 'عدد الساعات الجامعية مطلوب.',
+            'training_hours.required' => 'عدد الساعات التدريبية مطلوب.',
             'training_hours.max' => 'عدد الساعات التدريبية يجب ألا يتجاوز 500 ساعة.',
+            'type.required' => 'نوع المساق مطلوب.',
+            'department_id.required' => 'القسم مطلوب.',
+            'department_id.exists' => 'القسم المحدد غير موجود.',
         ];
     }
 

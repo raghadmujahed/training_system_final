@@ -201,7 +201,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Sauvegardes
     Route::apiResource('backups', BackupController::class);
-    Route::post('backups/{backup}/restore', [BackupController::class, 'restore']);
+    Route::post('backups/{backup_id}/restore', [BackupController::class, 'restore']);
     Route::get('backups/{id}/table/{tableName}', [BackupController::class, 'getTableData']);
 
     // Logs d'activité

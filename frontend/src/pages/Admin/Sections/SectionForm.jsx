@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSection, createSection, updateSection, getCourses, getUsers } from "../../../services/api";
+import { getSection, createSection, updateSection, getCourses, getUsers, getRoles } from "../../../services/api";
 
 export default function SectionForm() {
   const { id } = useParams();
@@ -8,6 +8,7 @@ export default function SectionForm() {
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState([]);
   const [supervisors, setSupervisors] = useState([]);
+  const [supervisorRoleId, setSupervisorRoleId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     academic_year: new Date().getFullYear(),
@@ -17,37 +18,56 @@ export default function SectionForm() {
   });
   const [errors, setErrors] = useState({});
 
+  // جلب المساقات ومعرف دور المشرف الأكاديمي
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // جلب قائمة المساقات (courses) والمشرفين الأكاديميين (users with role academic_supervisor)
-        const coursesData = await getCourses();
-        setCourses(coursesData.data || []);
+    getCourses().then(coursesData => setCourses(coursesData.data || [])).catch(() => {});
+    getRoles().then(rolesData => {
+      const roles = rolesData.data || rolesData || [];
+      const supRole = roles.find(r => r.name === 'academic_supervisor');
+      if (supRole) setSupervisorRoleId(supRole.id);
+    }).catch(() => {});
+  }, []);
 
-        // جلب المشرفين الأكاديميين (يمكن فلترتهم في الـ Backend أو Frontend)
-        const usersData = await getUsers({ role: 'academic_supervisor' });
-        setSupervisors(usersData.data || []);
-
-        if (id) {
-          const sectionData = await getSection(id);
-          setForm({
-            name: sectionData.name,
-            academic_year: sectionData.academic_year,
-            academic_supervisor_id: sectionData.academic_supervisor_id || "",
-            semester: sectionData.semester,
-            course_id: sectionData.course_id,
-          });
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchData();
+  // جلب بيانات الشعبة عند التعديل
+  useEffect(() => {
+    if (!id) return;
+    getSection(id).then(sectionData => {
+      setForm({
+        name: sectionData.name,
+        academic_year: sectionData.academic_year,
+        academic_supervisor_id: sectionData.academic_supervisor_id || "",
+        semester: sectionData.semester,
+        course_id: sectionData.course_id,
+      });
+    }).catch(() => {});
   }, [id]);
 
+  // فلترة المشرفين حسب قسم المساق المختار
+  useEffect(() => {
+    if (!form.course_id || !supervisorRoleId) {
+      setSupervisors([]);
+      return;
+    }
+    const selectedCourse = courses.find(c => String(c.id) === String(form.course_id));
+    const deptId = selectedCourse?.department_id;
+    if (!deptId) {
+      setSupervisors([]);
+      return;
+    }
+    getUsers({ role_id: supervisorRoleId, department_id: deptId, per_page: 200 })
+      .then(usersData => setSupervisors(usersData.data || []))
+      .catch(() => setSupervisors([]));
+  }, [form.course_id, courses, supervisorRoleId]);
+
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+      // عند تغيير المساق، إعادة تعيين المشرف لأن المشرفين يتغيرون حسب القسم
+      ...(name === 'course_id' ? { academic_supervisor_id: '' } : {}),
+    }));
+    if (errors[name]) setErrors({ ...errors, [name]: null });
   };
 
   const handleSubmit = async (e) => {
@@ -118,12 +138,18 @@ export default function SectionForm() {
 
         <div className="form-group">
           <label>المشرف الأكاديمي</label>
-          <select name="academic_supervisor_id" value={form.academic_supervisor_id} onChange={handleChange}>
-            <option value="">اختر المشرف</option>
-            {supervisors.map(sup => (
-              <option key={sup.id} value={sup.id}>{sup.name}</option>
-            ))}
-          </select>
+          {!form.course_id ? (
+            <p className="text-muted" style={{ fontSize: "0.9rem", margin: "4px 0" }}>اختر المساق أولاً لعرض المشرفين التابعين لقسمه</p>
+          ) : supervisors.length === 0 ? (
+            <p className="text-muted" style={{ fontSize: "0.9rem", margin: "4px 0" }}>لا يوجد مشرفين أكاديميين في هذا القسم</p>
+          ) : (
+            <select name="academic_supervisor_id" value={form.academic_supervisor_id} onChange={handleChange}>
+              <option value="">اختر المشرف</option>
+              {supervisors.map(sup => (
+                <option key={sup.id} value={sup.id}>{sup.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="form-actions">

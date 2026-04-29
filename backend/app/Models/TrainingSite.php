@@ -14,6 +14,8 @@ class TrainingSite extends Model
         'name',
         'location',
         'phone',
+        'email',
+        'mobile',
         'description',
         'is_active',
         'directorate',
@@ -21,6 +23,8 @@ class TrainingSite extends Model
         'site_type',
         'governing_body',
         'school_type',
+        'gender_classification',
+        'school_level',
     ];
 
     public function trainingRequests()

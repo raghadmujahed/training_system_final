@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getEnrollment, createEnrollment, updateEnrollment, getSections, getStudents } from "../../../services/api";
+import { getEnrollment, createEnrollment, updateEnrollment, getSections, getUsers } from "../../../services/api";
 
 export default function EnrollmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sections, setSections] = useState([]);
-  const [students, setStudents] = useState([]);
   const [form, setForm] = useState({
     user_id: "",
     section_id: "",
@@ -17,17 +16,18 @@ export default function EnrollmentForm() {
     final_grade: "",
   });
   const [errors, setErrors] = useState({});
+  const [studentSearch, setStudentSearch] = useState("");
+  const [selectedStudentDisplay, setSelectedStudentDisplay] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimeout = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // جلب قائمة الشعب (sections)
         const sectionsData = await getSections();
         setSections(sectionsData.data || []);
-
-        // جلب قائمة الطلاب (users with role student)
-        const studentsData = await getStudents(); // getStudents already filters for role_id: 2
-        setStudents(studentsData.data || []);
 
         if (id) {
           const enrollmentData = await getEnrollment(id);
@@ -39,6 +39,14 @@ export default function EnrollmentForm() {
             status: enrollmentData.status,
             final_grade: enrollmentData.final_grade || "",
           });
+          // عرض اسم الطالب عند التعديل
+          if (enrollmentData.user_id) {
+            try {
+              const usersRes = await getUsers({ role: 'student', search: String(enrollmentData.user_id), per_page: 1 });
+              const found = (usersRes.data || []).find(u => u.id === enrollmentData.user_id);
+              if (found) setSelectedStudentDisplay(`${found.name} (${found.university_id})`);
+            } catch {}
+          }
         }
       } catch (error) {
         console.error(error);
@@ -46,6 +54,39 @@ export default function EnrollmentForm() {
     };
     fetchData();
   }, [id]);
+
+  // البحث عن طالب بالاسم أو الرقم الجامعي
+  const handleStudentSearch = (value) => {
+    setStudentSearch(value);
+    setSelectedStudentDisplay("");
+    setForm(prev => ({ ...prev, user_id: "" }));
+    setShowDropdown(true);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (!value.trim()) { setSearchResults([]); return; }
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await getUsers({ role: 'student', search: value.trim(), per_page: 20 });
+        setSearchResults(res.data || []);
+      } catch { setSearchResults([]); }
+      finally { setSearching(false); }
+    }, 300);
+  };
+
+  const selectStudent = (student) => {
+    setForm(prev => ({ ...prev, user_id: student.id }));
+    setSelectedStudentDisplay(`${student.name} (${student.university_id})`);
+    setStudentSearch("");
+    setShowDropdown(false);
+    if (errors.user_id) setErrors({ ...errors, user_id: null });
+  };
+
+  const clearStudentSelection = () => {
+    setForm(prev => ({ ...prev, user_id: "" }));
+    setStudentSearch("");
+    setSelectedStudentDisplay("");
+    setShowDropdown(false);
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -83,14 +124,41 @@ export default function EnrollmentForm() {
 
       <form onSubmit={handleSubmit} className="form">
         <div className="form-row">
-          <div className="form-group">
+          <div className="form-group" style={{ position: 'relative' }}>
             <label>الطالب *</label>
-            <select name="user_id" value={form.user_id} onChange={handleChange} required>
-              <option value="">اختر الطالب</option>
-              {students.map(student => (
-                <option key={student.id} value={student.id}>{student.name} ({student.university_id})</option>
-              ))}
-            </select>
+            <input
+              type="text"
+              placeholder={selectedStudentDisplay ? "" : "ابحث بالاسم أو الرقم الجامعي..."}
+              value={selectedStudentDisplay || studentSearch}
+              onChange={(e) => handleStudentSearch(e.target.value)}
+              onFocus={() => {
+                if (selectedStudentDisplay) {
+                  setStudentSearch(selectedStudentDisplay);
+                  setSelectedStudentDisplay("");
+                }
+                setShowDropdown(true);
+              }}
+              style={{ width: "100%", paddingRight: form.user_id ? 35 : 10 }}
+              required={!form.user_id}
+            />
+            {form.user_id && (
+              <button type="button" onClick={clearStudentSelection} style={{ position: 'absolute', left: 10, top: '32px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✕</button>
+            )}
+            {searching && <p style={{ color: '#666', fontSize: '0.85rem' }}>جاري البحث...</p>}
+            {showDropdown && studentSearch && searchResults.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: 'white', border: '1px solid #ddd', borderRadius: 4, maxHeight: 200, overflowY: 'auto', zIndex: 100, marginTop: 4 }}>
+                {searchResults.map(student => (
+                  <div key={student.id} onClick={() => selectStudent(student)} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }} onMouseEnter={e => e.target.style.backgroundColor = '#f5f5f5'} onMouseLeave={e => e.target.style.backgroundColor = 'white'}>
+                    <div style={{ fontWeight: 500 }}>{student.name}</div>
+                    <div style={{ fontSize: 12, color: '#666' }}>الرقم الجامعي: {student.university_id}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!searching && showDropdown && studentSearch && searchResults.length === 0 && (
+              <p style={{ color: '#999', fontSize: '0.85rem' }}>لا توجد نتائج</p>
+            )}
+            <input type="hidden" name="user_id" value={form.user_id} />
             {errors.user_id && <span className="error">{errors.user_id[0]}</span>}
           </div>
 

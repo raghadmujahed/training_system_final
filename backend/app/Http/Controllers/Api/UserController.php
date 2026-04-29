@@ -30,6 +30,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'role_id' => 'nullable|exists:roles,id',
+            'role' => 'nullable|string|exists:roles,name',
             'department_id' => 'nullable|exists:departments,id',
             'status' => [
                 'nullable',
@@ -64,6 +65,10 @@ class UserController extends Controller
 
         $users->when($validated['role_id'] ?? null, function ($q, $roleId) {
             $q->where('users.role_id', $roleId);
+        });
+
+        $users->when($validated['role'] ?? null, function ($q, $roleName) {
+            $q->whereHas('role', fn ($rq) => $rq->where('name', $roleName));
         });
 
         $users->when($validated['department_id'] ?? null, function ($q, $departmentId) {

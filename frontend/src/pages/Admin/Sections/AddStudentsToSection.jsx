@@ -1,55 +1,61 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { createUser, createEnrollment, getUsers } from "../../../services/api";
+import { createEnrollment, getUsers, createUser } from "../../../services/api";
 import * as XLSX from "xlsx";
 
 export default function AddStudentsToSection() {
   const { id: sectionId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [manualStudent, setManualStudent] = useState({ name: "", email: "", university_id: "" });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [file, setFile] = useState(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const searchTimeout = useRef(null);
 
-  // إضافة طالب يدوي
-  const handleManualAdd = async (e) => {
-    e.preventDefault();
-    if (!manualStudent.name || !manualStudent.email || !manualStudent.university_id) {
-      alert("يرجى ملء جميع الحقول");
+  // البحث عن طالب بالاسم أو الرقم الجامعي
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    setSelectedStudent(null);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    if (!query.trim()) {
+      setSearchResults([]);
       return;
     }
+    searchTimeout.current = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await getUsers({ role: 'student', search: query.trim(), per_page: 20 });
+        setSearchResults(res.data || []);
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+  };
+
+  // تسجيل الطالب المختار في الشعبة
+  const handleEnrollSelected = async () => {
+    if (!selectedStudent) return;
     setLoading(true);
     try {
-      // البحث عن الطالب أو إنشاؤه
-      const existing = await getUsers({ email: manualStudent.email });
-      let userId;
-      if (existing.data && existing.data.length > 0) {
-        userId = existing.data[0].id;
-      } else {
-        const newUser = await createUser({
-          name: manualStudent.name,
-          email: manualStudent.email,
-          university_id: manualStudent.university_id,
-          password: "12345678",
-          password_confirmation: "12345678",
-          role_id: 2,
-          status: "active",
-        });
-        userId = newUser.data.id;
-      }
-      // استخدام createEnrollment بدلاً من enrollStudentInSection
       await createEnrollment({
-        user_id: userId,
+        user_id: selectedStudent.id,
         section_id: sectionId,
         academic_year: new Date().getFullYear(),
         semester: "first",
         status: "active"
       });
-      alert("تمت إضافة الطالب بنجاح");
-      setManualStudent({ name: "", email: "", university_id: "" });
+      alert("تم تسجيل الطالب في الشعبة بنجاح");
+      setSelectedStudent(null);
+      setSearchQuery("");
+      setSearchResults([]);
     } catch (err) {
-      alert("فشل إضافة الطالب: " + (err.response?.data?.message || err.message));
+      alert(err.response?.data?.message || "فشل تسجيل الطالب");
     } finally {
       setLoading(false);
     }
@@ -78,10 +84,13 @@ export default function AddStudentsToSection() {
         const successList = [], errorList = [];
         for (const s of students) {
           try {
-            let userId;
-            const existing = await getUsers({ email: s.email });
-            if (existing.data && existing.data.length > 0) {
-              userId = existing.data[0].id;
+            // البحث عن طالب موجود بالرقم الجامعي أو البريد
+            let userId = null;
+            const byUnivId = await getUsers({ role: 'student', search: s.university_id, per_page: 5 });
+            const existingList = byUnivId.data || [];
+            const match = existingList.find(u => u.university_id === s.university_id || u.email === s.email);
+            if (match) {
+              userId = match.id;
             } else {
               const newUser = await createUser({
                 name: s.name,
@@ -94,7 +103,6 @@ export default function AddStudentsToSection() {
               });
               userId = newUser.data.id;
             }
-            // استخدام createEnrollment بدلاً من enrollStudentInSection
             await createEnrollment({
               user_id: userId,
               section_id: sectionId,
@@ -125,15 +133,47 @@ export default function AddStudentsToSection() {
         <button onClick={() => navigate("/admin/sections")} className="btn-secondary">رجوع</button>
       </div>
 
-      {/* إضافة يدوية */}
+      {/* البحث عن طالب وتسجيله */}
       <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem" }}>
-        <legend style={{ fontWeight: "bold" }}>إضافة طالب يدوي</legend>
-        <div className="form-row">
-          <input type="text" placeholder="الاسم الكامل" value={manualStudent.name} onChange={(e) => setManualStudent({ ...manualStudent, name: e.target.value })} />
-          <input type="email" placeholder="البريد الإلكتروني" value={manualStudent.email} onChange={(e) => setManualStudent({ ...manualStudent, email: e.target.value })} />
-          <input type="text" placeholder="الرقم الجامعي" value={manualStudent.university_id} onChange={(e) => setManualStudent({ ...manualStudent, university_id: e.target.value })} />
-          <button onClick={handleManualAdd} disabled={loading}>{loading ? "جاري..." : "إضافة"}</button>
+        <legend style={{ fontWeight: "bold" }}>تسجيل طالب في الشعبة</legend>
+        <div className="form-group">
+          <label>البحث بالاسم أو الرقم الجامعي</label>
+          <input
+            type="text"
+            placeholder="اكتب اسم الطالب أو رقمه الجامعي..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          {searching && <p style={{ color: "#666", fontSize: "0.85rem" }}>جاري البحث...</p>}
+          {searchResults.length > 0 && !selectedStudent && (
+            <div style={{ border: "1px solid #ddd", maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
+              {searchResults.map(student => (
+                <div
+                  key={student.id}
+                  onClick={() => { setSelectedStudent(student); setSearchQuery(student.name); setSearchResults([]); }}
+                  style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #eee" }}
+                  onMouseEnter={e => e.target.style.background = "#f0f0f0"}
+                  onMouseLeave={e => e.target.style.background = ""}
+                >
+                  <strong>{student.name}</strong> — {student.university_id} {student.department?.name ? `| ${student.department.name}` : ""}
+                </div>
+              ))}
+            </div>
+          )}
+          {searchQuery && searchResults.length === 0 && !searching && !selectedStudent && (
+            <p style={{ color: "#999", fontSize: "0.85rem" }}>لا توجد نتائج</p>
+          )}
         </div>
+        {selectedStudent && (
+          <div style={{ background: "#f8f9fa", padding: "1rem", borderRadius: "8px", marginTop: "0.5rem" }}>
+            <p><strong>الطالب المختار:</strong> {selectedStudent.name} ({selectedStudent.university_id})</p>
+            <button onClick={handleEnrollSelected} disabled={loading} className="btn-primary">
+              {loading ? "جاري التسجيل..." : "تسجيل في الشعبة"}
+            </button>
+            <button onClick={() => { setSelectedStudent(null); setSearchQuery(""); }} className="btn-secondary" style={{ marginRight: "0.5rem" }}>إلغاء</button>
+          </div>
+        )}
       </fieldset>
 
       {/* رفع Excel */}

@@ -71,17 +71,27 @@ export default function TrainingPlaces() {
     name: "",
     school_type: "حكومية",
     city: "",
+    phone: "",
+    email: "",
+    mobile: "",
     capacity: "",
     directorate: "وسط",
+    gender_classification: "",
+    school_level: "",
   });
 
   const [editFormData, setEditFormData] = useState({
     name: "",
     school_type: "حكومية",
     city: "",
+    phone: "",
+    email: "",
+    mobile: "",
     capacity: "",
     directorate: "وسط",
     is_active: true,
+    gender_classification: "",
+    school_level: "",
   });
 
   useEffect(() => {
@@ -155,28 +165,30 @@ export default function TrainingPlaces() {
       await createTrainingSite({
         name: formData.name,
         location: formData.city,
+        phone: formData.phone,
+        email: formData.email,
+        mobile: formData.mobile,
         capacity: Number(formData.capacity),
         is_active: true,
         directorate: formData.directorate,
         school_type: toApiSchoolType(formData.school_type),
-
-        // الباك يطلبهم، فنرسلهم ثابتين بدون عرضهم في الواجهة
+        gender_classification: formData.gender_classification,
+        school_level: formData.school_level,
         site_type: "school",
         governing_body: "directorate_of_education",
-
-        // نخزن نوع المدرسة داخل الوصف حتى يظهر لاحقًا
-        description:
-          formData.school_type === "خاصة"
-            ? "school_type:private"
-            : "school_type:public",
       });
 
       setFormData({
         name: "",
         school_type: "حكومية",
         city: "",
+        phone: "",
+        email: "",
+        mobile: "",
         capacity: "",
         directorate: "وسط",
+        gender_classification: "",
+        school_level: "",
       });
 
       setSavedMessage("تم حفظ مكان التدريب بنجاح.");
@@ -195,9 +207,14 @@ export default function TrainingPlaces() {
       name: place.name,
       school_type: place.school_type,
       city: place.city,
+      phone: place.phone || "",
+      email: place.email || "",
+      mobile: place.mobile || "",
       capacity: String(place.capacity),
       directorate: place.directorate,
       is_active: place.is_active,
+      gender_classification: place.gender_classification || "",
+      school_level: place.school_level || "",
     });
     setSavedMessage("");
     setErrorMessage("");
@@ -209,9 +226,14 @@ export default function TrainingPlaces() {
       name: "",
       school_type: "حكومية",
       city: "",
+      phone: "",
+      email: "",
+      mobile: "",
       capacity: "",
       directorate: "وسط",
       is_active: true,
+      gender_classification: "",
+      school_level: "",
     });
   };
 
@@ -234,19 +256,17 @@ export default function TrainingPlaces() {
       await updateTrainingSite(id, {
         name: editFormData.name,
         location: editFormData.city,
+        phone: editFormData.phone,
+        email: editFormData.email,
+        mobile: editFormData.mobile,
         capacity: Number(editFormData.capacity),
         is_active: editFormData.is_active,
         directorate: editFormData.directorate,
         school_type: toApiSchoolType(editFormData.school_type),
-
-        // ثابتين للباك
+        gender_classification: editFormData.gender_classification,
+        school_level: editFormData.school_level,
         site_type: "school",
         governing_body: "directorate_of_education",
-
-        description:
-          editFormData.school_type === "خاصة"
-            ? "school_type:private"
-            : "school_type:public",
       });
 
       setSavedMessage("تم تعديل مكان التدريب بنجاح.");
@@ -404,6 +424,61 @@ export default function TrainingPlaces() {
                 <option value="يطا">{"يطا"}</option>
               </select>
             </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                {"الهاتف"}
+              </label>
+              <input type="text" name="phone" placeholder={"رقم الهاتف"} value={formData.phone} onChange={handleChange}
+                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                {"البريد الإلكتروني"}
+              </label>
+              <input type="email" name="email" placeholder={"بريد المدير"} value={formData.email} onChange={handleChange}
+                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                {"رقم المحمول"}
+              </label>
+              <input type="text" name="mobile" placeholder={"رقم المحمول"} value={formData.mobile} onChange={handleChange}
+                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                {"تصنيف المدرسة"}
+              </label>
+              <select name="gender_classification" value={formData.gender_classification} onChange={handleChange}
+                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              >
+                <option value="">{"-- اختر --"}</option>
+                <option value="boys">{"ذكور"}</option>
+                <option value="girls">{"إناث"}</option>
+                <option value="mixed">{"مختلطة"}</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                {"مرحلة المدرسة"}
+              </label>
+              <select name="school_level" value={formData.school_level} onChange={handleChange}
+                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              >
+                <option value="">{"-- اختر --"}</option>
+                <option value="lower">{"دنيا"}</option>
+                <option value="upper">{"عليا"}</option>
+              </select>
+            </div>
+
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
@@ -455,7 +530,7 @@ export default function TrainingPlaces() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
               <thead>
                 <tr style={{ background: "#f8fafc" }}>
-                  {["اسم المكان", "نوع المدرسة", "المدينة", "السعة", "المديرية", "الحالة", "الإجراءات"].map((h) => (
+                  {["اسم المكان", "نوع المدرسة", "المدينة", "الهاتف", "البريد", "المحمول", "السعة", "المديرية", "الحالة", "الإجراءات"].map((h) => (
                     <th key={h} style={{ padding: "0.875rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
@@ -479,6 +554,21 @@ export default function TrainingPlaces() {
                       </td>
                       <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
                         <input type="text" name="city" value={editFormData.city} onChange={handleEditChange}
+                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                        />
+                      </td>
+                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                        <input type="text" name="phone" value={editFormData.phone} onChange={handleEditChange}
+                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                        />
+                      </td>
+                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                        <input type="email" name="email" value={editFormData.email} onChange={handleEditChange}
+                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                        />
+                      </td>
+                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                        <input type="text" name="mobile" value={editFormData.mobile} onChange={handleEditChange}
                           style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
                         />
                       </td>
@@ -537,6 +627,15 @@ export default function TrainingPlaces() {
                       <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
                         <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><MapPin size={13} />{place.city}</span>
                       </td>
+                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                        {place.phone || "-"}
+                      </td>
+                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                        {place.email || "-"}
+                      </td>
+                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                        {place.mobile || "-"}
+                      </td>
                       <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontWeight: 600, color: "#1e293b" }}>
                           <Users size={14} color="#64748b" />{place.capacity}
@@ -575,7 +674,7 @@ export default function TrainingPlaces() {
 
                 {filteredPlaces.length === 0 && (
                   <tr>
-                    <td colSpan={7} style={{ padding: "2.5rem", textAlign: "center" }}>
+                    <td colSpan={10} style={{ padding: "2.5rem", textAlign: "center" }}>
                       <div style={{ color: "#94a3b8" }}>
                         <School size={48} style={{ marginBottom: "0.75rem", opacity: 0.4 }} />
                         <p style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>

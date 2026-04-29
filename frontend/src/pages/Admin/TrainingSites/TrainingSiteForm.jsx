@@ -10,11 +10,16 @@ export default function TrainingSiteForm() {
     name: "",
     location: "",
     phone: "",
+    email: "",
+    mobile: "",
     description: "",
     directorate: "وسط",
     capacity: 10,
     site_type: "school",
     governing_body: "directorate_of_education",
+    school_type: "public",
+    gender_classification: "",
+    school_level: "",
     is_active: true,
   });
   const [loading, setLoading] = useState(false);
@@ -32,11 +37,16 @@ export default function TrainingSiteForm() {
           name: siteData.name || "",
           location: siteData.location || "",
           phone: siteData.phone || "",
+          email: siteData.email || "",
+          mobile: siteData.mobile || "",
           description: siteData.description || "",
           directorate: siteData.directorate || "وسط",
           capacity: siteData.capacity || 10,
           site_type: siteData.site_type || "school",
           governing_body: siteData.governing_body || "directorate_of_education",
+          school_type: siteData.school_type || "public",
+          gender_classification: siteData.gender_classification || "",
+          school_level: siteData.school_level || "",
           is_active: siteData.is_active !== undefined ? siteData.is_active : true,
         });
       });
@@ -94,11 +104,13 @@ export default function TrainingSiteForm() {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: "array" });
         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-        
+
         const sites = rows.map((row) => ({
           name: normalizeValue(row["الاسم"] || row["name"], "string"),
           location: normalizeValue(row["الموقع"] || row["location"], "string"),
           phone: normalizeValue(row["الهاتف"] || row["phone"], "string"),
+          email: normalizeValue(row["البريد"] || row["email"], "string"),
+          mobile: normalizeValue(row["المحمول"] || row["mobile"], "string"),
           description: normalizeValue(row["الوصف"] || row["description"], "string"),
           directorate: normalizeValue(row["المديرية"] || row["directorate"], "string") || "وسط",
           capacity: normalizeValue(row["السعة"] || row["capacity"], "number") || 10,
@@ -110,6 +122,9 @@ export default function TrainingSiteForm() {
             const val = normalizeValue(row["الجهة المسؤولة"] || row["governing_body"], "string");
             return val === "وزارة الصحة" ? "ministry_of_health" : "directorate_of_education";
           })(),
+          school_type: normalizeValue(row["نوع المدرسة"] || row["school_type"], "string") || "public",
+          gender_classification: normalizeValue(row["التصنيف"] || row["gender_classification"], "string"),
+          school_level: normalizeValue(row["المرحلة"] || row["school_level"], "string"),
           is_active: normalizeValue(row["نشط"] || row["is_active"], "boolean"),
         })).filter(s => s.name !== "");
 
@@ -166,6 +181,14 @@ export default function TrainingSiteForm() {
           <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
         </div>
         <div className="form-group">
+          <label>البريد الإلكتروني (بريد المدير)</label>
+          <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+        </div>
+        <div className="form-group">
+          <label>رقم المحمول</label>
+          <input type="text" value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} />
+        </div>
+        <div className="form-group">
           <label>الوصف</label>
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         </div>
@@ -190,6 +213,30 @@ export default function TrainingSiteForm() {
           </select>
         </div>
         <div className="form-group">
+          <label>نوع المدرسة</label>
+          <select value={form.school_type} onChange={(e) => setForm({ ...form, school_type: e.target.value })}>
+            <option value="public">حكومية</option>
+            <option value="private">خاصة</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>تصنيف المدرسة</label>
+          <select value={form.gender_classification} onChange={(e) => setForm({ ...form, gender_classification: e.target.value })}>
+            <option value="">-- اختر --</option>
+            <option value="boys">ذكور</option>
+            <option value="girls">إناث</option>
+            <option value="mixed">مختلطة</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>مرحلة المدرسة</label>
+          <select value={form.school_level} onChange={(e) => setForm({ ...form, school_level: e.target.value })}>
+            <option value="">-- اختر --</option>
+            <option value="lower">دنيا</option>
+            <option value="upper">عليا</option>
+          </select>
+        </div>
+        <div className="form-group">
           <label>الجهة المسؤولة</label>
           <select value={form.governing_body} onChange={(e) => setForm({ ...form, governing_body: e.target.value })}>
             <option value="directorate_of_education">مديرية التربية</option>
@@ -211,7 +258,7 @@ export default function TrainingSiteForm() {
       <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
         <legend style={{ fontWeight: "bold" }}>إضافة جماعية عبر ملف Excel</legend>
         <p>
-          الأعمدة المطلوبة: <strong>الاسم</strong> (إجباري)، الموقع، الهاتف، الوصف، المديرية، السعة، نوع الموقع (مدرسة/مركز صحي)، الجهة المسؤولة (مديرية التربية/وزارة الصحة)، نشط (نعم/لا).
+          الأعمدة المطلوبة: <strong>الاسم</strong> (إجباري)، الموقع، الهاتف، البريد، المحمول، الوصف، المديرية، السعة، نوع الموقع (مدرسة/مركز صحي)، نوع المدرسة (public/private)، التصنيف (boys/girls/mixed)، المرحلة (lower/upper)، الجهة المسؤولة، نشط (نعم/لا).
         </p>
         <input type="file" id="bulk-file-input" accept=".xlsx, .xls" onChange={handleFileChange} />
         <button onClick={processBulkUpload} disabled={bulkLoading} style={{ marginTop: "0.5rem" }} className="btn-secondary">

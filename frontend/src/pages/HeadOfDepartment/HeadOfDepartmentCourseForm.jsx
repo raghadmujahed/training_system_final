@@ -87,20 +87,20 @@ export default function HeadOfDepartmentCourseForm() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>الساعات الجامعية</label>
-            <input type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} min="1" max="6" />
+            <label>الساعات الجامعية *</label>
+            <input type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} min="1" max="6" required />
             {errors.credit_hours && <span className="error">{errors.credit_hours[0]}</span>}
           </div>
 
           <div className="form-group">
-            <label>الساعات التدريبية</label>
-            <input type="number" name="training_hours" value={form.training_hours} onChange={handleChange} min="0" max="500" />
+            <label>الساعات التدريبية *</label>
+            <input type="number" name="training_hours" value={form.training_hours} onChange={handleChange} min="0" max="500" required />
             {errors.training_hours && <span className="error">{errors.training_hours[0]}</span>}
           </div>
 
           <div className="form-group">
-            <label>النوع</label>
-            <select name="type" value={form.type} onChange={handleChange}>
+            <label>النوع *</label>
+            <select name="type" value={form.type} onChange={handleChange} required>
               <option value="practical">عملي</option>
               <option value="theoretical">نظري</option>
               <option value="both">نظري وعملي</option>

@@ -11,6 +11,9 @@ const normalizePlace = (item) => ({
   id: item.id,
   name: item.name || "—",
   location: item.location || "—",
+  phone: item.phone || "—",
+  email: item.email || "—",
+  mobile: item.mobile || "—",
   capacity: item.capacity ?? 0,
   directorate: item.directorate || "—",
   status: item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
@@ -39,6 +42,9 @@ export default function HealthTrainingSites() {
   const [formData, setFormData] = useState({
     name: "",
     location: "",
+    phone: "",
+    email: "",
+    mobile: "",
     capacity: "",
     directorate: "وسط",
   });
@@ -46,6 +52,9 @@ export default function HealthTrainingSites() {
   const [editFormData, setEditFormData] = useState({
     name: "",
     location: "",
+    phone: "",
+    email: "",
+    mobile: "",
     capacity: "",
     directorate: "وسط",
     is_active: true,
@@ -116,6 +125,9 @@ export default function HealthTrainingSites() {
       await createTrainingSite({
         name: formData.name,
         location: formData.location,
+        phone: formData.phone,
+        email: formData.email,
+        mobile: formData.mobile,
         capacity: Number(formData.capacity),
         is_active: true,
         directorate: formData.directorate,
@@ -126,6 +138,9 @@ export default function HealthTrainingSites() {
       setFormData({
         name: "",
         location: "",
+        phone: "",
+        email: "",
+        mobile: "",
         capacity: "",
         directorate: "وسط",
       });
@@ -143,6 +158,9 @@ export default function HealthTrainingSites() {
     setEditFormData({
       name: place.name,
       location: place.location,
+      phone: place.phone || "",
+      email: place.email || "",
+      mobile: place.mobile || "",
       capacity: String(place.capacity),
       directorate: place.directorate,
       is_active: place.is_active,
@@ -156,6 +174,9 @@ export default function HealthTrainingSites() {
     setEditFormData({
       name: "",
       location: "",
+      phone: "",
+      email: "",
+      mobile: "",
       capacity: "",
       directorate: "وسط",
       is_active: true,
@@ -175,6 +196,9 @@ export default function HealthTrainingSites() {
       await updateTrainingSite(id, {
         name: editFormData.name,
         location: editFormData.location,
+        phone: editFormData.phone,
+        email: editFormData.email,
+        mobile: editFormData.mobile,
         capacity: Number(editFormData.capacity),
         is_active: editFormData.is_active,
         directorate: editFormData.directorate,
@@ -247,6 +271,39 @@ export default function HealthTrainingSites() {
             </div>
 
             <div className="col-md-6">
+              <label className="form-label-custom">الهاتف</label>
+              <input
+                type="text"
+                name="phone"
+                className="form-control-custom"
+                placeholder="رقم الهاتف"
+                value={formData.phone}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label-custom">البريد الإلكتروني</label>
+              <input
+                type="email"
+                name="email"
+                className="form-control-custom"
+                placeholder="بريد المدير"
+                value={formData.email}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-md-6">
+              <label className="form-label-custom">رقم المحمول</label>
+              <input
+                type="text"
+                name="mobile"
+                className="form-control-custom"
+                placeholder="رقم المحمول"
+                value={formData.mobile}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="col-md-6">
               <label className="form-label-custom">الطاقة الاستيعابية</label>
               <input
                 type="number"
@@ -303,6 +360,9 @@ export default function HealthTrainingSites() {
                 <tr>
                   <th>اسم المركز</th>
                   <th>الموقع</th>
+                  <th>الهاتف</th>
+                  <th>البريد</th>
+                  <th>المحمول</th>
                   <th>الطاقة الاستيعابية</th>
                   <th>المنطقة</th>
                   <th>الحالة</th>
@@ -328,6 +388,33 @@ export default function HealthTrainingSites() {
                           name="location"
                           className="form-control-custom"
                           value={editFormData.location}
+                          onChange={handleEditChange}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          name="phone"
+                          className="form-control-custom"
+                          value={editFormData.phone}
+                          onChange={handleEditChange}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="email"
+                          name="email"
+                          className="form-control-custom"
+                          value={editFormData.email}
+                          onChange={handleEditChange}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          name="mobile"
+                          className="form-control-custom"
+                          value={editFormData.mobile}
                           onChange={handleEditChange}
                         />
                       </td>
@@ -388,6 +475,9 @@ export default function HealthTrainingSites() {
                     <tr key={place.id}>
                       <td>{place.name}</td>
                       <td>{place.location}</td>
+                      <td>{place.phone}</td>
+                      <td>{place.email}</td>
+                      <td>{place.mobile}</td>
                       <td>{place.capacity}</td>
                       <td>{place.directorate}</td>
                       <td>
@@ -417,7 +507,7 @@ export default function HealthTrainingSites() {
 
                 {places.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="9" className="text-center">
                       لا توجد مراكز صحية مسجلة حاليًا
                     </td>
                   </tr>
