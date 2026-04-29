@@ -104,7 +104,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
   });
   const [summaryCards, setSummaryCards] = useState([
     { title: "طلب التدريب", value: "جاري التحميل...", desc: "حالة طلب التدريب الحالي", className: "warning", icon: ClipboardList, link: "/student/training-request" },
-    { title: "برنامج التدريب", value: "0 أيام مسجلة", desc: "عدد الأيام المضافة في البرنامج", className: "primary", icon: Calendar, link: "/student/schedule" },
+    { title: "جدول الحصص الأسبوعية", value: "0 أيام مسجلة", desc: "عدد الأيام المضافة في البرنامج", className: "primary", icon: Calendar, link: "/student/schedule" },
     { title: "ملف الإنجاز", value: "0 ملفات", desc: "عدد الملفات المرفوعة", className: "success", icon: Award, link: "/student/portfolio" },
     { title: "التكليفات", value: "0 تكليف متبقي", desc: "التكليفات التي تحتاج متابعة", className: "accent", icon: CheckCircle2, link: "/student/assignments" },
   ]);
@@ -182,7 +182,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
             const entriesCount = summary?.portfolio?.entries_count || 0;
             return { ...card, value: `${entriesCount} ملفات` };
           }
-          if (card.title === "برنامج التدريب") {
+          if (card.title === "جدول الحصص الأسبوعية") {
             const hasProgram = !!summary?.training_program?.data?.schedule;
             const isEditable = summary?.training_program?.is_editable;
             if (!hasProgram) return { ...card, value: "لم يُعبَّأ بعد", desc: "الجدول الأسبوعي للحصص التدريبية" };

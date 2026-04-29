@@ -7,23 +7,22 @@ import { Calendar, Clock, Lock, Edit3, Save, RotateCcw, Loader2, AlertCircle, Ch
 // Print-specific CSS
 const printStyles = `
 @media print {
-  @page { size: landscape; margin: 10mm; }
+  @page { size: landscape; margin: 8mm; }
   body * { visibility: hidden; }
   #printable-area, #printable-area * { visibility: visible; }
   #printable-area { 
     position: absolute; 
-    left: 0; 
-    top: 0; 
+    left: 0; top: 0; 
     width: 100%;
-    padding: 10mm;
+    padding: 6mm;
   }
   .no-print { display: none !important; }
   .print-header { display: block !important; visibility: visible !important; }
   table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #333; padding: 8px; text-align: center; font-size: 11px; }
-  th { background-color: #142a42 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .day-cell { background-color: #f5f5f5 !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .filled-cell { background-color: #e3f2fd !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  th, td { border: 1px solid #bbb; padding: 6px 4px; text-align: center; font-size: 10px; }
+  th { background-color: var(--primary, #142a42) !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .day-cell { background-color: #f0f0f0 !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .filled-cell { background-color: #e8f0fe !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }`;
 
 const days = [
@@ -103,7 +102,7 @@ export default function Schedule() {
         });
       }
     } catch (e) {
-      setError(e?.response?.data?.message || "تعذر تحميل برنامج التدريب.");
+      setError(e?.response?.data?.message || "تعذر تحميل جدول الحصص الأسبوعية.");
     } finally {
       setLoading(false);
     }
@@ -175,7 +174,7 @@ export default function Schedule() {
     setError("");
     setSuccess("");
     try {
-      const res = await saveStudentTrainingProgram(schedule);
+      const res = await saveStudentTrainingProgram({ schedule });
       setHasSavedProgram(true);
       if (res?.data?.portfolio_entry_id) {
         portfolioEntryIdRef.current = res.data.portfolio_entry_id;
@@ -186,7 +185,7 @@ export default function Schedule() {
         if (editingEntry && portfolioEntryIdRef.current) {
           const dateStr = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
           await updatePortfolioEntry(portfolioEntryIdRef.current, {
-            title: `برنامج التدريب — ${dateStr}`,
+            title: `جدول الحصص الأسبوعية — ${dateStr}`,
             content: JSON.stringify(schedule, null, 2),
           });
         }
@@ -199,10 +198,10 @@ export default function Schedule() {
       }
 
       const actionText = editingEntry ? "تعديل" : "حفظ";
-      setSuccess(`تم ${actionText} برنامج التدريب بنجاح وإضافته للملف الإنجاز.`);
+      setSuccess(`تم ${actionText} جدول الحصص الأسبوعية بنجاح وإضافته للملف الإنجاز.`);
       setEditingEntry(null);
     } catch (e) {
-      setError(e?.response?.data?.message || "تعذر حفظ برنامج التدريب.");
+      setError(e?.response?.data?.message || "تعذر حفظ جدول الحصص الأسبوعية.");
     } finally {
       setSaving(false);
     }
@@ -224,18 +223,20 @@ export default function Schedule() {
 
   if (loading) {
     return (
-      <div className="section-card" style={{ textAlign: "center", padding: "2rem" }}>
-        <Loader2 className="spin" size={24} /> جاري التحميل...
+      <div className="section-card" style={{ textAlign: "center", padding: "4rem 2rem" }}>
+        <Loader2 className="spin" size={32} style={{ color: "var(--primary)" }} />
+        <p style={{ marginTop: "1rem", color: "var(--text-soft)", fontSize: "1rem" }}>جاري تحميل جدول الحصص...</p>
       </div>
     );
   }
 
   if (error && !Object.keys(schedule).some((d) => periods.some((p) => schedule[d]?.[p.id]))) {
     return (
-      <div className="section-card">
-        <p className="text-danger" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <AlertCircle size={18} /> {error}
-        </p>
+      <div className="section-card" style={{ padding: "2.5rem", textAlign: "center" }}>
+        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(176,58,72,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+          <AlertCircle size={28} style={{ color: "var(--danger)" }} />
+        </div>
+        <p className="text-danger" style={{ fontSize: "1.05rem", fontWeight: 600, margin: 0 }}>{error}</p>
       </div>
     );
   }
@@ -244,48 +245,49 @@ export default function Schedule() {
     <>
       <style>{printStyles}</style>
       <div className="content-header no-print">
-        <h1 className="page-title">برنامج التدريب</h1>
+        <h1 className="page-title">جدول الحصص الأسبوعية</h1>
         <p className="page-subtitle">
           الجدول الأسبوعي للحصص التدريبية — {studentInfo.name} — {studentInfo.university_id}
         </p>
       </div>
 
+      {/* Status Alerts */}
       {!isEditable && (
-        <div className="alert-custom alert-warning mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="alert-custom alert-warning mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <Lock size={18} />
-          تعبئة برنامج التدريب مغلقة حالياً من قبل المنسق. يمكنك مشاهدة الجدول فقط.
+          تعبئة جدول الحصص الأسبوعية مغلقة حالياً من قبل المنسق. يمكنك مشاهدة الجدول فقط.
         </div>
       )}
 
       {isEditable && (
-        <div className="alert-custom alert-info mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="alert-custom alert-info mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <Edit3 size={18} />
-          تعبئة برنامج التدريب مفتوحة — يمكنك تعديل الجدول وحفظه.
+          تعبئة جدول الحصص الأسبوعية مفتوحة — يمكنك تعديل الجدول وحفظه.
         </div>
       )}
 
       {programStatus === "submitted" && hasSavedProgram && (
-        <div className="alert-custom alert-info mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#cce5ff", border: "1px solid #b8daff", color: "#004085", borderRadius: 8, padding: "0.75rem 1rem" }}>
+        <div className="alert-custom alert-info mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <Clock size={18} />
-          {"تم إرسال برنامج التدريب للمنسق — بانتظار المراجعة."}
+          {"تم إرسال جدول الحصص الأسبوعية للمنسق — بانتظار المراجعة."}
         </div>
       )}
 
       {programStatus === "approved" && hasSavedProgram && (
-        <div className="alert-custom alert-success mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="alert-custom alert-success mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <CheckCircle size={18} />
-          {"تمت الموافقة على برنامج التدريب من المنسق."}
+          {"تمت الموافقة على جدول الحصص الأسبوعية من المنسق."}
         </div>
       )}
 
       {programStatus === "rejected" && hasSavedProgram && (
-        <div className="alert-custom alert-danger mb-3 no-print" style={{ display: "flex", flexDirection: "column", gap: "0.25rem", background: "#f8d7da", border: "1px solid #f5c6cb", color: "#721c24", borderRadius: 8, padding: "0.75rem 1rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="alert-custom alert-danger mb-3 no-print" style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.95rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <AlertCircle size={18} />
-            {"تم رفض برنامج التدريب من المنسق."}
+            {"تم رفض جدول الحصص الأسبوعية من المنسق."}
           </div>
           {coordinatorNote && (
-            <div style={{ marginRight: "1.6rem", fontSize: "0.85rem", opacity: 0.85 }}>
+            <div style={{ marginRight: "1.8rem", fontSize: "0.88rem", opacity: 0.9, fontWeight: 500 }}>
               <strong>{"ملاحظة المنسق:"}</strong> {coordinatorNote}
             </div>
           )}
@@ -293,126 +295,102 @@ export default function Schedule() {
       )}
 
       {editingEntry && (
-        <div className="alert-custom alert-warning mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "#fef3c7", border: "1.5px solid #f59e0b", color: "#92400e", borderRadius: 8, padding: "0.75rem 1rem" }}>
+        <div className="alert-custom alert-warning mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <Edit3 size={18} />
           وضع التعديل — يتم تحديث المدخل الموجود في ملف الإنجاز
         </div>
       )}
 
       {error && (
-        <div className="alert-custom alert-danger mb-3" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="alert-custom alert-danger mb-3" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <AlertCircle size={18} /> {error}
         </div>
       )}
 
       {success && (
-        <div className="alert-custom alert-success mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div className="alert-custom alert-success mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
           <CheckCircle size={18} /> {success}
         </div>
       )}
 
-      {/* بطاقات المعلومات */}
-      <div className="dashboard-grid mb-3 no-print">
-        <div className="stat-card primary">
-          <div className="stat-title">الطالب</div>
-          <div className="stat-value" style={{ fontSize: "1.1rem" }}>{studentInfo.name}</div>
-          <div className="stat-meta">{studentInfo.university_id}</div>
-        </div>
-        <div className="stat-card accent">
-          <div className="stat-title">جهة التدريب</div>
-          <div className="stat-value" style={{ fontSize: "1.1rem" }}>{studentInfo.school}</div>
-          <div className="stat-meta">المدرسة / المركز</div>
-        </div>
-        <div className="stat-card success">
-          <div className="stat-title">الفترة التدريبية</div>
-          <div className="stat-value" style={{ fontSize: "1rem" }}>{studentInfo.semester}</div>
-          <div className="stat-meta">الفترة الحالية</div>
-        </div>
-        <div className="stat-card info">
-          <div className="stat-title">خلايا معبأة</div>
-          <div className="stat-value">{filledCount}</div>
-          <div className="stat-meta">من {days.length * periods.length}</div>
+      {/* Info Strip */}
+      <div className="section-card mb-3 no-print" style={{ padding: "1rem 1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem", borderLeft: "1px solid var(--border)" }}>
+            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>الطالب</div>
+            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>{studentInfo.name}</div>
+            <div style={{ fontSize: "0.82rem", color: "var(--text-faint)", marginTop: "0.15rem" }}>{studentInfo.university_id}</div>
+          </div>
+          <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem", borderLeft: "1px solid var(--border)" }}>
+            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>جهة التدريب</div>
+            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>{studentInfo.school || "—"}</div>
+            <div style={{ fontSize: "0.82rem", color: "var(--text-faint)", marginTop: "0.15rem" }}>المدرسة / المركز</div>
+          </div>
+          <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem" }}>
+            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>الفترة التدريبية</div>
+            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>{studentInfo.semester || "—"}</div>
+            <div style={{ fontSize: "0.82rem", color: "var(--text-faint)", marginTop: "0.15rem" }}>الفترة الحالية</div>
+          </div>
         </div>
       </div>
 
-      {/* نموذج برنامج التدريب */}
+      {/* نموذج جدول الحصص الأسبوعية */}
       <div id="printable-area" className="section-card">
         {/* Print-only header */}
         <div style={{ display: 'none' }} className="print-header">
-          <h1 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '18px' }}>نموذج برنامج التدريب</h1>
+          <h1 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '18px' }}>نموذج جدول الحصص الأسبوعية</h1>
           <p style={{ textAlign: 'center', marginBottom: '20px', fontSize: '12px' }}>
             الطالب: {studentInfo.name} | الرقم الجامعي: {studentInfo.university_id} | جهة التدريب: {studentInfo.school}
           </p>
         </div>
-        <div className="panel-header no-print" style={{ borderBottom: "2px solid var(--primary, #142a42)", paddingBottom: "1rem", marginBottom: "1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div
-              style={{
-                width: "48px",
-                height: "48px",
-                borderRadius: "12px",
-                background: "linear-gradient(135deg, #142a42 0%, #2a4a6a 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-              }}
-            >
+        {/* Panel Header */}
+        <div className="no-print" style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "1rem",
+          paddingBottom: "1.25rem",
+          marginBottom: "1.5rem",
+          borderBottom: "1.5px solid var(--border)",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "white",
+              flexShrink: 0,
+              boxShadow: "0 4px 14px rgba(20,42,66,0.2)",
+            }}>
               <Calendar size={24} />
             </div>
             <div>
-              <h3 className="panel-title" style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700, color: "var(--primary, #142a42)" }}>
-                نموذج برنامج التدريب
+              <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "var(--primary-dark)" }}>
+                جدول الحصص الأسبوعية
               </h3>
-              <p className="panel-subtitle" style={{ margin: "0.25rem 0 0 0", color: "#666", fontSize: "0.95rem" }}>
-                الجدول الأسبوعي للحصص التدريبية (5 أيام × 7 حصص)
+              <p style={{ margin: "0.2rem 0 0", color: "var(--text-faint)", fontSize: "0.88rem" }}>
+                5 أيام × 7 حصص تدريبية
               </p>
             </div>
           </div>
-          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             {hasSavedProgram && (
-              <button
-                onClick={handlePrint}
-                style={{
-                  padding: "0.5rem 1rem",
-                  backgroundColor: "#1565c0",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "20px",
-                  fontSize: "0.85rem",
-                  fontWeight: 600,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  cursor: "pointer",
-                }}
-              >
+              <button onClick={handlePrint} className="btn-outline-custom btn-sm-custom">
                 <Printer size={14} /> طباعة
               </button>
             )}
-            <span
-              style={{
-                padding: "0.5rem 1rem",
-                backgroundColor: isEditable ? "#e8f5e9" : "#fff3e0",
-                color: isEditable ? "#2e7d32" : "#ef6c00",
-                borderRadius: "20px",
-                fontSize: "0.85rem",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-              }}
-            >
-              {isEditable ? (
-                <><Edit3 size={14} /> قابل للتعديل</>
-              ) : (
-                <><Lock size={14} /> للعرض فقط</>
-              )}
+            <span className={isEditable ? "badge-custom badge-success" : "badge-custom badge-warning"}>
+              {isEditable ? <><Edit3 size={13} /> قابل للتعديل</> : <><Lock size={13} /> للعرض فقط</>}
             </span>
           </div>
         </div>
 
-        <div className="table-wrapper" style={{ borderRadius: "12px", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+        <div className="table-wrapper" style={{ borderRadius: "var(--radius-md, 16px)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
           <table
             style={{
               width: "100%",
@@ -426,13 +404,14 @@ export default function Schedule() {
               <tr>
                 <th
                   style={{
-                    padding: "16px 12px",
-                    background: "linear-gradient(135deg, #142a42 0%, #2a4a6a 100%)",
+                    padding: "14px 14px",
+                    background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
                     color: "white",
-                    fontWeight: 700,
-                    fontSize: "1rem",
+                    fontWeight: 800,
+                    fontSize: "0.95rem",
                     border: "none",
-                    width: "100px",
+                    width: "110px",
+                    letterSpacing: "0.02em",
                   }}
                 >
                   اليوم / الحصة
@@ -441,15 +420,16 @@ export default function Schedule() {
                   <th
                     key={period.id}
                     style={{
-                      padding: "16px 10px",
-                      background: "linear-gradient(135deg, #142a42 0%, #2a4a6a 100%)",
+                      padding: "12px 8px",
+                      background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
                       color: "white",
-                      fontWeight: 600,
-                      fontSize: "0.95rem",
+                      fontWeight: 700,
+                      fontSize: "0.88rem",
                       border: "none",
-                      borderRight: idx < periods.length - 1 ? "1px solid rgba(255,255,255,0.2)" : "none",
+                      borderRight: idx < periods.length - 1 ? "1px solid rgba(255,255,255,0.12)" : "none",
                     }}
                   >
+                    <div style={{ fontSize: "0.75rem", opacity: 0.7, marginBottom: 2 }}>{period.id}</div>
                     {period.label}
                   </th>
                 ))}
@@ -460,143 +440,132 @@ export default function Schedule() {
                 <tr
                   key={day.id}
                   style={{
-                    backgroundColor: dayIdx % 2 === 0 ? "#ffffff" : "#f8f9fa",
+                    backgroundColor: dayIdx % 2 === 0 ? "#ffffff" : "var(--bg-soft, #faf8f5)",
+                    transition: "var(--transition)",
                   }}
                 >
                   <td
                     style={{
-                      padding: "18px 12px",
-                      fontWeight: 700,
-                      fontSize: "1rem",
-                      background: "linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)",
-                      color: "var(--primary, #142a42)",
-                      border: "1px solid #e0e0e0",
-                      borderLeft: "4px solid var(--primary, #142a42)",
+                      padding: "16px 14px",
+                      fontWeight: 800,
+                      fontSize: "0.95rem",
+                      background: "linear-gradient(135deg, #f7f9fc 0%, #edf1f7 100%)",
+                      color: "var(--primary)",
+                      border: "1px solid var(--border)",
+                      borderRight: "4px solid var(--primary)",
+                      letterSpacing: "0.02em",
                     }}
                   >
                     {day.label}
                   </td>
-                  {periods.map((period) => (
-                    <td
-                      key={`${day.id}-${period.id}`}
-                      style={{
-                        padding: "10px 8px",
-                        border: "1px solid #e0e0e0",
-                        backgroundColor: schedule[day.id]?.[period.id] ? "#e3f2fd" : "transparent",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      {isEditable ? (
-                        <input
-                          type="text"
-                          value={schedule[day.id]?.[period.id] || ""}
-                          onChange={(e) => handleCellChange(day.id, period.id, e.target.value)}
-                          placeholder="..."
-                          style={{
-                            width: "100%",
-                            minHeight: "45px",
-                            padding: "8px",
-                            border: "2px solid transparent",
-                            borderRadius: "8px",
-                            fontSize: "0.85rem",
-                            textAlign: "center",
-                            backgroundColor: "rgba(255,255,255,0.8)",
-                            transition: "all 0.2s ease",
-                            outline: "none",
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = "#142a42";
-                            e.target.style.backgroundColor = "white";
-                            e.target.style.boxShadow = "0 0 0 3px rgba(20,42,66,0.1)";
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = "transparent";
-                            e.target.style.backgroundColor = "rgba(255,255,255,0.8)";
-                            e.target.style.boxShadow = "none";
-                          }}
-                        />
-                      ) : (
-                        <span
-                          style={{
-                            fontSize: "0.9rem",
-                            color: schedule[day.id]?.[period.id] ? "#1565c0" : "#bbb",
-                            fontWeight: schedule[day.id]?.[period.id] ? 500 : 400,
-                          }}
-                        >
-                          {schedule[day.id]?.[period.id] || "—"}
-                        </span>
-                      )}
-                    </td>
-                  ))}
+                  {periods.map((period) => {
+                    const isFilled = !!schedule[day.id]?.[period.id];
+                    return (
+                      <td
+                        key={`${day.id}-${period.id}`}
+                        style={{
+                          padding: "8px 6px",
+                          border: "1px solid var(--border)",
+                          backgroundColor: isFilled ? "rgba(59,130,182,0.06)" : "transparent",
+                          transition: "var(--transition)",
+                        }}
+                      >
+                        {isEditable ? (
+                          <input
+                            type="text"
+                            value={schedule[day.id]?.[period.id] || ""}
+                            onChange={(e) => handleCellChange(day.id, period.id, e.target.value)}
+                            placeholder="..."
+                            style={{
+                              width: "100%",
+                              minHeight: "42px",
+                              padding: "8px 6px",
+                              border: "2px solid transparent",
+                              borderRadius: "var(--radius-sm, 10px)",
+                              fontSize: "0.85rem",
+                              textAlign: "center",
+                              backgroundColor: isFilled ? "rgba(59,130,182,0.04)" : "rgba(255,255,255,0.6)",
+                              transition: "var(--transition)",
+                              outline: "none",
+                              color: "var(--text)",
+                            }}
+                            onFocus={(e) => {
+                              e.target.style.borderColor = "var(--primary)";
+                              e.target.style.backgroundColor = "white";
+                              e.target.style.boxShadow = "0 0 0 4px rgba(20,42,66,0.08)";
+                            }}
+                            onBlur={(e) => {
+                              e.target.style.borderColor = "transparent";
+                              e.target.style.backgroundColor = isFilled ? "rgba(59,130,182,0.04)" : "rgba(255,255,255,0.6)";
+                              e.target.style.boxShadow = "none";
+                            }}
+                          />
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: "0.9rem",
+                              color: isFilled ? "var(--info)" : "var(--border-strong)",
+                              fontWeight: isFilled ? 600 : 400,
+                            }}
+                          >
+                            {schedule[day.id]?.[period.id] || "—"}
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* أزرار التحكم */}
+        {/* Action Buttons */}
         {isEditable && (
-          <div
-            className="no-print"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "1.5rem",
-              padding: "1rem",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "8px",
-            }}
-          >
+          <div className="no-print" style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "1.5rem",
+            padding: "1rem 1.25rem",
+            background: "var(--bg-soft)",
+            borderRadius: "var(--radius-sm)",
+            border: "1px solid var(--border)",
+          }}>
             <button
               onClick={handleReset}
               disabled={saving}
-              style={{
-                padding: "0.75rem 1.5rem",
-                backgroundColor: "#6c757d",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: saving ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                opacity: saving ? 0.6 : 1,
-                fontWeight: 500,
-              }}
+              className="btn-light-custom btn-sm-custom"
+              style={{ opacity: saving ? 0.55 : 1, cursor: saving ? "not-allowed" : "pointer" }}
             >
-              <RotateCcw size={16} /> إعادة تعيين
+              <RotateCcw size={15} /> إعادة تعيين
             </button>
-
             <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{
-                  padding: "0.75rem 2rem",
-                  backgroundColor: "var(--primary, #142a42)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: saving ? "not-allowed" : "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  opacity: saving ? 0.6 : 1,
-                  fontWeight: 600,
-                  boxShadow: "0 4px 12px rgba(20,42,66,0.3)",
-                }}
-              >
-                {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
-                {saving ? "جاري الحفظ..." : "حفظ"}
-              </button>
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary-custom"
+              style={{ opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer", minWidth: 130 }}
+            >
+              {saving ? <Loader2 className="spin" size={16} /> : <Save size={15} />}
+              {saving ? "جاري الحفظ..." : "حفظ الجدول"}
+            </button>
           </div>
         )}
 
-        {/* ملاحظة */}
-        <div className="no-print" style={{ marginTop: "1rem", padding: "1rem", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-          <p style={{ margin: 0, color: "#666", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Clock size={16} />
-            <strong>ملاحظة:</strong> عند الحفظ يتم إضافة البرنامج تلقائياً لملف الإنجاز وإرساله للمنسق للمراجعة.
+        {/* Note */}
+        <div className="no-print" style={{
+          marginTop: "1rem",
+          padding: "0.85rem 1.1rem",
+          background: "rgba(158,115,70,0.05)",
+          borderRadius: "var(--radius-sm)",
+          border: "1px solid rgba(158,115,70,0.15)",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "0.6rem",
+        }}>
+          <Clock size={15} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} />
+          <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.88rem", lineHeight: 1.6 }}>
+            <strong style={{ color: "var(--secondary)" }}>ملاحظة:</strong> عند الحفظ يتم إضافة الجدول تلقائياً لملف الإنجاز وإرساله للمنسق للمراجعة.
             المنسق يتحكم بفتح وإغلاق التعبئة.
           </p>
         </div>

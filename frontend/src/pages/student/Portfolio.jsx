@@ -110,7 +110,7 @@ export default function Portfolio() {
     // Determine the form key from the title
     const title = (en.title || "").toString();
     let formKey = null;
-    if (title.includes("برنامج التدريب") || title.includes("برنامج تدريب")) {
+    if (title.includes("جدول الحصص الأسبوعية") || title.includes("برنامج التدريب") || title.includes("برنامج تدريب")) {
       navigate("/student/schedule", { state: { editEntry: { id: en.id, title: en.title, content: en.content } } });
       return;
     }
@@ -180,7 +180,7 @@ export default function Portfolio() {
 
   const getEntryStyle = (title) => {
     const t = (title || '').toString();
-    if (t.includes('برنامج التدريب')) return { icon: Calendar, color: '#667eea', gradient: 'linear-gradient(135deg, #667eea, #764ba2)', bg: '#f5f3ff' };
+    if (t.includes('جدول الحصص الأسبوعية') || t.includes('برنامج التدريب')) return { icon: Calendar, color: '#667eea', gradient: 'linear-gradient(135deg, #667eea, #764ba2)', bg: '#f5f3ff' };
     if (t.includes('حضور') || t.includes('غياب')) return { icon: ClipboardCheck, color: '#0891b2', gradient: 'linear-gradient(135deg, #0891b2, #06b6d4)', bg: '#ecfeff' };
     if (t.includes('نقد خبرات') || t.includes('خبرات التعلم')) return { icon: BookOpen, color: '#059669', gradient: 'linear-gradient(135deg, #059669, #34d399)', bg: '#ecfdf5' };
     if (t.includes('تقرير مختصر') || t.includes('المختصر')) return { icon: FileBarChart, color: '#d97706', gradient: 'linear-gradient(135deg, #d97706, #fbbf24)', bg: '#fffbeb' };

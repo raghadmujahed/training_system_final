@@ -290,36 +290,56 @@ export default function CoordinatorTrainingRequests() {
                           {statusLabel}
                         </span>
                       </td>
-                      <td style={{ minWidth: 320 }}>
+                      <td style={{ minWidth: 340 }}>
                         {b.status === "draft" ? (
-                          <div style={{ display: "grid", gap: 8 }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                              <input
+                          <div style={{
+                            background: "linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%)",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: 12,
+                            padding: "14px 16px",
+                            display: "grid",
+                            gap: 12,
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                          }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em" }}>رقم الكتاب</label>
+                                <input
+                                  className="form-control-custom"
+                                  placeholder="تلقائي"
+                                  value={effectiveLetterNumber}
+                                  onChange={(e) =>
+                                    setBatchSendField(b.id, "letter_number", e.target.value)
+                                  }
+                                  style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #cbd5e1", padding: "6px 10px", background: "#fff", outline: "none" }}
+                                />
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em" }}>تاريخ الكتاب</label>
+                                <input
+                                  className="form-control-custom"
+                                  type="date"
+                                  value={effectiveLetterDate}
+                                  onChange={(e) =>
+                                    setBatchSendField(b.id, "letter_date", e.target.value)
+                                  }
+                                  style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #cbd5e1", padding: "6px 10px", background: "#fff", outline: "none" }}
+                                />
+                              </div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                              <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em" }}>محتوى الكتاب</label>
+                              <textarea
                                 className="form-control-custom"
-                                placeholder="رقم الكتاب (تلقائي)"
-                                value={effectiveLetterNumber}
+                                placeholder="اكتب محتوى الكتاب هنا..."
+                                value={batchSendForm[b.id]?.content || ""}
                                 onChange={(e) =>
-                                  setBatchSendField(b.id, "letter_number", e.target.value)
+                                  setBatchSendField(b.id, "content", e.target.value)
                                 }
-                              />
-                              <input
-                                className="form-control-custom"
-                                type="date"
-                                value={effectiveLetterDate}
-                                onChange={(e) =>
-                                  setBatchSendField(b.id, "letter_date", e.target.value)
-                                }
+                                rows={3}
+                                style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #cbd5e1", padding: "8px 10px", background: "#fff", resize: "vertical", outline: "none", lineHeight: 1.6 }}
                               />
                             </div>
-                            <textarea
-                              className="form-control-custom"
-                              placeholder="محتوى الكتاب"
-                              value={batchSendForm[b.id]?.content || ""}
-                              onChange={(e) =>
-                                setBatchSendField(b.id, "content", e.target.value)
-                              }
-                              rows={2}
-                            />
                             <button
                               className="btn-primary-custom"
                               onClick={() => handleSendBatch(b.id)}
@@ -329,9 +349,22 @@ export default function CoordinatorTrainingRequests() {
                                   ? "إرسال الدفعة"
                                   : "أدخل محتوى الكتاب قبل الإرسال"
                               }
-                              style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 8,
+                                borderRadius: 8,
+                                padding: "9px 16px",
+                                fontSize: "0.88rem",
+                                fontWeight: 700,
+                                letterSpacing: "0.02em",
+                                opacity: (!saving && isBatchFormComplete) ? 1 : 0.6,
+                                cursor: (!saving && isBatchFormComplete) ? "pointer" : "not-allowed",
+                                transition: "opacity 0.2s",
+                              }}
                             >
-                              <FileText size={14} />
+                              <FileText size={15} />
                               {saving ? "جاري الإرسال..." : "إرسال الدفعة"}
                             </button>
                           </div>
