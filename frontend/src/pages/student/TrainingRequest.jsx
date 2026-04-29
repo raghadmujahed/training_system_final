@@ -59,6 +59,7 @@ export default function TrainingRequest() {
     governing_body: isEducationFlow ? "directorate_of_education" : "ministry_of_health",
     site_type: isEducationFlow ? "school" : "health_center",
     directorate: "",
+    gender: "",
   });
 
   const [formData, setFormData] = useState({
@@ -144,21 +145,25 @@ export default function TrainingRequest() {
         return;
       }
       try {
-        const res = await getTrainingSites({
+        const params = {
           governing_body: filters.governing_body,
           site_type: filters.site_type,
           directorate: filters.directorate,
           is_active: true,
           has_manager_account: true,
           per_page: 200,
-        });
+        };
+        if (filters.gender) {
+          params.gender = filters.gender;
+        }
+        const res = await getTrainingSites(params);
         setSchools(itemsFromPagedResponse(res));
       } catch (e) {
         setError(e?.response?.data?.message || "فشل تحميل المدارس");
       }
     };
     loadSchools();
-  }, [filters.governing_body, filters.site_type, filters.directorate]);
+  }, [filters.governing_body, filters.site_type, filters.directorate, filters.gender]);
 
   const validationErrors = useMemo(() => {
     const errs = {};
@@ -509,7 +514,7 @@ export default function TrainingRequest() {
               </div>
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-3">
               <div className="form-field">
                 <label
                   htmlFor="training-request-directorate"
@@ -522,7 +527,7 @@ export default function TrainingRequest() {
                   id="training-request-directorate"
                   className={`form-select-custom ${validationErrors.directorate ? "is-invalid" : ""}`}
                   value={filters.directorate}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, directorate: e.target.value }))}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, directorate: e.target.value, gender: "" }))}
                   disabled={!filters.governing_body}
                 >
                   <option value="">اختر المديرية</option>
@@ -538,7 +543,31 @@ export default function TrainingRequest() {
               </div>
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-2">
+              <div className="form-field">
+                <label
+                  htmlFor="training-request-gender"
+                  className="form-label-custom d-flex align-items-center gap-1"
+                >
+                  <School size={14} />
+                  النوع
+                </label>
+                <select
+                  id="training-request-gender"
+                  className="form-select-custom"
+                  value={filters.gender}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, gender: e.target.value }))}
+                  disabled={!filters.directorate || !isEducationFlow}
+                >
+                  <option value="">الكل</option>
+                  <option value="male">ذكور</option>
+                  <option value="female">إناث</option>
+                  <option value="mixed">مختلط</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="col-md-3">
               <div className="form-field">
                 <label
                   htmlFor="training-request-site-search"
