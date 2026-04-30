@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { getBackupDetails } from "../../../services/api";
+import { getBackupDetails, downloadBackup } from "../../../services/api";
 
 export default function BackupDetails() {
   const { id } = useParams();
@@ -27,6 +27,16 @@ export default function BackupDetails() {
     fetchDetails();
   }, [id]);
 
+  const handleDownload = async () => {
+    try {
+      await downloadBackup(id, data?.name);
+      alert("تم تحميل النسخة الاحتياطية بنجاح");
+    } catch (err) {
+      console.error(err);
+      setError("فشل تحميل النسخة");
+    }
+  };
+
   if (loading) return <div>جاري تحميل التفاصيل...</div>;
   if (error) return <div className="error">{error}</div>;
   if (!data) return <div>لا توجد بيانات</div>;
@@ -35,9 +45,14 @@ export default function BackupDetails() {
     <div>
       <div className="page-header">
         <h1>تفاصيل النسخة الاحتياطية</h1>
-        <button onClick={() => navigate("/admin/backups")} className="btn-secondary">
-          رجوع إلى القائمة
-        </button>
+        <div className="page-header-actions">
+          <button onClick={handleDownload} className="btn-primary">
+            تحميل النسخة
+          </button>
+          <button onClick={() => navigate("/admin/backups")} className="btn-secondary">
+            رجوع إلى القائمة
+          </button>
+        </div>
       </div>
 
       <div className="section-card">
@@ -61,6 +76,7 @@ export default function BackupDetails() {
             <thead>
               <tr>
                 <th>اسم الجدول</th>
+                <th>عدد الحقول</th>
                 <th>عدد السجلات</th>
                 <th>الإجراءات</th>
               </tr>
@@ -69,14 +85,15 @@ export default function BackupDetails() {
               {data.tables.map((table, idx) => (
                 <tr key={idx}>
                   <td>{table.name}</td>
-                  <td>{table.count}</td>
+                  <td>{table.columns_count !== undefined ? table.columns_count : '-'}</td>
+                  <td>{table.rows_count !== undefined ? table.rows_count : table.count || 0}</td>
                   <td>
                     <Link
                       to={`/admin/backups/${id}/table/${encodeURIComponent(table.name)}`}
                       target="_blank"
                       className="btn-sm"
                     >
-                      عرض البيانات
+                      عرض تفاصيل الجدول
                     </Link>
                   </td>
                 </tr>

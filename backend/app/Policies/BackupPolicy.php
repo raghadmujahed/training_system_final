@@ -37,6 +37,11 @@ class BackupPolicy
         return $user->role?->name === 'admin';
     }
 
+    public function download(User $user, Backup $backup): bool
+    {
+        return $user->role?->name === 'admin';
+    }
+
     public function forceDelete(User $user, Backup $backup): bool
     {
         return $user->role?->name === 'admin';

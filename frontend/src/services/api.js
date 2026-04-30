@@ -239,6 +239,52 @@ export const getBackupTableData = (id, tableName) => apiClient.get(`/backups/${i
 export const createBackup = (data) => apiClient.post('/backups', data).then(res => res.data);
 export const restoreBackup = (id) => apiClient.post(`/backups/${id}/restore`).then(res => res.data);
 export const deleteBackup = (id) => apiClient.delete(`/backups/${id}`).then(res => res.data);
+export const downloadBackup = async (id, filename) => {
+  try {
+    console.log('Starting download for backup:', id, 'filename:', filename);
+    
+    const response = await apiClient.get(`/backups/${id}/download`, {
+      responseType: 'blob',
+    });
+    
+    console.log('Download response received:', response);
+    console.log('Response data type:', typeof response.data);
+    console.log('Response data size:', response.data?.size || 'unknown');
+    
+    if (!response.data || response.data.size === 0) {
+      throw new Error('الملف فارغ أو لم يتم استلامه بشكل صحيح');
+    }
+    
+    // Create blob from response data
+    const blob = new Blob([response.data], { type: 'application/octet-stream' });
+    console.log('Blob created:', blob);
+    
+    const url = window.URL.createObjectURL(blob);
+    console.log('Object URL created:', url);
+    
+    // Create temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename || `backup_${id}.sql`);
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    
+    console.log('Triggering download...');
+    link.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      console.log('Cleanup completed');
+    }, 100);
+    
+  } catch (error) {
+    console.error('Download error:', error);
+    console.error('Error details:', error.response || error.message);
+    throw error;
+  }
+};
 
 // ==================== Activity Logs ====================
 export const getActivityLogs = (params) => apiClient.get('/activity-logs', { params }).then(res => res.data);

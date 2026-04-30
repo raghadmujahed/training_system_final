@@ -203,6 +203,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('backups', BackupController::class);
     Route::post('backups/{backup_id}/restore', [BackupController::class, 'restore']);
     Route::get('backups/{id}/table/{tableName}', [BackupController::class, 'getTableData']);
+    Route::get('backups/{id}/download', [BackupController::class, 'download']);
 
     // Logs d'activité
     Route::post('activity-logs/page-visit', [ActivityLogController::class, 'trackPageVisit']);

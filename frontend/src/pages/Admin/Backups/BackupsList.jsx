@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getBackups, createBackup, restoreBackup, deleteBackup } from "../../../services/api";
+import { getBackups, createBackup, restoreBackup, deleteBackup, downloadBackup } from "../../../services/api";
 
 export default function BackupsList() {
   const [backups, setBackups] = useState([]);
@@ -29,8 +29,21 @@ export default function BackupsList() {
     if (!window.confirm("هل أنت متأكد من إنشاء نسخة احتياطية جديدة؟")) return;
     setCreating(true);
     try {
-      await createBackup({ type: "full" });
+      const response = await createBackup({ type: "full" });
       alert("تم إنشاء النسخة الاحتياطية بنجاح");
+      
+      // تحميل الملف تلقائياً بعد الإنشاء
+      const backupId = response.backup?.id || response?.id;
+      const filename = response.backup?.name || response?.name;
+      if (backupId) {
+        try {
+          await downloadBackup(backupId, filename);
+          alert("تم تحميل النسخة الاحتياطية بنجاح");
+        } catch (downloadErr) {
+          console.error("فشل التحميل التلقائي:", downloadErr);
+        }
+      }
+      
       fetchBackups();
     } catch (err) {
       setError("فشل إنشاء النسخة");
@@ -58,6 +71,16 @@ export default function BackupsList() {
       fetchBackups();
     } catch (err) {
       setError("فشل حذف النسخة");
+    }
+  };
+
+  const handleDownload = async (id, filename) => {
+    try {
+      await downloadBackup(id, filename);
+      alert("تم تحميل النسخة الاحتياطية بنجاح");
+    } catch (err) {
+      console.error(err);
+      setError("فشل تحميل النسخة");
     }
   };
 
@@ -96,6 +119,9 @@ export default function BackupsList() {
                   <Link to={`/admin/backups/${backup.id}`} className="btn-sm">
                     عرض التفاصيل
                   </Link>
+                  <button onClick={() => handleDownload(backup.id, backup.name)} className="btn-sm">
+                    تحميل
+                  </button>
                   <button onClick={() => handleRestore(backup.id)} className="btn-sm">
                     استعادة
                   </button>

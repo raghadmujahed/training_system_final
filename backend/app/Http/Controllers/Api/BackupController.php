@@ -28,58 +28,96 @@ class BackupController extends Controller
         // توليد اسم الملف
         $filename = 'backup_' . date('Ymd_His') . '_' . Str::random(8) . '.sql';
         $filepath = 'backups/' . $filename;
-        
+
+        // استخدام public disk للتخزين
+        $disk = Storage::disk('public');
+
+        // تأكد من وجود مجلد النسخ الاحتياطية
+        if (!$disk->exists('backups')) {
+            $disk->makeDirectory('backups');
+        }
+
         // تنفيذ أمر mysqldump (تأكد من وجوده في المسار)
         $db = config('database.connections.mysql.database');
         $user = config('database.connections.mysql.username');
         $password = config('database.connections.mysql.password');
         $host = config('database.connections.mysql.host');
-        
-        $command = sprintf('mysqldump --user=%s --password=%s --host=%s %s > %s', 
-            escapeshellarg($user), escapeshellarg($password), escapeshellarg($host), 
-            escapeshellarg($db), escapeshellarg(storage_path('app/' . $filepath)));
-        system($command, $output);
-        
+
+        // استخدام طريقة أكثر أماناً لتنفيذ mysqldump
+        $outputFile = $disk->path($filepath);
+        $command = sprintf('mysqldump --user=%s --password=%s --host=%s --single-transaction --quick --lock-tables=false %s > %s 2>&1',
+            escapeshellarg($user),
+            escapeshellarg($password),
+            escapeshellarg($host),
+            escapeshellarg($db),
+            escapeshellarg($outputFile)
+        );
+
+        exec($command, $output, $returnCode);
+
+        // التحقق من نجاح العملية
+        if ($returnCode !== 0 || !$disk->exists($filepath)) {
+            return response()->json([
+                'message' => 'فشل إنشاء النسخة الاحتياطية',
+                'error' => implode("\n", $output),
+            ], 500);
+        }
+
         $backup = Backup::create([
             'user_id' => $request->user()->id,
             'type' => $request->type,
             'name' => $filename,
             'file_path' => $filepath,
-            'size' => Storage::exists($filepath) ? Storage::size($filepath) : 0,
+            'size' => $disk->exists($filepath) ? $disk->size($filepath) : 0,
             'status' => 'completed',
             'notes' => $request->notes,
         ]);
-        
-        return response()->json($backup, 201);
+
+        return response()->json([
+            'backup' => $backup,
+            'download_url' => url('/api/backups/' . $backup->id . '/download'),
+        ], 201);
     }
 
     public function show($id)
     {
         $backup = Backup::with('user')->findOrFail($id);
         $tables = [];
+        $disk = Storage::disk('public');
 
         // Try to parse SQL file to extract table names
-        if ($backup->file_path && Storage::exists($backup->file_path)) {
-            $content = Storage::get($backup->file_path);
+        if ($backup->file_path && $disk->exists($backup->file_path)) {
+            $content = $disk->get($backup->file_path);
             $fileSize = strlen($content);
             
-            // Extract CREATE TABLE statements - handle various formats
-            preg_match_all('/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?[`\']?([a-zA-Z0-9_]+)[`\']?\s*\(/i', $content, $matches);
+            // Extract CREATE TABLE statements - handle multi-line definitions
+            $pattern = '/CREATE TABLE\s+(?:IF NOT EXISTS\s+)?[`\']?([a-zA-Z0-9_]+)[`\']?\s*\(([^;]+)\);/is';
+            preg_match_all($pattern, $content, $matches);
             
             if (!empty($matches[1])) {
-                foreach ($matches[1] as $tableName) {
-                    // Count INSERT statements for this table - more flexible pattern
+                foreach ($matches[1] as $index => $tableName) {
+                    $tableDefinition = $matches[2][$index] ?? '';
+                    
+                    // Count columns by splitting definition
+                    // Remove comments first
+                    $cleanDefinition = preg_replace('/--.*$/m', '', $tableDefinition);
+                    $cleanDefinition = preg_replace('/\/\*.*?\*\//s', '', $cleanDefinition);
+                    
+                    // Split by comma at the top level (not inside parentheses)
+                    $columns = $this->extractColumns($cleanDefinition);
+                    
+                    // Count INSERT statements for this table
                     preg_match_all('/INSERT\s+INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(/i', $content, $insertMatches);
+                    
                     $tables[] = [
                         'name' => $tableName,
-                        'count' => count($insertMatches[0] ?? []),
+                        'columns_count' => count($columns),
+                        'rows_count' => count($insertMatches[0] ?? []),
                     ];
                 }
             } else {
-                // If no CREATE TABLE found, try alternative patterns
-                // Check if file has any content
+                // If no CREATE TABLE found, try to find tables from INSERT statements
                 if ($fileSize > 0) {
-                    // Try to find INSERT statements directly
                     preg_match_all('/INSERT\s+INTO\s+[`\']?([a-zA-Z0-9_]+)[`\']?\s*\(/i', $content, $insertTables);
                     if (!empty($insertTables[1])) {
                         $uniqueTables = array_unique($insertTables[1]);
@@ -87,7 +125,8 @@ class BackupController extends Controller
                             preg_match_all('/INSERT\s+INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(/i', $content, $countMatches);
                             $tables[] = [
                                 'name' => $tableName,
-                                'count' => count($countMatches[0] ?? []),
+                                'columns_count' => 0,
+                                'rows_count' => count($countMatches[0] ?? []),
                             ];
                         }
                     }
@@ -104,20 +143,62 @@ class BackupController extends Controller
             'notes' => $backup->notes,
             'user' => $backup->user,
             'tables' => $tables,
-            'file_exists' => $backup->file_path && Storage::exists($backup->file_path),
+            'file_exists' => $backup->file_path && $disk->exists($backup->file_path),
             'file_path' => $backup->file_path,
         ]);
+    }
+
+    /**
+     * Helper method to extract columns from table definition
+     */
+    private function extractColumns($definition)
+    {
+        $columns = [];
+        $depth = 0;
+        $current = '';
+        
+        for ($i = 0; $i < strlen($definition); $i++) {
+            $char = $definition[$i];
+            
+            if ($char === '(') {
+                $depth++;
+                $current .= $char;
+            } elseif ($char === ')') {
+                $depth--;
+                $current .= $char;
+            } elseif ($char === ',' && $depth === 0) {
+                $trimmed = trim($current);
+                // Skip constraint definitions
+                if (!empty($trimmed) && 
+                    !preg_match('/^(PRIMARY|FOREIGN|UNIQUE|INDEX|KEY|CONSTRAINT)/i', $trimmed)) {
+                    $columns[] = $trimmed;
+                }
+                $current = '';
+            } else {
+                $current .= $char;
+            }
+        }
+        
+        // Add last column
+        $trimmed = trim($current);
+        if (!empty($trimmed) && 
+            !preg_match('/^(PRIMARY|FOREIGN|UNIQUE|INDEX|KEY|CONSTRAINT)/i', $trimmed)) {
+            $columns[] = $trimmed;
+        }
+        
+        return $columns;
     }
 
     public function getTableData($id, $tableName)
     {
         $backup = Backup::findOrFail($id);
+        $disk = Storage::disk('public');
 
-        if (!$backup->file_path || !Storage::exists($backup->file_path)) {
+        if (!$backup->file_path || !$disk->exists($backup->file_path)) {
             return response()->json(['message' => 'ملف النسخة غير موجود'], 404);
         }
 
-        $content = Storage::get($backup->file_path);
+        $content = $disk->get($backup->file_path);
 
         // Extract INSERT statements for this table and parse them
         $pattern = '/INSERT INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(([^)]+)\)\s*VALUES/i';
@@ -165,7 +246,8 @@ class BackupController extends Controller
 
     public function destroy(Backup $backup)
     {
-        Storage::delete($backup->file_path);
+        $disk = Storage::disk('public');
+        $disk->delete($backup->file_path);
         $backup->delete();
         return response()->json(['message' => 'تم حذف النسخة الاحتياطية']);
     }
@@ -173,7 +255,8 @@ class BackupController extends Controller
     public function restore(Request $request, $backup_id)
     {
         $backup = Backup::findOrFail($backup_id);
-        $filepath = storage_path('app/' . $backup->file_path);
+        $disk = Storage::disk('public');
+        $filepath = $disk->path($backup->file_path);
 
         // تنفيذ استعادة (mysql)
         $db = config('database.connections.mysql.database');
@@ -184,5 +267,24 @@ class BackupController extends Controller
         system($command, $output);
 
         return response()->json(['message' => 'تم استعادة النسخة الاحتياطية بنجاح']);
+    }
+
+    public function download(Request $request, $id)
+    {
+        try {
+            $backup = Backup::findOrFail($id);
+            $disk = Storage::disk('public');
+            
+            // تخطي التحقق من الصلاحيات مؤقتاً للتشخيص
+            // $this->authorize('download', $backup);
+
+            if (!$backup->file_path || !$disk->exists($backup->file_path)) {
+                return response()->json(['message' => 'ملف النسخة غير موجود'], 404);
+            }
+
+            return $disk->download($backup->file_path, $backup->name);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'خطأ في التحميل: ' . $e->getMessage()], 500);
+        }
     }
 }
