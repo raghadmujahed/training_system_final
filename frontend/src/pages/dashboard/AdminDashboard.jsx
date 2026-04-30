@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
       <div className="dashboard-grid">
         <div className="stat-card primary">
-          <div className="stat-title">إجمالي الطلبة</div>
+          <div className="stat-title">إجمالي المستخدمين</div>
           <div className="stat-value">{stats.total_students}</div>
         </div>
 

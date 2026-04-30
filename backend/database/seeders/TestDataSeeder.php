@@ -46,6 +46,7 @@ class TestDataSeeder extends Seeder
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $adminRole->id,
+            'phone' => '0590000000',
         ]);
 
         $coordinator = User::create([
@@ -56,6 +57,7 @@ class TestDataSeeder extends Seeder
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $coordinatorRole->id,
             'department_id' => $educationDept->id,
+            'phone' => '0590000001',
         ]);
 
         $supervisor = User::create([
@@ -66,6 +68,7 @@ class TestDataSeeder extends Seeder
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $academicSupervisorRole->id,
             'department_id' => $educationDept->id,
+            'phone' => '0590000003',
         ]);
 
         $teacher = User::create([
@@ -75,6 +78,7 @@ class TestDataSeeder extends Seeder
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $teacherRole->id,
+            'phone' => '0591000101',
         ]);
 
         $student = User::create([
@@ -85,6 +89,8 @@ class TestDataSeeder extends Seeder
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $studentRole->id,
             'department_id' => $educationDept->id,
+            'major' => 'رياضيات',
+            'phone' => '0591000000',
         ]);
 
         $schoolManager = User::create([
@@ -94,6 +100,7 @@ class TestDataSeeder extends Seeder
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $schoolManagerRole->id,
+            'phone' => '0222222222',
         ]);
 
         $directorateUser = User::create([
@@ -103,6 +110,8 @@ class TestDataSeeder extends Seeder
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $educationDirectorateRole->id,
+            'directorate' => 'وسط',
+            'phone' => '0222222223',
         ]);
 
         // إنشاء مساقات وشعب
@@ -141,6 +150,9 @@ class TestDataSeeder extends Seeder
             'capacity' => 10,
             'site_type' => SiteType::SCHOOL->value,
             'governing_body' => GoverningBody::DIRECTORATE_OF_EDUCATION->value,
+            'school_type' => 'public',
+            'gender_classification' => 'boys',
+            'school_level' => 'lower',
         ]);
 
         // إنشاء فترة تدريب نشطة

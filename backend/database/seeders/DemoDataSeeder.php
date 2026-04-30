@@ -55,7 +55,7 @@ class DemoDataSeeder extends Seeder
 
         $section = Section::query()->orderBy('id')->first();
         $supervisor = User::query()->whereHas('role', fn ($q) => $q->where('name', 'academic_supervisor'))->first();
-        $teacher = User::query()->where('email', 'teacher@hebron.edu')->first();
+        $teacher = User::query()->whereHas('role', fn ($q) => $q->where('name', 'teacher'))->first();
         $coordinator = User::query()
             ->whereHas('role', fn ($q) => $q->where('name', 'training_coordinator'))
             ->orderBy('id')

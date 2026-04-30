@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSection, getSectionEnrollments, deleteEnrollment } from "../../services/api";
-import { ArrowLeft, Users, User, BookOpen, Calendar, GraduationCap, Mail, Phone, Trash2 } from "lucide-react";
+import { getSection, getSectionEnrollments, deleteEnrollment, addStudentToSection, removeStudentFromSection, searchStudentsHeadDepartment } from "../../services/api";
+import { ArrowLeft, Users, User, BookOpen, Calendar, GraduationCap, Mail, Phone, Trash2, Plus, Search, X } from "lucide-react";
 
 export default function HeadOfDepartmentSectionDetails() {
   const { id } = useParams();
@@ -11,6 +11,11 @@ export default function HeadOfDepartmentSectionDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [removingId, setRemovingId] = useState(null);
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [studentSearch, setStudentSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const handleRemoveStudent = async (enrollment) => {
     const studentName = enrollment.user?.name || "الطالب";
@@ -21,13 +26,56 @@ export default function HeadOfDepartmentSectionDetails() {
 
     try {
       setRemovingId(enrollment.id);
-      await deleteEnrollment(enrollment.id);
+      // Try section_students pivot first, then enrollment
+      if (enrollment.pivot) {
+        await removeStudentFromSection(id, { student_id: enrollment.user?.id || enrollment.id });
+      } else {
+        await deleteEnrollment(enrollment.id);
+      }
       setEnrollments((prev) => prev.filter((e) => e.id !== enrollment.id));
     } catch (err) {
       console.error("Error removing student:", err);
       alert(err?.response?.data?.message || "تعذر حذف الطالب من الشعبة");
     } finally {
       setRemovingId(null);
+    }
+  };
+
+  const handleStudentSearch = async (query) => {
+    setStudentSearch(query);
+    if (query.trim().length >= 2) {
+      setSearching(true);
+      try {
+        const response = await searchStudentsHeadDepartment(query);
+        setSearchResults(response.data || []);
+      } catch (err) {
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
+      }
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleAddStudent = async (student) => {
+    try {
+      setAddingStudent(true);
+      await addStudentToSection(id, { student_id: student.id, status: 'accepted' });
+      alert(`تم إضافة ${student.name} للشعبة بنجاح`);
+      setStudentSearch("");
+      setSearchResults([]);
+      setShowAddStudent(false);
+      // Refresh data
+      const enrollmentsData = await getSectionEnrollments(id);
+      setEnrollments(enrollmentsData.data || []);
+      // Also refresh section to update counts
+      const sectionData = await getSection(id);
+      setSection(sectionData);
+    } catch (err) {
+      alert(err?.response?.data?.message || "حدث خطأ أثناء إضافة الطالب");
+    } finally {
+      setAddingStudent(false);
     }
   };
 
@@ -159,27 +207,89 @@ export default function HeadOfDepartmentSectionDetails() {
             <Users size={20} />
             الطلاب المسجلون
           </h2>
-          <span style={{ 
-            backgroundColor: "#e7f3ff", 
-            color: "#3b82f6",
-            padding: "4px 12px",
-            borderRadius: 12,
-            fontSize: 14 
-          }}>
-            {enrollments.length} طالب
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ 
+              backgroundColor: "#e7f3ff", 
+              color: "#3b82f6",
+              padding: "4px 12px",
+              borderRadius: 12,
+              fontSize: 14 
+            }}>
+              {enrollments.length} طالب
+            </span>
+            <button
+              onClick={() => setShowAddStudent(!showAddStudent)}
+              className="btn-primary"
+              style={{ padding: "6px 12px", fontSize: 13 }}
+            >
+              <Plus size={14} style={{ display: "inline", marginRight: 4 }} />
+              إضافة طالب
+            </button>
+          </div>
         </div>
+
+        {/* Add Student Search */}
+        {showAddStudent && (
+          <div style={{ marginBottom: 16, padding: 16, backgroundColor: "#f8f9fa", borderRadius: 8, position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <Search size={16} style={{ color: "#666" }} />
+              <input
+                type="text"
+                placeholder="ابحث بالاسم أو الرقم الجامعي..."
+                value={studentSearch}
+                onChange={(e) => handleStudentSearch(e.target.value)}
+                style={{ flex: 1, padding: "8px 12px", borderRadius: 4, border: "1px solid #ddd" }}
+              />
+              <button
+                onClick={() => { setShowAddStudent(false); setStudentSearch(""); setSearchResults([]); }}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            {searching && <p style={{ fontSize: 13, color: "#666" }}>جاري البحث...</p>}
+            {searchResults.length > 0 && (
+              <div style={{ border: "1px solid #ddd", borderRadius: 4, maxHeight: 200, overflowY: "auto" }}>
+                {searchResults.map(student => (
+                  <div
+                    key={student.id}
+                    style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f0f0f0"}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
+                  >
+                    <div>
+                      <strong>{student.name}</strong>
+                      <span style={{ fontSize: 12, color: "#666", marginRight: 8 }}>({student.university_id})</span>
+                    </div>
+                    <button
+                      onClick={() => handleAddStudent(student)}
+                      disabled={addingStudent}
+                      className="btn-primary"
+                      style={{ padding: "4px 10px", fontSize: 12 }}
+                    >
+                      {addingStudent ? "..." : "إضافة"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!searching && studentSearch.length >= 2 && searchResults.length === 0 && (
+              <p style={{ fontSize: 13, color: "#999" }}>لا توجد نتائج</p>
+            )}
+          </div>
+        )}
 
         {enrollments.length === 0 ? (
           <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
             <Users size={48} style={{ marginBottom: 16, opacity: 0.3 }} />
             <p>لا يوجد طلاب مسجلون في هذه الشعبة</p>
             <button 
-              onClick={() => navigate(`/head-department/enrollments/create?section_id=${id}`)}
+              onClick={() => setShowAddStudent(true)}
               className="btn-primary"
               style={{ marginTop: 16 }}
             >
-              تسجيل طالب جديد
+              <Plus size={16} style={{ display: "inline", marginRight: 4 }} />
+              إضافة طالب للشعبة
             </button>
           </div>
         ) : (

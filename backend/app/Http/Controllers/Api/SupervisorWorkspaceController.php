@@ -65,6 +65,26 @@ class SupervisorWorkspaceController extends Controller
         $assignmentIds = $assignments->pluck('id');
         $studentIds = $assignments->pluck('enrollment.user_id')->filter()->unique()->values();
 
+        // Also count sections assigned directly via academic_supervisor_id (section_students pivot)
+        $directSectionIds = Section::where('academic_supervisor_id', $user->id)
+            ->when($user->department_id, fn ($q) => $q->where(function ($q2) use ($user) {
+                $q2->whereHas('course', fn ($cq) => $cq->where('department_id', $user->department_id))
+                    ->orWhereHas('students', fn ($sq) => $sq->where('department_id', $user->department_id));
+            }))
+            ->pluck('id');
+
+        // Also count students from section_students pivot
+        $pivotStudentIds = \DB::table('section_students')
+            ->whereIn('section_id', $directSectionIds)
+            ->where('status', 'accepted')
+            ->pluck('student_id')
+            ->unique()
+            ->values();
+
+        $allStudentIds = $studentIds->merge($pivotStudentIds)->unique()->values();
+        $allSectionIds = $assignments->pluck('enrollment.section_id')->filter()->unique()
+            ->merge($directSectionIds)->unique()->values();
+
         $recentActivity = Note::query()
             ->whereIn('training_assignment_id', $assignmentIds)
             ->latest('id')
@@ -113,8 +133,8 @@ class SupervisorWorkspaceController extends Controller
             'department_summary' => [
                 'department' => $this->trackResolver->resolveDepartment($user),
             ],
-            'sections_count' => $assignments->pluck('enrollment.section_id')->filter()->unique()->count(),
-            'students_count' => $studentIds->count(),
+            'sections_count' => $allSectionIds->count(),
+            'students_count' => $allStudentIds->count(),
             'visits_this_week' => SupervisorVisit::where('supervisor_id', $user->id)
                 ->whereBetween('scheduled_date', [now()->startOfWeek(), now()->endOfWeek()])
                 ->count(),
@@ -363,10 +383,11 @@ class SupervisorWorkspaceController extends Controller
             ->when($supervisor->department_id, function ($sectionQuery) use ($supervisor) {
                 $sectionQuery->where(function ($q) use ($supervisor) {
                     $q->whereHas('course', fn ($courseQuery) => $courseQuery->where('department_id', $supervisor->department_id))
-                        ->orWhereHas('enrollments.user', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id));
+                        ->orWhereHas('enrollments.user', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id))
+                        ->orWhereHas('students', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id));
                 });
             })
-            ->with(['course', 'academicSupervisor', 'enrollments.user.department', 'enrollments.trainingAssignments.trainingSite'])
+            ->with(['course', 'academicSupervisor', 'enrollments.user.department', 'enrollments.trainingAssignments.trainingSite', 'students.department'])
             ->withCount('enrollments');
 
         if ($filters['semester']) {
@@ -376,22 +397,31 @@ class SupervisorWorkspaceController extends Controller
             $query->where('course_id', (int) $filters['course_id']);
         }
         if ($filters['department']) {
-            $query->whereHas('enrollments.user.department', function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['department'] . '%');
+            $query->where(function ($q) use ($filters) {
+                $q->whereHas('enrollments.user.department', function ($dq) use ($filters) {
+                    $dq->where('name', 'like', '%' . $filters['department'] . '%');
+                })->orWhereHas('students.department', function ($dq) use ($filters) {
+                    $dq->where('name', 'like', '%' . $filters['department'] . '%');
+                });
             });
         }
         if ($filters['training_track']) {
             $track = strtolower((string) $filters['training_track']);
             if ($track === 'psychology_clinic') {
-                $query->whereHas('enrollments.trainingAssignments.trainingSite', fn ($q) => $q->whereIn('site_type', ['health_center', 'clinic']));
+                $query->where(function ($q) {
+                    $q->whereHas('enrollments.trainingAssignments.trainingSite', fn ($sq) => $sq->whereIn('site_type', ['health_center', 'clinic']))
+                        ->orWhereHas('students.department', fn ($sq) => $sq->where('name', 'like', '%psych%'));
+                });
             } elseif ($track === 'psychology_school') {
-                $query
-                    ->whereHas('enrollments.trainingAssignments.trainingSite', fn ($q) => $q->where('site_type', 'school'))
-                    ->whereHas('enrollments.user.department', function ($q) {
-                        $q->where('name', 'like', '%psych%')->orWhere('name', 'like', '%علم النفس%');
-                    });
+                $query->where(function ($q) {
+                    $q->whereHas('enrollments.trainingAssignments.trainingSite', fn ($sq) => $sq->where('site_type', 'school'))
+                        ->orWhereHas('students.department', fn ($sq) => $sq->where('name', 'like', '%psych%'));
+                });
             } else {
-                $query->whereHas('enrollments.trainingAssignments.trainingSite', fn ($q) => $q->where('site_type', 'school'));
+                $query->where(function ($q) {
+                    $q->whereHas('enrollments.trainingAssignments.trainingSite', fn ($sq) => $sq->where('site_type', 'school'))
+                        ->orWhereHas('students.department', fn ($sq) => $sq->where('name', 'like', '%usool%')->orWhere('name', 'like', '%تربي%'));
+                });
             }
         }
         if ($filters['search']) {
@@ -414,14 +444,58 @@ class SupervisorWorkspaceController extends Controller
                 ->unique()
                 ->count();
 
+            // Count students from both enrollments and section_students pivot
+            $enrollmentCount = (int) $section->enrollments_count;
+            $pivotStudentCount = $section->students->count();
+            $totalStudents = max($enrollmentCount, $pivotStudentCount);
+
+            // Get department from enrollments first, then from section_students
+            $department = data_get($section, 'enrollments.0.user.department.name')
+                ?? data_get($section, 'students.0.department.name');
+
+            // Resolve training track from assignment or from section_students department
+            $trainingTrack = $this->trackResolver->resolveForAssignment($firstAssignment);
+            if (!$trainingTrack) {
+                $pivotDept = data_get($section, 'students.0.department.name');
+                if ($pivotDept && (str_contains(strtolower($pivotDept), 'psych') || str_contains($pivotDept, 'علم النفس'))) {
+                    $trainingTrack = 'psychology';
+                } elseif ($pivotDept) {
+                    $trainingTrack = 'education';
+                }
+            }
+
+            // Build students list from both enrollments and section_students
+            $enrollmentStudents = $section->enrollments->map(fn ($e) => [
+                'id' => $e->user?->id,
+                'name' => $e->user?->name,
+                'university_id' => $e->user?->university_id,
+                'department' => data_get($e, 'user.department.label') ?? data_get($e, 'user.department.name'),
+                'major' => $e->user?->major,
+            ])->filter(fn ($s) => $s['id']);
+
+            $pivotStudents = $section->students->map(fn ($s) => [
+                'id' => $s->id,
+                'name' => $s->name,
+                'university_id' => $s->university_id,
+                'department' => data_get($s, 'department.label') ?? data_get($s, 'department.name'),
+                'major' => $s->major,
+            ])->filter(fn ($s) => $s['id']);
+
+            // Merge: prefer enrollment students, add pivot students not already included
+            $existingIds = $enrollmentStudents->pluck('id')->toArray();
+            $allStudents = $enrollmentStudents->merge(
+                $pivotStudents->filter(fn ($s) => !in_array($s['id'], $existingIds))
+            )->values();
+
             return [
                 'id' => $section->id,
                 'section_code' => $section->id,
                 'section_name' => $section->name,
                 'course' => data_get($section, 'course.name'),
-                'department' => data_get($section, 'enrollments.0.user.department.name'),
-                'training_track' => $this->trackResolver->resolveForAssignment($firstAssignment),
-                'students_count' => (int) $section->enrollments_count,
+                'department' => $department,
+                'training_track' => $trainingTrack,
+                'students_count' => $totalStudents,
+                'students' => $allStudents,
                 'training_sites_count' => $trainingSitesCount,
                 'academic_supervisor' => data_get($section, 'academicSupervisor.name'),
                 'status' => 'active',
@@ -450,8 +524,68 @@ class SupervisorWorkspaceController extends Controller
 
     public function studentOverview(Request $request, $studentId)
     {
+        $supervisor = $request->user();
         $student = User::with('department')->findOrFail($studentId);
-        $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $studentId);
+
+        // Try to get TrainingAssignment; if none, check if student is in a supervised section
+        $assignment = $this->studentService->getAssignmentForStudent($supervisor, (int) $studentId);
+
+        if (!$assignment) {
+            // Check if student is in a section supervised by this supervisor
+            if (!$this->studentService->isStudentInSupervisedSection($supervisor, (int) $studentId)) {
+                abort(403, 'You are not authorized to access this student.');
+            }
+
+            // Student is in a supervised section but has no training assignment yet
+            // Return basic student info with empty summaries
+            $enrollment = \App\Models\Enrollment::where('user_id', $studentId)
+                ->whereHas('section', fn ($q) => $q->where('academic_supervisor_id', $supervisor->id))
+                ->with(['section.course'])
+                ->latest()
+                ->first();
+
+            $section = $enrollment?->section ?? \App\Models\Section::where('academic_supervisor_id', $supervisor->id)
+                ->whereHas('students', fn ($q) => $q->where('student_id', $studentId))
+                ->with(['course'])
+                ->first();
+
+            return $this->successResponse([
+                'student' => $student,
+                'summaries' => [
+                    'attendance' => null,
+                    'daily_logs' => ['total' => 0, 'approved' => 0],
+                    'portfolio' => ['entries_count' => 0],
+                    'visits' => ['completed' => 0],
+                    'tasks' => ['total' => 0, 'open_count' => 0, 'pending_submissions' => 0],
+                    'evaluations' => ['field' => null, 'academic' => null],
+                ],
+                'related_data' => [
+                    'assignment' => null,
+                    'academic_supervision' => [
+                        'status' => 'not_started',
+                        'status_label' => $this->academicStatusLabel('not_started'),
+                        'note' => null,
+                        'updated_at' => null,
+                        'updated_by' => null,
+                    ],
+                    'section' => $section,
+                    'course' => $section?->course,
+                    'training_site' => null,
+                    'field_supervisor' => null,
+                ],
+                'permissions' => [
+                    'can_review_attendance' => false,
+                    'can_review_logs' => false,
+                    'can_submit_academic_evaluation' => false,
+                ],
+                'track_config_hints' => [
+                    'department' => $this->trackResolver->resolveDepartment($student),
+                    'training_track' => null,
+                ],
+                'has_training_assignment' => false,
+            ], 'Student overview loaded (no training assignment yet).');
+        }
+
         $assignmentId = $assignment->id;
 
         $attendanceSummary = Attendance::where('training_assignment_id', $assignmentId)
@@ -539,6 +673,7 @@ class SupervisorWorkspaceController extends Controller
                 'department' => $this->trackResolver->resolveDepartment($student),
                 'training_track' => $this->trackResolver->resolveForAssignment($assignment),
             ],
+            'has_training_assignment' => true,
         ], 'Student overview loaded successfully.');
     }
 

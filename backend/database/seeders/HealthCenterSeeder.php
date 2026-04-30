@@ -32,6 +32,8 @@ class HealthCenterSeeder extends Seeder
         
         if ($psychCenterManagerRole) {
             // Create psychology center manager user
+            $psychDeptId = \App\Models\Department::where('name', 'psychology')->value('id');
+
             User::firstOrCreate(
                 ['email' => 'psychcentermanager@hebron.edu'],
                 [
@@ -41,6 +43,8 @@ class HealthCenterSeeder extends Seeder
                     'role_id' => $psychCenterManagerRole->id,
                     'status' => 'active',
                     'training_site_id' => $healthSite->id,
+                    'department_id' => $psychDeptId,
+                    'phone' => '0233333334',
                 ]
             );
             
@@ -59,6 +63,8 @@ class HealthCenterSeeder extends Seeder
                     'role_id' => $psychologistRole->id,
                     'status' => 'active',
                     'training_site_id' => $healthSite->id,
+                    'department_id' => $psychDeptId ?? null,
+                    'phone' => '0590000004',
                 ]
             );
             
@@ -71,6 +77,8 @@ class HealthCenterSeeder extends Seeder
                     'role_id' => $psychologistRole->id,
                     'status' => 'active',
                     'training_site_id' => $healthSite->id,
+                    'department_id' => $psychDeptId ?? null,
+                    'phone' => '0590000005',
                 ]
             );
             

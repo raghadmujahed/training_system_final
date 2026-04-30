@@ -50,6 +50,15 @@ class FieldSupervisorSeeder extends Seeder
             ],
         ];
 
+        $usoolDeptId = \App\Models\Department::where('name', 'usool_tarbiah')->value('id');
+        $psychDeptId = \App\Models\Department::where('name', 'psychology')->value('id');
+
+        $deptMap = [
+            'mentor_teacher' => $usoolDeptId,
+            'school_counselor' => $psychDeptId,
+            'psychologist' => $psychDeptId,
+        ];
+
         foreach ($supervisors as $supervisorData) {
             // إنشاء المستخدم
             $user = User::firstOrCreate(
@@ -59,6 +68,8 @@ class FieldSupervisorSeeder extends Seeder
                     'university_id' => $supervisorData['university_id'],
                     'password' => Hash::make('password123'),
                     'role_id' => $role->id,
+                    'department_id' => $deptMap[$supervisorData['type']] ?? null,
+                    'phone' => '0599000000',
                     'status' => 'active',
                 ]
             );

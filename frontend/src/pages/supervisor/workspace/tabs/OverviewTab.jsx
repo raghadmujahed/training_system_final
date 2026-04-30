@@ -27,6 +27,7 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
 
   const data = overview || getDefaultOverview();
   const s = student || {};
+  const hasNoAssignment = overview?.has_training_assignment === false;
 
   const handleQuickAction = async (action) => {
     switch (action) {
@@ -64,6 +65,13 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+      {hasNoAssignment && (
+        <div className="section-card" style={{ gridColumn: "1 / -1", borderRight: "4px solid #ffc107", backgroundColor: "#fff8e1" }}>
+          <p style={{ margin: 0, color: "#856404", fontSize: "0.9rem" }}>
+            ⚠️ هذا الطالب مسجل في شعبتك لكن لم يُعيّن في جهة تدريب بعد. بعض البيانات (الحضور، السجلات، التقييم) ستكون متاحة بعد تعيينه.
+          </p>
+        </div>
+      )}
       {/* Student Info Card */}
       <div className="section-card" style={{ gridColumn: "1 / -1" }}>
         <h4 style={{ margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>

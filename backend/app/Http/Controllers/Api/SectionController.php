@@ -158,6 +158,25 @@ class SectionController extends Controller
             'notes' => $request->notes
         ]);
 
+        // إشعار المشرف الأكاديمي بإضافة طالب لشعبته
+        if ($section->academic_supervisor_id) {
+            $student = User::find($studentId);
+            $section->loadMissing('course');
+            AppNotification::create([
+                'user_id' => $section->academic_supervisor_id,
+                'type' => 'student_added_to_section',
+                'message' => "تمت إضافة الطالب \"{$student?->name}\" إلى شعبتك \"{$section->name}\" في مساق \"{$section->course?->name}\".",
+                'notifiable_type' => Section::class,
+                'notifiable_id' => $section->id,
+                'data' => [
+                    'section_id' => $section->id,
+                    'student_id' => $studentId,
+                    'section_name' => $section->name,
+                    'course_name' => $section->course?->name,
+                ],
+            ]);
+        }
+
         return response()->json(['message' => 'تم إضافة الطالب للشعبة بنجاح']);
     }
 

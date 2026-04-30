@@ -22,6 +22,7 @@ class UserResource extends JsonResource
             'department_id' => $this->department_id,
             'training_site_id' => $this->training_site_id,
             'directorate' => $this->directorate,
+            'major' => $this->major,
             // لا تُمرَّر علاقة null إلى JsonResource — يُسبب 500 عند عدم وجود دور/قسم/موقع
             'training_site' => $this->when(
                 $this->relationLoaded('trainingSite') && $this->trainingSite !== null,

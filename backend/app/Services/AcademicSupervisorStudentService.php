@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AcademicSupervisionStatusHistory;
+use App\Models\Section;
 use App\Models\TrainingAssignment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -66,13 +67,51 @@ class AcademicSupervisorStudentService
             ->first();
     }
 
+    /**
+     * Check if a student is in a section supervised by this supervisor
+     * (via enrollments or section_students pivot).
+     */
+    public function isStudentInSupervisedSection(User $supervisor, int $studentId): bool
+    {
+        return Section::where('academic_supervisor_id', $supervisor->id)
+            ->where(function ($q) use ($studentId) {
+                $q->whereHas('enrollments', fn ($eq) => $eq->where('user_id', $studentId))
+                  ->orWhereHas('students', fn ($sq) => $sq->where('student_id', $studentId));
+            })
+            ->exists();
+    }
+
     public function mustGetAssignmentForStudent(User $supervisor, int $studentId): TrainingAssignment
     {
         $assignment = $this->getAssignmentForStudent($supervisor, $studentId);
 
-        abort_unless($assignment, 403, 'You are not authorized to access this student.');
+        if ($assignment) {
+            return $assignment;
+        }
 
-        return $assignment;
+        // If no TrainingAssignment, check if student is in a supervised section
+        if ($this->isStudentInSupervisedSection($supervisor, $studentId)) {
+            // Return a new/empty assignment placeholder so the controller can handle gracefully
+            // Create a minimal unsaved assignment that references the student's enrollment
+            $enrollment = \App\Models\Enrollment::where('user_id', $studentId)
+                ->whereHas('section', fn ($q) => $q->where('academic_supervisor_id', $supervisor->id))
+                ->latest()
+                ->first();
+
+            if ($enrollment) {
+                // Try to find any existing assignment for this enrollment
+                $existingAssignment = TrainingAssignment::where('enrollment_id', $enrollment->id)->latest()->first();
+                if ($existingAssignment) {
+                    return $existingAssignment;
+                }
+            }
+
+            // Student is in a supervised section but has no training assignment yet
+            // Allow access by aborting with a specific message the controller can handle
+            abort(404, 'Student has no training assignment yet, but is in your supervised section.');
+        }
+
+        abort_unless(false, 403, 'You are not authorized to access this student.');
     }
 
     public function updateAcademicStatus(User $actor, int $studentId, string $status, ?string $note = null): TrainingAssignment

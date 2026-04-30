@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getEnrollment, createEnrollment, updateEnrollment, getSections, getStudents, bulkEnrollStudents, searchStudentsHeadDepartment } from "../../services/api";
 import { Upload, FileSpreadsheet, Search, X } from "lucide-react";
 
 export default function HeadOfDepartmentEnrollmentForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preselectedSectionId = searchParams.get('section_id') || "";
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [sections, setSections] = useState([]);
@@ -39,10 +41,30 @@ export default function HeadOfDepartmentEnrollmentForm() {
     const fetchData = async () => {
       try {
         const sectionsData = await getSections();
-        setSections(sectionsData.data?.data || sectionsData.data || []);
+        const sectionsList = sectionsData.data?.data || sectionsData.data || [];
+        setSections(sectionsList);
 
         const studentsData = await getStudents();
         setStudents(studentsData.data?.data || studentsData.data || []);
+
+        // If section_id is provided in URL, auto-fill section and its academic_year/semester
+        if (!id && preselectedSectionId) {
+          const preselected = sectionsList.find(s => String(s.id) === String(preselectedSectionId));
+          if (preselected) {
+            setForm(prev => ({
+              ...prev,
+              section_id: preselected.id,
+              academic_year: preselected.academic_year || new Date().getFullYear(),
+              semester: preselected.semester || "first",
+            }));
+            setBulkForm(prev => ({
+              ...prev,
+              section_id: preselected.id,
+              academic_year: preselected.academic_year || new Date().getFullYear(),
+              semester: preselected.semester || "first",
+            }));
+          }
+        }
 
         if (id) {
           const enrollmentData = await getEnrollment(id);
@@ -68,7 +90,16 @@ export default function HeadOfDepartmentEnrollmentForm() {
   }, [id]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const updatedForm = { ...form, [e.target.name]: e.target.value };
+    // When section changes, auto-update academic_year and semester from section data
+    if (e.target.name === 'section_id' && e.target.value) {
+      const selected = sections.find(s => String(s.id) === String(e.target.value));
+      if (selected) {
+        updatedForm.academic_year = selected.academic_year || new Date().getFullYear();
+        updatedForm.semester = selected.semester || "first";
+      }
+    }
+    setForm(updatedForm);
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
   };
 
@@ -114,7 +145,16 @@ export default function HeadOfDepartmentEnrollmentForm() {
   const filteredStudents = searchResults;
 
   const handleBulkChange = (e) => {
-    setBulkForm({ ...bulkForm, [e.target.name]: e.target.value });
+    const updatedBulkForm = { ...bulkForm, [e.target.name]: e.target.value };
+    // When section changes, auto-update academic_year and semester from section data
+    if (e.target.name === 'section_id' && e.target.value) {
+      const selected = sections.find(s => String(s.id) === String(e.target.value));
+      if (selected) {
+        updatedBulkForm.academic_year = selected.academic_year || new Date().getFullYear();
+        updatedBulkForm.semester = selected.semester || "first";
+      }
+    }
+    setBulkForm(updatedBulkForm);
   };
 
   const handleSubmit = async (e) => {

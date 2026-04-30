@@ -90,7 +90,8 @@ export default function StudentDashboard({ forcedTrack = null }) {
   const [studentInfo, setStudentInfo] = useState({
     name: "",
     universityId: "",
-    specialization: "",
+    department: "",
+    major: "",
     college: "",
     status: "",
     directorate: "",
@@ -140,7 +141,8 @@ export default function StudentDashboard({ forcedTrack = null }) {
         ...prev,
         name: user?.name || user?.data?.name || "",
         universityId: user?.university_id || user?.data?.university_id || "",
-        specialization: getStudentSpecialization(user, effectiveTrack),
+        department: user?.department?.label || user?.data?.department?.label || getStudentSpecialization(user, effectiveTrack),
+        major: user?.major || user?.data?.major || "",
         college: getCollegeLabel(user, effectiveTrack),
         status: getUserStatusLabel(user),
         sectionName: cs.section_name || "",
@@ -302,21 +304,30 @@ export default function StudentDashboard({ forcedTrack = null }) {
             </div>
           </div>
           <div className="info-card">
-            <div className="info-icon-wrapper success">
-              <BookOpen size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">التخصص</span>
-              <strong className="info-value">{studentInfo.specialization}</strong>
-            </div>
-          </div>
-          <div className="info-card">
             <div className="info-icon-wrapper info">
               <Building2 size={18} />
             </div>
             <div className="info-content">
               <span className="info-label">الكلية</span>
               <strong className="info-value">{studentInfo.college}</strong>
+            </div>
+          </div>
+          <div className="info-card">
+            <div className="info-icon-wrapper accent">
+              <BookOpen size={18} />
+            </div>
+            <div className="info-content">
+              <span className="info-label">التخصص</span>
+              <strong className="info-value">{studentInfo.major || "—"}</strong>
+            </div>
+          </div>
+          <div className="info-card">
+            <div className="info-icon-wrapper success">
+              <BookOpen size={18} />
+            </div>
+            <div className="info-content">
+              <span className="info-label">القسم</span>
+              <strong className="info-value">{studentInfo.department || "—"}</strong>
             </div>
           </div>
           <div className="info-card">
@@ -335,15 +346,6 @@ export default function StudentDashboard({ forcedTrack = null }) {
             <div className="info-content">
               <span className="info-label">{effectiveTrack === "psychology" ? "الجهة المعتمدة" : "المدرسة المعتمدة"}</span>
               <strong className="info-value">{studentInfo.school || "—"}</strong>
-            </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon-wrapper success">
-              <CheckCircle2 size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">الحالة</span>
-              <strong className="info-value">{studentInfo.status || "—"}</strong>
             </div>
           </div>
           <div className="info-card highlight">
