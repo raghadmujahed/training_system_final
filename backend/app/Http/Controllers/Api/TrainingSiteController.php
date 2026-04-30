@@ -60,7 +60,13 @@ class TrainingSiteController extends Controller
                     });
             });
         }
-        
+        if ($request->filled('gender_classification')) {
+            $query->where('gender_classification', trim((string) $request->gender_classification));
+        }
+        if ($request->filled('school_level')) {
+            $query->where('school_level', trim((string) $request->school_level));
+        }
+
         $sites = $query->latest()->paginate($request->per_page ?? 15);
         return TrainingSiteResource::collection($sites);
     }

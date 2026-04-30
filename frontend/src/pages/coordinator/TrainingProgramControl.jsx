@@ -123,7 +123,7 @@ export default function TrainingProgramControl() {
             <Settings size={44} />
           </div>
           <div style={{ flex: 1 }}>
-            <h1 className="hero-title">التحكم ببرنامج التدريب</h1>
+            <h1 className="hero-title">التحكم بجدول الحصص الأسبوعية</h1>
             <p className="hero-subtitle">
               فتح أو إغلاق إمكانية تعديل الطلاب لجدول الحصص ومراجعة البرامج المرسلة
             </p>
@@ -145,51 +145,72 @@ export default function TrainingProgramControl() {
 
       {/* Feature Flag Toggle Card */}
       {flag ? (
-        <div className="section-card mb-4">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div className="section-icon" style={{ background: flag.is_open ? "linear-gradient(135deg, var(--success) 0%, #5cb85c 100%)" : "linear-gradient(135deg, var(--danger) 0%, #c9302c 100%)" }}>
-              {flag.is_open ? <Unlock size={18} /> : <Lock size={18} />}
-            </div>
-            <h5 style={{ margin: 0 }}>حالة إدخال برنامج التدريب</h5>
+        <div style={{
+          background: "#fff",
+          borderRadius: 14,
+          border: `1.5px solid ${flag.is_open ? "#b7e0c4" : "#f1b8bc"}`,
+          padding: "14px 18px",
+          marginBottom: 16,
+          display: "flex",
+          alignItems: "center",
+          gap: 14,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        }}>
+          {/* Status indicator */}
+          <div style={{
+            width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+            background: flag.is_open
+              ? "linear-gradient(135deg, #d4edda 0%, #b7dfc5 100%)"
+              : "linear-gradient(135deg, #f8d7da 0%, #f1b8bc 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: flag.is_open ? "0 2px 8px rgba(21,87,36,0.15)" : "0 2px 8px rgba(114,28,36,0.15)",
+          }}>
+            {flag.is_open ? <Unlock size={20} color="#155724" /> : <Lock size={20} color="#721c24" />}
           </div>
 
-          <div style={{
-            display: "flex", flexDirection: "column", alignItems: "center",
-            padding: "24px 20px",
-            background: flag.is_open
-              ? "linear-gradient(135deg, rgba(212,237,218,0.4) 0%, rgba(212,237,218,0.1) 100%)"
-              : "linear-gradient(135deg, rgba(248,215,218,0.4) 0%, rgba(248,215,218,0.1) 100%)",
-            borderRadius: 14,
-            border: flag.is_open ? "1px solid rgba(21,87,36,0.15)" : "1px solid rgba(114,28,36,0.15)",
-            marginBottom: 16,
-          }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: "50%",
-              background: flag.is_open ? "#d4edda" : "#f8d7da",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: 10,
-              boxShadow: flag.is_open ? "0 4px 12px rgba(21,87,36,0.12)" : "0 4px 12px rgba(114,28,36,0.12)",
-            }}>
-              {flag.is_open ? <Unlock size={26} color="#155724" /> : <Lock size={26} color="#721c24" />}
+          {/* Text */}
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+              <span style={{ fontWeight: 700, fontSize: "0.92rem", color: "var(--text)" }}>
+                حالة إدخال جدول الحصص
+              </span>
+              <span style={{
+                background: flag.is_open ? "#d4edda" : "#f8d7da",
+                color: flag.is_open ? "#155724" : "#721c24",
+                fontSize: "0.72rem", fontWeight: 700,
+                padding: "2px 10px", borderRadius: 99,
+              }}>
+                {flag.is_open ? "مفتوح" : "مغلق"}
+              </span>
             </div>
-            <h4 style={{ margin: "0 0 4px", color: flag.is_open ? "#155724" : "#721c24" }}>
-              {flag.is_open ? "إدخال برنامج التدريب مفتوح" : "إدخال برنامج التدريب مغلق"}
-            </h4>
-            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.85rem", textAlign: "center" }}>
-              {flag.is_open ? "الطلاب يمكنهم إدخال وتعديل جدول الحصص" : "الطلاب يمكنهم مشاهدة الجدول فقط"}
+            <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--text-faint)" }}>
+              {flag.is_open ? "الطلاب يمكنهم إدخال وتعديل جدول الحصص الأسبوعية" : "الطلاب يمكنهم مشاهدة الجدول فقط"}
             </p>
           </div>
 
-          <button onClick={toggle} disabled={toggling} style={{
-            width: "100%", padding: "12px 24px", fontSize: "0.95rem", fontWeight: 700,
-            background: flag.is_open ? "linear-gradient(135deg, var(--danger) 0%, #c9302c 100%)" : "linear-gradient(135deg, var(--success) 0%, #5cb85c 100%)",
-            color: "#fff", border: "none", borderRadius: 12,
-            cursor: toggling ? "not-allowed" : "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            opacity: toggling ? 0.6 : 1, transition: "all 0.2s",
-          }}>
-            {toggling ? <Loader2 className="spin" size={18} /> : flag.is_open ? <Lock size={18} /> : <Unlock size={18} />}
-            {flag.is_open ? "إغلاق إدخال برنامج التدريب" : "فتح إدخال برنامج التدريب"}
+          {/* Toggle Button */}
+          <button
+            onClick={toggle}
+            disabled={toggling}
+            style={{
+              padding: "8px 18px",
+              fontSize: "0.83rem", fontWeight: 700,
+              background: flag.is_open
+                ? "linear-gradient(135deg, #dc3545 0%, #c9302c 100%)"
+                : "linear-gradient(135deg, #28a745 0%, #218838 100%)",
+              color: "#fff", border: "none", borderRadius: 10,
+              cursor: toggling ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", gap: 6,
+              opacity: toggling ? 0.6 : 1,
+              transition: "all 0.2s",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {toggling
+              ? <Loader2 className="spin" size={15} />
+              : flag.is_open ? <Lock size={15} /> : <Unlock size={15} />}
+            {flag.is_open ? "إغلاق" : "فتح"}
           </button>
         </div>
       ) : (

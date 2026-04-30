@@ -547,8 +547,8 @@ export const getStudentTrainingProgram = async (config = {}) => {
     return response.data;
 };
 
-export const saveStudentTrainingProgram = async (schedule) => {
-    const response = await apiClient.post('/student/training-program', { schedule });
+export const saveStudentTrainingProgram = async (data) => {
+    const response = await apiClient.post('/student/training-program', data);
     return response.data;
 };
 

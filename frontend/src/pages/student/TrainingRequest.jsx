@@ -12,8 +12,7 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Search,
-  ChevronDown,
+  Users,
 } from "lucide-react";
 import {
   createStudentTrainingRequest,
@@ -59,6 +58,8 @@ export default function TrainingRequest() {
     governing_body: isEducationFlow ? "directorate_of_education" : "ministry_of_health",
     site_type: isEducationFlow ? "school" : "health_center",
     directorate: "",
+    gender_classification: "",
+    school_level: "",
   });
 
   const [formData, setFormData] = useState({
@@ -96,6 +97,8 @@ export default function TrainingRequest() {
       ...prev,
       governing_body: isEducationFlow ? "directorate_of_education" : "ministry_of_health",
       site_type: isEducationFlow ? "school" : "health_center",
+      gender_classification: "",
+      school_level: "",
     }));
   }, [isEducationFlow, isPsychologyFlow]);
 
@@ -144,21 +147,28 @@ export default function TrainingRequest() {
         return;
       }
       try {
-        const res = await getTrainingSites({
+        const params = {
           governing_body: filters.governing_body,
           site_type: filters.site_type,
           directorate: filters.directorate,
           is_active: true,
           has_manager_account: true,
           per_page: 200,
-        });
+        };
+        if (filters.gender_classification) {
+          params.gender_classification = filters.gender_classification;
+        }
+        if (filters.school_level) {
+          params.school_level = filters.school_level;
+        }
+        const res = await getTrainingSites(params);
         setSchools(itemsFromPagedResponse(res));
       } catch (e) {
         setError(e?.response?.data?.message || "فشل تحميل المدارس");
       }
     };
     loadSchools();
-  }, [filters.governing_body, filters.site_type, filters.directorate]);
+  }, [filters.governing_body, filters.site_type, filters.directorate, filters.gender_classification, filters.school_level]);
 
   const validationErrors = useMemo(() => {
     const errs = {};
@@ -167,7 +177,7 @@ export default function TrainingRequest() {
     }
     if (!formData.training_site_id) errs.training_site_id = "اختر المدرسة/جهة التدريب";
     return errs;
-  }, [formData, filters.directorate, filters.governing_body]);
+  }, [formData, filters.directorate, filters.governing_body, filters.gender_classification]);
 
   const normalizeArabicSearch = (value) =>
     String(value || "")
@@ -290,6 +300,8 @@ export default function TrainingRequest() {
       governing_body: site?.governing_body || requestItem.governing_body || prev.governing_body,
       site_type: site?.site_type || prev.site_type,
       directorate: site?.directorate || "",
+      gender_classification: site?.gender_classification || "",
+      school_level: site?.school_level || "",
     }));
     setFormData({
       training_site_id: site?.id ? String(site.id) : "",
@@ -384,49 +396,100 @@ export default function TrainingRequest() {
 
       {hasSubmittedRequest ? (
         <div className="section-card mb-3">
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="mb-0 d-flex align-items-center gap-2">
-              <Building2 size={20} className="text-primary" />
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <h5 className="mb-0 d-flex align-items-center gap-2 fw-bold">
+              <span style={{
+                background: "linear-gradient(135deg, #e8f0fe, #c7d9fc)",
+                borderRadius: "10px",
+                padding: "7px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+                <Building2 size={18} style={{ color: "var(--primary)" }} />
+              </span>
               حالة الطلب الحالي
             </h5>
             {getStatusBadge(latestRequest.book_status)}
           </div>
 
-          <div className="summary-grid">
-            <div className="stat-card primary">
-              <div>
-                <div className="stat-title">حالة الطلب</div>
-                <div className="stat-value fs-6">
-                  {getStatusBadge(latestRequest.book_status)}
+          <div className="row g-3">
+            {/* حالة الطلب */}
+            <div className="col-md-3 col-6">
+              <div style={{
+                background: "#fff",
+                border: "1px solid #e9ecef",
+                borderRadius: "14px",
+                padding: "16px",
+                borderRight: "4px solid var(--primary)",
+                height: "100%",
+              }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-soft)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <ClipboardList size={13} />
+                  حالة الطلب
                 </div>
+                <div>{getStatusBadge(latestRequest.book_status)}</div>
               </div>
             </div>
 
-            <div className="stat-card success">
-              <div>
-                <div className="stat-title">الجهة المعتمدة</div>
-                <div className="stat-value fs-6">
+            {/* الجهة المعتمدة */}
+            <div className="col-md-3 col-6">
+              <div style={{
+                background: "#fff",
+                border: "1px solid #e9ecef",
+                borderRadius: "14px",
+                padding: "16px",
+                borderRight: "4px solid var(--success)",
+                height: "100%",
+              }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-soft)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <Building2 size={13} />
+                  الجهة المعتمدة
+                </div>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--secondary)", lineHeight: 1.4 }}>
                   {latestRequest.training_site?.name || "—"}
                 </div>
               </div>
             </div>
 
-            <div className="stat-card accent">
-              <div>
-                <div className="stat-title">المديرية</div>
-                <div className="stat-value fs-6">
-                  <MapPin size={14} className="me-1" />
+            {/* المديرية */}
+            <div className="col-md-3 col-6">
+              <div style={{
+                background: "#fff",
+                border: "1px solid #e9ecef",
+                borderRadius: "14px",
+                padding: "16px",
+                borderRight: "4px solid var(--accent)",
+                height: "100%",
+              }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-soft)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <MapPin size={13} />
+                  المديرية
+                </div>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--secondary)" }}>
                   {latestRequest.training_site?.directorate || "—"}
                 </div>
               </div>
             </div>
 
-            <div className="stat-card warning">
-              <div>
-                <div className="stat-title">المشرف/المرشد</div>
-                <div className="stat-value fs-6">
-                  <School size={14} className="me-1" />
-                  {latestRequest.students?.[0]?.assigned_teacher?.name || "غير محدد"}
+            {/* المشرف/المرشد */}
+            <div className="col-md-3 col-6">
+              <div style={{
+                background: "#fff",
+                border: "1px solid #e9ecef",
+                borderRadius: "14px",
+                padding: "16px",
+                borderRight: "4px solid var(--warning)",
+                height: "100%",
+              }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-soft)", marginBottom: "10px", display: "flex", alignItems: "center", gap: "5px" }}>
+                  <Users size={13} />
+                  المشرف/المرشد
+                </div>
+                <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--secondary)" }}>
+                  {latestRequest.students?.[0]?.assigned_teacher?.name || (
+                    <span style={{ color: "var(--text-soft)", fontWeight: 500, fontSize: "0.88rem" }}>غير محدد بعد</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -491,7 +554,7 @@ export default function TrainingRequest() {
 
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
-            <div className="col-md-4">
+            <div className="col-md-2">
               <div className="form-field">
                 <label
                   htmlFor="training-request-governing-body"
@@ -509,7 +572,7 @@ export default function TrainingRequest() {
               </div>
             </div>
 
-            <div className="col-md-4">
+            <div className="col-md-2">
               <div className="form-field">
                 <label
                   htmlFor="training-request-directorate"
@@ -522,7 +585,7 @@ export default function TrainingRequest() {
                   id="training-request-directorate"
                   className={`form-select-custom ${validationErrors.directorate ? "is-invalid" : ""}`}
                   value={filters.directorate}
-                  onChange={(e) => setFilters((prev) => ({ ...prev, directorate: e.target.value }))}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, directorate: e.target.value, gender_classification: "", school_level: "" }))}
                   disabled={!filters.governing_body}
                 >
                   <option value="">اختر المديرية</option>
@@ -537,6 +600,57 @@ export default function TrainingRequest() {
                 )}
               </div>
             </div>
+
+            {isEducationFlow && (
+              <div className="col-md-2">
+                <div className="form-field">
+                  <label
+                    htmlFor="training-request-gender"
+                    className="form-label-custom d-flex align-items-center gap-1"
+                  >
+                    <Users size={14} />
+                    تصنيف المدرسة
+                  </label>
+                  <select
+                    id="training-request-gender"
+                    className="form-select-custom"
+                    value={filters.gender_classification}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, gender_classification: e.target.value }))}
+                    disabled={!filters.directorate}
+                  >
+                    <option value="">الكل (ذكور وإناث)</option>
+                    <option value="boys">مدرسة ذكور</option>
+                    <option value="girls">مدرسة إناث</option>
+                    <option value="mixed">مدرسة مختلطة</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {isEducationFlow && (
+              <div className="col-md-2">
+                <div className="form-field">
+                  <label
+                    htmlFor="training-request-level"
+                    className="form-label-custom d-flex align-items-center gap-1"
+                  >
+                    <School size={14} />
+                    مرحلة المدرسة
+                  </label>
+                  <select
+                    id="training-request-level"
+                    className="form-select-custom"
+                    value={filters.school_level}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, school_level: e.target.value }))}
+                    disabled={!filters.directorate}
+                  >
+                    <option value="">الكل (دنيا وعليا)</option>
+                    <option value="lower">أساسية دنيا</option>
+                    <option value="upper">أساسية عليا</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             <div className="col-md-4">
               <div className="form-field">

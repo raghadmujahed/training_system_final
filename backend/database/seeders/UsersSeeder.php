@@ -138,47 +138,40 @@ class UsersSeeder extends Seeder
             ]
         );
 
-        // 6. مدير مدرسة (يرتبط بأول موقع تدريب لاستلام الطلبات المرسلة للمدرسة)
+        // 6. مدير مدرسة — إنشاء حساب لكل مدرسة
         $schoolManagerRole = Role::where('name', 'school_manager')->first();
-        $defaultSchoolSiteId = $this->resolveSchoolSiteIdForDirectorate('وسط')
-            ?? TrainingSite::query()->where('site_type', 'school')->orderBy('id')->value('id');
-        $sm = User::firstOrCreate(
-            ['email' => 'schoolmanager@hebron.edu'],
-            [
-                'name' => 'خالد مدير المدرسة',
-                'password' => Hash::make('password'),
-                'role_id' => $schoolManagerRole->id,
-                'status' => 'active',
-            ]
-        );
-        if ($defaultSchoolSiteId && (int) $sm->training_site_id !== (int) $defaultSchoolSiteId) {
-            $sm->update(['training_site_id' => $defaultSchoolSiteId]);
-        }
+        $allSchools = TrainingSite::query()
+            ->where('site_type', 'school')
+            ->where('is_active', true)
+            ->get();
 
-        // حسابات مديري مدارس للفحص (كل حساب ثابت لمديرية محددة)
-        $schoolManagerAccounts = [
-            ['email' => 'schoolmanager.1@hebron.edu', 'name' => 'مدير مدرسة - وسط', 'directorate' => 'وسط'],
-            ['email' => 'schoolmanager.2@hebron.edu', 'name' => 'مدير مدرسة - شمال', 'directorate' => 'شمال'],
-            ['email' => 'schoolmanager.3@hebron.edu', 'name' => 'مدير مدرسة - جنوب', 'directorate' => 'جنوب'],
-            ['email' => 'schoolmanager.4@hebron.edu', 'name' => 'مدير مدرسة - يطا', 'directorate' => 'يطا'],
-        ];
-        foreach ($schoolManagerAccounts as $account) {
-            $siteId = $this->resolveSchoolSiteIdForDirectorate($account['directorate']);
+        $schoolIndex = 1;
+        foreach ($allSchools as $school) {
+            // تخطي المدارس التي لها مدير بالفعل
+            $existingManager = User::query()
+                ->where('training_site_id', $school->id)
+                ->whereIn('role_id', function ($q) {
+                    $q->select('id')->from('roles')
+                      ->whereIn('name', ['school_manager', 'principal']);
+                })
+                ->exists();
 
-            if (! $siteId) {
+            if ($existingManager) {
                 continue;
             }
 
-            User::updateOrCreate(
-                ['email' => $account['email']],
+            $email = 'schoolmanager.' . $schoolIndex . '@hebron.edu';
+            User::firstOrCreate(
+                ['email' => $email],
                 [
-                    'name' => $account['name'],
+                    'name' => 'مدير ' . $school->name,
                     'password' => Hash::make('password'),
                     'role_id' => $schoolManagerRole->id,
                     'status' => 'active',
-                    'training_site_id' => $siteId,
+                    'training_site_id' => $school->id,
                 ]
             );
+            $schoolIndex++;
         }
 
         // 7. أخصائي نفسي

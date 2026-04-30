@@ -107,7 +107,7 @@ export default function EvaluationProgram() {
         });
       }
     } catch (e) {
-      setError(e?.response?.data?.message || "تعذر تحميل برنامج التدريب.");
+      setError(e?.response?.data?.message || "تعذر تحميل جدول الحصص الأسبوعية.");
     } finally {
       setLoading(false);
     }
@@ -129,13 +129,10 @@ export default function EvaluationProgram() {
     setError("");
     setSuccess("");
     try {
-      await saveStudentTrainingProgram({
-        schedule,
-        teachingSessions
-      });
-      setSuccess("تم حفظ برنامج التدريب بنجاح");
+      await saveStudentTrainingProgram({ schedule });
+      setSuccess("تم حفظ جدول الحصص الأسبوعية بنجاح");
     } catch (e) {
-      setError(e?.response?.data?.message || "فشل حفظ برنامج التدريب.");
+      setError(e?.response?.data?.message || "فشل حفظ جدول الحصص الأسبوعية.");
     } finally {
       setSaving(false);
     }

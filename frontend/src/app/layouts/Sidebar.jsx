@@ -120,7 +120,7 @@ const menus = {
   student: [
     { name: "الرئيسية", path: "/student/dashboard" },
     { name: "طلب التدريب", path: "/student/training-request" },
-    { name: "برنامج التدريب", path: "/student/schedule" },
+    { name: "جدول الحصص الأسبوعية", path: "/student/schedule" },
     { name: "سجل الحضور والغياب", path: "/student/attendance" },
     { name: "الملف الإنجازي", path: "/student/portfolio" },
     { name: "التكليفات", path: "/student/assignments" },
@@ -148,7 +148,7 @@ const menus = {
     { name: "حالة التوزيع", path: "/coordinator/distribution-status" },
     { name: "الطلبة", path: "/coordinator/students" },
     { name: "الإحصائيات", path: "/coordinator/statistics" },
-    { name: "التحكم ببرنامج التدريب", path: "/coordinator/training-program-control" },
+    { name: "التحكم بجدول الحصص الأسبوعية", path: "/coordinator/training-program-control" },
   ],
 
   principal: [

@@ -53,19 +53,37 @@ class TrainingSitesFromCsvSeeder extends Seeder
                 continue;
             }
 
+            // Map Arabic gender values to database enum values
+            $genderClassification = null;
+            if ($gender) {
+                $genderLower = mb_strtolower($gender, 'UTF-8');
+                if (str_contains($genderLower, 'ذكور') || str_contains($genderLower, 'boys')) {
+                    $genderClassification = 'boys';
+                } elseif (str_contains($genderLower, 'إناث') || str_contains($genderLower, 'اناث') || str_contains($genderLower, 'girls')) {
+                    $genderClassification = 'girls';
+                } elseif (str_contains($genderLower, 'مختلط') || str_contains($genderLower, 'mixed')) {
+                    $genderClassification = 'mixed';
+                }
+            }
+
+            // Map Arabic stage values to database enum values
+            $schoolLevel = null;
+            if ($stage) {
+                $stageLower = mb_strtolower($stage, 'UTF-8');
+                if (str_contains($stageLower, 'دنيا') || str_contains($stageLower, 'lower')) {
+                    $schoolLevel = 'lower';
+                } elseif (str_contains($stageLower, 'عليا') || str_contains($stageLower, 'upper')) {
+                    $schoolLevel = 'upper';
+                }
+            }
+
             // Build description from available info
             $descriptionParts = [];
-            if ($gender) {
-                $descriptionParts[] = "تصنيف: {$gender}";
-            }
-            if ($stage) {
-                $descriptionParts[] = "مرحلة: {$stage}";
-            }
             if ($email) {
                 $descriptionParts[] = "البريد: {$email}";
             }
 
-            $description = implode(' | ', $descriptionParts);
+            $description = implode(' | ', $descriptionParts) ?: null;
 
             // Use phone if available, otherwise mobile
             $phoneNumber = $phone ?: $mobile;
@@ -84,6 +102,8 @@ class TrainingSitesFromCsvSeeder extends Seeder
                 'name' => $name,
                 'location' => $location ?: 'الخليل',
                 'phone' => $phoneNumber,
+                'email' => $email ?: null,
+                'mobile' => $mobile ?: null,
                 'description' => $description,
                 'is_active' => true,
                 'directorate' => $directorate,
@@ -91,6 +111,8 @@ class TrainingSitesFromCsvSeeder extends Seeder
                 'site_type' => 'school',
                 'governing_body' => 'directorate_of_education',
                 'school_type' => 'public',
+                'gender_classification' => $genderClassification,
+                'school_level' => $schoolLevel,
             ]);
 
             $count++;

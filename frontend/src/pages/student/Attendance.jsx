@@ -40,6 +40,15 @@ const printStyles = `
 
 const DAYS = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
 
+const getDayFromDate = (dateStr) => {
+  if (!dateStr) return DAYS[0];
+  const d = new Date(dateStr);
+  if (isNaN(d)) return DAYS[0];
+  const jsDay = d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const map = { 6: "السبت", 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس" };
+  return map[jsDay] || DAYS[0];
+};
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -65,10 +74,10 @@ export default function StudentAttendance() {
   const portfolioEntryIdRef = useRef(null);
 
   const [formData, setFormData] = useState({
-    day: DAYS[0],
+    day: getDayFromDate(todayISO()),
     date: todayISO(),
-    check_in: "",
-    check_out: "",
+    check_in: "08:00",
+    check_out: "14:00",
     lessons_count: "",
     notes: "",
   });
@@ -127,9 +136,30 @@ export default function StudentAttendance() {
     }
   };
 
+  const clampTime = (name, value) => {
+    if (name === "check_in" && value < "08:00") return "08:00";
+    if (name === "check_in" && value > "14:00") return "14:00";
+    if (name === "check_out" && value < "08:00") return "08:00";
+    if (name === "check_out" && value > "14:00") return "14:00";
+    return value;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "date") {
+      setFormData((prev) => ({ ...prev, date: value, day: getDayFromDate(value) }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: clampTime(name, value) }));
+    }
+  };
+
+  const handleTimeBlur = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: clampTime(name, value) }));
+  };
+
+  const handleEditTimeBlur = (name, value) => {
+    setEditRecord((prev) => ({ ...prev, [name]: clampTime(name, value) }));
   };
 
   const handlePrint = () => {
@@ -158,10 +188,10 @@ export default function StudentAttendance() {
       }
       setSuccess(editingEntry ? "تم تعديل سجل الحضور بنجاح." : "تم إضافة سجل الحضور بنجاح.");
       setFormData({
-        day: DAYS[0],
+        day: getDayFromDate(todayISO()),
         date: todayISO(),
-        check_in: "",
-        check_out: "",
+        check_in: "08:00",
+        check_out: "14:00",
         lessons_count: "",
         notes: "",
       });
@@ -300,54 +330,50 @@ export default function StudentAttendance() {
         </p>
       </div>
 
-      {/* بطاقات الإحصائيات */}
-      <div className="dashboard-grid no-print" style={{ marginBottom: 20 }}>
-        <div className="stat-card primary">
-          <div className="stat-top">
-            <div>
-              <div className="stat-title">إجمالي أيام الحضور</div>
-              <div className="stat-value">{stats.total}</div>
-            </div>
-            <div className="stat-icon">
+      {/* Stats Strip */}
+      <div className="section-card no-print" style={{ padding: "0", marginBottom: 20, overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "stretch", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, minWidth: 160, padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", borderLeft: "1px solid var(--border)" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0, boxShadow: "0 4px 12px rgba(20,42,66,0.18)" }}>
               <CalendarCheck size={20} />
             </div>
-          </div>
-          <div className="stat-meta">يوم تدريب مسجّل</div>
-        </div>
-
-        <div className="stat-card success">
-          <div className="stat-top">
             <div>
-              <div className="stat-title">إجمالي ساعات التدريب</div>
-              <div className="stat-value">{stats.totalHours}</div>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.25rem", letterSpacing: "0.04em" }}>إجمالي أيام الحضور</div>
+              <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "var(--secondary)", lineHeight: 1 }}>{stats.total}</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-faint)", marginTop: "0.2rem" }}>يوم تدريب مسجّل</div>
             </div>
-            <div className="stat-icon">
+          </div>
+          <div style={{ flex: 1, minWidth: 160, padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem", borderLeft: "1px solid var(--border)" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, var(--success) 0%, #28a76e 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0, boxShadow: "0 4px 12px rgba(28,122,86,0.2)" }}>
               <Clock size={20} />
             </div>
-          </div>
-          <div className="stat-meta">ساعة تدريب فعليّة</div>
-        </div>
-
-        <div className="stat-card info">
-          <div className="stat-top">
             <div>
-              <div className="stat-title">إجمالي الحصص</div>
-              <div className="stat-value">{stats.totalLessons}</div>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.25rem", letterSpacing: "0.04em" }}>إجمالي ساعات التدريب</div>
+              <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "var(--secondary)", lineHeight: 1 }}>{stats.totalHours}</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-faint)", marginTop: "0.2rem" }}>ساعة تدريب فعليّة</div>
             </div>
-            <div className="stat-icon">
+          </div>
+          <div style={{ flex: 1, minWidth: 160, padding: "1.25rem 1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, var(--info) 0%, #3a8fc7 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0, boxShadow: "0 4px 12px rgba(46,111,163,0.2)" }}>
               <BookOpen size={20} />
             </div>
+            <div>
+              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.25rem", letterSpacing: "0.04em" }}>إجمالي الحصص</div>
+              <div style={{ fontSize: "1.9rem", fontWeight: 800, color: "var(--secondary)", lineHeight: 1 }}>{stats.totalLessons}</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-faint)", marginTop: "0.2rem" }}>حصة تدريبيّة</div>
+            </div>
           </div>
-          <div className="stat-meta">حصة تدريبيّة</div>
         </div>
       </div>
 
       {/* نموذج إضافة سجل جديد */}
       <div className="section-card no-print" style={{ marginBottom: 20 }}>
-        <h4 style={{ margin: "0 0 16px", color: "var(--secondary)", fontSize: "1.05rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
-          <ClipboardList size={18} />
-          إضافة سجل حضور جديد
-        </h4>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1.5px solid var(--border)" }}>
+          <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg, var(--accent) 0%, #b8894e 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
+            <ClipboardList size={18} />
+          </div>
+          <h4 style={{ margin: 0, color: "var(--primary-dark)", fontSize: "1.05rem", fontWeight: 800 }}>إضافة سجل حضور جديد</h4>
+        </div>
         <form onSubmit={handleAddRecord}>
           <div
             style={{
@@ -358,29 +384,32 @@ export default function StudentAttendance() {
             }}
           >
             <div className="form-field">
-              <label className="field-label">اليوم</label>
-              <select
-                name="day"
-                value={formData.day}
-                onChange={handleInputChange}
-                className="form-select-custom"
-              >
-                {DAYS.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="form-field">
-              <label className="field-label">التاريخ</label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                className="form-input-custom"
-              />
+              <label className="field-label">اليوم والتاريخ</label>
+              <div style={{ position: "relative" }}>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleInputChange}
+                  className="form-input-custom"
+                  style={{ paddingLeft: "5rem" }}
+                />
+                <span style={{
+                  position: "absolute",
+                  left: "0.75rem",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: "0.82rem",
+                  fontWeight: 700,
+                  color: "var(--primary)",
+                  background: "rgba(20,42,66,0.07)",
+                  borderRadius: 6,
+                  padding: "2px 8px",
+                  pointerEvents: "none",
+                }}>
+                  {formData.day}
+                </span>
+              </div>
             </div>
             <div className="form-field">
               <label className="field-label">ساعة الحضور</label>
@@ -389,6 +418,9 @@ export default function StudentAttendance() {
                 name="check_in"
                 value={formData.check_in}
                 onChange={handleInputChange}
+                onBlur={handleTimeBlur}
+                min="08:00"
+                max="14:00"
                 className="form-input-custom"
               />
             </div>
@@ -399,6 +431,9 @@ export default function StudentAttendance() {
                 name="check_out"
                 value={formData.check_out}
                 onChange={handleInputChange}
+                onBlur={handleTimeBlur}
+                min="08:00"
+                max="14:00"
                 className="form-input-custom"
               />
             </div>
@@ -457,7 +492,7 @@ export default function StudentAttendance() {
       )}
 
       {editingEntry && (
-        <div className="no-print" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, padding: "0.75rem 1rem", background: "#fef3c7", border: "1.5px solid #f59e0b", color: "#92400e", borderRadius: 8, fontWeight: 600, fontSize: "0.9rem" }}>
+        <div className="alert-custom alert-warning no-print" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, fontSize: "0.9rem" }}>
           <Edit3 size={18} />
           وضع التعديل — يتم تحديث المدخل الموجود في ملف الإنجاز
         </div>
@@ -469,29 +504,20 @@ export default function StudentAttendance() {
         <div style={{ display: 'none' }} className="print-header">
           <h1 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '18px' }}>سجل الحضور والغياب — نموذج رقم (2)</h1>
         </div>
-        <h4 className="no-print" style={{ margin: "0 0 16px", color: "var(--secondary)", fontSize: "1.05rem", fontWeight: 800, display: "flex", alignItems: "center", gap: 8 }}>
-          <CalendarCheck size={18} />
-          سجل الحضور والغياب — نموذج رقم (2)
-          <button
-            onClick={handlePrint}
-            style={{
-              marginRight: "auto",
-              padding: "0.4rem 0.8rem",
-              backgroundColor: "#1565c0",
-              color: "white",
-              border: "none",
-              borderRadius: "20px",
-              fontSize: "0.8rem",
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              cursor: "pointer",
-            }}
-          >
+        <div className="no-print" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1.5px solid var(--border)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
+              <CalendarCheck size={18} />
+            </div>
+            <div>
+              <h4 style={{ margin: 0, color: "var(--primary-dark)", fontSize: "1.05rem", fontWeight: 800 }}>سجل الحضور والغياب</h4>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--text-faint)" }}>نموذج رقم (2)</p>
+            </div>
+          </div>
+          <button onClick={handlePrint} className="btn-outline-custom btn-sm-custom">
             <Printer size={14} /> طباعة
           </button>
-        </h4>
+        </div>
 
         <div className="table-wrapper">
           <table className="data-table">
@@ -528,29 +554,27 @@ export default function StudentAttendance() {
                     {editingRecordId === rec.id ? (
                       <>
                         <td>
-                          <select
-                            value={editRecord.day}
-                            onChange={(e) => setEditRecord((prev) => ({ ...prev, day: e.target.value }))}
-                            className="form-select-custom"
-                            style={{ fontSize: "0.82rem", marginBottom: 4 }}
-                          >
-                            {DAYS.map((d) => (
-                              <option key={d} value={d}>{d}</option>
-                            ))}
-                          </select>
-                          <input
-                            type="date"
-                            value={editRecord.date}
-                            onChange={(e) => setEditRecord((prev) => ({ ...prev, date: e.target.value }))}
-                            className="form-input-custom"
-                            style={{ fontSize: "0.78rem" }}
-                          />
+                          <div style={{ position: "relative", marginBottom: 4 }}>
+                            <input
+                              type="date"
+                              value={editRecord.date}
+                              onChange={(e) => setEditRecord((prev) => ({ ...prev, date: e.target.value, day: getDayFromDate(e.target.value) }))}
+                              className="form-input-custom"
+                              style={{ fontSize: "0.78rem", paddingLeft: "4.5rem" }}
+                            />
+                            <span style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", fontWeight: 700, color: "var(--primary)", background: "rgba(20,42,66,0.07)", borderRadius: 5, padding: "1px 6px", pointerEvents: "none" }}>
+                              {editRecord.day}
+                            </span>
+                          </div>
                         </td>
                         <td style={{ textAlign: "center" }}>
                           <input
                             type="time"
                             value={editRecord.check_in}
-                            onChange={(e) => setEditRecord((prev) => ({ ...prev, check_in: e.target.value }))}
+                            onChange={(e) => setEditRecord((prev) => ({ ...prev, check_in: clampTime("check_in", e.target.value) }))}
+                            onBlur={(e) => handleEditTimeBlur("check_in", e.target.value)}
+                            min="08:00"
+                            max="14:00"
                             className="form-input-custom"
                             style={{ fontSize: "0.82rem", textAlign: "center" }}
                           />
@@ -559,7 +583,10 @@ export default function StudentAttendance() {
                           <input
                             type="time"
                             value={editRecord.check_out}
-                            onChange={(e) => setEditRecord((prev) => ({ ...prev, check_out: e.target.value }))}
+                            onChange={(e) => setEditRecord((prev) => ({ ...prev, check_out: clampTime("check_out", e.target.value) }))}
+                            onBlur={(e) => handleEditTimeBlur("check_out", e.target.value)}
+                            min="08:00"
+                            max="14:00"
                             className="form-input-custom"
                             style={{ fontSize: "0.82rem", textAlign: "center" }}
                           />
@@ -665,24 +692,17 @@ export default function StudentAttendance() {
         </div>
 
         {/* ملاحظات توضيحية */}
-        <div
-          className="no-print"
-          style={{
-            marginTop: 22,
-            padding: "14px 18px",
-            background: "rgba(59,130,182,0.05)",
-            border: "1px solid rgba(59,130,182,0.12)",
-            borderRadius: "var(--radius-sm, 10px)",
-            fontSize: "0.88rem",
-            color: "var(--text-soft)",
-            lineHeight: 1.9,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, fontWeight: 800, color: "var(--info)" }}>
-            <Info size={16} />
-            تعليمات
-          </div>
-          <ul style={{ paddingRight: 20, listStyle: "disc" }}>
+        <div className="no-print" style={{
+          marginTop: "1.25rem",
+          padding: "0.9rem 1.1rem",
+          background: "rgba(46,111,163,0.04)",
+          border: "1px solid rgba(46,111,163,0.12)",
+          borderRadius: "var(--radius-sm)",
+          display: "flex",
+          gap: "0.75rem",
+        }}>
+          <Info size={16} style={{ color: "var(--info)", marginTop: 3, flexShrink: 0 }} />
+          <ul style={{ margin: 0, padding: 0, listStyle: "none", fontSize: "0.88rem", color: "var(--text-soft)", lineHeight: 1.9 }}>
             <li>يجب تسجيل حضورك يومياً خلال فترة التدريب.</li>
             <li>تأكد من إدخال ساعة الحضور والمغادرة بالتنسيق 24 ساعة (مثال: 08:00 - 14:30).</li>
             <li>عدد الحصص يشير إلى عدد الدروس/الفصول التي حضرتها في ذلك اليوم.</li>
