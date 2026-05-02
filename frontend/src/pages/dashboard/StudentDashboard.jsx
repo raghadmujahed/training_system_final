@@ -7,6 +7,7 @@ import {
 } from "../../services/api";
 import { getStudentDashboardPath, getStudentTrack } from "../../utils/studentSection";
 import { readStoredUser } from "../../utils/session";
+import { useStudentTrack, TRACK_CONFIG } from "../../hooks/useStudentTrack";
 import { getTrainingRequestStatusMeta, isTaskPending } from "../../utils/status";
 import {
   User,
@@ -28,51 +29,17 @@ import {
   Megaphone,
 } from "lucide-react";
 
-const getStudentSpecialization = (user, track) => {
-  const normalizeText = (value) =>
-    String(value || "")
-      .toLowerCase()
-      .replace(/[أإآ]/g, "ا")
-      .replace(/ى/g, "ي")
-      .replace(/ة/g, "ه")
-      .trim();
-  const department = user?.department || user?.data?.department;
-  const departmentName = normalizeText(department?.name);
-  const courseName = user?.current_section?.course_name || user?.data?.current_section?.course_name;
+const getStudentSpecialization = (user, config) => {
   const specialization = user?.specialization || user?.data?.specialization || user?.major || user?.data?.major;
-
-  if (specialization) {
-    return specialization;
-  }
-
-  if (departmentName.includes("psych") || departmentName.includes("نفس") || track === "psychology") {
-    return "علم النفس";
-  }
-
-  if (
-    departmentName.includes("usool") ||
-    departmentName.includes("اصول") ||
-    departmentName.includes("تربي") ||
-    track === "education"
-  ) {
-    return "أصول التربية";
-  }
-
-  return department?.name || courseName || "—";
+  if (specialization) return specialization;
+  return config.specializationLabel;
 };
 
-const getCollegeLabel = (user, track) => {
-  const departmentName = String(user?.department?.name || user?.data?.department?.name || "").toLowerCase();
-
-  if (departmentName.includes("psych") || track === "psychology") {
-    return "كلية الآداب";
-  }
-
-  if (departmentName.includes("usool") || track === "education") {
-    return "كلية التربية";
-  }
-
-  return user?.department?.name || user?.data?.department?.name || "—";
+const getCollegeLabel = (user, config) => {
+  const departmentName = user?.department?.name || user?.data?.department?.name;
+  if (departmentName === "psychology" || config.isPsychology) return config.collegeLabel;
+  if (departmentName === "usool_tarbiah" || config.isEducation) return config.collegeLabel;
+  return departmentName || "—";
 };
 
 const getUserStatusLabel = (user) => {
@@ -118,8 +85,11 @@ export default function StudentDashboard({ forcedTrack = null }) {
   const [loading, setLoading] = useState(true);
   const abortControllerRef = useRef(null);
   const currentUser = useMemo(() => readStoredUser(), []);
-  const detectedTrack = getStudentTrack(currentUser);
+  const { track: detectedTrack, config: detectedConfig } = useStudentTrack();
   const effectiveTrack = forcedTrack || detectedTrack || "education";
+  const config = forcedTrack && forcedTrack !== detectedTrack
+    ? (forcedTrack === "psychology" ? TRACK_CONFIG.psychology : TRACK_CONFIG.education)
+    : detectedConfig;
 
   const displaySummaryCards = useMemo(() => {
     return summaryCards.map((card) => {
@@ -161,9 +131,9 @@ export default function StudentDashboard({ forcedTrack = null }) {
         ...prev,
         name: user?.name || user?.data?.name || "",
         universityId: user?.university_id || user?.data?.university_id || "",
-        department: user?.department?.label || user?.data?.department?.label || getStudentSpecialization(user, effectiveTrack),
+        department: user?.department?.label || user?.data?.department?.label || getStudentSpecialization(user, config),
         major: user?.major || user?.data?.major || "",
-        college: getCollegeLabel(user, effectiveTrack),
+        college: getCollegeLabel(user, config),
         status: getUserStatusLabel(user),
         sectionName: cs.section_name || "",
         courseName: cs.course_name || "",
@@ -257,7 +227,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
         setLoading(false);
       }
     }
-  }, [effectiveTrack]);
+  }, [effectiveTrack, config]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -293,9 +263,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
           <div className="hero-text">
             <h1 className="hero-title">مرحباً، {studentInfo.name || "طالب"} 👋</h1>
             <p className="hero-subtitle">
-              {effectiveTrack === "psychology"
-                ? "لوحة تحكم طالب علم النفس - تابع تقدمك في التدريب الميداني"
-                : "لوحة تحكم طالب أصول التربية - تابع تقدمك في التدريب الميداني"}
+              {config.dashboardTitle}
             </p>
           </div>
         </div>
@@ -432,7 +400,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
               <MapPin size={18} />
             </div>
             <div className="info-content">
-              <span className="info-label">{effectiveTrack === "psychology" ? "الجهة/المديرية" : "مديرية التربية"}</span>
+              <span className="info-label">{config.directorateLabel}</span>
               <strong className="info-value">{studentInfo.directorate || "—"}</strong>
             </div>
           </div>
@@ -441,7 +409,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
               <School size={18} />
             </div>
             <div className="info-content">
-              <span className="info-label">{effectiveTrack === "psychology" ? "الجهة المعتمدة" : "المدرسة المعتمدة"}</span>
+              <span className="info-label">{config.siteLabel}</span>
               <strong className="info-value">{studentInfo.school || "—"}</strong>
             </div>
           </div>
@@ -499,7 +467,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
                 <School size={18} />
               </div>
               <div className="info-content">
-                <span className="info-label">{effectiveTrack === "psychology" ? "الأخصائي المرشد" : "المعلم المرشد"}</span>
+                <span className="info-label">{config.mentorLabel}</span>
                 <strong className="info-value">{studentInfo.mentorName || "لم يُعيَّن بعد"}</strong>
               </div>
             </div>

@@ -5,6 +5,7 @@ import {
   saveStudentTrainingProgram,
   submitFormToSupervisor,
 } from "../../services/api";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 const days = [
   { id: "sunday", label: "الأحد" },
@@ -36,6 +37,7 @@ const buildEmptySchedule = () => {
 };
 
 export default function EvaluationProgram() {
+  const { config } = useStudentTrack();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -54,15 +56,17 @@ export default function EvaluationProgram() {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState("");
 
-  // Available forms list
-  const availableForms = [
+  // Available forms list — education-only forms hidden for psychology
+  const allForms = [
     {
       id: "teaching_sessions",
       title: "عدد الحصص التي درسها الطالب",
       description: "تسجيل الحصص النوعية التي قام الطالب بتدريسها خلال فترة التدريب",
       icon: FileText,
+      educationOnly: true,
     },
   ];
+  const availableForms = allForms.filter(f => config.isEducation || !f.educationOnly);
 
   // Teaching sessions state (الحصص النوعية)
   const [teachingSessions, setTeachingSessions] = useState([

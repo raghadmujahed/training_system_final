@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { checkFeatureFlag } from "../../services/api";
-import { readStoredUser } from "../../utils/session";
-import { isPsychologyStudentUser } from "../../utils/psychologyWorkflow";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 import TrainingRequest from "./TrainingRequest";
 
 export default function StudentTrainingRequestEntry() {
+  const { isPsychology } = useStudentTrack();
   const [isOpen, setIsOpen] = useState(null);
+
+  // Psychology students cannot create training requests — redirect instantly
+  if (isPsychology) {
+    return <Navigate to="/student/training-request-status" replace />;
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -24,11 +29,6 @@ export default function StudentTrainingRequestEntry() {
       mounted = false;
     };
   }, []);
-
-  const u = readStoredUser();
-  if (isPsychologyStudentUser(u)) {
-    return <Navigate to="/student/training-request-status" replace />;
-  }
 
   if (isOpen === null) {
     return (

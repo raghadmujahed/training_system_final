@@ -32,6 +32,14 @@ export default function Login() {
       localStorage.setItem("access_token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
+      // تخزين معرّفات الأقسام لاستخدامها في تحديد المسار
+      const deptIds = response?.department_ids;
+      if (deptIds) {
+        localStorage.setItem("department_ids", JSON.stringify(deptIds));
+        window.__PSYCHOLOGY_DEPT_ID = deptIds.psychology;
+        window.__USOOL_TARBIAH_DEPT_ID = deptIds.usool_tarbiah;
+      }
+
       if (userRole === ROLES.STUDENT) {
         navigate(getStudentDashboardPath(user));
       } else {

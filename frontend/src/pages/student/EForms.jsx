@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { getStudentEForms, saveStudentTrainingProgram, saveStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Loader2, Save, Plus, Trash2, RotateCcw, BookOpen, FileText, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, ArrowRight, CheckCircle2, Clock, Edit3 } from "lucide-react";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 // CSS Animation for smooth form appearance
 const fadeInStyles = `
@@ -26,17 +27,19 @@ const fadeInStyles = `
 }
 `;
 
-const availableForms = [
-  { key: "weekly_reflection", title: "نموذج التأمل الأسبوعي", desc: "تأمل ذاتي أسبوعي في التجربة التدريبية", icon: BookOpen, color: "#6366f1", gradient: "linear-gradient(135deg, #6366f1, #8b5cf6)" },
-  { key: "field_visit_summary", title: "ملخص الزيارة الميدانية", desc: "توثيق الزيارات الميدانية والملاحظات", icon: ClipboardCheck, color: "#0891b2", gradient: "linear-gradient(135deg, #0891b2, #06b6d4)" },
-  { key: "learning_experience_review", title: "نقد خبرات التعلم", desc: "تقييم وتقويم الخبرات التعليمية المكتسبة", icon: FileText, color: "#059669", gradient: "linear-gradient(135deg, #059669, #34d399)" },
-  { key: "weekly_brief_report", title: "التقرير المختصر الأسبوعي", desc: "تقرير شامل عن الأنشطة والتأمل الذاتي", icon: FileBarChart, color: "#d97706", gradient: "linear-gradient(135deg, #d97706, #fbbf24)" },
-  { key: "weekly_full_report", title: "التقرير الأسبوعي", desc: "تقرير مفصل عن الأنشطة والمهام المنفذة", icon: FileSpreadsheet, color: "#dc2626", gradient: "linear-gradient(135deg, #e11d48, #f43f5e)" },
-  { key: "classes_count", title: "عدد الحصص التي درسها الطالب", desc: "تسجيل الحصص النوعية التي قام الطالب بتدريسها", icon: GraduationCap, color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)" },
+const allForms = [
+  { key: "weekly_reflection", title: "نموذج التأمل الأسبوعي", desc: "تأمل ذاتي أسبوعي في التجربة التدريبية", icon: BookOpen, color: "#6366f1", gradient: "linear-gradient(135deg, #6366f1, #8b5cf6)", educationOnly: false },
+  { key: "field_visit_summary", title: "ملخص الزيارة الميدانية", desc: "توثيق الزيارات الميدانية والملاحظات", icon: ClipboardCheck, color: "#0891b2", gradient: "linear-gradient(135deg, #0891b2, #06b6d4)", educationOnly: false },
+  { key: "learning_experience_review", title: "نقد خبرات التعلم", desc: "تقييم وتقويم الخبرات التعليمية المكتسبة", icon: FileText, color: "#059669", gradient: "linear-gradient(135deg, #059669, #34d399)", educationOnly: false },
+  { key: "weekly_brief_report", title: "التقرير المختصر الأسبوعي", desc: "تقرير شامل عن الأنشطة والتأمل الذاتي", icon: FileBarChart, color: "#d97706", gradient: "linear-gradient(135deg, #d97706, #fbbf24)", educationOnly: false },
+  { key: "weekly_full_report", title: "التقرير الأسبوعي", desc: "تقرير مفصل عن الأنشطة والمهام المنفذة", icon: FileSpreadsheet, color: "#dc2626", gradient: "linear-gradient(135deg, #e11d48, #f43f5e)", educationOnly: false },
+  { key: "classes_count", title: "عدد الحصص التي درسها الطالب", desc: "تسجيل الحصص النوعية التي قام الطالب بتدريسها", icon: GraduationCap, color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)", educationOnly: true },
 ];
 
 export default function EForms() {
   const location = useLocation();
+  const { config } = useStudentTrack();
+  const availableForms = allForms.filter(f => config.isEducation || !f.educationOnly);
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

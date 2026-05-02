@@ -11,6 +11,7 @@ use App\Enums\UserStatus;
 use App\Helpers\ActivityLogger;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\TrainingTrackResolver;
 use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -238,6 +239,10 @@ class UserController extends Controller
             'user' => new UserResource($user->load(['role', 'department', 'trainingSite', 'fieldSupervisorProfile', 'enrollments.section.course'])),
             'access_token' => $token,
             'token_type' => 'Bearer',
+            'department_ids' => [
+                'psychology' => TrainingTrackResolver::psychologyDeptId(),
+                'usool_tarbiah' => TrainingTrackResolver::usoolTarbiahDeptId(),
+            ],
         ]);
     }
 

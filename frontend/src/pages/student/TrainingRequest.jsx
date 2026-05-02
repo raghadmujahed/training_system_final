@@ -23,8 +23,7 @@ import {
   itemsFromPagedResponse,
   updateStudentTrainingRequest,
 } from "../../services/api";
-import { getStudentTrack } from "../../utils/studentSection";
-import { readStoredUser } from "../../utils/session";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 import {
   getTrainingRequestStatusMeta,
   isTrainingRequestCancelable,
@@ -35,11 +34,8 @@ import TrainingRequestWorkflowStepper from "../../components/training/TrainingRe
 const educationDirectorates = ["وسط", "شمال", "جنوب", "يطا"];
 
 export default function TrainingRequest() {
-  const currentUser = readStoredUser();
-  const studentTrack = getStudentTrack(currentUser);
-  const isEducationFlow = studentTrack === "education";
-  const isPsychologyFlow = studentTrack === "psychology";
-  const governingBodyLabel = isEducationFlow ? "مديرية التربية والتعليم" : "وزارة الصحة";
+  const { isEducation: isEducationFlow, isPsychology: isPsychologyFlow, config } = useStudentTrack();
+  const governingBodyLabel = config.governingBodyLabel;
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,8 +52,8 @@ export default function TrainingRequest() {
   const [highlightedSiteIndex, setHighlightedSiteIndex] = useState(-1);
 
   const [filters, setFilters] = useState({
-    governing_body: isEducationFlow ? "directorate_of_education" : "ministry_of_health",
-    site_type: isEducationFlow ? "school" : "health_center",
+    governing_body: config.governingBodyValue,
+    site_type: config.siteTypeValue,
     directorate: "",
     gender_classification: "",
     school_level: "",
@@ -96,8 +92,8 @@ export default function TrainingRequest() {
     if (!isEducationFlow && !isPsychologyFlow) return;
     setFilters((prev) => ({
       ...prev,
-      governing_body: isEducationFlow ? "directorate_of_education" : "ministry_of_health",
-      site_type: isEducationFlow ? "school" : "health_center",
+      governing_body: config.governingBodyValue,
+      site_type: config.siteTypeValue,
       gender_classification: "",
       school_level: "",
     }));
@@ -679,7 +675,7 @@ export default function TrainingRequest() {
                   className="form-label-custom d-flex align-items-center gap-1"
                 >
                   <School size={14} />
-                  {isEducationFlow ? "المدرسة" : "جهة التدريب"}
+                  {config.siteSearchLabel}
                 </label>
                 <div style={{ position: "relative" }}>
                   <input

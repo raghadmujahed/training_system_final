@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { getStaffDirectory } from "../../services/api";
 import { Mail, Phone, Building2, GraduationCap, Users } from "lucide-react";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 export default function StaffDirectory() {
+  const { config } = useStudentTrack();
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,8 +36,10 @@ export default function StaffDirectory() {
       case "المشرف الأكاديمي":
         return <GraduationCap size={20} />;
       case "مدير المدرسة":
+      case "مدير المركز":
         return <Building2 size={20} />;
       case "المعلم":
+      case "الأخصائي المرشد":
         return <Users size={20} />;
       default:
         return <Users size={20} />;
@@ -51,8 +55,10 @@ export default function StaffDirectory() {
       case "المشرف الأكاديمي":
         return "#10b981";
       case "مدير المدرسة":
+      case "مدير المركز":
         return "#f59e0b";
       case "المعلم":
+      case "الأخصائي المرشد":
         return "#6366f1";
       default:
         return "#6b7280";

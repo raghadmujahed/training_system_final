@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { getStudentTrainingProgram, saveStudentTrainingProgram, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Calendar, Clock, Lock, Edit3, Save, RotateCcw, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 // Print-specific CSS
 const printStyles = `
@@ -56,6 +57,11 @@ const buildEmptySchedule = () => {
 
 export default function Schedule() {
   const location = useLocation();
+  const { isPsychology, config } = useStudentTrack();
+
+  if (isPsychology) {
+    return <Navigate to="/student/dashboard" replace />;
+  }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -245,7 +251,7 @@ export default function Schedule() {
     <>
       <style>{printStyles}</style>
       <div className="content-header no-print">
-        <h1 className="page-title">جدول الحصص الأسبوعية</h1>
+        <h1 className="page-title">{config.scheduleTitle}</h1>
         <p className="page-subtitle">
           الجدول الأسبوعي للحصص التدريبية — {studentInfo.name} — {studentInfo.university_id}
         </p>
@@ -371,7 +377,7 @@ export default function Schedule() {
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "var(--primary-dark)" }}>
-                جدول الحصص الأسبوعية
+                {config.scheduleTitle}
               </h3>
               <p style={{ margin: "0.2rem 0 0", color: "var(--text-faint)", fontSize: "0.88rem" }}>
                 5 أيام × 7 حصص تدريبية

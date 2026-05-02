@@ -7,11 +7,17 @@ export function departmentName(user) {
 }
 
 export function isPsychologyDepartmentUser(user) {
-  // 1) مقارنة صريحة باسم القسم (من API)
+  // 1) مقارنة بمعرّف القسم (الأسرع)
+  const deptId = user?.department_id ?? user?.data?.department_id;
+  const psychId = window.__PSYCHOLOGY_DEPT_ID ?? null;
+  if (psychId !== null && deptId === psychId) return true;
+  const usoolId = window.__USOOL_TARBIAH_DEPT_ID ?? null;
+  if (usoolId !== null && deptId === usoolId) return false;
+  // 2) مقارنة صريحة باسم القسم (من API)
   const deptName = user?.department?.name ?? user?.department;
   if (deptName === "psychology") return true;
   if (deptName === "usool_tarbiah") return false;
-  // 2) fallback: تحليل نصي
+  // 3) fallback: تحليل نصي
   const n = departmentName(user);
   return n.includes("psych") || n.includes("psychology") || n.includes("نفس");
 }

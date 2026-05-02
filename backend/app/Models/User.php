@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TrainingTrackResolver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -187,7 +188,16 @@ public function enrollments()
             return null;
         }
 
-        // 1) مقارنة صريحة باسم القسم (المسار الرئيسي)
+        // 1) مقارنة بمعرّف القسم (الأسرع — لا يحتاج تحميل العلاقة)
+        $departmentId = $this->department_id;
+        if ($departmentId === TrainingTrackResolver::psychologyDeptId()) {
+            return 'psychology';
+        }
+        if ($departmentId === TrainingTrackResolver::usoolTarbiahDeptId()) {
+            return 'education';
+        }
+
+        // 2) مقارنة باسم القسم (إذا لم يتوفر المعرّف)
         $departmentName = $this->department?->name;
         if ($departmentName === 'psychology') {
             return 'psychology';
@@ -196,7 +206,7 @@ public function enrollments()
             return 'education';
         }
 
-        // 2) fallback: تحليل نصي في حال عدم وجود قسم
+        // 3) fallback: تحليل نصي في حال عدم وجود قسم
         $enrollment = $this->currentEnrollment();
         $courseCode = strtolower((string) data_get($enrollment, 'section.course.code', ''));
         $courseName = strtolower((string) data_get($enrollment, 'section.course.name', ''));

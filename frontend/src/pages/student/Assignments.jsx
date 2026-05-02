@@ -26,6 +26,7 @@ import {
   submitStudentTask,
   updateStudentTaskSubmission,
 } from "../../services/api";
+import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 const STATUS_CONFIG = {
   pending: { 
@@ -65,10 +66,10 @@ const STATUS_CONFIG = {
   },
 };
 
-const getAssignerRoleLabel = (role) => {
+const getAssignerRoleLabel = (role, mentorLabel) => {
   if (!role) return "مُكلِّف";
   const map = {
-    teacher: "المعلم المرشد",
+    teacher: mentorLabel,
     academic_supervisor: "المشرف الأكاديمي",
     field_supervisor: "المشرف الميداني",
     admin: "الإدارة",
@@ -77,6 +78,7 @@ const getAssignerRoleLabel = (role) => {
 };
 
 export default function Assignments() {
+  const { config } = useStudentTrack();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState([]);
@@ -531,7 +533,7 @@ export default function Assignments() {
                             </div>
                             <span>
                               <strong style={{ color: "#374151" }}>
-                                {getAssignerRoleLabel(assigner.role?.name)}:
+                                {getAssignerRoleLabel(assigner.role?.name, config.mentorLabel)}:
                               </strong>{" "}
                               {assigner.name}
                             </span>

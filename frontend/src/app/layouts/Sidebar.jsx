@@ -238,7 +238,7 @@ export default function Sidebar({ isOpen, onClose }) {
     if (role === "student") {
       const full = menus.student;
       if (isPsychologyStudentUser(savedUser)) {
-        return full.filter((i) => i.path !== "/student/training-request");
+        return full.filter((i) => !["/student/training-request", "/student/schedule"].includes(i.path));
       }
       return full;
     }
