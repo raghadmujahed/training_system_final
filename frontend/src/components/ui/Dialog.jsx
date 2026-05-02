@@ -2,7 +2,7 @@ import React, { useState, createContext, useContext } from 'react';
 
 const DialogContext = createContext(null);
 
-export function Dialog({ children, open, onOpenChange, ...props }) {
+export function Dialog({ children, open, onOpenChange }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = open !== undefined ? open : internalOpen;
   const setIsOpen = onOpenChange || setInternalOpen;

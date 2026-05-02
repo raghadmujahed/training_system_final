@@ -6,6 +6,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTrainingSiteRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('capacity')) {
+            $this->merge(['capacity' => 3]);
+        }
+    }
+
     public function authorize(): bool
     {
         return in_array($this->user()->role?->name, [

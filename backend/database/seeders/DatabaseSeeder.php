@@ -8,7 +8,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 👇 تشغيل seeders أولًا
+        //  تشغيل seeders أولًا
         $this->call([
             RoleSeeder::class,
             DepartmentSeeder::class,
@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UpdateSchoolsClassificationSeeder::class, // تحديث تصنيف المدارس (ذكور/إناث/مختلطة ودنيا/عليا)
             RolePermissionSeeder::class,
             UsersSeeder::class,
+            PsychologyTrainingSitesSeeder::class,
             StudentsSeeder::class,
             Students2Seeder::class,
             SectionsSeeder::class,

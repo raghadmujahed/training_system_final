@@ -21,6 +21,7 @@ use App\Models\Course;
 use App\Models\OfficialLetter;
 use App\Models\User;
 use App\Services\TrainingRequestService;
+use App\Support\PsychologyAcademicWorkflow;
 use App\Support\TrainingRequestNotifications;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
@@ -107,6 +108,25 @@ class TrainingRequestController extends Controller
         $this->authorizeResource(TrainingRequest::class, 'training_request');
     }
 
+    /**
+     * توحيد قيمة الجهة الحكومية الواردة من الفلتر (تصحيح قيم واجهة قد تُرسل بصيغ الأدوار).
+     *
+     * @return 'directorate_of_education'|'ministry_of_health'|null
+     */
+    private function normalizeGoverningBodyFilter(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return match ($value) {
+            'education_directorate' => 'directorate_of_education',
+            'health_directorate' => 'ministry_of_health',
+            'directorate_of_education', 'ministry_of_health' => $value,
+            default => null,
+        };
+    }
+
     public function index(IndexTrainingRequestRequest $request)
     {
         $query = TrainingRequest::with([
@@ -130,8 +150,15 @@ class TrainingRequestController extends Controller
         if ($request->filled('training_period_id')) {
             $query->where('training_period_id', $request->training_period_id);
         }
-        if ($request->filled('governing_body')) {
-            $query->where('governing_body', $request->governing_body);
+        $governingBodyFilter = $this->normalizeGoverningBodyFilter($request->governing_body);
+        if ($governingBodyFilter !== null) {
+            $query->where(function ($q) use ($governingBodyFilter) {
+                $q->where('governing_body', $governingBodyFilter)
+                    ->orWhere(function ($q2) use ($governingBodyFilter) {
+                        $q2->whereNull('governing_body')
+                            ->whereHas('trainingSite', fn ($sq) => $sq->where('governing_body', $governingBodyFilter));
+                    });
+            });
         }
         if ($request->filled('from_date')) {
             $query->whereDate('requested_at', '>=', $request->from_date);
@@ -165,7 +192,26 @@ class TrainingRequestController extends Controller
                     });
                 });
             }
+
+            if (PsychologyAcademicWorkflow::isPsychologyCoordinator($request->user())) {
+                $psychSupervisorIds = User::query()
+                    ->whereHas('role', fn ($r) => $r->where('name', 'academic_supervisor'))
+                    ->whereHas('department', fn ($d) => $d->where('name', \App\Services\TrainingTrackResolver::PSYCHOLOGY))
+                    ->pluck('id');
+                if ($psychSupervisorIds->isNotEmpty()) {
+                    $query->whereNotIn('requested_by', $psychSupervisorIds->all());
+                }
+            }
             // إذا لم يكن للمنسق قسم، يرى جميع الطلبات بدون فلتر
+        }
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($request->user())) {
+            $supervisor = $request->user();
+            $query->where(function ($q) use ($supervisor) {
+                $q->where('requested_by', $supervisor->id)
+                    ->orWhereHas('trainingRequestStudents.user.enrollments.section', function ($sec) use ($supervisor) {
+                        $sec->where('academic_supervisor_id', $supervisor->id);
+                    });
+            });
         }
         if ($request->user()->role?->name === 'education_directorate' && !empty($request->user()->directorate)) {
             $userDirectorate = $request->user()->directorate;
@@ -177,6 +223,14 @@ class TrainingRequestController extends Controller
             });
         }
 
+        // فصل مسار التربية (مدارس) عن مسار الصحة (مراكز صحية) في قوائم الجهات الرسمية
+        if ($request->user()->role?->name === 'education_directorate') {
+            $query->whereHas('trainingSite', fn ($q) => $q->where('site_type', 'school'));
+        }
+        if (in_array($request->user()->role?->name, ['health_directorate', 'ministry_of_health'], true)) {
+            $query->whereHas('trainingSite', fn ($q) => $q->where('site_type', 'health_center'));
+        }
+
         $trainingRequests = $query->latest()->paginate($request->per_page ?? 15);
 
         return TrainingRequestResource::collection($trainingRequests);
@@ -186,7 +240,7 @@ class TrainingRequestController extends Controller
     {
         $trainingRequest = $this->trainingRequestService->createTrainingRequest(
             $request->validated(),
-            $request->user()->id
+            $request->user()
         );
         return new TrainingRequestResource($trainingRequest);
     }
@@ -325,16 +379,29 @@ class TrainingRequestController extends Controller
             'trainingPeriod',
         ]);
 
-        TrainingRequestNotifications::forStudents(
-            $trainingRequest,
-            'training_request_coordinator_review',
-            $msg,
-            [
-                'training_request_id' => $trainingRequest->id,
-                'book_status' => $trainingRequest->book_status,
-                'decision' => $decision,
-            ]
-        );
+        if ($decision === 'needs_edit' || $decision === 'rejected') {
+            TrainingRequestNotifications::forStudents(
+                $trainingRequest,
+                'training_request_coordinator_review',
+                $msg,
+                [
+                    'training_request_id' => $trainingRequest->id,
+                    'book_status' => $trainingRequest->book_status,
+                    'decision' => $decision,
+                ]
+            );
+        } else {
+            TrainingRequestNotifications::forStudents(
+                $trainingRequest,
+                'training_request_coordinator_review',
+                'تحديث مسار طلبك اعتماد المنسق المبدئي — الطلب يتابع لدى الجهات الرسمية، وليس قبولاً نهائياً في جهة التدريب بعد.',
+                [
+                    'training_request_id' => $trainingRequest->id,
+                    'book_status' => $trainingRequest->book_status,
+                    'decision' => $decision,
+                ]
+            );
+        }
 
         return new TrainingRequestResource($trainingRequest);
     }
@@ -369,6 +436,11 @@ class TrainingRequestController extends Controller
         $this->authorize('create', TrainingRequest::class);
 
         $user = $request->user();
+        if ($user->resolveStudentTrack() === 'psychology') {
+            return response()->json([
+                'message' => 'طلبات تدريب قسم علم النفس يتم إنشاؤها بواسطة المشرف الأكاديمي للقسم وليس من قبل الطالب.',
+            ], 403);
+        }
         $existingRequest = TrainingRequest::query()
             ->where(function ($q) use ($user) {
                 $q->where('requested_by', $user->id)

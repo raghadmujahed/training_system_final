@@ -3,7 +3,14 @@ import { NavLink, useNavigate } from "react-router-dom";
 import SidebarMenuGlyph from "./SidebarMenuGlyph";
 import { checkFeatureFlag } from "../../services/api";
 import { getFieldStaffRoleKey, getRoleLabel, normalizeRole, ROLES } from "../../utils/roles";
+import {
+  isPsychologyAcademicSupervisor,
+  isPsychologyStudentUser,
+} from "../../utils/psychologyWorkflow";
 import { clearStoredToken, clearStoredUser, readStoredUser } from "../../utils/session";
+import huLogo from "../../assets/HU Logo.webp";
+import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
+import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
 
 const menuFeatureMap = {
   "/student/training-request": "training_requests.create",
@@ -54,6 +61,18 @@ function buildFieldStaffMenu(roleKey) {
       { name: "الشعب", path: "/supervisor/sections" },
       { name: "حلول الطلبة", path: "/supervisor/submissions" },
     );
+
+    const supervisorFieldStaffPaths = {
+      "/field-staff/students": "/supervisor/students",
+      "/field-staff/notes": "/supervisor/notes",
+      "/field-staff/tasks": "/supervisor/tasks",
+      "/field-staff/daily-reports": "/supervisor/daily-reports",
+      "/field-staff/final-evaluation": "/supervisor/final-evaluation",
+    };
+    for (let i = 0; i < menu.length; i++) {
+      const next = supervisorFieldStaffPaths[menu[i].path];
+      if (next) menu[i] = { ...menu[i], path: next };
+    }
   }
 
   // الجدول الأسبوعي: للمعلم فقط
@@ -144,7 +163,8 @@ const menus = {
   coordinator: [
     { name: "الرئيسية", path: "/coordinator/dashboard" },
     { name: "طلبات التدريب والتوزيع", path: "/coordinator/training-requests" },
-    { name: "الكتب الرسمية", path: "/coordinator/official-letters" },
+    { name: "دفعات طلبات التدريب", path: "/coordinator/official-letters" },
+    { name: "الإعلانات العامة", path: "/coordinator/announcements" },
     { name: "حالة التوزيع", path: "/coordinator/distribution-status" },
     { name: "الطلبة", path: "/coordinator/students" },
     { name: "الإحصائيات", path: "/coordinator/statistics" },
@@ -167,13 +187,13 @@ const menus = {
   health_directorate: [
     { name: "الرئيسية", path: "/health/dashboard" },
     { name: "أماكن التدريب", path: "/health/training-sites" },
-    { name: "الكتب الرسمية", path: "/health/official-letters" },
+    { name: "طلبات التدريب", path: "/health/official-letters" },
   ],
 
   education_directorate: [
     { name: "الرئيسية", path: "/education/dashboard" },
     { name: "أماكن التدريب", path: "/education/training-sites" },
-    { name: "الكتب الرسمية", path: "/education/official-letters" },
+    { name: "طلبات التدريب", path: "/education/official-letters" },
   ],
 };
 
@@ -191,7 +211,42 @@ export default function Sidebar({ isOpen, onClose }) {
       : getFieldStaffRoleKey(normalizedRole);
   const userName = savedUser?.name || "مستخدم تجريبي";
   const roleName = getRoleLabel(rawRole);
-  const menu = menus[role] || [];
+
+  const menu = useMemo(() => {
+    if (role === "supervisor") {
+      const base = buildFieldStaffMenu("supervisor");
+      if (!isPsychologyAcademicSupervisor(savedUser)) {
+        return base;
+      }
+      const psychItems = [
+        { name: "إنشاء طلب تدريب", path: "/supervisor/psychology/create-training-request" },
+        { name: "طلبات التدريب والدفعات", path: "/supervisor/psychology/training-requests" },
+        { name: "الكتب الرسمية / الدفعات", path: "/supervisor/psychology/official-letters" },
+        { name: "حالة التوزيع", path: "/supervisor/psychology/distribution-status" },
+      ];
+      const workspaceIdx = base.findIndex((i) => i.path === "/supervisor/workspace");
+      if (workspaceIdx < 0) {
+        return [...psychItems, ...base];
+      }
+      const next = [...base];
+      next.splice(workspaceIdx + 1, 0, ...psychItems);
+      return next;
+    }
+    if (role === "coordinator") {
+      return menus.coordinator;
+    }
+    if (role === "student") {
+      const full = menus.student;
+      if (isPsychologyStudentUser(savedUser)) {
+        return full.filter((i) => i.path !== "/student/training-request");
+      }
+      return full;
+    }
+    return menus[role] || [];
+  }, [role, savedUser]);
+
+  const showMinistryEducationSeal = normalizedRole === ROLES.EDUCATION_DIRECTORATE;
+  const showMinistryHealthSeal = normalizedRole === ROLES.HEALTH_DIRECTORATE;
 
   useEffect(() => {
     let isMounted = true;
@@ -256,9 +311,30 @@ export default function Sidebar({ isOpen, onClose }) {
       </div>
 
       <div className="sidebar-brand">
-        <h2>جامعة الخليل</h2>
-        <p>منصة إدارة التدريب الميداني</p>
+        <div className="sidebar-brand-header">
+          <img src={huLogo} alt="" className="sidebar-brand-logo" width={44} height={44} decoding="async" />
+          <div className="sidebar-brand-text">
+            <h2>جامعة الخليل</h2>
+            <p>منصة إدارة التدريب الميداني</p>
+          </div>
+        </div>
       </div>
+
+      {(showMinistryEducationSeal || showMinistryHealthSeal) && (
+        <div
+          className="sidebar-ministry-strip"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "10px 14px 12px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "rgba(255, 255, 255, 0.04)",
+          }}
+        >
+          {showMinistryEducationSeal ? <MinistryEducationSeal size={46} /> : <MinistryHealthSeal height={42} maxWidth={190} />}
+        </div>
+      )}
 
       <div className="sidebar-menu">
         <div className="sidebar-section-title">القائمة الرئيسية</div>

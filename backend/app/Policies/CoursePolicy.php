@@ -14,6 +14,11 @@ class CoursePolicy
 
     public function view(User $user, Course $course): bool
     {
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && (int) $course->department_id === (int) $user->department_id;
+        }
+
         return true;
     }
 
@@ -24,7 +29,15 @@ class CoursePolicy
 
     public function update(User $user, Course $course): bool
     {
-        return in_array($user->role?->name, ['admin', 'head_of_department']);
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && (int) $course->department_id === (int) $user->department_id;
+        }
+
+        return false;
     }
 
     public function delete(User $user, Course $course): bool
@@ -32,6 +45,11 @@ class CoursePolicy
         // Check if user has permission
         if (!in_array($user->role?->name, ['admin', 'head_of_department'])) {
             return false;
+        }
+        if ($user->role?->name === 'head_of_department') {
+            if (!$user->department_id || (int) $course->department_id !== (int) $user->department_id) {
+                return false;
+            }
         }
         
         // Prevent deletion if course has sections (current or past)
@@ -44,7 +62,14 @@ class CoursePolicy
     
     public function archive(User $user, Course $course): bool
     {
-        // Allow archiving (soft delete) for courses with sections
-        return in_array($user->role?->name, ['admin', 'head_of_department']);
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && (int) $course->department_id === (int) $user->department_id;
+        }
+
+        return false;
     }
 }

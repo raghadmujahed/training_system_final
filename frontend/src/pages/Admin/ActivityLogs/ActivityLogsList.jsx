@@ -34,7 +34,7 @@ export default function ActivityLogsList() {
     setError("");
     try {
       const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, v]) => v !== "")
+        Object.entries(filters).filter(([, v]) => v !== "")
       );
 
       const response = await getActivityLogs({
@@ -123,7 +123,7 @@ export default function ActivityLogsList() {
               <th>الحدث</th>
               <th>الوصف</th>
               <th>IP</th>
-              <th>  التاريخ</th>
+              <th> التاريخ</th>
             </tr>
           </thead>
           <tbody>

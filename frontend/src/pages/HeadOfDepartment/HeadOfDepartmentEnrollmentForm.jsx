@@ -179,7 +179,7 @@ export default function HeadOfDepartmentEnrollmentForm() {
           semester: form.semester,
           status: "active",
         });
-        setSelectedStudent(null);
+        setSelectedStudentDisplay("");
         setStudentSearch("");
       }
     } catch (err) {
@@ -282,11 +282,14 @@ export default function HeadOfDepartmentEnrollmentForm() {
         <form onSubmit={handleSubmit} className="form">
           <div className="form-row">
             <div className="form-group" style={{ position: 'relative' }}>
-              <label>الطالب *</label>
+              <label htmlFor="hod-enroll-student-search">الطالب *</label>
               <div style={{ position: 'relative' }}>
                 <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
                 <input
+                  id="hod-enroll-student-search"
+                  name="student_search"
                   type="text"
+                  autoComplete="off"
                   placeholder={selectedStudentDisplay ? "" : "ابحث بالاسم أو الرقم الجامعي..."}
                   value={selectedStudentDisplay || studentSearch}
                   onChange={handleStudentSearch}
@@ -397,13 +400,13 @@ export default function HeadOfDepartmentEnrollmentForm() {
               )}
               
               {/* Hidden input for form submission */}
-              <input type="hidden" name="user_id" value={form.user_id} />
+              <input type="hidden" id="hod-enroll-user-id" name="user_id" value={form.user_id} />
               {errors.user_id && <span className="error">{errors.user_id[0]}</span>}
             </div>
 
             <div className="form-group">
-              <label>الشعبة *</label>
-              <select name="section_id" value={form.section_id} onChange={handleChange} required>
+              <label htmlFor="hod-enroll-section">الشعبة *</label>
+              <select id="hod-enroll-section" name="section_id" value={form.section_id} onChange={handleChange} required>
                 <option value="">اختر الشعبة</option>
                 {sections.map(section => (
                   <option key={section.id} value={section.id}>
@@ -417,14 +420,14 @@ export default function HeadOfDepartmentEnrollmentForm() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>السنة الأكاديمية *</label>
-              <input type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
+              <label htmlFor="hod-enroll-academic-year">السنة الأكاديمية *</label>
+              <input id="hod-enroll-academic-year" type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
               {errors.academic_year && <span className="error">{errors.academic_year[0]}</span>}
             </div>
 
             <div className="form-group">
-              <label>الفصل الدراسي *</label>
-              <select name="semester" value={form.semester} onChange={handleChange}>
+              <label htmlFor="hod-enroll-semester">الفصل الدراسي *</label>
+              <select id="hod-enroll-semester" name="semester" value={form.semester} onChange={handleChange}>
                 <option value="first">الفصل الأول</option>
                 <option value="second">الفصل الثاني</option>
                 <option value="summer">الفصل الصيفي</option>
@@ -433,8 +436,8 @@ export default function HeadOfDepartmentEnrollmentForm() {
           </div>
 
           <div className="form-group">
-            <label>الحالة</label>
-            <select name="status" value={form.status} onChange={handleChange}>
+            <label htmlFor="hod-enroll-status">الحالة</label>
+            <select id="hod-enroll-status" name="status" value={form.status} onChange={handleChange}>
               <option value="active">نشط</option>
               <option value="dropped">منسحب</option>
               <option value="completed">مكتمل</option>
@@ -456,9 +459,11 @@ export default function HeadOfDepartmentEnrollmentForm() {
               يجب أن يحتوي الملف على عمود يحتوي على الرقم الجامعي للطلاب
             </p>
             <div className="form-group">
-              <label>اختر ملف CSV/Excel</label>
-              <input 
-                type="file" 
+              <label htmlFor="hod-enroll-bulk-file">اختر ملف CSV/Excel</label>
+              <input
+                id="hod-enroll-bulk-file"
+                name="bulk_upload_file"
+                type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileUpload}
                 style={{ display: 'flex', alignItems: 'center', gap: 8 }}
@@ -475,22 +480,24 @@ export default function HeadOfDepartmentEnrollmentForm() {
             <h3>اختيار الطلاب يدوياً</h3>
             <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 4, padding: 8 }}>
               {students.map(student => (
-                <div key={student.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 4 }}>
+                <label key={student.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 4, cursor: 'pointer' }}>
                   <input
                     type="checkbox"
+                    id={`hod-enroll-bulk-student-${student.id}`}
+                    name={`bulk_student_${student.id}`}
                     checked={selectedStudents.includes(student.id)}
                     onChange={() => toggleStudent(student.id)}
                   />
                   <span>{student.name} ({student.university_id})</span>
-                </div>
+                </label>
               ))}
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>الشعبة *</label>
-              <select name="section_id" value={bulkForm.section_id} onChange={handleBulkChange} required>
+              <label htmlFor="hod-enroll-bulk-section">الشعبة *</label>
+              <select id="hod-enroll-bulk-section" name="section_id" value={bulkForm.section_id} onChange={handleBulkChange} required>
                 <option value="">اختر الشعبة</option>
                 {sections.map(section => (
                   <option key={section.id} value={section.id}>
@@ -501,14 +508,14 @@ export default function HeadOfDepartmentEnrollmentForm() {
             </div>
 
             <div className="form-group">
-              <label>السنة الأكاديمية *</label>
-              <input type="number" name="academic_year" value={bulkForm.academic_year} onChange={handleBulkChange} required />
+              <label htmlFor="hod-enroll-bulk-academic-year">السنة الأكاديمية *</label>
+              <input id="hod-enroll-bulk-academic-year" type="number" name="academic_year" value={bulkForm.academic_year} onChange={handleBulkChange} required />
             </div>
           </div>
 
           <div className="form-group">
-            <label>الفصل الدراسي *</label>
-            <select name="semester" value={bulkForm.semester} onChange={handleBulkChange}>
+            <label htmlFor="hod-enroll-bulk-semester">الفصل الدراسي *</label>
+            <select id="hod-enroll-bulk-semester" name="semester" value={bulkForm.semester} onChange={handleBulkChange}>
               <option value="first">الفصل الأول</option>
               <option value="second">الفصل الثاني</option>
               <option value="summer">الفصل الصيفي</option>

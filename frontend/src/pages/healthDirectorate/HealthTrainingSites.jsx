@@ -6,6 +6,7 @@ import {
   deleteTrainingSite,
 } from "../../services/api";
 import { siteLabels } from "../../utils/roles";
+import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
 
 const normalizePlace = (item) => ({
   id: item.id,
@@ -235,10 +236,15 @@ export default function HealthTrainingSites() {
   return (
     <>
       <div className="content-header">
-        <h1 className="page-title">أماكن التدريب الصحي</h1>
-        <p className="page-subtitle">
-          إدارة وعرض المراكز الصحية والمصحات المعتمدة التابعة لـ {labels.directorateName}.
-        </p>
+        <div className="d-flex align-items-center gap-3 flex-wrap" style={{ flexDirection: "row" }}>
+          <MinistryHealthSeal height={54} maxWidth={260} />
+          <div style={{ flex: "1 1 220px" }}>
+            <h1 className="page-title mb-0">أماكن التدريب الصحي</h1>
+            <p className="page-subtitle mb-0">
+              إدارة وعرض المراكز الصحية والمصحات المعتمدة التابعة لـ {labels.directorateName}.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="section-card mb-3">

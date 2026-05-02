@@ -78,7 +78,7 @@ export default function HeadOfDepartmentSectionsList() {
       setDeleteLoading(id);
       await deleteSection(id);
       await fetchSections();
-    } catch (err) {
+    } catch {
       alert("فشل في حذف الشعبة");
     } finally {
       setDeleteLoading(null);

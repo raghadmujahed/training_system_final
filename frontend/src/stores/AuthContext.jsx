@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
                 })
                 .finally(() => setLoading(false));
         } else {
-            setLoading(false);
+            queueMicrotask(() => setLoading(false));
         }
     }, []);
 
@@ -42,4 +42,5 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components -- مزود السياق يصدّر هوك مرفق
 export const useAuth = () => useContext(AuthContext);

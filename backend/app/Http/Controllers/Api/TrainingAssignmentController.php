@@ -7,29 +7,49 @@ use App\Http\Requests\UpdateTrainingAssignmentRequest;
 use App\Http\Resources\TrainingAssignmentResource;
 use App\Models\TrainingAssignment;
 use App\Models\User;
+use App\Services\AcademicSupervisorStudentService;
 use Illuminate\Http\Request;
 
 class TrainingAssignmentController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly AcademicSupervisorStudentService $supervisorStudentService
+    ) {
         $this->authorizeResource(TrainingAssignment::class, 'training_assignment');
     }
 
     public function index(Request $request)
     {
-        $query = TrainingAssignment::with(['enrollment.user', 'trainingSite', 'teacher', 'academicSupervisor']);
-        
-        if ($request->user()->role?->name === 'student') {
-            $query->whereHas('enrollment', fn ($q) => $q->where('user_id', $request->user()->id));
-        } elseif (in_array($request->user()->role?->name, ['teacher', 'adviser', 'psychologist', 'field_supervisor'], true)) {
-            $query->where('teacher_id', $request->user()->id);
-        } elseif ($request->user()->role?->name === 'academic_supervisor') {
-            $query->where('academic_supervisor_id', $request->user()->id);
-        } elseif ($request->user()->role?->name === 'school_manager' && $request->user()->training_site_id) {
-            $query->where('training_site_id', $request->user()->training_site_id);
+        $user = $request->user();
+        $isAcademicSupervisor = $user->role?->name === 'academic_supervisor';
+
+        $eager = $isAcademicSupervisor
+            ? [
+                'enrollment' => fn ($q) => $q->withArchived()->with(['user', 'section']),
+                'trainingSite',
+                'teacher',
+                'academicSupervisor',
+            ]
+            : ['enrollment.user', 'trainingSite', 'teacher', 'academicSupervisor'];
+
+        $query = $isAcademicSupervisor
+            ? TrainingAssignment::query()->withArchived()->with($eager)
+            : TrainingAssignment::with($eager);
+
+        if ($user->role?->name === 'student') {
+            $query->whereHas('enrollment', fn ($q) => $q->where('user_id', $user->id));
+        } elseif (in_array($user->role?->name, ['teacher', 'adviser', 'psychologist', 'field_supervisor'], true)) {
+            $query->where('teacher_id', $user->id);
+        } elseif ($isAcademicSupervisor) {
+            $this->supervisorStudentService->ensureShellAssignmentsForSupervisedEnrollments($user);
+            $scopeIds = $this->supervisorStudentService
+                ->supervisedAssignmentsBaseQuery($user)
+                ->select('training_assignments.id');
+            $query->whereIn('training_assignments.id', $scopeIds);
+        } elseif ($user->role?->name === 'school_manager' && $user->training_site_id) {
+            $query->where('training_site_id', $user->training_site_id);
         }
-        
+
         $assignments = $query->latest()->paginate($request->per_page ?? 15);
         return TrainingAssignmentResource::collection($assignments);
     }

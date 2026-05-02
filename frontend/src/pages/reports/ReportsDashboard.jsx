@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getDashboardStats, getTrainingRequests, getUsers, getTrainingSites } from "../../services/api";
+import { getDashboardStats, getTrainingRequests, getUsers } from "../../services/api";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import Papa from "papaparse";
@@ -97,7 +97,7 @@ export default function ReportsDashboard() {
         "تاريخ الإنشاء": new Date(r.created_at).toLocaleDateString(),
       }));
       exportToCSV(exportData, "training_requests_report");
-    } catch (err) {
+    } catch {
       alert("فشل تصدير طلبات التدريب");
     }
   };

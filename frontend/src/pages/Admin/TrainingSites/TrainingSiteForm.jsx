@@ -82,13 +82,15 @@ export default function TrainingSiteForm() {
     switch (type) {
       case "string":
         return String(value).trim();
-      case "number":
+      case "number": {
         const num = Number(value);
         return isNaN(num) ? 0 : num;
-      case "boolean":
+      }
+      case "boolean": {
         if (typeof value === "boolean") return value;
         const str = String(value).toLowerCase();
         return str === "نعم" || str === "yes" || str === "true" || str === "1";
+      }
       default:
         return value;
     }

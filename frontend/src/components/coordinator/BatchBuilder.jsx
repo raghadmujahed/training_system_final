@@ -17,11 +17,11 @@ export default function BatchBuilder({
         <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
           <Layers size={20} />
         </div>
-        <h4 style={{ margin: 0 }}>كتب رسمية — تجميع حسب المديرية</h4>
+        <h4 style={{ margin: 0 }}>دفعات طلبات التدريب — تجميع حسب المديرية</h4>
       </div>
       <p style={{ color: "var(--text-faint)", marginBottom: 16, fontSize: "0.88rem", marginTop: 4 }}>
-        الطلبات المعتمدة مبدئيًا مُجمّعة تلقائيًا حسب الجهة الرسمية والمديرية.
-        أنشئ كتابًا رسميًا لكل مجموعة ثم أرسله للجهة المعنية.
+        الطلبات المعتمدة مبدئيًا مُجمّعة تلقائيًا حسب الجهة والمديرية.
+        أنشئ دفعة معاملة رسمية لكل مجموعة ثم أرسلها للجهة المعنية.
       </p>
 
       {groups.map((group, idx) => {
@@ -72,7 +72,7 @@ export default function BatchBuilder({
                 style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem" }}
               >
                 <Send size={14} />
-                {saving ? "جاري الإنشاء..." : `إنشاء كتاب (${group.requests.length})`}
+                {saving ? "جاري الإنشاء..." : `إنشاء دفعة (${group.requests.length})`}
               </button>
             </div>
 

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   useStudentDailyReports,
   useDailyReport,
-  useReportTemplates,
 } from "../../../hooks/useFieldSupervisorApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,9 +27,8 @@ import {
 /**
  * تبويب التقارير اليومية مع دعم النماذج الديناميكية
  */
-export default function DailyReportsTab({ studentId, labels }) {
+export default function DailyReportsTab({ studentId }) {
   const { reports, loading, error, refresh } = useStudentDailyReports(studentId);
-  const { templates } = useReportTemplates();
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewComment, setReviewComment] = useState("");
@@ -38,13 +36,13 @@ export default function DailyReportsTab({ studentId, labels }) {
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const { confirm, returnForEdit } = useDailyReport(selectedReportId);
+
   const handleReview = async () => {
     if (!selectedReportId || !reviewAction) return;
 
     setProcessing(true);
     try {
-      const { report, confirm, returnForEdit } = useDailyReport(selectedReportId);
-
       if (reviewAction === "confirm") {
         await confirm(reviewComment);
       } else {
@@ -56,7 +54,7 @@ export default function DailyReportsTab({ studentId, labels }) {
       setShowReviewDialog(false);
       setReviewComment("");
       refresh();
-    } catch (err) {
+    } catch {
       // Error handled
     } finally {
       setProcessing(false);

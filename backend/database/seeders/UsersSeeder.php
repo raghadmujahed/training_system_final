@@ -60,7 +60,8 @@ class UsersSeeder extends Seeder
 
         // 2. منسق التدريب — قسم أصول التربية
         $coordinatorRole = Role::where('name', 'training_coordinator')->first();
-        $usoolDeptId = Department::where('name', 'usool_tarbiah')->value('id');
+        $usoolDeptId = Department::where('name', 'usool_tarbiah')->value('id')
+            ?? Department::query()->orderBy('id')->value('id');
         User::firstOrCreate(
             ['email' => 'coordinator.tarbiah@hebron.edu'],
             [
@@ -75,7 +76,8 @@ class UsersSeeder extends Seeder
         );
 
         // 2b. منسق التدريب — قسم علم النفس
-        $psychDeptId = Department::where('name', 'psychology')->value('id');
+        $psychDeptId = Department::where('name', 'psychology')->value('id')
+            ?? $usoolDeptId;
         User::firstOrCreate(
             ['email' => 'coordinator.psychology@hebron.edu'],
             [
@@ -152,11 +154,13 @@ class UsersSeeder extends Seeder
         foreach ($allSchools as $school) {
             $email = 'teacher.' . $teacherIndex . '@hebron.edu';
             $nameIdx = ($teacherIndex - 1) % count($teacherNames);
+            // university_id فريد لكل مدرسة (يتجنب التصادم مع TCH001 القديم مثل teacher@hebron.edu)
+            $teacherUniversityId = sprintf('TCHS%05d', (int) $school->id);
             User::firstOrCreate(
                 ['email' => $email],
                 [
                     'name' => $teacherNames[$nameIdx] . ' المعلم - ' . $school->name,
-                    'university_id' => 'TCH' . str_pad((string) $teacherIndex, 3, '0', STR_PAD_LEFT),
+                    'university_id' => $teacherUniversityId,
                     'password' => Hash::make('password'),
                     'role_id' => $teacherRole->id,
                     'training_site_id' => $school->id,
@@ -181,11 +185,12 @@ class UsersSeeder extends Seeder
             foreach ($allSchools as $school) {
                 $email = 'adviser.' . $adviserIndex . '@hebron.edu';
                 $nameIdx = ($adviserIndex - 1) % count($adviserNames);
+                $adviserUniversityId = sprintf('ADVS%05d', (int) $school->id);
                 User::firstOrCreate(
                     ['email' => $email],
                     [
                         'name' => $adviserNames[$nameIdx] . ' المرشد - ' . $school->name,
-                        'university_id' => 'ADV' . str_pad((string) $adviserIndex, 3, '0', STR_PAD_LEFT),
+                        'university_id' => $adviserUniversityId,
                         'password' => Hash::make('password'),
                         'role_id' => $adviserRole->id,
                         'training_site_id' => $school->id,
@@ -263,9 +268,9 @@ class UsersSeeder extends Seeder
             ]
         );
 
-        // 8. رئيس القسم
+        // 8. رئيس القسم (يجب ربطه بقسم وإلا تفشل واجهة /head-department/* بـ 403)
         $headRole = Role::where('name', 'head_of_department')->first();
-        User::firstOrCreate(
+        $headUser = User::firstOrCreate(
             ['email' => 'head@hebron.edu'],
             [
                 'name' => 'د. رامي رئيس القسم',
@@ -277,6 +282,28 @@ class UsersSeeder extends Seeder
                 'status' => 'active',
             ]
         );
+        if ($headUser->department_id === null && $usoolDeptId) {
+            $headUser->update(['department_id' => $usoolDeptId]);
+        }
+
+        // 8b. رئيس قسم علم النفس
+        if ($headRole && $psychDeptId) {
+            $psychHead = User::firstOrCreate(
+                ['email' => 'head.psychology@hebron.edu'],
+                [
+                    'name' => 'د. ليلى رئيسة قسم علم النفس',
+                    'university_id' => 'HEADPSY01',
+                    'password' => Hash::make('password'),
+                    'role_id' => $headRole->id,
+                    'department_id' => $psychDeptId,
+                    'phone' => '0590000006',
+                    'status' => 'active',
+                ]
+            );
+            if ($psychHead->department_id === null && $psychDeptId) {
+                $psychHead->update(['department_id' => $psychDeptId]);
+            }
+        }
 
         // 9. مديرية التربية
         $eduDirectorateRole = Role::where('name', 'education_directorate')->first();
@@ -373,5 +400,15 @@ class UsersSeeder extends Seeder
                 'phone' => '0233333334',
             ]
         );
+
+        // رؤوس أقسام بلا department_id يحرمون واجهة /api/head-department/* (403)
+        $headRoleId = Role::where('name', 'head_of_department')->value('id');
+        $hodDeptFallback = $usoolDeptId ?? $psychDeptId ?? Department::query()->orderBy('id')->value('id');
+        if ($headRoleId && $hodDeptFallback) {
+            User::query()
+                ->where('role_id', $headRoleId)
+                ->whereNull('department_id')
+                ->update(['department_id' => $hodDeptFallback]);
+        }
     }
 }

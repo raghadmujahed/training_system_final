@@ -45,7 +45,9 @@ export default function EnrollmentForm() {
               const usersRes = await getUsers({ role: 'student', search: String(enrollmentData.user_id), per_page: 1 });
               const found = (usersRes.data || []).find(u => u.id === enrollmentData.user_id);
               if (found) setSelectedStudentDisplay(`${found.name} (${found.university_id})`);
-            } catch {}
+            } catch {
+              /* optional: student label if API fails */
+            }
           }
         }
       } catch (error) {

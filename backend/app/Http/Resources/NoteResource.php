@@ -12,6 +12,8 @@ class NoteResource extends JsonResource
         return [
             'id' => $this->id,
             'content' => $this->content,
+            'user_id' => $this->user_id,
+            'training_assignment_id' => $this->training_assignment_id,
             'user' => new UserResource($this->whenLoaded('user')),
             'training_assignment' => new TrainingAssignmentResource($this->whenLoaded('trainingAssignment')),
             'created_at' => $this->created_at?->toDateTimeString(),

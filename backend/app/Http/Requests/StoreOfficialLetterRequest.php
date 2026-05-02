@@ -18,7 +18,7 @@ class StoreOfficialLetterRequest extends FormRequest
             'training_request_id' => 'required|exists:training_requests,id',
             'letter_number' => 'required|string|max:255|unique:official_letters,letter_number',
             'letter_date' => 'required|date',
-            'type' => 'required|in:to_directorate,to_school',
+            'type' => 'required|in:to_directorate,to_school,to_health_ministry',
             'content' => 'required|string',
             'file_path' => 'nullable|string|max:255',
         ];

@@ -6,9 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateTrainingRequestBatchRequest;
 use App\Http\Requests\SendTrainingRequestBatchRequest;
 use App\Http\Resources\TrainingRequestBatchResource;
+use App\Enums\OfficialLetterStatus;
+use App\Enums\OfficialLetterType;
 use App\Models\OfficialLetter;
 use App\Models\TrainingRequest;
 use App\Models\TrainingRequestBatch;
+use App\Support\PsychologyAcademicWorkflow;
 use App\Support\TrainingRequestNotifications;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +32,9 @@ class TrainingRequestBatchController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($request->user())) {
+            $query->where('created_by', $request->user()->id);
+        }
 
         $batches = $query
             ->withCount('trainingRequests')
@@ -40,6 +46,11 @@ class TrainingRequestBatchController extends Controller
 
     public function show(TrainingRequestBatch $trainingRequestBatch)
     {
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor(request()->user())
+            && (int) $trainingRequestBatch->created_by !== (int) request()->user()->id) {
+            abort(403);
+        }
+
         $batch = $trainingRequestBatch->load([
             'createdBy',
             'trainingRequests.trainingSite',
@@ -77,6 +88,12 @@ class TrainingRequestBatchController extends Controller
                 ->toArray();
 
             foreach ($requests as $tr) {
+                if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($request->user())) {
+                    if ((int) $tr->requested_by !== (int) $request->user()->id) {
+                        continue;
+                    }
+                }
+
                 if ($tr->book_status !== 'prelim_approved') {
                     continue;
                 }
@@ -124,11 +141,18 @@ class TrainingRequestBatchController extends Controller
 
     public function send(SendTrainingRequestBatchRequest $request, TrainingRequestBatch $trainingRequestBatch)
     {
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($request->user())
+            && (int) $trainingRequestBatch->created_by !== (int) $request->user()->id) {
+            abort(403);
+        }
+
         if ($trainingRequestBatch->status !== 'draft') {
             return response()->json(['message' => 'لا يمكن إرسال هذه الدفعة.'], 422);
         }
 
         $data = $request->validated();
+
+        $trainingRequestBatch->loadMissing('trainingRequests.trainingSite');
 
         $batch = DB::transaction(function () use ($trainingRequestBatch, $data) {
             $trainingRequestBatch->update([
@@ -144,23 +168,48 @@ class TrainingRequestBatchController extends Controller
                 : 'sent_to_directorate';
 
             foreach ($trainingRequestBatch->trainingRequests as $tr) {
-                $tr->update([
+                $site = $tr->trainingSite;
+                $payload = [
                     'book_status' => $nextStatus,
                     'sent_to_directorate_at' => now(),
-                ]);
+                    // يجب أن يطابق فلترة مديريات التربية/الصحة في القائمة (كان يبقى null في بيانات قديمة)
+                    'governing_body' => $trainingRequestBatch->governing_body,
+                ];
+
+                if ($trainingRequestBatch->governing_body === 'directorate_of_education') {
+                    $dir = $trainingRequestBatch->directorate
+                        ?: $tr->directorate
+                        ?: ($site ? trim((string) $site->directorate) : '');
+                    if ($dir !== '') {
+                        $payload['directorate'] = $dir;
+                    }
+                } elseif ($trainingRequestBatch->governing_body === 'ministry_of_health' && ! $tr->directorate && $site) {
+                    $d = trim((string) $site->directorate);
+                    if ($d !== '') {
+                        $payload['directorate'] = $d;
+                    }
+                }
+
+                $tr->update($payload);
+
+                // رقم الكتاب فريد على مستوى الجدول؛ الدفعة الواحدة تُنشئ عدة صفوف فيتكرر الرقم إن لم نُفرّقه حسب الطلب
+                $batchLetterNo = trim((string) $data['letter_number']);
+                $perRequestLetterNo = sprintf('%s-طلب%d', $batchLetterNo, $tr->id);
 
                 OfficialLetter::query()->create([
                     'training_request_id' => $tr->id,
                     'training_site_id' => $tr->training_site_id,
-                    'letter_number' => $data['letter_number'],
+                    'letter_number' => $perRequestLetterNo,
                     'letter_date' => $data['letter_date'],
                     'type' => $trainingRequestBatch->governing_body === 'ministry_of_health'
-                        ? 'to_health_ministry'
-                        : 'to_directorate',
+                        ? OfficialLetterType::TO_HEALTH_MINISTRY->value
+                        : OfficialLetterType::TO_DIRECTORATE->value,
                     'content' => $data['content'],
                     'sent_by' => request()->user()->id,
                     'sent_at' => now(),
-                    'status' => $nextStatus,
+                    'status' => $nextStatus === 'sent_to_health_ministry'
+                        ? OfficialLetterStatus::SENT_TO_HEALTH_MINISTRY->value
+                        : OfficialLetterStatus::SENT_TO_DIRECTORATE->value,
                 ]);
             }
 

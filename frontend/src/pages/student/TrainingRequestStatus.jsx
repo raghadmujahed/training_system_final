@@ -18,6 +18,7 @@ import {
   getStudentTrainingRequests,
   itemsFromPagedResponse,
 } from "../../services/api";
+import TrainingRequestWorkflowStepper from "../../components/training/TrainingRequestWorkflowStepper";
 
 export default function TrainingRequestStatus() {
   const [loading, setLoading] = useState(true);
@@ -231,6 +232,10 @@ export default function TrainingRequestStatus() {
 
       {!loading && !error && requestItem && (
         <>
+          <TrainingRequestWorkflowStepper
+            bookStatus={requestItem.book_status}
+            governingBody={requestItem.governing_body}
+          />
           <div className="section-card">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <h5 className="mb-0 d-flex align-items-center gap-2">

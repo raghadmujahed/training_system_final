@@ -3,8 +3,12 @@
 namespace App\Services;
 
 use App\Models\AcademicSupervisionStatusHistory;
+use App\Models\Enrollment;
 use App\Models\Section;
 use App\Models\TrainingAssignment;
+use App\Models\TrainingPeriod;
+use App\Models\TrainingRequest;
+use App\Models\TrainingSite;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -19,33 +23,225 @@ class AcademicSupervisorStudentService
 
     public function supervisedAssignmentsQuery(User $supervisor): Builder
     {
-        $query = TrainingAssignment::query()
-            ->where('academic_supervisor_id', $supervisor->id)
-            ->whereHas('enrollment.user', function (Builder $studentQuery) use ($supervisor) {
-                $studentQuery->whereHas('role', fn (Builder $roleQuery) => $roleQuery->where('name', 'student'));
+        return $this->supervisedAssignmentsBaseQuery($supervisor)->with([
+            'trainingSite',
+            'teacher',
+            'trainingPeriod',
+            'enrollment' => fn ($q) => $q->withArchived()->with(['user.department', 'section.course']),
+            'academicStatusUpdatedBy:id,name',
+        ]);
+    }
 
-                if ($supervisor->department_id) {
-                    $studentQuery->where('department_id', $supervisor->department_id);
-                }
+    /**
+     * نفس نطاق supervisedAssignmentsQuery بدون eager load (مناسب للاستعلامات الفرعية وwhereIn).
+     */
+    public function supervisedAssignmentsBaseQuery(User $supervisor): Builder
+    {
+        $query = TrainingAssignment::query()->withArchived()
+            ->where(function (Builder $outer) use ($supervisor) {
+                $outer->where('academic_supervisor_id', $supervisor->id)
+                    ->orWhereHas('enrollment.section', function (Builder $sec) use ($supervisor) {
+                        $sec->withArchived()->where('academic_supervisor_id', $supervisor->id);
+                    });
             })
-            ->with([
-                'trainingSite',
-                'teacher',
-                'trainingPeriod',
-                'enrollment.user.department',
-                'enrollment.section.course',
-                'academicStatusUpdatedBy:id,name',
-            ]);
+            ->whereHas('enrollment', function (Builder $enrollmentQuery) use ($supervisor) {
+                $enrollmentQuery->withArchived();
+                $enrollmentQuery->whereHas('user', function (Builder $studentQuery) use ($supervisor) {
+                    $studentQuery->whereHas('role', fn (Builder $roleQuery) => $roleQuery->where('name', 'student'));
+
+                    if ($supervisor->department_id) {
+                        $studentQuery->where(function (Builder $sq) use ($supervisor) {
+                            $sq->where('department_id', $supervisor->department_id)
+                                ->orWhereHas('enrollments', function (Builder $enr) use ($supervisor) {
+                                    $enr->withArchived();
+                                    $enr->whereHas('section', function (Builder $sec) use ($supervisor) {
+                                        $sec->withArchived()->where('academic_supervisor_id', $supervisor->id);
+                                    });
+                                });
+                        });
+                    }
+                });
+            });
 
         if ($supervisor->department_id) {
             $query->where(function (Builder $assignmentQuery) use ($supervisor) {
                 $assignmentQuery
-                    ->whereHas('enrollment.user', fn (Builder $studentQuery) => $studentQuery->where('department_id', $supervisor->department_id))
-                    ->orWhereHas('enrollment.section.course', fn (Builder $courseQuery) => $courseQuery->where('department_id', $supervisor->department_id));
+                    ->whereHas('enrollment', function (Builder $enr) use ($supervisor) {
+                        $enr->withArchived()->whereHas('user', fn (Builder $studentQuery) => $studentQuery->where('department_id', $supervisor->department_id));
+                    })
+                    ->orWhereHas('enrollment', function (Builder $enr) use ($supervisor) {
+                        $enr->withArchived()->whereHas('section.course', fn (Builder $courseQuery) => $courseQuery->where('department_id', $supervisor->department_id));
+                    })
+                    ->orWhereHas('enrollment', function (Builder $enr) use ($supervisor) {
+                        $enr->withArchived()->whereHas('section', function (Builder $sec) use ($supervisor) {
+                            $sec->withArchived()->where('academic_supervisor_id', $supervisor->id);
+                        });
+                    });
             });
         }
 
         return $query;
+    }
+
+    /**
+     * تسجيلات الشعب تحت إشراف المشرف (أو لها تعيين تدريب يخصّصه كمشرف)، حتى قبل إنشاء تعيين تدريب.
+     * يُستخدم لقائمة الطلاب في مساحة العمل لتطابق ما يظهر في بطاقات الشعب.
+     */
+    public function supervisedEnrollmentsQuery(User $supervisor): Builder
+    {
+        $query = Enrollment::query()->withArchived()
+            ->where(function (Builder $outer) use ($supervisor) {
+                $outer->whereHas('section', function (Builder $sec) use ($supervisor) {
+                    $sec->withArchived()->where('academic_supervisor_id', $supervisor->id);
+                })
+                    ->orWhereHas('trainingAssignments', function (Builder $ta) use ($supervisor) {
+                        $ta->where('academic_supervisor_id', $supervisor->id);
+                    });
+            })
+            ->whereHas('user', function (Builder $studentQuery) use ($supervisor) {
+                $studentQuery->whereHas('role', fn (Builder $roleQuery) => $roleQuery->where('name', 'student'));
+
+                if ($supervisor->department_id) {
+                    $studentQuery->where(function (Builder $sq) use ($supervisor) {
+                        $sq->where('department_id', $supervisor->department_id)
+                            ->orWhereHas('enrollments', function (Builder $enr) use ($supervisor) {
+                                $enr->withArchived();
+                                $enr->whereHas('section', function (Builder $sec) use ($supervisor) {
+                                    $sec->withArchived()->where('academic_supervisor_id', $supervisor->id);
+                                });
+                            });
+                    });
+                }
+            });
+
+        if ($supervisor->department_id) {
+            $query->where(function (Builder $enrollmentQuery) use ($supervisor) {
+                $enrollmentQuery
+                    ->whereHas('user', fn (Builder $studentQuery) => $studentQuery->where('department_id', $supervisor->department_id))
+                    ->orWhereHas('section.course', fn (Builder $courseQuery) => $courseQuery->where('department_id', $supervisor->department_id))
+                    ->orWhereHas('section', function (Builder $sec) use ($supervisor) {
+                        $sec->withArchived()->where('academic_supervisor_id', $supervisor->id);
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * طلب تدريب داخلي يُستخدم فقط لربط تعيينات «قبل اكتمال التوزيع الميداني» حتى تبقى المهام والملاحظات والزيارات متسقة مع نموذج البيانات.
+     */
+    public function getOrCreateShellTrainingRequest(): TrainingRequest
+    {
+        $siteId = TrainingSite::query()->orderBy('id')->value('id');
+        abort_if(! $siteId, 503, 'لا يوجد موقع تدريب في النظام. أضف جهة تدريب ثم أعد المحاولة.');
+
+        $period = TrainingPeriod::query()->where('is_active', true)->orderByDesc('id')->first()
+            ?? TrainingPeriod::query()->orderByDesc('id')->first();
+        abort_if(! $period, 503, 'لا توجد فترة تدريبية في النظام. أضف فترة تدريب ثم أعد المحاولة.');
+
+        return TrainingRequest::firstOrCreate(
+            ['letter_number' => '__system_academic_shell_v1__'],
+            [
+                'training_site_id' => $siteId,
+                'training_period_id' => $period->id,
+                'book_status' => 'draft',
+                'status' => 'approved',
+                'requested_at' => now(),
+            ]
+        );
+    }
+
+    /**
+     * يضمن وجود صف training_assignment لتسجيل طالب تحت إشراف المشرف (مثلاً قبل اكتمال طلب التدريب والموافقات).
+     */
+    public function ensureShellAssignmentForEnrollment(User $supervisor, int $enrollmentId): ?TrainingAssignment
+    {
+        return DB::transaction(function () use ($supervisor, $enrollmentId) {
+            $existing = TrainingAssignment::query()->withArchived()
+                ->where('enrollment_id', $enrollmentId)
+                ->lockForUpdate()
+                ->latest('id')
+                ->first();
+            if ($existing) {
+                return $existing;
+            }
+
+            $allowed = $this->supervisedEnrollmentsQuery($supervisor)->whereKey($enrollmentId)->exists();
+            if (! $allowed) {
+                return null;
+            }
+
+            $period = TrainingPeriod::query()->where('is_active', true)->orderByDesc('id')->first()
+                ?? TrainingPeriod::query()->orderByDesc('id')->first();
+            if (! $period) {
+                return null;
+            }
+
+            $shellTr = $this->getOrCreateShellTrainingRequest();
+            $start = $period->start_date ?? now()->toDateString();
+            $end = $period->end_date ?? now()->addMonths(4)->toDateString();
+
+            return TrainingAssignment::create([
+                'enrollment_id' => $enrollmentId,
+                'training_request_id' => $shellTr->id,
+                'training_site_id' => $shellTr->training_site_id,
+                'training_period_id' => $period->id,
+                'teacher_id' => null,
+                'academic_supervisor_id' => $supervisor->id,
+                'coordinator_id' => null,
+                'status' => 'assigned',
+                'start_date' => $start,
+                'end_date' => $end,
+            ]);
+        });
+    }
+
+    public function ensureShellAssignmentsForSupervisedEnrollments(User $supervisor): void
+    {
+        $enrollmentIds = $this->supervisedEnrollmentsQuery($supervisor)->select('id')->pluck('id');
+        foreach ($enrollmentIds as $eid) {
+            $this->ensureShellAssignmentForEnrollment($supervisor, (int) $eid);
+        }
+    }
+
+    /**
+     * أرقام تعيينات التدريب للطلاب/الشعب المختارة ضمن إشراف المشرف الأكاديمي.
+     * يُنشأ تعيين أولي تلقائياً عند الحاجة حتى تُربط المهام بـ training_assignment_id.
+     *
+     * @param  'student'|'group'|'section'  $targetType
+     * @param  list<int>  $targetIds
+     * @return Collection<int, int>
+     */
+    public function trainingAssignmentIdsForTaskTargets(User $supervisor, string $targetType, array $targetIds): Collection
+    {
+        $ids = collect($targetIds)->map(fn ($id) => (int) $id)->filter()->values();
+        if ($ids->isEmpty() || ! in_array($targetType, ['student', 'group', 'section'], true)) {
+            return collect();
+        }
+
+        $query = $this->supervisedEnrollmentsQuery($supervisor);
+
+        if ($targetType === 'section') {
+            $query->whereIn('section_id', $ids->all());
+        } else {
+            $query->whereIn('user_id', $ids->all());
+        }
+
+        $enrollmentIds = $query->select('id')->pluck('id');
+        if ($enrollmentIds->isEmpty()) {
+            return collect();
+        }
+
+        $assignmentIds = collect();
+        foreach ($enrollmentIds as $eid) {
+            $assignment = $this->ensureShellAssignmentForEnrollment($supervisor, (int) $eid);
+            if ($assignment) {
+                $assignmentIds->push($assignment->id);
+            }
+        }
+
+        return $assignmentIds->unique()->values();
     }
 
     public function supervisedStudentIds(User $supervisor): array
@@ -89,29 +285,17 @@ class AcademicSupervisorStudentService
             return $assignment;
         }
 
-        // If no TrainingAssignment, check if student is in a supervised section
-        if ($this->isStudentInSupervisedSection($supervisor, $studentId)) {
-            // Return a new/empty assignment placeholder so the controller can handle gracefully
-            // Create a minimal unsaved assignment that references the student's enrollment
-            $enrollment = \App\Models\Enrollment::where('user_id', $studentId)
-                ->whereHas('section', fn ($q) => $q->where('academic_supervisor_id', $supervisor->id))
-                ->latest()
-                ->first();
+        $enrollment = $this->supervisedEnrollmentsQuery($supervisor)
+            ->where('user_id', $studentId)
+            ->orderByDesc('id')
+            ->first();
 
-            if ($enrollment) {
-                // Try to find any existing assignment for this enrollment
-                $existingAssignment = TrainingAssignment::where('enrollment_id', $enrollment->id)->latest()->first();
-                if ($existingAssignment) {
-                    return $existingAssignment;
-                }
-            }
+        abort_unless($enrollment, 403, 'You are not authorized to access this student.');
 
-            // Student is in a supervised section but has no training assignment yet
-            // Allow access by aborting with a specific message the controller can handle
-            abort(404, 'Student has no training assignment yet, but is in your supervised section.');
-        }
+        $created = $this->ensureShellAssignmentForEnrollment($supervisor, (int) $enrollment->id);
+        abort_if(! $created, 503, 'تعذر إنشاء سجل تعيين مبدئي. تأكد من وجود موقع وفترة تدريب في النظام.');
 
-        abort_unless(false, 403, 'You are not authorized to access this student.');
+        return $created;
     }
 
     public function updateAcademicStatus(User $actor, int $studentId, string $status, ?string $note = null): TrainingAssignment

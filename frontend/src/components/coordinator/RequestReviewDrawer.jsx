@@ -18,18 +18,16 @@ export default function RequestReviewDrawer({
   const [reason, setReason] = useState("");
   const [selectedSiteId, setSelectedSiteId] = useState("");
 
+  // مزامنة الحقول عند فتح الدروer أو تغيّر الطلب — نمط معتاد مع حقول متحكم بها محلياً
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (!open) {
-      setDecision("");
-      setReason("");
-      setSelectedSiteId("");
-      return;
-    }
+    if (!open) return;
 
     setDecision(initialDecision || "");
     setReason(initialReason || "");
     setSelectedSiteId("");
   }, [open, request?.id, initialDecision, initialReason]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   if (!open || !request) return null;
 

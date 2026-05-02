@@ -11,6 +11,19 @@ class UpdateCourseRequest extends FormRequest
         return in_array($this->user()->role?->name, ['admin', 'head_of_department']);
     }
 
+    protected function prepareForValidation(): void
+    {
+        foreach (['credit_hours', 'training_hours'] as $key) {
+            $v = $this->input($key);
+            if ($v === '' || $v === null) {
+                continue;
+            }
+            if (is_numeric($v)) {
+                $this->merge([$key => (int) $v]);
+            }
+        }
+    }
+
     public function messages(): array
     {
         return [

@@ -7,6 +7,7 @@ import {
   getTrainingRequests,
 } from "../../services/api";
 import { siteLabels } from "../../utils/roles";
+import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
 
 const HealthDirectorateDashboard = () => {
   const labels = siteLabels("health_center");
@@ -135,7 +136,7 @@ const HealthDirectorateDashboard = () => {
 
   const summaryCards = [
     {
-      title: "الكتب الرسمية الجديدة",
+      title: "طلبات التدريب الجديدة",
       value: String(officialLetters.length),
       desc: "كتب بانتظار المراجعة أو الإرسال",
       className: "primary",
@@ -175,10 +176,15 @@ const HealthDirectorateDashboard = () => {
   return (
     <>
       <div className="content-header">
-        <h1 className="page-title">لوحة {labels.directorateName}</h1>
-        <p className="page-subtitle">
-          متابعة الكتب الرسمية، المراكز الصحية، والطاقة الاستيعابية داخل {labels.directorateName}.
-        </p>
+        <div className="d-flex align-items-center gap-3 flex-wrap" style={{ flexDirection: "row" }}>
+          <MinistryHealthSeal height={56} maxWidth={280} />
+          <div style={{ flex: "1 1 220px" }}>
+            <h1 className="page-title mb-0">لوحة {labels.directorateName}</h1>
+            <p className="page-subtitle mb-0">
+              متابعة طلبات التدريب، المراكز الصحية، والطاقة الاستيعابية داخل {labels.directorateName}.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="section-card mb-3">
@@ -219,7 +225,7 @@ const HealthDirectorateDashboard = () => {
       </div>
 
       <div className="section-card mb-3">
-        <h4>الكتب الرسمية</h4>
+        <h4>طلبات التدريب</h4>
 
         <div className="table-wrapper">
           <table className="table-custom">

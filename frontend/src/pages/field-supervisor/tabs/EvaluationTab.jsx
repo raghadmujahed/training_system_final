@@ -75,7 +75,7 @@ export default function EvaluationTab({ studentId, labels }) {
       });
       setSuccess("draft");
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
+    } catch {
       // Error handled
     } finally {
       setSaving(false);
@@ -107,7 +107,7 @@ export default function EvaluationTab({ studentId, labels }) {
       setSuccess("submitted");
       setTimeout(() => setSuccess(null), 3000);
       refresh();
-    } catch (err) {
+    } catch {
       // Error handled
     } finally {
       setSubmitting(false);

@@ -63,6 +63,10 @@ class UserController extends Controller
             $users->where('status', 'active');
         }
 
+        if ($request->user()->role?->name === 'head_of_department' && $request->user()->department_id) {
+            $users->where('users.department_id', $request->user()->department_id);
+        }
+
         $users->when($validated['role_id'] ?? null, function ($q, $roleId) {
             $q->where('users.role_id', $roleId);
         });

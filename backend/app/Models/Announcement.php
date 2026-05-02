@@ -10,7 +10,21 @@ class Announcement extends Model
 {
     use HasFactory, HidesArchived;
 
-    protected $fillable = ['title', 'content', 'user_id'];
+    protected $fillable = [
+        'title',
+        'content',
+        'user_id',
+        'status',
+        'published_at',
+        'expires_at',
+        'all_students',
+    ];
+
+    protected $casts = [
+        'published_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'all_students' => 'boolean',
+    ];
 
     public function user()
     {

@@ -32,7 +32,6 @@ export default function DistributionStatusStepper({
         const stepOrder = step.order;
         const isCurrent = step.key === currentStatus;
         const isPast = currentIndex > stepOrder && !isRejected;
-        const isFuture = currentIndex < stepOrder && !isRejected;
         const isRejectedStep = rejectedStep && step.key === rejectedStep.key;
 
         let bgColor = "#e9ecef";

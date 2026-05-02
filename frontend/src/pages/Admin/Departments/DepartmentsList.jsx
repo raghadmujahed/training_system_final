@@ -5,30 +5,52 @@ import { getDepartments, deleteDepartment } from "../../../services/api";
 export default function DepartmentsList() {
   const [items, setItems] = useState([]);
 
-const fetchDepartments = async () => {
-  try {
-    const response = await getDepartments();
-    
-    let departmentsArray = [];
-    if (Array.isArray(response)) {
-      departmentsArray = response;
-    } else if (response?.data && Array.isArray(response.data)) {
-      departmentsArray = response.data;
-    } else if (response?.data?.data && Array.isArray(response.data.data)) {
-      departmentsArray = response.data.data;
-    } else {
-      departmentsArray = [];
+  const fetchDepartments = async () => {
+    try {
+      const response = await getDepartments();
+
+      let departmentsArray = [];
+      if (Array.isArray(response)) {
+        departmentsArray = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        departmentsArray = response.data;
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        departmentsArray = response.data.data;
+      } else {
+        departmentsArray = [];
+      }
+
+      setItems(departmentsArray);
+    } catch (err) {
+      console.error(err);
+      setItems([]);
     }
-    
-    setItems(departmentsArray);
-  } catch (err) {
-    console.error(err);
-    setItems([]);
-  }
-};
+  };
 
   useEffect(() => {
-    fetchDepartments();
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await getDepartments();
+        let departmentsArray = [];
+        if (Array.isArray(response)) {
+          departmentsArray = response;
+        } else if (response?.data && Array.isArray(response.data)) {
+          departmentsArray = response.data;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          departmentsArray = response.data.data;
+        }
+        if (!cancelled) {
+          setItems(departmentsArray);
+        }
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setItems([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleDelete = async (id) => {

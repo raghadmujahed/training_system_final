@@ -8,7 +8,7 @@ class StoreAnnouncementRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()->role?->name, ['admin', 'coordinator']);
+        return in_array($this->user()->role?->name, ['admin', 'coordinator', 'training_coordinator'], true);
     }
 
     public function rules(): array
@@ -16,6 +16,10 @@ class StoreAnnouncementRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'content' => 'required|string',
+            'status' => 'nullable|in:draft,active,archived',
+            'published_at' => 'nullable|date',
+            'expires_at' => 'nullable|date|after_or_equal:published_at',
+            'all_students' => 'nullable|boolean',
             'target_roles' => 'nullable|array',
             'target_roles.*' => 'exists:roles,id',
             'target_users' => 'nullable|array',

@@ -109,8 +109,10 @@ export default function HeadOfDepartmentDistributionStatus() {
         {showFilters && (
           <div className="filters-grid" style={{ marginBottom: 16 }}>
             <div className="form-group">
-              <label>المساق</label>
+              <label htmlFor="hod-dist-filter-course">المساق</label>
               <select
+                id="hod-dist-filter-course"
+                name="course_id"
                 value={filters.course_id}
                 onChange={(e) => setFilters({ ...filters, course_id: e.target.value })}
               >
@@ -123,8 +125,10 @@ export default function HeadOfDepartmentDistributionStatus() {
               </select>
             </div>
             <div className="form-group">
-              <label>الحالة</label>
+              <label htmlFor="hod-dist-filter-status">الحالة</label>
               <select
+                id="hod-dist-filter-status"
+                name="status"
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
               >

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   ClipboardList,
@@ -7,6 +7,7 @@ import {
   XCircle,
   Loader2,
   ArrowLeft,
+  Printer,
 } from "lucide-react";
 import useCoordinatorDistribution from "../../hooks/useCoordinatorDistribution";
 import {
@@ -19,21 +20,34 @@ import { BATCH_STATUS_LABELS, BATCH_STATUS_COLORS } from "../../config/coordinat
 import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies";
 import { STATUS_LABELS } from "../../config/coordinator/statusLabels";
 import EmptyState from "../../components/common/EmptyState";
+import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
+import {
+  buildFormalTrainingLetterHtml,
+  printHtmlDocument,
+  trainingRequestToPrintRow,
+  filterTrainingRequestsForPrint,
+  formatEducationDirectorateRecipient,
+  formatEducationRegionSubtitle,
+  DEFAULT_COORDINATOR_TO_DIRECTORATE_INTRO,
+} from "../../utils/trainingRequestPrint";
 
-export default function CoordinatorTrainingRequests() {
+export default function CoordinatorTrainingRequests({ variant = "coordinator" }) {
+  const isPsychSupervisor = variant === "psychologySupervisor";
+  const lettersLink = isPsychSupervisor ? "/supervisor/psychology/official-letters" : "/coordinator/official-letters";
+
   const {
     loading,
     saving,
     error,
     success,
     batches,
+    requests,
     incomingRequests,
     coordinatorRejected,
     prelimApprovedByGroup,
     reviewDecision,
     createBatchForGroup,
     sendBatch,
-    reload,
     sites,
   } = useCoordinatorDistribution();
 
@@ -68,11 +82,12 @@ export default function CoordinatorTrainingRequests() {
     ];
     const found = allRequests.find((r) => Number(r.id) === idNum);
     if (found) {
-      handleView(found);
-      // Remove the param so it doesn't re-open after closing
-      const next = new URLSearchParams(searchParams);
-      next.delete("highlight");
-      setSearchParams(next, { replace: true });
+      queueMicrotask(() => {
+        handleView(found);
+        const next = new URLSearchParams(searchParams);
+        next.delete("highlight");
+        setSearchParams(next, { replace: true });
+      });
     }
   }, [searchParams, loading, incomingRequests, coordinatorRejected, prelimApprovedByGroup, setSearchParams]);
 
@@ -142,6 +157,63 @@ export default function CoordinatorTrainingRequests() {
       })
     : filteredIncoming;
 
+  const requestsByDirectorate = useMemo(() => {
+    const map = new Map();
+    for (const r of requests) {
+      const gb = r.governing_body || "directorate_of_education";
+      const dir = (r.training_site?.directorate || r.directorate || "").trim();
+      const key = `${gb}::${dir || "__none__"}`;
+      if (!map.has(key)) {
+        map.set(key, { governing_body: gb, directorate: dir, requests: [] });
+      }
+      map.get(key).requests.push(r);
+    }
+    return Array.from(map.values()).sort((a, b) => {
+      const la = `${getGoverningBodyLabel(a.governing_body)} ${a.directorate || ""}`;
+      const lb = `${getGoverningBodyLabel(b.governing_body)} ${b.directorate || ""}`;
+      return la.localeCompare(lb, "ar");
+    });
+  }, [requests]);
+
+  const printCoordinatorGroup = (group) => {
+    const acceptedOnly = filterTrainingRequestsForPrint(group.requests);
+    if (acceptedOnly.length === 0) {
+      window.alert("لا توجد طلبات «معتمدة» ضمن هذه المجموعة للطباعة (يُستبعد المسودة والمرفوضة وبانتظار المراجعة).");
+      return;
+    }
+    const variant = group.governing_body === "ministry_of_health" ? "health" : "education";
+    const dirLabel = group.directorate || "";
+    const orgLines =
+      group.governing_body === "ministry_of_health"
+        ? [
+            "كلية التربية — جامعة الخليل",
+            "وزارة الصحة الفلسطينية",
+            "قطاع التدريب الميداني — وزارة الصحة",
+          ]
+        : [
+            "كلية التربية — جامعة الخليل",
+            "وزارة التربية والتعليم",
+            `المنطقة: ${formatEducationRegionSubtitle(dirLabel)}`,
+          ];
+    const recipientTo =
+      group.governing_body === "ministry_of_health"
+        ? "وزارة الصحة الفلسطينية — لمتابعة ملفات التدريب الميداني"
+        : formatEducationDirectorateRecipient(dirLabel);
+    const html = buildFormalTrainingLetterHtml({
+      variant,
+      orgLines,
+      referenceNumber: null,
+      letterDate: new Date().toLocaleDateString("ar-SA"),
+      recipientTo,
+      subject: "طلبات التدريب الميداني",
+      bodyIntro: DEFAULT_COORDINATOR_TO_DIRECTORATE_INTRO,
+      sections: [{ title: "كشف بأسماء الطلبة — طلبات معتمدة", rows: acceptedOnly.map(trainingRequestToPrintRow) }],
+      senderFooter: "منسّق التدريب الميداني — كلية التربية — جامعة الخليل",
+      attachmentsNote: null,
+    });
+    printHtmlDocument(html);
+  };
+
   if (loading) {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
@@ -160,9 +232,13 @@ export default function CoordinatorTrainingRequests() {
             <ClipboardList size={44} />
           </div>
           <div style={{ flex: 1 }}>
-            <h1 className="hero-title">طلبات التدريب والتوزيع</h1>
+            <h1 className="hero-title">
+              {isPsychSupervisor ? "طلبات التدريب والدفعات — علم النفس" : "طلبات التدريب والتوزيع"}
+            </h1>
             <p className="hero-subtitle">
-              مراجعة الطلبات، اعتمادها، تجميعها في كتب رسمية حسب المديرية، وإرسالها للجهات الرسمية.
+              {isPsychSupervisor
+                ? "إنشاء الطلبات ومتابعة الدفعات والكتب الرسمية ضمن صلاحيات مشرف قسم علم النفس (لا يعرض مسار أصول التربية)."
+                : "مراجعة الطلبات، اعتمادها، تجميعها في كتب رسمية حسب المديرية، وإرسالها للجهات الرسمية."}
             </p>
           </div>
         </div>
@@ -173,6 +249,8 @@ export default function CoordinatorTrainingRequests() {
           <p style={{ margin: 0 }}>{error}</p>
         </div>
       )}
+
+      {!isPsychSupervisor && <CoordinatorPsychologyReadOnlyNotice />}
 
       {success && (
         <div className="alert-custom alert-success mb-3">
@@ -189,24 +267,96 @@ export default function CoordinatorTrainingRequests() {
         statusOptions={statusOptions}
       />
 
-      {/* المرحلة ١: طلبات واردة */}
       <div className="section-card mb-4">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div className="section-icon">
-            <ClipboardList size={20} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+          <div
+            className="section-icon"
+            style={{ background: "linear-gradient(135deg, #1e5a8e 0%, #1e3a5f 100%)" }}
+          >
+            <Printer size={20} />
           </div>
-          <h4 style={{ margin: 0 }}>طلبات واردة ({filteredSearch.length})</h4>
+          <div style={{ flex: 1 }}>
+            <h4 style={{ margin: 0 }}>طباعة حسب الجهة والمديرية</h4>
+            <p style={{ margin: "6px 0 0", fontSize: "0.82rem", color: "var(--text-faint)" }}>
+              تُطبَع الطلبات المعتمدة فقط (بلا مسودة أو مرفوض أو قيد المراجعة عند المنسّق)، بصيغة كتاب رسمي.
+            </p>
+          </div>
         </div>
-        {filteredSearch.length === 0 ? (
-          <EmptyState title="لا توجد طلبات واردة" description="جميع الطلبات تمت مراجعتها." />
+        {requestsByDirectorate.length === 0 ? (
+          <EmptyState title="لا توجد طلبات" description="لم تُحمَّل أي طلبات بعد." />
         ) : (
-          <RequestsTable
-            requests={filteredSearch}
-            onView={handleView}
-            saving={saving}
-          />
+          <div
+            style={{
+              display: "grid",
+              gap: 10,
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+            }}
+          >
+            {requestsByDirectorate.map((g) => (
+              <div
+                key={`${g.governing_body}-${g.directorate || "x"}`}
+                style={{
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  padding: "14px 16px",
+                  background: "linear-gradient(180deg, #fff, #f8fafc)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "var(--primary)" }}>
+                    {getGoverningBodyLabel(g.governing_body)}
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: 4 }}>
+                    {g.governing_body === "ministry_of_health"
+                      ? "طلبات موجهة إلى وزارة الصحة"
+                      : `المديرية: ${g.directorate || "غير محددة"}`}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-faint)", marginTop: 6 }}>
+                    {g.requests.length} طلب
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-primary-custom"
+                  onClick={() => printCoordinatorGroup(g)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    fontSize: "0.84rem",
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Printer size={16} />
+                  طباعة هذه المجموعة
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* المرحلة ١: طلبات واردة — غير مستخدمة في مسار علم النفس (المشرف يُنشئ الطلب مباشرة) */}
+      {!isPsychSupervisor && (
+        <div className="section-card mb-4">
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <div className="section-icon">
+              <ClipboardList size={20} />
+            </div>
+            <h4 style={{ margin: 0 }}>طلبات واردة ({filteredSearch.length})</h4>
+          </div>
+          {filteredSearch.length === 0 ? (
+            <EmptyState title="لا توجد طلبات واردة" description="جميع الطلبات تمت مراجعتها." />
+          ) : (
+            <RequestsTable requests={filteredSearch} onView={handleView} saving={saving} />
+          )}
+        </div>
+      )}
 
       {/* المرحلة ٢: معتمد مبدئيًا — تجميع كتب رسمية */}
       <BatchBuilder
@@ -380,7 +530,7 @@ export default function CoordinatorTrainingRequests() {
           </div>
           <div style={{ marginTop: 12, textAlign: "center" }}>
             <Link
-              to="/coordinator/official-letters"
+              to={lettersLink}
               style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.85rem", color: "var(--info)", fontWeight: 700 }}
             >
               عرض الكل <ArrowLeft size={14} />

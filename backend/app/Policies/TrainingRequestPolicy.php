@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\TrainingRequest;
 use App\Models\User;
+use App\Support\PsychologyAcademicWorkflow;
 
 class TrainingRequestPolicy
 {
@@ -30,6 +31,12 @@ class TrainingRequestPolicy
         }
 
         if (in_array($user->role?->name, ['coordinator', 'training_coordinator'], true)) {
+            if (PsychologyAcademicWorkflow::isPsychologyCoordinator($user)) {
+                $trainingRequest->loadMissing('requestedBy');
+
+                return ! PsychologyAcademicWorkflow::isOrchestratedByPsychologySupervisor($trainingRequest);
+            }
+
             return true;
         }
 
@@ -50,8 +57,10 @@ class TrainingRequestPolicy
         if ($user->role?->name === 'education_directorate'
             && in_array($trainingRequest->book_status, ['sent_to_directorate', 'directorate_approved', 'directorate_rejected', 'sent_to_school', 'school_approved', 'school_rejected', 'rejected'], true)) {
             if (!empty($user->directorate)) {
-                $siteDirectorate = (string) data_get($trainingRequest, 'trainingSite.directorate', '');
-                return trim($siteDirectorate) === trim((string) $user->directorate);
+                $reqDirectorate = trim((string) ($trainingRequest->directorate
+                    ?? data_get($trainingRequest, 'trainingSite.directorate', '')));
+
+                return $reqDirectorate === trim((string) $user->directorate);
             }
             return true;
         }
@@ -74,6 +83,17 @@ class TrainingRequestPolicy
         }
 
         if ($user->role?->name === 'academic_supervisor') {
+            if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($user)) {
+                $trainingRequest->loadMissing('trainingRequestStudents');
+                if ((int) $trainingRequest->requested_by === (int) $user->id) {
+                    return true;
+                }
+
+                return $trainingRequest->trainingRequestStudents()
+                    ->whereHas('user.enrollments.section', fn ($sec) => $sec->where('academic_supervisor_id', $user->id))
+                    ->exists();
+            }
+
             return true;
         }
 
@@ -82,11 +102,37 @@ class TrainingRequestPolicy
 
     public function create(User $user): bool
     {
-        return in_array($user->role?->name, ['student', 'coordinator', 'training_coordinator'], true);
+        if ($user->role?->name === 'student') {
+            if (PsychologyAcademicWorkflow::userHasPsychologyDepartment($user)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($user)) {
+            return true;
+        }
+
+        return in_array($user->role?->name, ['coordinator', 'training_coordinator'], true);
     }
 
     public function update(User $user, TrainingRequest $trainingRequest): bool
     {
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($user)) {
+            if ((int) $trainingRequest->requested_by !== (int) $user->id) {
+                return false;
+            }
+
+            return in_array($trainingRequest->book_status, [
+                'draft',
+                'rejected',
+                'coordinator_rejected',
+                'needs_edit',
+                'prelim_approved',
+            ], true);
+        }
+
         return in_array($user->role?->name, ['coordinator', 'training_coordinator'], true)
             && in_array($trainingRequest->book_status, ['draft', 'rejected', 'coordinator_rejected'], true);
     }
@@ -127,6 +173,11 @@ class TrainingRequestPolicy
             return false;
         }
 
+        $trainingRequest->loadMissing('requestedBy');
+        if (PsychologyAcademicWorkflow::isOrchestratedByPsychologySupervisor($trainingRequest)) {
+            return false;
+        }
+
         $requestOwnerDepartmentId = data_get($trainingRequest, 'requestedBy.department_id');
         if ($requestOwnerDepartmentId && (int) $user->department_id !== (int) $requestOwnerDepartmentId) {
             return false;
@@ -146,8 +197,15 @@ class TrainingRequestPolicy
 
     public function sendToDirectorate(User $user, TrainingRequest $trainingRequest): bool
     {
-        return in_array($user->role?->name, ['coordinator', 'training_coordinator'], true)
-            && $trainingRequest->book_status === 'prelim_approved';
+        if ($trainingRequest->book_status !== 'prelim_approved') {
+            return false;
+        }
+
+        if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($user)) {
+            return (int) $trainingRequest->requested_by === (int) $user->id;
+        }
+
+        return in_array($user->role?->name, ['coordinator', 'training_coordinator'], true);
     }
 
     public function approveByDirectorate(User $user, TrainingRequest $trainingRequest): bool

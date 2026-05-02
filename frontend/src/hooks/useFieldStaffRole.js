@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { getFieldStaffRoleKey, normalizeRole, ROLES } from "../utils/roles";
 import { readStoredUser } from "../utils/session";
 
@@ -91,63 +90,53 @@ const FIELD_STAFF_MAP = {
 };
 
 export default function useFieldStaffRole() {
-  const info = useMemo(() => {
-    const savedUser = readStoredUser();
-    const rawRole = normalizeRole(savedUser?.role?.name || savedUser?.role || "");
+  const savedUser = readStoredUser();
+  const rawRole = normalizeRole(savedUser?.role?.name || savedUser?.role || "");
 
-    const mapped = FIELD_STAFF_MAP[rawRole];
+  const mapped = FIELD_STAFF_MAP[rawRole];
 
-    if (!mapped) {
-      // ليس من الكادر الميداني
-      return {
-        isFieldStaff: false,
-        roleKey: getFieldStaffRoleKey(rawRole),
-        rawRole,
-        label: "",
-        targetRole: rawRole,
-        basePath: "",
-        isMentor: false,
-        isAdviser: false,
-        isSupervisor: false,
-        isPsychologist: false,
-        isPrincipal: false,
-        isFieldSupervisor: false,
-        supervisorSubtype: null,
-        subtypeLabel: "",
-        terms: {},
-      };
-    }
-
-    // استخراج النوع الفرعي للمشرف الميداني
-    const supervisorSubtype = savedUser?.field_supervisor_profile?.supervisor_type || null;
-    const subtypeLabel = SUBTYPE_LABELS[supervisorSubtype] || "";
-    const terms = SUBTYPE_TERMS[supervisorSubtype] || {};
-
-    // إذا كان مشرف ميداني، استخدم تسمية النوع الفرعي
-    const label = rawRole === "field_supervisor"
-      ? (subtypeLabel || mapped.label)
-      : mapped.label;
-
+  if (!mapped) {
     return {
-      isFieldStaff: true,
-      roleKey: mapped.roleKey,
+      isFieldStaff: false,
+      roleKey: getFieldStaffRoleKey(rawRole),
       rawRole,
-      label,
-      targetRole: mapped.targetRole,
-      basePath: "/field-staff",
-      isMentor: mapped.roleKey === "mentor",
-      isAdviser: mapped.roleKey === "adviser",
-      isSupervisor: mapped.roleKey === "supervisor",
-      isPsychologist: mapped.roleKey === "psychologist",
-      isPrincipal: mapped.roleKey === "principal",
-      isFieldSupervisor: mapped.roleKey === "field_supervisor",
-      supervisorSubtype,
-      subtypeLabel,
-      terms,
+      label: "",
+      targetRole: rawRole,
+      basePath: "",
+      isMentor: false,
+      isAdviser: false,
+      isSupervisor: false,
+      isPsychologist: false,
+      isPrincipal: false,
+      isFieldSupervisor: false,
+      supervisorSubtype: null,
+      subtypeLabel: "",
+      terms: {},
     };
-  }, []);
+  }
 
-  return info;
+  const supervisorSubtype = savedUser?.field_supervisor_profile?.supervisor_type || null;
+  const subtypeLabel = SUBTYPE_LABELS[supervisorSubtype] || "";
+  const terms = SUBTYPE_TERMS[supervisorSubtype] || {};
+  const label = rawRole === "field_supervisor" ? subtypeLabel || mapped.label : mapped.label;
+
+  return {
+    isFieldStaff: true,
+    roleKey: mapped.roleKey,
+    rawRole,
+    label,
+    targetRole: mapped.targetRole,
+    basePath: "/field-staff",
+    isMentor: mapped.roleKey === "mentor",
+    isAdviser: mapped.roleKey === "adviser",
+    isSupervisor: mapped.roleKey === "supervisor",
+    isPsychologist: mapped.roleKey === "psychologist",
+    isPrincipal: mapped.roleKey === "principal",
+    isFieldSupervisor: mapped.roleKey === "field_supervisor",
+    supervisorSubtype,
+    subtypeLabel,
+    terms,
+  };
 }
 
 export { SUBTYPE_LABELS, SUBTYPE_TERMS };

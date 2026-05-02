@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { checkFeatureFlag } from "../../services/api";
+import { readStoredUser } from "../../utils/session";
+import { isPsychologyStudentUser } from "../../utils/psychologyWorkflow";
 import TrainingRequest from "./TrainingRequest";
 
 export default function StudentTrainingRequestEntry() {
@@ -22,6 +24,11 @@ export default function StudentTrainingRequestEntry() {
       mounted = false;
     };
   }, []);
+
+  const u = readStoredUser();
+  if (isPsychologyStudentUser(u)) {
+    return <Navigate to="/student/training-request-status" replace />;
+  }
 
   if (isOpen === null) {
     return (

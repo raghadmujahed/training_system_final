@@ -12,7 +12,8 @@ export default function HeadOfDepartmentDashboard() {
         const response = await getHeadDepartmentDashboardStats();
         setStats(response);
       } catch (err) {
-        setError("فشل في جلب الإحصائيات");
+        const apiMsg = err.response?.data?.message;
+        setError(apiMsg || "فشل في جلب الإحصائيات");
         console.error("Dashboard stats error:", err);
       } finally {
         setLoading(false);

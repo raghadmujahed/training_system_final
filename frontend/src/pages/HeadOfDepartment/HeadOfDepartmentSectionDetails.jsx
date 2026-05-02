@@ -48,7 +48,7 @@ export default function HeadOfDepartmentSectionDetails() {
       try {
         const response = await searchStudentsHeadDepartment(query);
         setSearchResults(response.data || []);
-      } catch (err) {
+      } catch {
         setSearchResults([]);
       } finally {
         setSearching(false);
@@ -232,14 +232,19 @@ export default function HeadOfDepartmentSectionDetails() {
         {showAddStudent && (
           <div style={{ marginBottom: 16, padding: 16, backgroundColor: "#f8f9fa", borderRadius: 8, position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <Search size={16} style={{ color: "#666" }} />
-              <input
-                type="text"
-                placeholder="ابحث بالاسم أو الرقم الجامعي..."
-                value={studentSearch}
-                onChange={(e) => handleStudentSearch(e.target.value)}
-                style={{ flex: 1, padding: "8px 12px", borderRadius: 4, border: "1px solid #ddd" }}
-              />
+              <label htmlFor="hod-section-add-student-search" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, margin: 0 }}>
+                <Search size={16} style={{ color: "#666", flexShrink: 0 }} />
+                <input
+                  id="hod-section-add-student-search"
+                  name="add_student_search"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="ابحث بالاسم أو الرقم الجامعي..."
+                  value={studentSearch}
+                  onChange={(e) => handleStudentSearch(e.target.value)}
+                  style={{ flex: 1, padding: "8px 12px", borderRadius: 4, border: "1px solid #ddd" }}
+                />
+              </label>
               <button
                 onClick={() => { setShowAddStudent(false); setStudentSearch(""); setSearchResults([]); }}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}

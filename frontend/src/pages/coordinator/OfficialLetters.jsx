@@ -16,8 +16,10 @@ import {
 import { BATCH_STATUS_LABELS, BATCH_STATUS_COLORS } from "../../config/coordinator/statusLabels";
 import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies";
 import EmptyState from "../../components/common/EmptyState";
+import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
 
-export default function CoordinatorOfficialLetters() {
+export default function CoordinatorOfficialLetters({ audience = "coordinator" }) {
+  const isPsych = audience === "psychologySupervisor";
   const {
     loading,
     error,
@@ -31,7 +33,6 @@ export default function CoordinatorOfficialLetters() {
 
   const [selectedBatchId, setSelectedBatchId] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [batchSendForm, setBatchSendForm] = useState({});
   const [batchDetail, setBatchDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [showAllBatches, setShowAllBatches] = useState(false);
@@ -47,24 +48,35 @@ export default function CoordinatorOfficialLetters() {
     ? getBatchLetter(selectedBatchId)
     : null;
 
-  function setBatchSendField(batchId, key, value) {
-    setBatchSendForm((prev) => ({
-      ...prev,
-      [batchId]: { ...(prev[batchId] || {}), [key]: value },
-    }));
-  }
+  const [sendSaving, setSendSaving] = useState(false);
+  const [sendError, setSendError] = useState("");
 
-  const handleSend = async (batchId) => {
-    const data = batchSendForm[batchId] || {};
-    await sendTrainingRequestBatch(batchId, {
-      letter_number: data.letter_number,
-      letter_date: data.letter_date,
-      content: data.content,
-    });
-    reload();
+  const handleSend = async (batchId, payload) => {
+    setSendError("");
+    setSendSaving(true);
+    try {
+      await sendTrainingRequestBatch(batchId, {
+        letter_number: payload.letter_number,
+        letter_date: payload.letter_date,
+        content: payload.content,
+      });
+      await reload();
+      closeDrawer();
+    } catch (e) {
+      const msg = e?.response?.data?.message;
+      const errs = e?.response?.data?.errors;
+      if (errs && typeof errs === "object") {
+        setSendError(Object.values(errs).flat().join(" ") || msg || "فشل الإرسال");
+      } else {
+        setSendError(msg || "فشل الإرسال");
+      }
+    } finally {
+      setSendSaving(false);
+    }
   };
 
   const openDrawer = async (batchId) => {
+    setSendError("");
     setSelectedBatchId(batchId);
     setDrawerOpen(true);
     setDetailLoading(true);
@@ -79,6 +91,7 @@ export default function CoordinatorOfficialLetters() {
   };
 
   const closeDrawer = () => {
+    setSendError("");
     setDrawerOpen(false);
     setTimeout(() => {
       setSelectedBatchId(null);
@@ -99,7 +112,7 @@ export default function CoordinatorOfficialLetters() {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
         <Loader2 size={40} className="spin" style={{ color: "var(--primary)", marginBottom: 12 }} />
-        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل الكتب الرسمية...</p>
+        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل دفعات طلبات التدريب...</p>
       </div>
     );
   }
@@ -113,9 +126,11 @@ export default function CoordinatorOfficialLetters() {
             <FileText size={44} />
           </div>
           <div style={{ flex: 1 }}>
-            <h1 className="hero-title">الكتب الرسمية والدفعات</h1>
+            <h1 className="hero-title">{isPsych ? "الكتب الرسمية / الدفعات — علم النفس" : "دفعات طلبات التدريب"}</h1>
             <p className="hero-subtitle">
-              عرض وإدارة دفعات الكتب الرسمية المرسلة للجهات الحكومية.
+              {isPsych
+                ? "متابعة دفعاتك كمشرف أكاديمي لقسم علم النفس وإرسالها للجهة الرسمية المناسبة."
+                : "عرض وإرسال دفعات طلبات التدريب (معاملة رسمية) إلى مديريات التربية أو وزارة الصحة."}
             </p>
           </div>
         </div>
@@ -126,6 +141,8 @@ export default function CoordinatorOfficialLetters() {
           <p style={{ margin: 0 }}>{error}</p>
         </div>
       )}
+
+      {!isPsych && <CoordinatorPsychologyReadOnlyNotice />}
 
       {/* Filters */}
       <CoordinatorFilters
@@ -148,18 +165,20 @@ export default function CoordinatorOfficialLetters() {
           <h4 style={{ margin: 0 }}>قائمة الدفعات ({batches.length})</h4>
         </div>
         {batches.length === 0 ? (
-          <EmptyState title="لا توجد دفعات" description="لم تُنشأ أي دفعات كتب رسمية بعد." />
+          <EmptyState title="لا توجد دفعات" description="لم تُنشأ أي دفعات طلبات تدريب بعد." />
         ) : (
           <div className="table-wrapper">
             <table className="data-table">
               <thead>
                 <tr>
                   <th>رقم الدفعة</th>
-                  <th>الجهة الرسمية</th>
+                  <th>الجهة المرسل إليها</th>
                   <th>المديرية</th>
                   <th>عدد الطلبات</th>
                   <th>الحالة</th>
-                  <th>رقم الكتاب</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th>تاريخ الإرسال</th>
+                  <th>رقم المعاملة</th>
                   <th></th>
                 </tr>
               </thead>
@@ -173,7 +192,7 @@ export default function CoordinatorOfficialLetters() {
                   return (
                     <tr key={b.id}>
                       <td style={{ fontWeight: 700 }}>#{b.id}</td>
-                      <td>{getGoverningBodyLabel(b.governing_body)}</td>
+                      <td>{b.recipient_label || getGoverningBodyLabel(b.governing_body)}</td>
                       <td>{b.directorate || "—"}</td>
                       <td>{b.items_count ?? "—"}</td>
                       <td>
@@ -189,6 +208,12 @@ export default function CoordinatorOfficialLetters() {
                         >
                           {statusLabel}
                         </span>
+                      </td>
+                      <td style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>
+                        {b.created_at ? new Date(b.created_at).toLocaleString("ar-SA") : "—"}
+                      </td>
+                      <td style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>
+                        {b.sent_at ? new Date(b.sent_at).toLocaleString("ar-SA") : "—"}
                       </td>
                       <td>{b.letter_number || "—"}</td>
                       <td>
@@ -289,18 +314,20 @@ export default function CoordinatorOfficialLetters() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <FileText size={22} />
             <h3 style={{ margin: 0, fontSize: "1.1rem" }}>
-              تفاصيل الكتاب الرسمي
+              تفاصيل دفعة طلبات التدريب
             </h3>
           </div>
           <button
+            type="button"
             onClick={closeDrawer}
+            aria-label="إغلاق"
             style={{
               background: "rgba(255,255,255,0.15)",
               border: "1px solid rgba(255,255,255,0.25)",
               color: "#fff",
               borderRadius: 10,
-              width: 34,
-              height: 34,
+              width: 44,
+              height: 44,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -308,7 +335,7 @@ export default function CoordinatorOfficialLetters() {
               transition: "all 0.2s",
             }}
           >
-            <X size={18} />
+            <X size={26} strokeWidth={2.25} />
           </button>
         </div>
 
@@ -324,8 +351,9 @@ export default function CoordinatorOfficialLetters() {
               batch={batchDetail || selectedBatch}
               requests={batchDetail?.training_requests || batchDetail?.trainingRequests || batchDetail?.requests || batchDetail?.items || getBatchRequests(selectedBatchId) || []}
               letter={selectedLetter}
-              onSend={() => handleSend(selectedBatch.id)}
-              saving={false}
+              onSend={(payload) => handleSend(selectedBatch.id, payload)}
+              saving={sendSaving}
+              sendError={sendError}
             />
           )}
         </div>

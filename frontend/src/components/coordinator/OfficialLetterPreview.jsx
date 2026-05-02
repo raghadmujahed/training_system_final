@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Send, Users, GraduationCap, Phone, Mail, ChevronDown, ChevronUp } from "lucide-react";
 import { BATCH_STATUS_LABELS, BATCH_STATUS_COLORS } from "../../config/coordinator/statusLabels";
 import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies";
@@ -10,8 +10,23 @@ export default function OfficialLetterPreview({
   letter = null,
   onSend,
   saving,
+  sendError = "",
 }) {
   const [showAllStudents, setShowAllStudents] = useState(false);
+  const [letterNumber, setLetterNumber] = useState("");
+  const [letterDate, setLetterDate] = useState("");
+  const [letterContent, setLetterContent] = useState("");
+  const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    if (!batch) return;
+    setLetterNumber(String(letter?.letter_number || batch.letter_number || "").trim());
+    setLetterDate(
+      letter?.letter_date || batch.letter_date || new Date().toISOString().slice(0, 10)
+    );
+    setLetterContent(String(letter?.content || batch.content || "").trim());
+    setFormError("");
+  }, [batch?.id, letter?.letter_number, letter?.letter_date, letter?.content]);
 
   if (!batch) return null;
 
@@ -41,7 +56,7 @@ export default function OfficialLetterPreview({
           <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)" }}>
             <FileText size={20} />
           </div>
-          <h4 style={{ margin: 0 }}>كتاب رسمي — دفعة #{batch.id}</h4>
+          <h4 style={{ margin: 0 }}>معاملة طلبات تدريب — دفعة #{batch.id}</h4>
         </div>
         <span
           style={{
@@ -60,9 +75,9 @@ export default function OfficialLetterPreview({
       <div className="info-grid" style={{ marginBottom: 16 }}>
         <div className="info-card">
           <div className="info-content">
-            <div className="info-label">الجهة الرسمية</div>
+            <div className="info-label">الجهة المرسل إليها</div>
             <div className="info-value">
-              {getGoverningBodyLabel(batch.governing_body)}
+              {batch.recipient_label || getGoverningBodyLabel(batch.governing_body)}
             </div>
           </div>
         </div>
@@ -74,7 +89,7 @@ export default function OfficialLetterPreview({
         </div>
         <div className="info-card">
           <div className="info-content">
-            <div className="info-label">رقم الكتاب</div>
+            <div className="info-label">رقم المعاملة</div>
             <div className="info-value">
               {letter?.letter_number || batch.letter_number || "—"}
             </div>
@@ -82,7 +97,7 @@ export default function OfficialLetterPreview({
         </div>
         <div className="info-card">
           <div className="info-content">
-            <div className="info-label">تاريخ الكتاب</div>
+            <div className="info-label">تاريخ المعاملة</div>
             <div className="info-value">
               {letter?.letter_date || batch.letter_date || "—"}
             </div>
@@ -242,7 +257,7 @@ export default function OfficialLetterPreview({
         </button>
       )}
 
-      {letter?.content && (
+      {letter?.content && batch.status !== "draft" && (
         <div
           style={{
             background: "#f8f9fa",
@@ -255,9 +270,79 @@ export default function OfficialLetterPreview({
             lineHeight: 1.8,
           }}
         >
-          <strong>محتوى الكتاب:</strong>
+          <strong>نص المعاملة:</strong>
           <br />
           {letter.content}
+        </div>
+      )}
+
+      {batch.status === "draft" && onSend && (
+        <div
+          style={{
+            marginBottom: 12,
+            padding: 16,
+            borderRadius: 12,
+            border: "1px solid var(--border)",
+            background: "#fff",
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: 12, fontSize: "0.92rem" }}>
+            بيانات المعاملة قبل الإرسال
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>رقم المعاملة</span>
+              <input
+                type="text"
+                className="form-control"
+                value={letterNumber}
+                onChange={(e) => setLetterNumber(e.target.value)}
+                placeholder="مثال: كتاب ١٢٣/٢٠٢٦"
+                disabled={saving}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)" }}
+              />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>تاريخ المعاملة</span>
+              <input
+                type="date"
+                className="form-control"
+                value={letterDate}
+                onChange={(e) => setLetterDate(e.target.value)}
+                disabled={saving}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)" }}
+              />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>نص المعاملة</span>
+              <textarea
+                value={letterContent}
+                onChange={(e) => setLetterContent(e.target.value)}
+                placeholder="النص الكامل للمعاملة المرسلة إلى الجهة..."
+                disabled={saving}
+                rows={8}
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  borderRadius: 10,
+                  border: "1px solid var(--border)",
+                  fontFamily: "inherit",
+                  fontSize: "0.92rem",
+                  lineHeight: 1.7,
+                  resize: "vertical",
+                }}
+              />
+            </label>
+          </div>
+        </div>
+      )}
+
+      {(formError || sendError) && (
+        <div
+          className="alert-custom alert-danger"
+          style={{ marginBottom: 12, fontSize: "0.88rem" }}
+        >
+          {formError || sendError}
         </div>
       )}
 
@@ -265,12 +350,27 @@ export default function OfficialLetterPreview({
         {batch.status === "draft" && onSend && (
           <button
             className="btn-primary-custom"
-            onClick={onSend}
+            type="button"
+            onClick={() => {
+              const num = letterNumber.trim();
+              const date = letterDate;
+              const txt = letterContent.trim();
+              if (!num || !date || !txt) {
+                setFormError("يرجى تعبئة رقم المعاملة وتاريخها ونص المعاملة قبل الإرسال.");
+                return;
+              }
+              setFormError("");
+              onSend({
+                letter_number: num,
+                letter_date: date,
+                content: txt,
+              });
+            }}
             disabled={saving}
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             <Send size={16} />
-            {saving ? "جاري الإرسال..." : "إرسال الكتاب"}
+            {saving ? "جاري الإرسال..." : "إرسال الدفعة للجهة"}
           </button>
         )}
       </div>

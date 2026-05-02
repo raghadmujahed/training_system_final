@@ -16,7 +16,6 @@ import {
   AlertCircle,
   Clock,
   Loader2,
-  Landmark,
   School,
   FileCheck,
   Bell,
@@ -25,6 +24,7 @@ import {
   Users,
   AlertTriangle,
 } from "lucide-react";
+import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 
 const EducationDirectorateDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -145,7 +145,7 @@ const EducationDirectorateDashboard = () => {
 
   const summaryCards = [
     {
-      title: "الكتب الرسمية الجديدة",
+      title: "طلبات التدريب الجديدة",
       value: String(officialLetters.length),
       desc: "كتب بانتظار المراجعة أو الإرسال",
       icon: Inbox,
@@ -199,14 +199,12 @@ const EducationDirectorateDashboard = () => {
     <div>
       {/* Hero Section */}
       <div className="hero-section mb-4">
-        <div className="hero-content">
-          <div className="hero-icon" style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)" }}>
-            <Landmark size={44} />
-          </div>
+        <div className="hero-content" style={{ alignItems: "flex-start" }}>
+          <MinistryEducationSeal size={54} />
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">{"لوحة مديرية التربية"}</h1>
             <p className="hero-subtitle">
-              {"متابعة الكتب الرسمية، أماكن التدريب، والطاقة الاستيعابية داخل المديرية"}
+              {"متابعة طلبات التدريب، أماكن التدريب، والطاقة الاستيعابية داخل المديرية"}
             </p>
           </div>
         </div>
@@ -258,7 +256,7 @@ const EducationDirectorateDashboard = () => {
           <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
             <FileCheck size={20} />
           </div>
-          <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>{"الكتب الرسمية"}</h4>
+          <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>{"طلبات التدريب"}</h4>
         </div>
         <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>

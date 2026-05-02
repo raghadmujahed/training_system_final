@@ -11,13 +11,12 @@ export default function EnrollmentsList() {
   const [bulkResults, setBulkResults] = useState(null);
   // بيانات التسجيل الفردي
   const [singleEnroll, setSingleEnroll] = useState({ studentEmail: "", sectionId: "" });
-  const [students, setStudents] = useState([]);
   const [sections, setSections] = useState([]);
   const [singleLoading, setSingleLoading] = useState(false);
 
   useEffect(() => {
     fetchEnrollments();
-    fetchStudentsAndSections();
+    fetchSections();
   }, []);
 
   const fetchEnrollments = async () => {
@@ -31,10 +30,8 @@ export default function EnrollmentsList() {
     }
   };
 
-  const fetchStudentsAndSections = async () => {
+  const fetchSections = async () => {
     try {
-      const studentsRes = await getUsers(); // getStudents already filters for role_id: 2
-      setStudents(studentsRes.data || []);
       const sectionsRes = await getSections();
       setSections(sectionsRes.data || []);
     } catch (err) {

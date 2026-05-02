@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Support\PsychologyAcademicWorkflow;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTrainingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()->role?->name, ['coordinator', 'training_coordinator']);
+        $u = $this->user();
+
+        return in_array($u->role?->name, ['coordinator', 'training_coordinator'], true)
+            || PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($u);
     }
 
     public function rules(): array

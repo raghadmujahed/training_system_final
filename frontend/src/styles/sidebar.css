@@ -6,8 +6,8 @@
   min-height: 100vh;
   max-height: 100vh;
   background:
-    radial-gradient(ellipse 100% 45% at 50% 0%, rgba(212, 196, 168, 0.14), transparent 55%),
-    linear-gradient(180deg, #132a44 0%, #0d1f33 42%, #081420 100%);
+    radial-gradient(ellipse 100% 45% at 50% 0%, rgba(220, 210, 190, 0.12), transparent 55%),
+    linear-gradient(180deg, #1a3550 0%, #14324d 40%, #0f2438 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -43,11 +43,31 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent);
 }
 
+.sidebar-brand-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-direction: row;
+}
+
+.sidebar-brand-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.sidebar-brand-text {
+  min-width: 0;
+}
+
 .sidebar-brand h1,
 .sidebar-brand h2,
 .sidebar-brand h3 {
   margin: 0;
-  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-size: clamp(1.22rem, 1.75vw, 1.62rem);
   font-weight: 800;
   color: #fff;
   letter-spacing: 0.2px;
@@ -149,8 +169,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   color: rgba(255, 255, 255, 0.88);
 }
 
@@ -163,8 +183,8 @@
 }
 
 .sidebar-link .menu-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 

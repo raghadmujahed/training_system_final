@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Search, Users, GraduationCap, Mail, Phone, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { getUsers, itemsFromPagedResponse } from "../../services/api";
 import EmptyState from "../../components/common/EmptyState";
+import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
 
 export default function CoordinatorStudents() {
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,8 @@ export default function CoordinatorStudents() {
           </div>
         </div>
       </div>
+
+      <CoordinatorPsychologyReadOnlyNotice />
 
       {/* Filters */}
       <div className="filters-bar" style={{

@@ -9,8 +9,16 @@ class UserPolicy
     public function viewAny(User $user): bool
     {
         // school_manager: fetch teachers for mentor assignment
-        // training_coordinator: fetch students for distribution lists
-        return in_array($user->role?->name, ['admin', 'school_manager', 'psychology_center_manager', 'training_coordinator', 'coordinator', 'psychologist'], true);
+        // training_coordinator / head_of_department: fetch students for lists & enrollment
+        return in_array($user->role?->name, [
+            'admin',
+            'school_manager',
+            'psychology_center_manager',
+            'training_coordinator',
+            'coordinator',
+            'psychologist',
+            'head_of_department',
+        ], true);
     }
 
     public function view(User $user, User $model): bool

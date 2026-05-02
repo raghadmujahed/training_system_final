@@ -124,8 +124,15 @@ class NotePolicy
     private function isSupervisorOfNoteStudent(User $user, Note $note): bool
     {
         $assignment = $note->trainingAssignment;
-        if (!$assignment) return false;
-        return $assignment->academic_supervisor_id === $user->id;
+        if (! $assignment) {
+            return false;
+        }
+        if ((int) $assignment->academic_supervisor_id === (int) $user->id) {
+            return true;
+        }
+        $assignment->loadMissing('enrollment.section');
+
+        return (int) ($assignment->enrollment?->section?->academic_supervisor_id) === (int) $user->id;
     }
 
     private function isMentorOfNoteStudent(User $user, Note $note): bool

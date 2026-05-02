@@ -36,7 +36,7 @@ const OfficialLetters = () => {
       setErrorMessage("");
     } catch (error) {
       console.error("Failed to load school letters:", error);
-      setErrorMessage("تعذر تحميل الكتب الرسمية.");
+      setErrorMessage("تعذر تحميل طلبات التدريب.");
     } finally {
       setLoading(false);
     }
@@ -75,16 +75,16 @@ const OfficialLetters = () => {
   return (
     <>
       <div className="content-header">
-        <h1 className="page-title">الكتب الرسمية</h1>
+        <h1 className="page-title">طلبات التدريب</h1>
         <p className="page-subtitle">
-          متابعة الكتب الرسمية الواردة من المديرية أو الكلية وإدارة حالتها.
+          متابعة طلبات التدريب الواردة من المديرية أو الكلية وإدارة حالتها.
         </p>
       </div>
 
       <div className="section-card">
-        <h4>إدارة الكتب الرسمية</h4>
+        <h4>إدارة طلبات التدريب</h4>
         {loading ? (
-          <div className="alert-custom alert-info">جاري تحميل الكتب الرسمية...</div>
+          <div className="alert-custom alert-info">جاري تحميل طلبات التدريب...</div>
         ) : (
           <div className="table-wrapper">
             <table className="table-custom">

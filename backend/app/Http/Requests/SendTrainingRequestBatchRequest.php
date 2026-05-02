@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Support\PsychologyAcademicWorkflow;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendTrainingRequestBatchRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()->role?->name, ['training_coordinator', 'coordinator']);
+        $u = $this->user();
+
+        return in_array($u->role?->name, ['training_coordinator', 'coordinator'], true)
+            || PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($u);
     }
 
     public function rules(): array

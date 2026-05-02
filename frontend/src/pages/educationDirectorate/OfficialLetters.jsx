@@ -12,12 +12,26 @@ import {
   Clock,
   Loader2,
   Save,
-  Landmark,
   AlertCircle,
   Send,
   FileText,
   Building2,
+  Printer,
 } from "lucide-react";
+import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
+import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
+import { readStoredUser } from "../../utils/session";
+import {
+  buildFormalTrainingLetterHtml,
+  printHtmlDocument,
+  trainingRequestToPrintRow,
+  filterTrainingRequestsForPrint,
+  formatEducationDirectorateRecipient,
+  DIRECTORATE_TO_COLLEGE_PRINT_INTRO,
+  HEALTH_MINISTRY_TO_CENTERS_PRINT_INTRO,
+  filterRequestsForEducationDirectorateUi,
+  filterRequestsForHealthMinistryUi,
+} from "../../utils/trainingRequestPrint";
 
 const getApiErrorMessage = (error, fallbackMessage) => {
   const responseData = error?.response?.data;
@@ -32,14 +46,15 @@ const getApiErrorMessage = (error, fallbackMessage) => {
 };
 
 const OfficialLetters = ({ siteType = "school" }) => {
+  const user = readStoredUser();
   const labels = siteLabels(siteType);
   const isHealth = siteType === "health_center";
   
   const governingBody = labels.governingBody;
   const directorateName = labels.directorateName;
   const pageSubtitle = isHealth
-    ? "متابعة الكتب الرسمية، اعتمادها، وإرسالها تلقائيًا إلى المراكز الصحية عند الموافقة."
-    : "متابعة الكتب الرسمية، اعتمادها، وإرسالها تلقائيًا إلى المدارس عند الموافقة.";
+    ? "متابعة طلبات التدريب، اعتمادها، وإرسالها تلقائيًا إلى المراكز الصحية عند الموافقة."
+    : "متابعة طلبات التدريب، اعتمادها، وإرسالها تلقائيًا إلى المدارس عند الموافقة.";
 
   const [savedMessage, setSavedMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -69,9 +84,20 @@ const OfficialLetters = ({ siteType = "school" }) => {
       const incomingItems = itemsFromPagedResponse(incomingRes);
       const sentItems = itemsFromPagedResponse(sentRes);
       const rejectedItems = itemsFromPagedResponse(rejectedRes);
-      setIncomingRequests(incomingItems);
-      setSentRequests(sentItems);
-      setRejectedRequests(rejectedItems);
+
+      const incomingFiltered = isHealth
+        ? filterRequestsForHealthMinistryUi(incomingItems)
+        : filterRequestsForEducationDirectorateUi(incomingItems);
+      const sentFiltered = isHealth
+        ? filterRequestsForHealthMinistryUi(sentItems)
+        : filterRequestsForEducationDirectorateUi(sentItems);
+      const rejectedFiltered = isHealth
+        ? filterRequestsForHealthMinistryUi(rejectedItems)
+        : filterRequestsForEducationDirectorateUi(rejectedItems);
+
+      setIncomingRequests(incomingFiltered);
+      setSentRequests(sentFiltered);
+      setRejectedRequests(rejectedFiltered);
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, "تعذر تحميل طلبات التدريب."));
     } finally {
@@ -145,27 +171,203 @@ const OfficialLetters = ({ siteType = "school" }) => {
     }));
   };
 
+  const handlePrintTrainingRequests = () => {
+    const sentAccepted = filterTrainingRequestsForPrint(sentRequests);
+    const rows = sentAccepted.map(trainingRequestToPrintRow);
+    const sectionTitle = isHealth
+      ? "كشف المعتمدين — المُحالون إلى المراكز الصحية التدريبية"
+      : "كشف الطلبات المعتمدة والمُحالة لجهة التدريب";
+    const sections = rows.length > 0 ? [{ title: sectionTitle, rows }] : [];
+
+    if (sections.length === 0) {
+      window.alert("لا توجد طلبات معتمدة ومُرسلة لجهة التدريب لعرضها في المطبوعة.");
+      return;
+    }
+
+    const regionKey = (user?.directorate || "").trim();
+    const variant = isHealth ? "health" : "education";
+    const orgLines = isHealth
+      ? [
+          "وزارة الصحة الفلسطينية",
+          `${directorateName}${regionKey ? ` — ${regionKey}` : ""}`,
+          "متابعة التدريب الميداني — المراكز الصحية",
+        ]
+      : ["وزارة التربية والتعليم", formatEducationDirectorateRecipient(regionKey)];
+
+    const recipientTo = isHealth
+      ? "مديرو المراكز الصحية التدريبية — وفق الكشف أدناه"
+      : "كلية التربية — جامعة الخليل / لجنة التدريب الميداني";
+    const subject = isHealth
+      ? "طلبات التدريب الميداني الصحي — كشف معتمدين ومُحالين"
+      : "طلبات التدريب الميداني — كشف معتمدين";
+    const bodyIntro = isHealth ? HEALTH_MINISTRY_TO_CENTERS_PRINT_INTRO : DIRECTORATE_TO_COLLEGE_PRINT_INTRO;
+
+    const html = buildFormalTrainingLetterHtml({
+      variant,
+      orgLines,
+      referenceNumber: null,
+      letterDate: new Date().toLocaleDateString("ar-SA"),
+      recipientTo,
+      subject,
+      bodyIntro,
+      sections,
+      senderFooter: isHealth ? `${directorateName}${regionKey ? ` — ${regionKey}` : ""}` : formatEducationDirectorateRecipient(regionKey),
+      attachmentsNote: null,
+    });
+    printHtmlDocument(html);
+  };
+
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "2rem", color: "var(--text-soft)" }}>
         <Loader2 size={24} className="spin" />
-        {"جاري تحميل الكتب الرسمية..."}
+        {"جاري تحميل طلبات التدريب..."}
       </div>
     );
   }
 
   return (
     <div>
-      {/* Hero Section */}
-      <div className="hero-section mb-4">
-        <div className="hero-content">
-          <div className="hero-icon" style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)" }}>
-            <Landmark size={44} />
+      {/* ترويسة بصيغة وثيقة رسمية */}
+      <div
+        className="mb-4"
+        style={{
+          position: "relative",
+          padding: "1.35rem 1.5rem 1.2rem",
+          background: "#fff",
+          border: "2px solid #1e3a5f",
+          borderRadius: 6,
+          overflow: "hidden",
+          boxShadow: "0 4px 24px rgba(15, 23, 42, 0.07)",
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "42%",
+            height: 120,
+            background:
+              "radial-gradient(ellipse 90% 80% at 0% 0%, rgba(30, 90, 142, 0.14) 0%, transparent 72%)",
+          }}
+        />
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            width: "46%",
+            height: 130,
+            background:
+              "radial-gradient(ellipse 85% 75% at 100% 100%, rgba(56, 189, 248, 0.12) 0%, transparent 70%)",
+          }}
+        />
+
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 16,
+            paddingBottom: 14,
+            borderBottom: "2px solid #1e3a5f",
+            marginBottom: 12,
+          }}
+        >
+          {isHealth ? <MinistryHealthSeal height={58} maxWidth={260} /> : <MinistryEducationSeal size={62} />}
+          <div style={{ flex: 1, textAlign: "right" }}>
+            <p style={{ margin: "0 0 4px", fontSize: "0.98rem", fontWeight: 800, color: "#0f172a" }}>
+              {isHealth ? "وزارة الصحة الفلسطينية" : "وزارة التربية والتعليم"}
+            </p>
+            <p style={{ margin: "0 0 2px", fontSize: "0.88rem", fontWeight: 600, color: "#334155" }}>
+              {directorateName}
+              {user?.directorate ? ` — ${user.directorate}` : ""}
+            </p>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>طلبات التدريب — معاملات رسمية</p>
           </div>
-          <div style={{ flex: 1 }}>
-            <h1 className="hero-title">{"الكتب الرسمية — "}{directorateName}</h1>
-            <p className="hero-subtitle">{pageSubtitle}</p>
-          </div>
+        </div>
+
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 24,
+            fontSize: "0.82rem",
+            color: "#334155",
+            marginBottom: 12,
+          }}
+        >
+          <span>
+            <strong>التاريخ:</strong> {new Date().toLocaleDateString("ar-SA")}
+          </span>
+          <span>
+            <strong>العدد:</strong> —
+          </span>
+        </div>
+
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            marginBottom: 12,
+          }}
+        >
+          <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", lineHeight: 1.75, flex: "1 1 260px" }}>
+            {pageSubtitle}
+          </p>
+          <button
+            type="button"
+            onClick={handlePrintTrainingRequests}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "0.55rem 1.1rem",
+              borderRadius: 8,
+              border: "none",
+              cursor: "pointer",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              color: "#fff",
+              background: isHealth
+                ? "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)"
+                : "linear-gradient(135deg, #1e5a8e 0%, #1e3a5f 100%)",
+              boxShadow: "0 2px 8px rgba(30, 58, 95, 0.2)",
+            }}
+          >
+            <Printer size={17} />
+            طباعة كشف الطلبات
+          </button>
+        </div>
+
+        <div
+          style={{
+            position: "relative",
+            marginTop: 4,
+            padding: "12px 14px",
+            borderRadius: 8,
+            border: isHealth ? "1px solid rgba(15, 118, 110, 0.22)" : "1px solid rgba(30, 58, 95, 0.2)",
+            background: isHealth ? "#f0fdfa" : "#f8fafc",
+            fontSize: "0.82rem",
+            color: "#334155",
+            lineHeight: 1.65,
+          }}
+        >
+          <strong style={{ display: "block", marginBottom: 4, color: isHealth ? "#0f766e" : "#1e3a5f" }}>
+            بيانات المعاملة
+          </strong>
+          {isHealth
+            ? `الجهة المرسلة: كلية التربية — جامعة الخليل · الجهة المستقبلة: وزارة الصحة — ${directorateName} · التسمية المعتمدة أمام المستخدم: طلبات التدريب`
+            : `الجهة المرسلة: كلية التربية — جامعة الخليل · الجهة المستقبلة: ${directorateName} · التسمية المعتمدة أمام المستخدم: طلبات التدريب`}
         </div>
       </div>
 
@@ -203,7 +405,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
               <thead>
                 <tr style={{ background: "#f8fafc" }}>
-                  {["رقم الطلب", "الموقع التدريبي", "الطالب", "المساق", "حالة الكتاب", "قرار المديرية", "سبب الرفض", "بيانات كتاب الإرسال", "إجراء"].map((h) => (
+                  {["رقم الطلب", "الموقع التدريبي", "الطالب", "المساق", "مرحلة الطلب", "قرار المديرية", "سبب الرفض", "بيانات كتاب الإرسال", "إجراء"].map((h) => (
                     <th key={h} style={{ padding: "0.75rem 0.75rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>

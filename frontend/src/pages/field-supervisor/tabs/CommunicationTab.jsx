@@ -55,7 +55,7 @@ export default function CommunicationTab({ studentId }) {
       setNewMessage("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
+    } catch {
       // Error handled by hook
     } finally {
       setSending(false);

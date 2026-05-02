@@ -207,7 +207,8 @@ export const addStudentToSection = (sectionId, data) => apiClient.post(`/section
 export const removeStudentFromSection = (sectionId, data) => apiClient.post(`/sections/${sectionId}/remove-student`, data).then(res => res.data);
 export const getEnrollments = (params) => apiClient.get('/enrollments', { params }).then(res => res.data);
 export const enrollStudent = (data) => apiClient.post('/enrollments', data).then(res => res.data);
-export const getStudents = (params) => apiClient.get('/users', { params: { ...params, role_id: 2 } }).then(res => res.data);
+export const getStudents = (params = {}) =>
+  apiClient.get('/users', { params: { role: 'student', ...params } }).then((res) => res.data);
 export const createEnrollment = (data) => apiClient.post('/enrollments', data).then(res => res.data);
 export const updateEnrollment = (id, data) => apiClient.put(`/enrollments/${id}`, data).then(res => res.data);
 export const deleteEnrollment = (id) => apiClient.delete(`/enrollments/${id}`).then(res => res.data);

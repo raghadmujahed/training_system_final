@@ -36,6 +36,9 @@ class StoreTrainingRequest extends FormRequest
             'students.*.end_date' => 'required|date|after:students.*.start_date',
 
             'students.*.notes' => 'nullable|string',
+
+            /** مديرية التربية — مطلوبة لمسار المدارس عند إنشاء المشرف لطلبة علم النفس (يُنصح بإرسالها) */
+            'directorate' => 'nullable|string|max:255',
         ];
     }
 

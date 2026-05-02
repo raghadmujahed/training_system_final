@@ -1,57 +1,160 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { apiClient, unwrapSupervisorList, unwrapSupervisorStats } from "../../../services/api";
 import DashboardSummary from "./DashboardSummary";
 import StudentsTable from "./StudentsTable";
 import StudentProfile from "./StudentProfile";
 
+async function fetchAllSupervisorSections() {
+  const merged = [];
+  let page = 1;
+  let lastPage = 1;
+  do {
+    const res = await apiClient.get("/supervisor/sections", {
+      params: { per_page: 100, page },
+    });
+    merged.push(...unwrapSupervisorList(res.data));
+    lastPage = res.data?.meta?.last_page ?? 1;
+    page++;
+  } while (page <= lastPage);
+  return merged;
+}
+
 export default function SupervisorWorkspace() {
+  const { studentId: studentIdParam } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedStudentId =
+    studentIdParam && /^\d+$/.test(String(studentIdParam)) ? Number(studentIdParam) : null;
+
   const [loading, setLoading] = useState(true);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [initialReady, setInitialReady] = useState(false);
   const [error, setError] = useState("");
   const [stats, setStats] = useState(null);
   const [students, setStudents] = useState([]);
   const [sections, setSections] = useState([]);
-  const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterSection, setFilterSection] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [expandedSection, setExpandedSection] = useState(null);
 
-  async function loadWorkspace() {
-    setLoading(true);
-    setError("");
-    try {
-      const [statsRes, studentsRes, sectionsRes] = await Promise.all([
-        apiClient.get("/supervisor/stats").then((r) => r.data).catch(() => null),
-        apiClient.get("/supervisor/students", { params: { per_page: 200 } }).then((r) => r.data).catch(() => ({})),
-        apiClient.get("/supervisor/sections", { params: { per_page: 100 } }).then((r) => r.data).catch(() => ({})),
-      ]);
-
-      setStats(unwrapSupervisorStats(statsRes));
-      setStudents(unwrapSupervisorList(studentsRes));
-      setSections(unwrapSupervisorList(sectionsRes));
-    } catch (e) {
-      setError(e?.response?.data?.message || "فشل تحميل البيانات");
-      setStats(null);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const loadAbortRef = useRef(null);
 
   useEffect(() => {
-    loadWorkspace();
+    return () => loadAbortRef.current?.abort();
   }, []);
 
-  const handleSelectStudent = useCallback((studentId) => {
-    setSelectedStudentId(studentId);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const loadStatsAndSections = useCallback(async () => {
+    const statsRes = await apiClient.get("/supervisor/stats").then((r) => r.data).catch(() => null);
+    setStats(unwrapSupervisorStats(statsRes));
+    const sectionsMerged = await fetchAllSupervisorSections();
+    setSections(sectionsMerged);
   }, []);
+
+  useEffect(() => {
+    const sid = searchParams.get("section");
+    if (!sid || !sections.length) return;
+    const exists = sections.some((s) => String(s.id) === String(sid));
+    if (exists) setFilterSection(String(sid));
+  }, [searchParams, sections]);
+
+  const loadStudentsOnly = useCallback(async () => {
+    loadAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadAbortRef.current = controller;
+    setStudentsLoading(true);
+    setError("");
+    try {
+      const params = {};
+      if (filterSection) params.section_id = filterSection;
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+
+      const merged = [];
+      let page = 1;
+      let lastPage = 1;
+      do {
+        const res = await apiClient.get("/supervisor/students", {
+          params: { per_page: 100, page, ...params },
+          signal: controller.signal,
+        });
+        merged.push(...unwrapSupervisorList(res.data));
+        lastPage = res.data?.meta?.last_page ?? 1;
+        page++;
+      } while (page <= lastPage);
+
+      if (!controller.signal.aborted) {
+        setStudents(merged);
+      }
+    } catch (e) {
+      if (e?.code === "ERR_CANCELED" || e?.name === "CanceledError" || e?.name === "AbortError") {
+        return;
+      }
+      setError(e?.response?.data?.message || "فشل تحميل قائمة الطلبة");
+    } finally {
+      if (!controller.signal.aborted) {
+        setStudentsLoading(false);
+      }
+    }
+  }, [filterSection, debouncedSearch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        await loadStatsAndSections();
+      } catch (e) {
+        if (!cancelled) {
+          setError(e?.response?.data?.message || "فشل تحميل البيانات");
+          setStats(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setInitialReady(true);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadStatsAndSections]);
+
+  useEffect(() => {
+    if (!initialReady) return;
+    loadStudentsOnly();
+  }, [initialReady, loadStudentsOnly]);
+
+  const handleSelectStudent = useCallback(
+    (id) => {
+      const sid = Number(id);
+      if (!Number.isFinite(sid)) return;
+      navigate(`/supervisor/workspace/${sid}`);
+    },
+    [navigate]
+  );
 
   const handleBackToList = useCallback(() => {
-    setSelectedStudentId(null);
-  }, []);
+    navigate("/supervisor/workspace", { replace: true });
+  }, [navigate]);
 
-  const handleRefresh = useCallback(() => {
-    loadWorkspace();
-  }, []);
+  const handleRefresh = useCallback(async () => {
+    setError("");
+    try {
+      await loadStatsAndSections();
+      await loadStudentsOnly();
+    } catch (e) {
+      setError(e?.response?.data?.message || "فشل التحديث");
+    }
+  }, [loadStatsAndSections, loadStudentsOnly]);
 
   if (loading) {
     return (
@@ -91,37 +194,45 @@ export default function SupervisorWorkspace() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
             {sections.map((s) => {
               const isExpanded = expandedSection === s.id;
-              const trackLabel = s.training_track === 'psychology_clinic' ? 'عيادة نفسية'
-                : s.training_track === 'psychology_school' ? 'مدرسة (نفسية)'
-                : s.training_track === 'psychology' ? 'علم النفس'
-                : s.training_track === 'education' ? 'تربية'
-                : s.training_track || '—';
-              const trackColor = s.training_track?.includes('psych') ? '#6f42c1' : '#0d6efd';
+              const trackLabel = s.training_track === "psychology_clinic"
+                ? "عيادة نفسية"
+                : s.training_track === "psychology_school"
+                  ? "مدرسة (نفسية)"
+                  : s.training_track === "psychology"
+                    ? "علم النفس"
+                    : s.training_track === "education"
+                      ? "تربية"
+                      : s.training_track || "—";
+              const trackColor = s.training_track?.includes("psych") ? "#6f42c6" : "#0d6efd";
               return (
-                <div key={s.id} style={{
-                  border: "1px solid #e9ecef",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  transition: "box-shadow 0.2s",
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)"}
-                onMouseLeave={(e) => e.currentTarget.style.boxShadow = "none"}
+                <div
+                  key={s.id}
+                  style={{
+                    border: "1px solid #e9ecef",
+                    borderRadius: "12px",
+                    padding: "16px",
+                    backgroundColor: "#fff",
+                    transition: "box-shadow 0.2s",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                     <div>
                       <h4 style={{ margin: 0, fontSize: "1.05rem" }}>{s.section_name || s.name}</h4>
                       <div style={{ fontSize: "0.82rem", color: "#666", marginTop: 2 }}>{s.course || "—"}</div>
                     </div>
-                    <span style={{
-                      padding: "3px 10px",
-                      borderRadius: "12px",
-                      fontSize: "0.72rem",
-                      fontWeight: 600,
-                      color: trackColor,
-                      backgroundColor: trackColor + "15",
-                      border: `1px solid ${trackColor}30`,
-                    }}>
+                    <span
+                      style={{
+                        padding: "3px 10px",
+                        borderRadius: "12px",
+                        fontSize: "0.72rem",
+                        fontWeight: 600,
+                        color: trackColor,
+                        backgroundColor: trackColor + "15",
+                        border: `1px solid ${trackColor}30`,
+                      }}
+                    >
                       {trackLabel}
                     </span>
                   </div>
@@ -161,7 +272,9 @@ export default function SupervisorWorkspace() {
                         </thead>
                         <tbody>
                           {s.students.map((st) => (
-                            <tr key={st.id} style={{ borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}
+                            <tr
+                              key={st.id}
+                              style={{ borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}
                               onClick={() => handleSelectStudent(st.id)}
                             >
                               <td style={{ padding: "6px 8px", fontWeight: 500 }}>{st.name}</td>
@@ -175,7 +288,9 @@ export default function SupervisorWorkspace() {
                     </div>
                   )}
                   {isExpanded && (!s.students || s.students.length === 0) && (
-                    <div style={{ marginTop: 12, textAlign: "center", color: "#999", fontSize: "0.82rem" }}>لا يوجد طلاب مسجلون</div>
+                    <div style={{ marginTop: 12, textAlign: "center", color: "#999", fontSize: "0.82rem" }}>
+                      لا يوجد طلاب مسجلون
+                    </div>
                   )}
                 </div>
               );
@@ -185,14 +300,24 @@ export default function SupervisorWorkspace() {
       )}
 
       <div className="section-card" style={{ marginTop: "24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "20px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "16px",
+            marginBottom: "20px",
+          }}
+        >
           <div>
             <h3 style={{ margin: 0, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
               👥 الطلبة المشرف عليهم
             </h3>
-            <p style={{ margin: "4px 0 0", color: "#666", fontSize: "0.85rem" }}>
-              متابعة شاملة لحالة كل طالب
-            </p>
+            <p style={{ margin: "4px 0 0", color: "#666", fontSize: "0.85rem" }}>متابعة شاملة لحالة كل طالب</p>
+            {studentsLoading && (
+              <p style={{ margin: "8px 0 0", color: "#0d6efd", fontSize: "0.8rem" }}>جاري تحديث القائمة...</p>
+            )}
           </div>
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
             <input
@@ -215,7 +340,7 @@ export default function SupervisorWorkspace() {
             >
               <option value="">كل الشعب</option>
               {sections.map((s) => (
-                <option key={s.id} value={s.id}>
+                <option key={s.id} value={String(s.id)}>
                   {s.section_name || s.name}
                 </option>
               ))}
@@ -238,8 +363,6 @@ export default function SupervisorWorkspace() {
 
         <StudentsTable
           students={students}
-          searchTerm={searchTerm}
-          filterSection={filterSection}
           filterStatus={filterStatus}
           onSelectStudent={handleSelectStudent}
         />

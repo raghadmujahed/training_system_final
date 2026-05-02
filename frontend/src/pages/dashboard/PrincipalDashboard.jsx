@@ -86,7 +86,7 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
       setLatestLetters(
         lettersList.map((letter) => ({
           id: letter.id,
-          subject: letter.letter_number || "كتاب رسمي",
+          subject: letter.letter_number || "طلب تدريب",
           sender: letter.sent_by?.data?.name || letter.sent_by?.name || "—",
           date: letter.letter_date || letter.created_at || "—",
         }))
@@ -160,9 +160,9 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
       bg: "#d1fae5",
     },
     {
-      title: "الكتب الرسمية",
+      title: "طلبات التدريب الواردة",
       value: String(latestLetters.length),
-      desc: "كتب جديدة واردة من المديرية",
+      desc: "معاملات جديدة من المديرية",
       icon: FileText,
       color: "#8b5cf6",
       bg: "#ede9fe",
@@ -185,7 +185,7 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">لوحة {labels.managerLabel}</h1>
             <p className="hero-subtitle">
-              متابعة طلبات التدريب والمرشدين والكتب الرسمية داخل {labels.siteName}
+              متابعة طلبات التدريب والمرشدين والمعاملات الرسمية داخل {labels.siteName}
             </p>
           </div>
         </div>
@@ -495,7 +495,7 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
             </div>
             <div>
               <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>
-                {"آخر الكتب الرسمية"}
+                {"آخر طلبات التدريب"}
               </h4>
               <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>
                 {`واردة من المديرية`}

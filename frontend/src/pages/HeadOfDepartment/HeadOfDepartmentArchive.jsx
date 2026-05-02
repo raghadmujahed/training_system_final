@@ -30,7 +30,7 @@ const TABLE_LABELS = {
   notes: "الملاحظات",
   notifications: "الإشعارات",
   announcements: "الإعلانات",
-  official_letters: "الكتب الرسمية",
+  official_letters: "طلبات التدريب",
 };
 
 export default function HeadOfDepartmentArchive() {

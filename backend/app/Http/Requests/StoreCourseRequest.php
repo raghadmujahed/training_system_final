@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Enums\CourseType;
 
 class StoreCourseRequest extends FormRequest
 {
@@ -47,6 +46,16 @@ class StoreCourseRequest extends FormRequest
             $this->merge([
                 'department_id' => $this->user()->department_id,
             ]);
+        }
+
+        foreach (['credit_hours', 'training_hours'] as $key) {
+            $v = $this->input($key);
+            if ($v === '' || $v === null) {
+                continue;
+            }
+            if (is_numeric($v)) {
+                $this->merge([$key => (int) $v]);
+            }
         }
     }
 }

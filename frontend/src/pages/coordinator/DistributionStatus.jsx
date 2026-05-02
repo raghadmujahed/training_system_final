@@ -5,8 +5,10 @@ import { CoordinatorFilters, StatusBadge, DistributionStatusStepper } from "../.
 import { STATUS_LABELS } from "../../config/coordinator/statusLabels";
 import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies";
 import EmptyState from "../../components/common/EmptyState";
+import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
 
-export default function CoordinatorDistributionStatus() {
+export default function CoordinatorDistributionStatus({ audience = "coordinator" }) {
+  const isPsych = audience === "psychologySupervisor";
   const {
     loading,
     error,
@@ -44,9 +46,11 @@ export default function CoordinatorDistributionStatus() {
             <GitBranch size={44} />
           </div>
           <div style={{ flex: 1 }}>
-            <h1 className="hero-title">حالة التوزيع</h1>
+            <h1 className="hero-title">{isPsych ? "متابعة حالة الطلبات — علم النفس" : "حالة التوزيع"}</h1>
             <p className="hero-subtitle">
-              تتبع حالة كل طلب عبر مراحل التوزيع من الإرسال حتى القبول أو الرفض.
+              {isPsych
+                ? "المسار من الإرسال للجهة الرسمية حتى موافقة المدرسة أو جهة التدريب النهائية؛ القبول النهائي ليس بموافقة المديرية/الوزارة وحدها."
+                : "تتبع حالة كل طلب عبر مراحل التوزيع من الإرسال حتى القبول أو الرفض."}
             </p>
           </div>
         </div>
@@ -57,6 +61,8 @@ export default function CoordinatorDistributionStatus() {
           <p style={{ margin: 0 }}>{error}</p>
         </div>
       )}
+
+      {!isPsych && <CoordinatorPsychologyReadOnlyNotice />}
 
       {/* Filters */}
       <CoordinatorFilters

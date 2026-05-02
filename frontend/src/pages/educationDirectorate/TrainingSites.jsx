@@ -21,8 +21,8 @@ import {
   Search,
   Building2,
   AlertCircle,
-  Landmark,
 } from "lucide-react";
+import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 
 const getSchoolTypeFromItem = (item) => {
   if (item.school_type === "private") return "خاصة";
@@ -118,12 +118,6 @@ export default function TrainingPlaces() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusClass = (status) => {
-    if (status === "متاح") return "badge-custom badge-success";
-    if (status === "غير نشط") return "badge-custom badge-danger";
-    return "badge-custom badge-soft";
   };
 
   const handleChange = (e) => {
@@ -313,10 +307,8 @@ export default function TrainingPlaces() {
     <div>
       {/* Hero Section */}
       <div className="hero-section mb-4">
-        <div className="hero-content">
-          <div className="hero-icon" style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)" }}>
-            <Landmark size={44} />
-          </div>
+        <div className="hero-content" style={{ alignItems: "flex-start" }}>
+          <MinistryEducationSeal size={54} />
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">{"أماكن التدريب"}</h1>
             <p className="hero-subtitle">

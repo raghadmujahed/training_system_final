@@ -65,7 +65,7 @@ export default function UsersList() {
     setLoading(true);
     try {
       const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value !== "")
+        Object.entries(filters).filter(([, value]) => value !== "")
       );
       const response = await getUsers({
         ...cleanFilters,

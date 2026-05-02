@@ -43,7 +43,6 @@ export default function RoleForm() {
   const [roleName, setRoleName] = useState("");
   const [grantedPermissions, setGrantedPermissions] = useState([]);
   const [availablePermissions, setAvailablePermissions] = useState([]);
-  const [allPermissions, setAllPermissions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,7 +51,6 @@ export default function RoleForm() {
         const permsRes = await getPermissions();
         // Handle paginated response - extract data from data.data if it exists
         const allPerms = permsRes.data?.data || permsRes.data || permsRes || [];
-        setAllPermissions(allPerms);
 
         if (id) {
           // جلب بيانات الدور مع صلاحياته

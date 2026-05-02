@@ -23,6 +23,11 @@ const ROUTE_ICON = {
   "/change-password": "lock",
 
   "/supervisor/dashboard": "home",
+  "/supervisor/workspace": "home",
+  "/supervisor/students": "graduation",
+  "/supervisor/notes": "fileText",
+  "/supervisor/daily-reports": "journal",
+  "/supervisor/final-evaluation": "star",
   "/supervisor/tasks": "task",
   "/supervisor/submissions": "inbox",
   "/supervisor/training-logs": "journal",
@@ -31,6 +36,10 @@ const ROUTE_ICON = {
   "/supervisor/sections": "layers",
   "/supervisor/evaluations": "star",
   "/supervisor/reports": "chart",
+  "/supervisor/psychology/create-training-request": "fileText",
+  "/supervisor/psychology/training-requests": "share",
+  "/supervisor/psychology/official-letters": "document",
+  "/supervisor/psychology/distribution-status": "mapPin",
 
   // Unified field-staff paths
   "/field-staff/dashboard": "home",
@@ -41,11 +50,6 @@ const ROUTE_ICON = {
   "/field-staff/guidance": "clipboard",
   "/field-staff/tasks": "task",
   "/field-staff/final-evaluation": "star",
-
-  // Supervisor specific paths
-  "/supervisor/field-visits": "map",
-  "/supervisor/sections": "layers",
-  "/supervisor/submissions": "inbox",
 
   // Legacy mentor paths (still used for attendance/schedule)
   "/mentor/attendance": "clipboardCheck",
@@ -65,6 +69,7 @@ const ROUTE_ICON = {
   "/coordinator/students": "users",
   "/coordinator/training-requests": "share",
   "/coordinator/official-letters": "document",
+  "/coordinator/announcements": "megaphone",
   "/coordinator/distribution-status": "mapPin",
   "/coordinator/statistics": "chart",
   "/coordinator/training-program-control": "flag",
@@ -83,6 +88,7 @@ const ROUTE_ICON = {
   "/health/dashboard": "home",
   "/health/training-requests": "fileText",
   "/health/training-sites": "mapPin",
+  "/health/official-letters": "document",
 
   "/education/dashboard": "home",
   "/education/training-requests": "fileText",
@@ -92,8 +98,8 @@ const ROUTE_ICON = {
 
 const svgProps = {
   viewBox: "0 0 24 24",
-  width: "20",
-  height: "20",
+  width: "22",
+  height: "22",
   fill: "none",
   xmlns: "http://www.w3.org/2000/svg",
 };

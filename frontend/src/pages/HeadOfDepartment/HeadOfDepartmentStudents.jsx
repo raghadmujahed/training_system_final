@@ -28,7 +28,8 @@ export default function HeadOfDepartmentStudents() {
       const response = await getHeadDepartmentStudents(params.toString());
       setStudents(response.data?.data || response.data || []);
     } catch (err) {
-      setError("فشل في جلب بيانات الطلاب");
+      const apiMsg = err.response?.data?.message;
+      setError(apiMsg || "فشل في جلب بيانات الطلاب");
       console.error("Students fetch error:", err);
     } finally {
       setLoading(false);
@@ -109,9 +110,11 @@ export default function HeadOfDepartmentStudents() {
       <div className="filters-section">
         <div className="filters-grid">
           <div className="filter-group">
-            <label>المساق:</label>
-            <select 
-              value={filters.course_id} 
+            <label htmlFor="hod-students-filter-course">المساق:</label>
+            <select
+              id="hod-students-filter-course"
+              name="course_id"
+              value={filters.course_id}
               onChange={(e) => setFilters({...filters, course_id: e.target.value})}
             >
               <option value="">جميع المساقات</option>
@@ -120,9 +123,11 @@ export default function HeadOfDepartmentStudents() {
           </div>
           
           <div className="filter-group">
-            <label>الشعبة:</label>
-            <select 
-              value={filters.section_id} 
+            <label htmlFor="hod-students-filter-section">الشعبة:</label>
+            <select
+              id="hod-students-filter-section"
+              name="section_id"
+              value={filters.section_id}
               onChange={(e) => setFilters({...filters, section_id: e.target.value})}
             >
               <option value="">جميع الشعب</option>
@@ -131,9 +136,11 @@ export default function HeadOfDepartmentStudents() {
           </div>
           
           <div className="filter-group">
-            <label>الحالة:</label>
-            <select 
-              value={filters.status} 
+            <label htmlFor="hod-students-filter-status">الحالة:</label>
+            <select
+              id="hod-students-filter-status"
+              name="status"
+              value={filters.status}
               onChange={(e) => setFilters({...filters, status: e.target.value})}
             >
               <option value="">جميع الحالات</option>
@@ -212,32 +219,32 @@ export default function HeadOfDepartmentStudents() {
             <div className="modal-body">
               <div className="student-details-grid">
                 <div className="detail-item">
-                  <label>الاسم:</label>
+                  <span className="detail-label">الاسم:</span>
                   <span>{selectedStudent.name}</span>
                 </div>
                 
                 <div className="detail-item">
-                  <label>الرقم الجامعي:</label>
+                  <span className="detail-label">الرقم الجامعي:</span>
                   <span>{selectedStudent.university_id}</span>
                 </div>
                 
                 <div className="detail-item">
-                  <label>التخصص:</label>
+                  <span className="detail-label">التخصص:</span>
                   <span>{selectedStudent.major || "غير محدد"}</span>
                 </div>
                 
                 <div className="detail-item">
-                  <label>البريد الإلكتروني:</label>
+                  <span className="detail-label">البريد الإلكتروني:</span>
                   <span>{selectedStudent.email}</span>
                 </div>
                 
                 <div className="detail-item">
-                  <label>مكان التدريب:</label>
+                  <span className="detail-label">مكان التدريب:</span>
                   <span>{getTrainingPlaceName(selectedStudent)}</span>
                 </div>
                 
                 <div className="detail-item">
-                  <label>الحالة:</label>
+                  <span className="detail-label">الحالة:</span>
                   <span className="status-badge" style={{ backgroundColor: getStudentStatus(selectedStudent).color }}>
                     {getStudentStatus(selectedStudent).text}
                   </span>
@@ -265,7 +272,7 @@ export default function HeadOfDepartmentStudents() {
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         .head-department-students {
           padding: 20px;
           max-width: 1200px;
@@ -420,7 +427,8 @@ export default function HeadOfDepartmentStudents() {
           flex-direction: column;
         }
 
-        .detail-item label {
+        .detail-item label,
+        .detail-item .detail-label {
           font-weight: 500;
           color: var(--text-muted);
           margin-bottom: 5px;

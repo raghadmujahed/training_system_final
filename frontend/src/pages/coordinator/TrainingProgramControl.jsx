@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getFeatureFlags, updateFeatureFlag, getCoordinatorTrainingPrograms, updateTrainingProgramStatus } from "../../services/api";
+import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
 import { Loader2, Lock, Unlock, AlertCircle, Settings, CheckCircle2, XCircle, Users, BookOpen, Search, Eye, ChevronDown, ChevronUp, GraduationCap, Building2, Clock, MessageSquare, Send, CheckCircle, XOctagon } from "lucide-react";
 
 const STATUS_MAP = {
@@ -37,7 +38,7 @@ export default function TrainingProgramControl() {
       const flags = await getFeatureFlags();
       const tpFlag = flags.find((f) => f.name === "training_program.edit");
       setFlag(tpFlag || null);
-    } catch (e) {
+    } catch {
       setError("تعذر تحميل حالة برنامج التدريب.");
     } finally {
       setLoading(false);
@@ -53,7 +54,7 @@ export default function TrainingProgramControl() {
       if (searchQuery) params.search = searchQuery;
       const res = await getCoordinatorTrainingPrograms(params);
       setPrograms(res.data || []);
-    } catch (e) {
+    } catch {
       setProgramsError("تعذر تحميل برامج التدريب.");
     } finally {
       setProgramsLoading(false);
@@ -81,7 +82,7 @@ export default function TrainingProgramControl() {
           ? "تم فتح إدخال برنامج التدريب للطلاب"
           : "تم إغلاق إدخال برنامج التدريب للطلاب"
       );
-    } catch (e) {
+    } catch {
       setError("تعذر تغيير حالة برنامج التدريب.");
     } finally {
       setToggling(false);
@@ -94,7 +95,7 @@ export default function TrainingProgramControl() {
       await updateTrainingProgramStatus(id, { status, coordinator_note: note });
       setNoteModal(null);
       loadPrograms();
-    } catch (e) {
+    } catch {
       setProgramsError("تعذر تحديث حالة البرنامج.");
     } finally {
       setActionLoading(null);
@@ -142,6 +143,8 @@ export default function TrainingProgramControl() {
           <CheckCircle2 size={18} /> {success}
         </div>
       )}
+
+      <CoordinatorPsychologyReadOnlyNotice />
 
       {/* Feature Flag Toggle Card */}
       {flag ? (

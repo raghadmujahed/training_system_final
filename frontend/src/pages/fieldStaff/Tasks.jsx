@@ -95,28 +95,36 @@ export default function FieldStaffTasks() {
     setLoading(true);
     setError("");
     try {
-      const [taskRes, assignRes, studentsRes, sectionsRes] = await Promise.all([
+      const fetchAllPages = async (path) => {
+        const merged = [];
+        let page = 1;
+        let lastPage = 1;
+        do {
+          const res = await apiClient.get(path, { params: { per_page: 100, page } });
+          merged.push(...unwrapSupervisorList(res.data));
+          lastPage = res.data?.meta?.last_page ?? 1;
+          page++;
+        } while (page <= lastPage);
+        return merged;
+      };
+
+      const [taskRes, assignRes, studentsList, sectionsList] = await Promise.all([
         getTasks({ per_page: 200, with_submissions: 1 }),
         getTrainingAssignments({ per_page: 200 }),
-        isAcademicSupervisor
-          ? apiClient.get("/supervisor/students", { params: { per_page: 200 } }).then((res) => res.data)
-          : Promise.resolve(null),
-        isAcademicSupervisor
-          ? apiClient.get("/supervisor/sections", { params: { per_page: 100 } }).then((res) => res.data)
-          : Promise.resolve(null),
+        isAcademicSupervisor ? fetchAllPages("/supervisor/students") : Promise.resolve([]),
+        isAcademicSupervisor ? fetchAllPages("/supervisor/sections") : Promise.resolve([]),
       ]);
       setItems(itemsFromPagedResponse(taskRes));
       setAssignments(itemsFromPagedResponse(assignRes));
       if (isAcademicSupervisor) {
-        const students = unwrapSupervisorList(studentsRes);
-        setSupervisedStudents(students);
-        setSections(unwrapSupervisorList(sectionsRes));
-        if (!selectedStudentIds.size && students[0]) {
-          const firstId = Number(students[0].student_id ?? students[0].id);
-          if (Number.isFinite(firstId)) {
-            setSelectedStudentIds(new Set([firstId]));
-          }
-        }
+        setSupervisedStudents(studentsList);
+        setSections(sectionsList);
+        setSelectedStudentIds((prev) => {
+          if (prev.size) return prev;
+          const first = studentsList[0];
+          const firstId = first ? Number(first.student_id ?? first.id) : null;
+          return Number.isFinite(firstId) ? new Set([firstId]) : new Set();
+        });
       }
     } catch (e) {
       setError(e?.response?.data?.message || "فشل تحميل المهام");
@@ -241,7 +249,18 @@ export default function FieldStaffTasks() {
       closeModal();
       await load();
     } catch (e) {
-      setFormError(e?.response?.data?.message || "فشل حفظ المهمة");
+      const data = e?.response?.data;
+      let msg = data?.message;
+      if (data?.errors && typeof data.errors === "object") {
+        const parts = Object.entries(data.errors).map(([key, vals]) => {
+          const v = Array.isArray(vals) ? vals.join(" ") : String(vals);
+          return `${key}: ${v}`;
+        });
+        if (parts.length) {
+          msg = [msg, ...parts].filter(Boolean).join(" — ");
+        }
+      }
+      setFormError(msg || e?.message || "فشل حفظ المهمة");
     } finally {
       setSaving(false);
     }

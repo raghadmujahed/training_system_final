@@ -8,7 +8,7 @@ class UpdateNoteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->id === $this->route('note')->user_id;
+        return $this->user()->can('update', $this->route('note'));
     }
 
     public function rules(): array

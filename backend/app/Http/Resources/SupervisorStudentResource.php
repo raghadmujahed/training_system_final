@@ -10,6 +10,7 @@ class SupervisorStudentResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this['id'] ?? $this['student_id'] ?? null,
             'student_id' => $this['student_id'] ?? null,
             'training_assignment_id' => $this['training_assignment_id'] ?? null,
             'name' => $this['name'] ?? null,
@@ -18,6 +19,7 @@ class SupervisorStudentResource extends JsonResource
             'specialization' => $this['specialization'] ?? null,
             'section_id' => $this['section_id'] ?? null,
             'section' => $this['section'] ?? null,
+            'course_id' => $this['course_id'] ?? null,
             'course' => $this['course'] ?? null,
             'training_site' => $this['training_site'] ?? null,
             'field_supervisor_name' => $this['field_supervisor_name'] ?? null,

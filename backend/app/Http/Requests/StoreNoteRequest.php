@@ -11,11 +11,18 @@ class StoreNoteRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('user_id') && $this->user()) {
+            $this->merge(['user_id' => $this->user()->id]);
+        }
+    }
+
     public function rules(): array
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'training_assignment_id' => 'nullable|exists:training_assignments,id',
+            'training_assignment_id' => 'required|exists:training_assignments,id',
             'content' => 'required|string',
         ];
     }

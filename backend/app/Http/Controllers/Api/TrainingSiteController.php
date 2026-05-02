@@ -67,6 +67,14 @@ class TrainingSiteController extends Controller
             $query->where('school_level', trim((string) $request->school_level));
         }
 
+        if ($request->boolean('include_occupancy')) {
+            $query->withCount([
+                'trainingAssignments as active_assignments_count' => static function ($q) {
+                    $q->whereIn('status', ['assigned', 'ongoing']);
+                },
+            ]);
+        }
+
         $sites = $query->latest()->paginate($request->per_page ?? 15);
         return TrainingSiteResource::collection($sites);
     }

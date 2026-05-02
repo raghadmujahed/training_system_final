@@ -174,12 +174,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('conversations', ConversationController::class);
     Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
 
-    // Annonces
-    Route::apiResource('announcements', AnnouncementController::class)
-        ->middleware('feature:announcements.create')
-        ->only(['store']);
-    Route::apiResource('announcements', AnnouncementController::class)
-        ->only(['index', 'show', 'update', 'destroy']);
+    // Annonces — الإنشاء مُصرَّح به لأدوار محددة في FormRequest (لا يعتمد على feature flag)
+    Route::post('announcements', [AnnouncementController::class, 'store']);
+    Route::apiResource('announcements', AnnouncementController::class)->except(['store']);
 
     // Notifications
     Route::get('notifications', [NotificationController::class, 'index']);

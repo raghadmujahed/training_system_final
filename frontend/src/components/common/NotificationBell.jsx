@@ -184,7 +184,7 @@ export default function NotificationBell() {
     if (notification?.id && !notification?.read_at) {
       try {
         await markSystemNotificationAsRead(notification.id);
-      } catch (e) {
+      } catch {
         // ignore
       }
     }

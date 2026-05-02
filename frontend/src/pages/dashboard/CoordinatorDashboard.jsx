@@ -14,6 +14,7 @@ import { CoordinatorStatsCards } from "../../components/coordinator";
 import { STATUS_LABELS } from "../../config/coordinator/statusLabels";
 import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies";
 import EmptyState from "../../components/common/EmptyState";
+import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
 
 const BATCH_STATUS_LABELS = {
   draft: "مسودة",
@@ -28,7 +29,6 @@ export default function CoordinatorDashboard() {
     error,
     recentRequests,
     recentBatches,
-    reload,
     pendingReview,
     prelimApproved,
     openBatches,
@@ -73,6 +73,8 @@ export default function CoordinatorDashboard() {
         </div>
       )}
 
+      <CoordinatorPsychologyReadOnlyNotice />
+
       {/* Stats Cards */}
       <CoordinatorStatsCards
         pendingReview={pendingReview}
@@ -105,7 +107,7 @@ export default function CoordinatorDashboard() {
           </Link>
           <Link className="quick-action-btn" to="/coordinator/official-letters">
             <FileText size={22} style={{ color: "var(--info)" }} />
-            <span>الكتب الرسمية</span>
+            <span>دفعات طلبات التدريب</span>
           </Link>
           <Link className="quick-action-btn" to="/coordinator/distribution-status">
             <Send size={22} style={{ color: "var(--success)" }} />

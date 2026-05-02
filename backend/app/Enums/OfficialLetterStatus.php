@@ -11,6 +11,8 @@ enum OfficialLetterStatus: string
     case SCHOOL_RECEIVED = 'school_received';
     case COMPLETED = 'completed';
     case REJECTED = 'rejected';
+    case SENT_TO_HEALTH_MINISTRY = 'sent_to_health_ministry';
+    case HEALTH_MINISTRY_REJECTED = 'health_ministry_rejected';
 
     public function label(): string
     {
@@ -22,6 +24,8 @@ enum OfficialLetterStatus: string
             self::SCHOOL_RECEIVED => 'مستلم من المدرسة',
             self::COMPLETED => 'مكتمل',
             self::REJECTED => 'مرفوض',
+            self::SENT_TO_HEALTH_MINISTRY => 'مرسل لوزارة الصحة',
+            self::HEALTH_MINISTRY_REJECTED => 'مرفوض من وزارة الصحة',
         };
     }
 }

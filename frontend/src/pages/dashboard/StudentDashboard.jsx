@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Navigate, Link } from "react-router-dom";
 import {
   getStudentDashboardSummary,
+  getAnnouncements,
+  itemsFromPagedResponse,
 } from "../../services/api";
 import { getStudentDashboardPath, getStudentTrack } from "../../utils/studentSection";
 import { readStoredUser } from "../../utils/session";
@@ -23,6 +25,7 @@ import {
   Award,
   ArrowLeft,
   Loader2,
+  Megaphone,
 } from "lucide-react";
 
 const getStudentSpecialization = (user, track) => {
@@ -111,15 +114,25 @@ export default function StudentDashboard({ forcedTrack = null }) {
   ]);
   const [latestItems, setLatestItems] = useState([]);
   const [latestTasks, setLatestTasks] = useState([]);
+  const [publicAnnouncements, setPublicAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const abortControllerRef = useRef(null);
   const currentUser = useMemo(() => readStoredUser(), []);
   const detectedTrack = getStudentTrack(currentUser);
   const effectiveTrack = forcedTrack || detectedTrack || "education";
 
-  if (forcedTrack && forcedTrack !== detectedTrack && detectedTrack) {
-    return <Navigate to={getStudentDashboardPath(currentUser)} replace />;
-  }
+  const displaySummaryCards = useMemo(() => {
+    return summaryCards.map((card) => {
+      if (effectiveTrack === "psychology" && card.title === "طلب التدريب") {
+        return {
+          ...card,
+          link: "/student/training-request-status",
+          desc: "متابعة المسار (يُنشأ الطلب عبر المشرف الأكاديمي للقسم)",
+        };
+      }
+      return card;
+    });
+  }, [summaryCards, effectiveTrack]);
 
   const fetchDashboardData = useCallback(async () => {
     // إلغاء أي طلب سابق قبل بدء طلب جديد
@@ -133,6 +146,13 @@ export default function StudentDashboard({ forcedTrack = null }) {
     setLoading(true);
     try {
       const summary = await getStudentDashboardSummary({ signal });
+      let announcementsList = [];
+      try {
+        const annRes = await getAnnouncements({ per_page: 6 });
+        announcementsList = itemsFromPagedResponse(annRes);
+      } catch {
+        announcementsList = [];
+      }
       const user = summary?.user || {};
 
       // 1. بيانات المستخدم + الشعبة + المشرفين
@@ -225,6 +245,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
       });
       setLatestItems(formattedNotif);
       setLatestTasks(tasks.slice(0, 4));
+      setPublicAnnouncements(announcementsList);
     } catch (error) {
       if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
         return;
@@ -247,6 +268,10 @@ export default function StudentDashboard({ forcedTrack = null }) {
       }
     };
   }, [fetchDashboardData]);
+
+  if (forcedTrack && forcedTrack !== detectedTrack && detectedTrack) {
+    return <Navigate to={getStudentDashboardPath(currentUser)} replace />;
+  }
 
   if (loading) {
     return (
@@ -275,6 +300,78 @@ export default function StudentDashboard({ forcedTrack = null }) {
           </div>
         </div>
       </div>
+
+      {effectiveTrack === "psychology" && (
+        <div
+          className="section-card mb-4"
+          style={{
+            borderRight: "4px solid #0284c7",
+            background: "linear-gradient(135deg, #f0f9ff 0%, #fff 100%)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div
+              className="section-icon"
+              style={{ background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)", flexShrink: 0 }}
+            >
+              <ClipboardList size={20} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>طلب التدريب — قسم علم النفس</h4>
+              <p style={{ margin: 0, fontSize: "0.92rem", lineHeight: 1.65, color: "var(--text-soft)" }}>
+                لا يتم إنشاء طلب التدريب من حساب الطالب. يقوم المشرف الأكاديمي للقسم بإنشاء الطلب ومتابعة الجهات
+                الرسمية حتى صدور الموافقة النهائية من جهة التدريب.
+              </p>
+              <Link
+                to="/student/training-request-status"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  marginTop: 12,
+                  fontWeight: 700,
+                  color: "#0284c7",
+                  textDecoration: "none",
+                }}
+              >
+                متابعة حالة طلب التدريب <ArrowLeft size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {publicAnnouncements.length > 0 ? (
+        <div className="section-card mb-4" style={{ borderRight: "4px solid var(--accent, #b08d57)" }}>
+          <div className="d-flex align-items-center gap-2 mb-3">
+            <div className="section-icon">
+              <Megaphone size={20} />
+            </div>
+            <h4 className="mb-0">إعلانات عامة</h4>
+          </div>
+          <ul className="list-unstyled mb-0" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {publicAnnouncements.map((a) => (
+              <li
+                key={a.id}
+                style={{
+                  padding: "12px 14px",
+                  borderRadius: 12,
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>{a.title}</div>
+                <div style={{ fontSize: "0.88rem", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{a.content}</div>
+                {a.published_at ? (
+                  <div style={{ fontSize: "0.78rem", color: "var(--text-soft)", marginTop: 8 }}>
+                    نُشر في {new Date(a.published_at).toLocaleString("ar-SA")}
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {/* Student Info Cards */}
       <div className="section-card mb-4">
@@ -412,7 +509,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
 
       {/* Stats Cards */}
       <div className="dashboard-grid mb-4">
-        {summaryCards.map((card, index) => {
+        {displaySummaryCards.map((card, index) => {
           const IconComponent = card.icon;
           return (
             <Link key={index} to={card.link} className="stat-card-link">

@@ -8,7 +8,14 @@ class RejectTrainingRequestRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()->role?->name, ['coordinator', 'education_directorate', 'school_manager', 'psychology_center_manager']);
+        return in_array($this->user()->role?->name, [
+            'coordinator',
+            'training_coordinator',
+            'education_directorate',
+            'school_manager',
+            'psychology_center_manager',
+            'academic_supervisor',
+        ], true);
     }
 
     public function rules(): array

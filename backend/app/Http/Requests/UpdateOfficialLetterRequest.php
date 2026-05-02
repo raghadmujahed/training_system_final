@@ -15,7 +15,7 @@ class UpdateOfficialLetterRequest extends FormRequest
     {
         return [
             'content' => 'sometimes|string',
-            'status' => 'sometimes|in:draft,sent_to_directorate,sent_to_school,completed',
+            'status' => 'sometimes|in:draft,sent_to_directorate,sent_to_school,sent_to_health_ministry,health_ministry_rejected,directorate_approved,completed,rejected',
         ];
     }
 }

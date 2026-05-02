@@ -68,39 +68,39 @@ export default function HeadOfDepartmentCourseForm() {
 
       <form onSubmit={handleSubmit} className="form">
         <div className="form-group">
-          <label>الكود *</label>
-          <input type="text" name="code" value={form.code} onChange={handleChange} required />
+          <label htmlFor="hod-course-code">الكود *</label>
+          <input id="hod-course-code" type="text" name="code" value={form.code} onChange={handleChange} required />
           {errors.code && <span className="error">{errors.code[0]}</span>}
         </div>
 
         <div className="form-group">
-          <label>الاسم *</label>
-          <input type="text" name="name" value={form.name} onChange={handleChange} required />
+          <label htmlFor="hod-course-name">الاسم *</label>
+          <input id="hod-course-name" type="text" name="name" value={form.name} onChange={handleChange} required />
           {errors.name && <span className="error">{errors.name[0]}</span>}
         </div>
 
         <div className="form-group">
-          <label>الوصف</label>
-          <textarea name="description" value={form.description} onChange={handleChange} rows="4" />
+          <label htmlFor="hod-course-description">الوصف</label>
+          <textarea id="hod-course-description" name="description" value={form.description} onChange={handleChange} rows="4" />
           {errors.description && <span className="error">{errors.description[0]}</span>}
         </div>
 
         <div className="form-row">
           <div className="form-group">
-            <label>الساعات الجامعية *</label>
-            <input type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} min="1" max="6" required />
+            <label htmlFor="hod-course-credit-hours">الساعات الجامعية *</label>
+            <input id="hod-course-credit-hours" type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} min="1" max="6" required />
             {errors.credit_hours && <span className="error">{errors.credit_hours[0]}</span>}
           </div>
 
           <div className="form-group">
-            <label>الساعات التدريبية *</label>
-            <input type="number" name="training_hours" value={form.training_hours} onChange={handleChange} min="0" max="500" required />
+            <label htmlFor="hod-course-training-hours">الساعات التدريبية *</label>
+            <input id="hod-course-training-hours" type="number" name="training_hours" value={form.training_hours} onChange={handleChange} min="0" max="500" required />
             {errors.training_hours && <span className="error">{errors.training_hours[0]}</span>}
           </div>
 
           <div className="form-group">
-            <label>النوع *</label>
-            <select name="type" value={form.type} onChange={handleChange} required>
+            <label htmlFor="hod-course-type">النوع *</label>
+            <select id="hod-course-type" name="type" value={form.type} onChange={handleChange} required>
               <option value="practical">عملي</option>
               <option value="theoretical">نظري</option>
               <option value="both">نظري وعملي</option>

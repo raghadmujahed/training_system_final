@@ -12,10 +12,12 @@ use App\Models\OfficialLetter;
 use App\Models\TrainingAssignment;
 use App\Models\TrainingRequest;
 use App\Models\TrainingRequestStudent;
+use App\Models\TrainingSite;
 use App\Models\User;
 use App\Models\WorkflowTemplate;
 use App\Models\WorkflowApproval;
 use App\Models\WorkflowInstance;
+use App\Support\PsychologyAcademicWorkflow;
 use App\Support\TrainingRequestNotifications;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -23,20 +25,45 @@ use Illuminate\Validation\ValidationException;
 class TrainingRequestService
 {
     /**
-     * إنشاء كتاب تدريبي جديد (من قبل المنسق)
+     * إنشاء كتاب تدريبي جديد (من المنسق أو من مشرف علم النفس حسب السياسات).
      */
-    public function createTrainingRequest(array $data, int $coordinatorId): TrainingRequest
+    public function createTrainingRequest(array $data, User $creator): TrainingRequest
     {
-        return DB::transaction(function () use ($data, $coordinatorId) {
-            $trainingRequest = TrainingRequest::create([
+        return DB::transaction(function () use ($data, $creator) {
+            PsychologyAcademicWorkflow::assertSupervisorOverseesPsychologyStudents($creator, $data['students'] ?? []);
+            if (PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($creator)) {
+                PsychologyAcademicWorkflow::assertTrainingSiteMatchesPsychologyTrack((int) $data['training_site_id'], $creator);
+            }
+
+            $site = TrainingSite::findOrFail($data['training_site_id']);
+            $isPsychologySupervisor = PsychologyAcademicWorkflow::isPsychologyAcademicSupervisor($creator);
+
+            $bookStatus = $isPsychologySupervisor
+                ? BookStatus::PRELIM_APPROVED->value
+                : BookStatus::DRAFT->value;
+
+            $attributes = [
+                'requested_by' => $creator->id,
                 'letter_number' => $data['letter_number'] ?? $this->generateLetterNumber(),
                 'letter_date' => $data['letter_date'] ?? now(),
                 'training_site_id' => $data['training_site_id'],
                 'training_period_id' => $data['training_period_id'] ?? null,
-                'book_status' => BookStatus::DRAFT->value,
+                'governing_body' => $site->governing_body,
+                'book_status' => $bookStatus,
                 'status' => 'pending',
                 'requested_at' => now(),
-            ]);
+            ];
+
+            if ($isPsychologySupervisor) {
+                $dir = $data['directorate'] ?? null;
+                if (($site->site_type ?? '') === 'school' || ($site->governing_body ?? '') === 'directorate_of_education') {
+                    $attributes['directorate'] = $dir !== null && $dir !== ''
+                        ? $dir
+                        : (trim((string) ($site->directorate ?? '')) ?: null);
+                }
+            }
+
+            $trainingRequest = TrainingRequest::create($attributes);
 
             foreach ($data['students'] as $student) {
                 TrainingRequestStudent::create([
@@ -68,7 +95,11 @@ class TrainingRequestService
 
             OfficialLetter::create([
                 'training_request_id' => $trainingRequest->id,
-                'letter_number' => $letterData['letter_number'],
+                'letter_number' => $this->uniqueOfficialLetterNumber(
+                    $letterData['letter_number'] ?? null,
+                    $trainingRequest->id,
+                    'مديرية'
+                ),
                 'letter_date' => $letterData['letter_date'],
                 'type' => OfficialLetterType::TO_DIRECTORATE->value,
                 'content' => $letterData['content'],
@@ -151,17 +182,6 @@ class TrainingRequestService
                     'book_status' => BookStatus::DIRECTORATE_APPROVED->value,
                 ]
             );
-
-            $trainingRequest->load('trainingRequestStudents');
-            TrainingRequestNotifications::forStudents(
-                $trainingRequest,
-                'training_request_directorate_approved_student',
-                'تمت موافقة الجهة الرسمية على طلب التدريب الخاص بك.',
-                [
-                    'training_request_id' => $trainingRequest->id,
-                    'book_status' => BookStatus::DIRECTORATE_APPROVED->value,
-                ]
-            );
         });
     }
 
@@ -179,7 +199,11 @@ class TrainingRequestService
 
             OfficialLetter::create([
                 'training_request_id' => $trainingRequest->id,
-                'letter_number' => $letterData['letter_number'],
+                'letter_number' => $this->uniqueOfficialLetterNumber(
+                    $letterData['letter_number'] ?? null,
+                    $trainingRequest->id,
+                    'جهة-تدريب'
+                ),
                 'letter_date' => $letterData['letter_date'],
                 'type' => OfficialLetterType::TO_SCHOOL->value,
                 'content' => $letterData['content'],
@@ -212,6 +236,8 @@ class TrainingRequestService
             $allowedRoles = $manager->role?->name === 'psychology_center_manager'
                 ? ['psychologist']
                 : ['teacher', 'adviser'];
+
+            $this->assertTrainingSiteAcceptsNewStudents($trainingRequest, count($studentsData));
 
             foreach ($studentsData as $studentData) {
                 $studentRequest = TrainingRequestStudent::findOrFail($studentData['id']);
@@ -264,16 +290,38 @@ class TrainingRequestService
                 ['training_request_id' => $trainingRequest->id]
             );
 
-            $trainingRequest->load('trainingRequestStudents');
+            $trainingRequest->load('trainingRequestStudents.course');
             TrainingRequestNotifications::forStudents(
                 $trainingRequest,
-                'training_request_school_approved_student',
-                'تمت موافقة جهة التدريب ويمكنك متابعة التدريب الميداني في النظام.',
+                'training_request_final_placement_student',
+                'تم قبولك في جهة التدريب.',
                 [
                     'training_request_id' => $trainingRequest->id,
                     'book_status' => BookStatus::SCHOOL_APPROVED->value,
                 ]
             );
+
+            $deptId = $trainingRequest->trainingRequestStudents
+                ->map(fn ($trs) => $trs->course?->department_id)
+                ->filter()
+                ->first();
+
+            $trainingRequest->loadMissing('requestedBy');
+            $skipPsychologyCoordinatorNotice = $deptId
+                && PsychologyAcademicWorkflow::departmentIsPsychology((int) $deptId)
+                && PsychologyAcademicWorkflow::isOrchestratedByPsychologySupervisor($trainingRequest);
+
+            if (! $skipPsychologyCoordinatorNotice) {
+                TrainingRequestNotifications::forCoordinatorsByDepartment(
+                    $deptId ? (int) $deptId : null,
+                    'training_request_final_school_accept_coordinator',
+                    'تم قبول طلبة في جهة التدريب — طلب رقم ' . ($trainingRequest->letter_number ?? "#{$trainingRequest->id}") . '.',
+                    [
+                        'training_request_id' => $trainingRequest->id,
+                        'book_status' => BookStatus::SCHOOL_APPROVED->value,
+                    ]
+                );
+            }
 
             $workflowInstance = WorkflowInstance::where('model_type', TrainingRequest::class)
                 ->where('model_id', $trainingRequest->id)
@@ -500,6 +548,43 @@ class TrainingRequestService
     }
 
     /**
+     * عدد تعيينات التدريب النشطة في الجهة (لا يُستهلك قبل قبول المدرسة النهائي — يُستدعى عند القبول فقط).
+     */
+    private function activeTrainingAssignmentsAtSite(int $trainingSiteId): int
+    {
+        return TrainingAssignment::query()
+            ->where('training_site_id', $trainingSiteId)
+            ->whereIn('status', ['assigned', 'ongoing'])
+            ->count();
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function assertTrainingSiteAcceptsNewStudents(TrainingRequest $trainingRequest, int $incomingCount): void
+    {
+        $siteId = (int) $trainingRequest->training_site_id;
+        if ($siteId < 1 || $incomingCount < 1) {
+            return;
+        }
+
+        $site = TrainingSite::query()->find($siteId);
+        if (! $site || $site->capacity === null) {
+            return;
+        }
+
+        $cap = max(0, (int) $site->capacity);
+        $used = $this->activeTrainingAssignmentsAtSite($siteId);
+        $remaining = max(0, $cap - $used);
+
+        if ($used + $incomingCount > $cap) {
+            throw ValidationException::withMessages([
+                'capacity' => "الجهة التدريبية مكتملة السعة (المتبقي: {$remaining}). لا يمكن قبول المزيد من الطلبة.",
+            ]);
+        }
+    }
+
+    /**
      * إرسال إشعار لرؤساء الأقسام المعنيين والأدمن.
      * يحدد القسم(الأقسام) من خلال مساقات الطلاب في طلب التدريب.
      */
@@ -567,6 +652,19 @@ class TrainingRequestService
             'notifiable_id' => $trainingRequest->id,
             'data' => $data,
         ]);
+    }
+
+    /**
+     * رقم كتاب للعرض يبقى كما أدخله المستخدم؛ القيمة المخزّنة تُكمّل لتفادي انتهاك الفهرس الفريد letter_number.
+     */
+    private function uniqueOfficialLetterNumber(?string $baseNumber, int $trainingRequestId, string $stageLabel): string
+    {
+        $base = trim((string) $baseNumber);
+        if ($base === '') {
+            $base = 'كتاب';
+        }
+
+        return sprintf('%s-طلب%d-%s', $base, $trainingRequestId, $stageLabel);
     }
 
     private function generateLetterNumber(): string

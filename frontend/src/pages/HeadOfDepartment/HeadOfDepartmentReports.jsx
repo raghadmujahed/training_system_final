@@ -203,8 +203,10 @@ export default function HeadOfDepartmentReports() {
       <div className="section-card">
         <div className="filters-grid">
           <div className="form-group">
-            <label>نوع التقرير</label>
+            <label htmlFor="hod-reports-type">نوع التقرير</label>
             <select
+              id="hod-reports-type"
+              name="report_type"
               value={selectedReport}
               onChange={(e) => setSelectedReport(e.target.value)}
             >
@@ -216,8 +218,10 @@ export default function HeadOfDepartmentReports() {
             </select>
           </div>
           <div className="form-group">
-            <label>المساق</label>
+            <label htmlFor="hod-reports-course">المساق</label>
             <select
+              id="hod-reports-course"
+              name="course_id"
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
             >

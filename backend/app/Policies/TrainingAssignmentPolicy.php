@@ -14,9 +14,21 @@ class TrainingAssignmentPolicy
 
     public function view(User $user, TrainingAssignment $assignment): bool
     {
-        if ($user->role?->name === 'admin') return true;
-        if ($user->id === $assignment->teacher_id) return true;
-        if ($user->id === $assignment->academic_supervisor_id) return true;
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        if ($user->role?->name === 'academic_supervisor') {
+            return app(\App\Services\AcademicSupervisorStudentService::class)
+                ->supervisedAssignmentsBaseQuery($user)
+                ->whereKey($assignment->getKey())
+                ->exists();
+        }
+        if ($user->id === $assignment->teacher_id) {
+            return true;
+        }
+        if ($user->id === $assignment->academic_supervisor_id) {
+            return true;
+        }
         // المشرف الميداني يرى تعيينات طلابه
         if ($user->role?->name === 'field_supervisor') {
             return $user->id === $assignment->teacher_id;

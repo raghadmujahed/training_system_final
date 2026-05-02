@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSection, createSection, updateSection, getCourses, getUsers, searchSupervisors } from "../../services/api";
+import { getSection, createSection, updateSection, getCourses, searchSupervisors } from "../../services/api";
 
 export default function HeadOfDepartmentSectionForm() {
   const { id } = useParams();
@@ -132,28 +132,28 @@ export default function HeadOfDepartmentSectionForm() {
       <form onSubmit={handleSubmit} className="form">
         <div className="form-row">
           <div className="form-group">
-            <label>اسم الشعبة *</label>
-            <input type="text" name="name" value={form.name} onChange={handleChange} required />
+            <label htmlFor="hod-sf-name">اسم الشعبة *</label>
+            <input id="hod-sf-name" type="text" name="name" value={form.name} onChange={handleChange} required />
             {errors.name && <span className="error">{errors.name[0]}</span>}
           </div>
 
           <div className="form-group">
-            <label>السعة *</label>
-            <input type="number" name="capacity" value={form.capacity} onChange={handleChange} min="1" required />
+            <label htmlFor="hod-sf-capacity">السعة *</label>
+            <input id="hod-sf-capacity" type="number" name="capacity" value={form.capacity} onChange={handleChange} min="1" required />
             {errors.capacity && <span className="error">{errors.capacity[0]}</span>}
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
-            <label>السنة الأكاديمية *</label>
-            <input type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
+            <label htmlFor="hod-sf-academic-year">السنة الأكاديمية *</label>
+            <input id="hod-sf-academic-year" type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
             {errors.academic_year && <span className="error">{errors.academic_year[0]}</span>}
           </div>
 
           <div className="form-group">
-            <label>الفصل الدراسي *</label>
-            <select name="semester" value={form.semester} onChange={handleChange}>
+            <label htmlFor="hod-sf-semester">الفصل الدراسي *</label>
+            <select id="hod-sf-semester" name="semester" value={form.semester} onChange={handleChange}>
               <option value="first">الفصل الأول</option>
               <option value="second">الفصل الثاني</option>
               <option value="summer">الفصل الصيفي</option>
@@ -163,8 +163,8 @@ export default function HeadOfDepartmentSectionForm() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>المساق *</label>
-            <select name="course_id" value={form.course_id} onChange={handleChange} required>
+            <label htmlFor="hod-sf-course-id">المساق *</label>
+            <select id="hod-sf-course-id" name="course_id" value={form.course_id} onChange={handleChange} required>
               <option value="">اختر المساق</option>
               {courses.map(course => (
                 <option key={course.id} value={course.id}>{course.name} ({course.code})</option>
@@ -174,9 +174,12 @@ export default function HeadOfDepartmentSectionForm() {
           </div>
 
           <div className="form-group" style={{ position: "relative" }}>
-            <label>المشرف الأكاديمي</label>
+            <label htmlFor="hod-sf-supervisor-search">المشرف الأكاديمي</label>
             <input
+              id="hod-sf-supervisor-search"
               type="text"
+              name="supervisor_search"
+              autoComplete="off"
               placeholder="ابحث عن المشرف الأكاديمي..."
               value={supervisorSearch}
               onChange={(e) => {
@@ -193,6 +196,7 @@ export default function HeadOfDepartmentSectionForm() {
             />
             <input
               type="hidden"
+              id="hod-sf-academic-supervisor-id"
               name="academic_supervisor_id"
               value={form.academic_supervisor_id}
             />

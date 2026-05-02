@@ -99,7 +99,7 @@ const formatDateTime = (value) => {
   return date.toLocaleString("ar", { dateStyle: "short", timeStyle: "short" });
 };
 
-export default function StudentsTable({ students, searchTerm, filterSection, filterStatus, onSelectStudent }) {
+export default function StudentsTable({ students, filterStatus, onSelectStudent }) {
   const normalized = useMemo(() => {
     const rows = students.map((s) => {
         const id = s.student_id ?? s.id;
@@ -153,26 +153,12 @@ export default function StudentsTable({ students, searchTerm, filterSection, fil
   const filtered = useMemo(() => {
     let list = [...normalized];
 
-    if (searchTerm.trim()) {
-      const q = searchTerm.trim().toLowerCase();
-      list = list.filter(
-        (s) =>
-          (s.name || "").toLowerCase().includes(q) ||
-          (s.university_id || "").toLowerCase().includes(q) ||
-          (s.site_name || "").toLowerCase().includes(q)
-      );
-    }
-
-    if (filterSection) {
-      list = list.filter((s) => String(s.section_id) === String(filterSection));
-    }
-
     if (filterStatus) {
       list = list.filter((s) => s.health_status === filterStatus);
     }
 
     return list;
-  }, [normalized, searchTerm, filterSection, filterStatus]);
+  }, [normalized, filterStatus]);
 
   if (!normalized.length) {
     return (

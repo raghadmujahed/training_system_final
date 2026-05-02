@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { clearStoredUser, readStoredUser, writeStoredUser } from "../utils/session";
 
 export default function useAuth() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     const savedUser = readStoredUser();
     if (savedUser?.id || savedUser?.name || savedUser?.role) {
-      setUser(savedUser);
+      return savedUser;
     }
-  }, []);
+    return null;
+  });
 
   const login = (role) => {
     const fakeUser = {

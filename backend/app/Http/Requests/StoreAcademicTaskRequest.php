@@ -32,7 +32,7 @@ class StoreAcademicTaskRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'instructions' => 'nullable|string',
-            'due_date' => 'nullable|date|after_or_equal:today',
+            'due_date' => 'nullable|date',
             'target_type' => 'required|in:student,section,group',
             'target_ids' => 'required|array|min:1',
             'target_ids.*' => 'integer|min:1',

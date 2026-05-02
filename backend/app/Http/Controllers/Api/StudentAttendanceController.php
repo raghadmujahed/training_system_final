@@ -9,6 +9,7 @@ use App\Models\StudentAttendance;
 use App\Models\StudentPortfolio;
 use App\Models\TrainingAssignment;
 use App\Models\TrainingRequestStudent;
+use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -92,78 +93,9 @@ class StudentAttendanceController extends Controller
      */
     public function store(Request $request)
     {
-        $user = $request->user();
-        
-        if ($user->role?->name !== 'student') {
-            return response()->json([
-                'message' => 'هذه الخدمة متاحة للطلاب فقط.'
-            ], 403);
-        }
-        
-        $validator = Validator::make($request->all(), [
-            'day' => 'required|string|in:السبت,الأحد,الإثنين,الثلاثاء,الأربعاء,الخميس',
-            'date' => 'required|date|before_or_equal:today',
-            'check_in' => 'required|date_format:H:i',
-            'check_out' => 'required|date_format:H:i|after:check_in',
-            'lessons_count' => 'nullable|integer|min:0|max:15',
-            'notes' => 'nullable|string|max:1000',
-        ], [
-            'day.required' => 'اليوم مطلوب.',
-            'day.in' => 'اليوم يجب أن يكون من الأيام الدراسية.',
-            'date.required' => 'التاريخ مطلوب.',
-            'date.before_or_equal' => 'لا يمكن تسجيل حضور لتاريخ مستقبلي.',
-            'check_in.required' => 'ساعة الحضور مطلوبة.',
-            'check_in.date_format' => 'صيغة ساعة الحضور غير صحيحة.',
-            'check_out.required' => 'ساعة المغادرة مطلوبة.',
-            'check_out.after' => 'ساعة المغادرة يجب أن تكون بعد ساعة الحضور.',
-            'check_out.date_format' => 'صيغة ساعة المغادرة غير صحيحة.',
-        ]);
-        
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'خطأ في البيانات المدخلة.',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-        
-        // التأكد من عدم وجود سجل مكرر لنفس اليوم
-        $exists = StudentAttendance::forUser($user->id)
-            ->forDate($request->date)
-            ->exists();
-        
-        if ($exists) {
-            return response()->json([
-                'message' => 'يوجد سجل حضور مسجل مسبقاً لهذا اليوم. يمكنك تعديله.'
-            ], 422);
-        }
-        
-        // الحصول على training_request_student_id النشط
-        $activeTraining = TrainingRequestStudent::whereHas('trainingRequest', function($q) {
-                $q->whereIn('book_status', ['school_approved', 'directorate_approved']);
-            })
-            ->where('user_id', $user->id)
-            ->first();
-        
-        $attendance = StudentAttendance::create([
-            'user_id' => $user->id,
-            'training_request_student_id' => $activeTraining?->id,
-            'day' => $request->day,
-            'date' => $request->date,
-            'check_in' => $request->check_in,
-            'check_out' => $request->check_out,
-            'lessons_count' => $request->lessons_count,
-            'notes' => $request->notes,
-            'status' => 'present',
-        ]);
-        
-        // مزامنة مع الملف الإنجازي
-        $portfolioEntry = $this->syncToPortfolio($user);
-
         return response()->json([
-            'message' => 'تم تسجيل الحضور بنجاح.',
-            'data' => $attendance->load('trainingRequestStudent.trainingRequest.trainingSite'),
-            'portfolio_entry_id' => $portfolioEntry?->id,
-        ], 201);
+            'message' => 'تسجيل الحضور والغياب يتم من قبل المرشد الميداني (المعلم/المشرف الميداني) في جهة التدريب. يمكنك الاطلاع على السجل من هذه الصفحة عند الاعتماد.',
+        ], 403);
     }
 
     /**
@@ -191,9 +123,15 @@ class StudentAttendanceController extends Controller
     public function update(Request $request, StudentAttendance $attendance)
     {
         $user = $request->user();
+
+        if ($user->role?->name === 'student') {
+            return response()->json([
+                'message' => 'لا يمكن للطالب تعديل سجل الحضور. راجع المرشد الميداني.',
+            ], 403);
+        }
         
-        // التأكد أن السجل يخص الطالب ولم يتم اعتماده بعد
-        if ($attendance->user_id !== $user->id) {
+        // التأكد من الصلاحية (مشرف ميداني / أدمن)
+        if (! $this->userCanManageStudentAttendance($user, (int) $attendance->user_id)) {
             return response()->json([
                 'message' => 'غير مصرح لك بتعديل هذا السجل.'
             ], 403);
@@ -223,7 +161,7 @@ class StudentAttendanceController extends Controller
         
         // التأكد من عدم التعارض مع سجل آخر عند تغيير التاريخ
         if ($request->filled('date') && $request->date !== $attendance->date->format('Y-m-d')) {
-            $exists = StudentAttendance::forUser($user->id)
+            $exists = StudentAttendance::forUser($attendance->user_id)
                 ->forDate($request->date)
                 ->where('id', '!=', $attendance->id)
                 ->exists();
@@ -251,9 +189,15 @@ class StudentAttendanceController extends Controller
     public function destroy(Request $request, StudentAttendance $attendance)
     {
         $user = $request->user();
+
+        if ($user->role?->name === 'student') {
+            return response()->json([
+                'message' => 'لا يمكن للطالب حذف سجل الحضور.',
+            ], 403);
+        }
         
-        // التأكد أن السجل يخص الطالب ولم يتم اعتماده
-        if ($attendance->user_id !== $user->id && $user->role?->name !== 'admin') {
+        // التأكد من الصلاحية
+        if (! $this->userCanManageStudentAttendance($user, (int) $attendance->user_id)) {
             return response()->json([
                 'message' => 'غير مصرح لك بحذف هذا السجل.'
             ], 403);
@@ -265,10 +209,15 @@ class StudentAttendanceController extends Controller
             ], 403);
         }
         
+        $studentUserId = (int) $attendance->user_id;
+
         $attendance->delete();
 
         // تحديث الملف الإنجازي
-        $this->syncToPortfolio($user);
+        $student = User::query()->find($studentUserId);
+        if ($student) {
+            $this->syncToPortfolio($student);
+        }
 
         return response()->json([
             'message' => 'تم حذف سجل الحضور بنجاح.'
@@ -352,7 +301,7 @@ class StudentAttendanceController extends Controller
         $user = $request->user();
         
         // يمكن للمشرف أو المعلم المرشد الاعتماد
-        if (!in_array($user->role?->name, ['supervisor', 'teacher', 'mentor', 'school_manager', 'principal'])) {
+        if (! in_array($user->role?->name, ['supervisor', 'teacher', 'mentor', 'school_manager', 'principal', 'field_supervisor', 'adviser', 'psychologist'], true)) {
             return response()->json([
                 'message' => 'غير مصرح لك باعتماد سجلات الحضور.'
             ], 403);
@@ -414,5 +363,17 @@ class StudentAttendanceController extends Controller
                 'visible_to_academic' => true,
             ]
         );
+    }
+
+    private function userCanManageStudentAttendance(User $actor, int $studentUserId): bool
+    {
+        if ($actor->role?->name === 'admin') {
+            return true;
+        }
+
+        return TrainingAssignment::query()
+            ->where('teacher_id', $actor->id)
+            ->whereHas('enrollment', fn ($q) => $q->where('user_id', $studentUserId))
+            ->exists();
     }
 }

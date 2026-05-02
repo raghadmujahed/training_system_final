@@ -107,7 +107,7 @@ export default function FieldStaffDashboard() {
           <ul style={{ paddingRight: 20 }}>
             <li>عيّن المعلم المرشد للطلبة المتدربين في جهتك.</li>
             <li>استخدم نماذج تقييم مدير المدرسة لتقييم الأداء العام.</li>
-            <li>تابع الكتب الرسمية والطلبة المتدربين.</li>
+            <li>تابع دفعات طلبات التدريب والطلبة المتدربين.</li>
           </ul>
         )}
         {isFieldSupervisor && supervisorSubtype === "mentor_teacher" && (

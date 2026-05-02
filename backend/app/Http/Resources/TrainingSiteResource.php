@@ -22,6 +22,18 @@ class TrainingSiteResource extends JsonResource
             'directorate' => $this->directorate,
             'directorate_label' => Directorate::tryFrom($this->directorate)?->label() ?? $this->directorate,
             'capacity' => $this->capacity,
+            'active_assignments_count' => $this->when(
+                isset($this->active_assignments_count),
+                (int) $this->active_assignments_count
+            ),
+            'remaining_capacity' => $this->when(
+                isset($this->active_assignments_count),
+                max(0, (int) $this->capacity - (int) $this->active_assignments_count)
+            ),
+            'is_at_capacity' => $this->when(
+                isset($this->active_assignments_count),
+                (int) $this->active_assignments_count >= (int) $this->capacity
+            ),
             'site_type' => $this->site_type,
             'site_type_label' => SiteType::tryFrom($this->site_type)?->label() ?? $this->site_type,
             'school_type' => $this->school_type ?? null,

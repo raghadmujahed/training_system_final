@@ -26,4 +26,12 @@ class Enrollment extends Model
     {
         return $this->hasMany(TrainingAssignment::class);
     }
+
+    /**
+     * Latest placement used for supervisor roster & dashboards when multiple rows exist.
+     */
+    public function latestTrainingAssignment()
+    {
+        return $this->hasOne(TrainingAssignment::class)->latestOfMany();
+    }
 }

@@ -8,7 +8,16 @@ class UpdateAnnouncementRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()->role?->name, ['admin', 'coordinator']);
+        $role = $this->user()->role?->name;
+        if (! in_array($role, ['admin', 'coordinator', 'training_coordinator'], true)) {
+            return false;
+        }
+        if ($role === 'admin') {
+            return true;
+        }
+        $announcement = $this->route('announcement');
+
+        return $announcement && (int) $announcement->user_id === (int) $this->user()->id;
     }
 
     public function rules(): array
@@ -16,6 +25,10 @@ class UpdateAnnouncementRequest extends FormRequest
         return [
             'title' => 'sometimes|string|max:255',
             'content' => 'sometimes|string',
+            'status' => 'nullable|in:draft,active,archived',
+            'published_at' => 'nullable|date',
+            'expires_at' => 'nullable|date',
+            'all_students' => 'nullable|boolean',
             'target_roles' => 'nullable|array',
             'target_roles.*' => 'exists:roles,id',
             'target_users' => 'nullable|array',

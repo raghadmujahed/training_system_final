@@ -28,10 +28,8 @@ export default function CoordinatorStatsCards({
   pendingReview = 0,
   prelimApproved = 0,
   needsEdit = 0,
-  openBatches = 0,
   sentToEducation = 0,
   approvedByBody = 0,
-  rejectedRequests = 0,
   rejectedByBody = 0,
   sentBatches = 0,
 }) {

@@ -84,6 +84,10 @@ import FieldVisits from "../pages/supervisor/FieldVisits";
 import Sections from "../pages/supervisor/Sections";
 import SupervisorReports from "../pages/supervisor/Reports";
 import Submissions from "../pages/supervisor/Submissions";
+import PsychologySupervisorCreateTrainingRequest from "../pages/supervisor/PsychologySupervisorCreateTrainingRequest";
+import PsychologySupervisorTrainingRequests from "../pages/supervisor/PsychologySupervisorTrainingRequests";
+import PsychologySupervisorOfficialLetters from "../pages/supervisor/PsychologySupervisorOfficialLetters";
+import PsychologySupervisorDistributionStatus from "../pages/supervisor/PsychologySupervisorDistributionStatus";
 
 
 // Mentor (المعلم المرشد - دور teacher) - legacy, kept for reference
@@ -112,6 +116,7 @@ import TrainingProgramControl from "../pages/coordinator/TrainingProgramControl"
 import CoordinatorTrainingRequests from "../pages/coordinator/TrainingRequests";
 import CoordinatorOfficialLetters from "../pages/coordinator/OfficialLetters";
 import CoordinatorDistributionStatus from "../pages/coordinator/DistributionStatus";
+import CoordinatorAnnouncements from "../pages/coordinator/CoordinatorAnnouncements";
 
 // Principal
 import PrincipalDashboard from "../pages/dashboard/PrincipalDashboard";
@@ -250,7 +255,11 @@ export default function AppRouter() {
           
           {/* Legacy - يُحتفظ به للتوافق */}
           <Route path="/supervisor/reports" element={<SupervisorReports />} />
-          
+
+          <Route path="/supervisor/psychology/create-training-request" element={<PsychologySupervisorCreateTrainingRequest />} />
+          <Route path="/supervisor/psychology/training-requests" element={<PsychologySupervisorTrainingRequests />} />
+          <Route path="/supervisor/psychology/official-letters" element={<PsychologySupervisorOfficialLetters />} />
+          <Route path="/supervisor/psychology/distribution-status" element={<PsychologySupervisorDistributionStatus />} />
 
           {/*
             Unified Field Staff Routes
@@ -315,6 +324,7 @@ export default function AppRouter() {
           <Route path="/coordinator/statistics" element={<CoordinatorStatistics />} />
           <Route path="/coordinator/training-requests" element={<CoordinatorTrainingRequests />} />
           <Route path="/coordinator/official-letters" element={<CoordinatorOfficialLetters />} />
+          <Route path="/coordinator/announcements" element={<CoordinatorAnnouncements />} />
           <Route path="/coordinator/distribution-status" element={<CoordinatorDistributionStatus />} />
           <Route path="/coordinator/training-program-control" element={<TrainingProgramControl />} />
           <Route path="/coordinator/students/:studentId/training-program" element={<StudentTrainingProgram />} />

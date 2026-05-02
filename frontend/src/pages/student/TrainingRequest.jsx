@@ -30,6 +30,7 @@ import {
   isTrainingRequestCancelable,
   isTrainingRequestEditable,
 } from "../../utils/status";
+import TrainingRequestWorkflowStepper from "../../components/training/TrainingRequestWorkflowStepper";
 
 const educationDirectorates = ["وسط", "شمال", "جنوب", "يطا"];
 
@@ -119,6 +120,7 @@ export default function TrainingRequest() {
           is_active: true,
           has_manager_account: true,
           per_page: 400,
+          include_occupancy: true,
         });
         const unique = Array.from(
           new Set(
@@ -154,6 +156,7 @@ export default function TrainingRequest() {
           is_active: true,
           has_manager_account: true,
           per_page: 200,
+          include_occupancy: true,
         };
         if (filters.gender_classification) {
           params.gender_classification = filters.gender_classification;
@@ -226,6 +229,16 @@ export default function TrainingRequest() {
     if (Object.keys(validationErrors).length > 0) {
       setError(Object.values(validationErrors).join("، "));
       return;
+    }
+    const pickedSite = schools.find((s) => String(s.id) === String(formData.training_site_id));
+    if (pickedSite) {
+      const atCapacity =
+        pickedSite.is_at_capacity === true ||
+        (pickedSite.remaining_capacity !== undefined && Number(pickedSite.remaining_capacity) <= 0);
+      if (atCapacity) {
+        setError("الجهة التدريبية المختارة مكتملة السعة ولا يمكن استقبال طلبات جديدة حاليًا.");
+        return;
+      }
     }
     if (hasSubmittedRequest && !submitTargetRequestId) {
       setError("الطلب الحالي لا يمكن تعديله في هذه المرحلة.");
@@ -393,6 +406,13 @@ export default function TrainingRequest() {
           {success}
         </div>
       )}
+
+      {hasSubmittedRequest && latestRequest ? (
+        <TrainingRequestWorkflowStepper
+          bookStatus={latestRequest.book_status}
+          governingBody={latestRequest.governing_body}
+        />
+      ) : null}
 
       {hasSubmittedRequest ? (
         <div className="section-card mb-3">
@@ -694,7 +714,12 @@ export default function TrainingRequest() {
                     } else if (e.key === "Enter" && highlightedSiteIndex >= 0) {
                       e.preventDefault();
                       const picked = filteredSchools[highlightedSiteIndex];
-                      if (picked) {
+                      const cap =
+                        picked &&
+                        (picked.is_at_capacity === true ||
+                          (picked.remaining_capacity !== undefined &&
+                            Number(picked.remaining_capacity) <= 0));
+                      if (picked && !cap) {
                         setFormData((prev) => ({ ...prev, training_site_id: String(picked.id) }));
                         setSiteSearch(picked.name || "");
                         setIsSiteMenuOpen(false);
@@ -730,16 +755,23 @@ export default function TrainingRequest() {
                       filteredSchools.map((s, idx) => {
                         const isSelected = String(s.id) === String(formData.training_site_id);
                         const isHighlighted = idx === highlightedSiteIndex;
+                        const atCapacity =
+                          s.is_at_capacity === true ||
+                          (s.remaining_capacity !== undefined && Number(s.remaining_capacity) <= 0);
+                        const rem =
+                          s.remaining_capacity !== undefined ? Number(s.remaining_capacity) : null;
                         return (
                           <button
                             key={s.id}
                             type="button"
                             onMouseDown={(event) => event.preventDefault()}
                             onClick={() => {
+                              if (atCapacity) return;
                               setFormData((prev) => ({ ...prev, training_site_id: String(s.id) }));
                               setSiteSearch(s.name || "");
                               setIsSiteMenuOpen(false);
                             }}
+                            disabled={atCapacity}
                             style={{
                               width: "100%",
                               textAlign: "right",
@@ -747,11 +779,23 @@ export default function TrainingRequest() {
                               background: isHighlighted ? "#f1f7ff" : isSelected ? "#f8f9fa" : "#fff",
                               padding: "10px 12px",
                               fontSize: "0.92rem",
-                              color: "#212529",
-                              cursor: "pointer",
+                              color: atCapacity ? "#9ca3af" : "#212529",
+                              cursor: atCapacity ? "not-allowed" : "pointer",
+                              opacity: atCapacity ? 0.72 : 1,
                             }}
                           >
-                            {s.name}
+                            <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                              <span>{s.name}</span>
+                              {atCapacity ? (
+                                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#b91c1c", background: "#fee2e2", padding: "2px 8px", borderRadius: 999 }}>
+                                  مكتملة السعة
+                                </span>
+                              ) : rem != null && Number.isFinite(rem) ? (
+                                <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "#0369a1" }}>
+                                  متبقي: {rem}
+                                </span>
+                              ) : null}
+                            </span>
                           </button>
                         );
                       })

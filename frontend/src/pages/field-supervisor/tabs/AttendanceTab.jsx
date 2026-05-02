@@ -64,7 +64,7 @@ export default function AttendanceTab({ studentId }) {
       setSuccess(true);
       setShowForm(false);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
+    } catch {
       // Error handled by hook
     } finally {
       setSubmitting(false);

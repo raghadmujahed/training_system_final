@@ -39,10 +39,13 @@ use App\Models\TrainingLog;
 use App\Models\Task;
 use App\Models\TaskSubmission;
 use App\Models\Evaluation;
+use App\Models\Enrollment;
 use App\Models\StudentPortfolio;
 use App\Models\Note;
+use App\Models\TrainingAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -141,6 +144,9 @@ class SupervisorWorkspaceController extends Controller
             'visible_daily_logs_count' => TrainingLog::whereIn('training_assignment_id', $assignmentIds)
                 ->where('status', 'approved')
                 ->count(),
+            'unreviewed_logs' => TrainingLog::whereIn('training_assignment_id', $assignmentIds)
+                ->where('status', 'submitted')
+                ->count(),
             'attendance_alerts_count' => Attendance::whereIn('training_assignment_id', $assignmentIds)
                 ->whereIn('status', ['absent', 'late'])
                 ->whereDate('date', '>=', now()->subDays(14)->toDateString())
@@ -163,7 +169,7 @@ class SupervisorWorkspaceController extends Controller
     public function students(Request $request)
     {
         $user = $request->user();
-        $perPage = max(1, min((int) $request->input('per_page', 15), 100));
+        $perPage = max(1, min((int) $request->input('per_page', 15), 500));
         $filters = [
             'section_id' => $request->input('section_id'),
             'department' => $request->input('department'),
@@ -175,61 +181,90 @@ class SupervisorWorkspaceController extends Controller
             'search' => $request->input('search'),
         ];
 
-        $query = $this->studentService->supervisedAssignmentsQuery($user);
+        // قائمة على مستوى التسجيل في الشعبة (وليس فقط تعيينات التدريب) حتى يظهر الطالب قبل إنشاء تعيين.
+        $query = $this->studentService->supervisedEnrollmentsQuery($user)
+            ->with([
+                'user.department',
+                'section.course',
+                'latestTrainingAssignment.trainingSite',
+                'latestTrainingAssignment.teacher',
+                'latestTrainingAssignment.academicStatusUpdatedBy:id,name',
+                // TrainingTrackResolver reads assignment→enrollment; without this, one query per roster row.
+                'latestTrainingAssignment.enrollment.user.department',
+                'latestTrainingAssignment.enrollment.section.course',
+            ]);
+
         if ($filters['section_id']) {
-            $query->whereHas('enrollment', fn ($q) => $q->where('section_id', (int) $filters['section_id']));
+            $query->where('section_id', (int) $filters['section_id']);
         }
         if ($filters['department']) {
-            $query->whereHas('enrollment.user.department', function ($q) use ($filters) {
+            $query->whereHas('user.department', function ($q) use ($filters) {
                 $q->where('name', 'like', '%' . $filters['department'] . '%');
             });
         }
         if ($filters['training_track']) {
-            $query->forTrainingTrack((string) $filters['training_track']);
+            $query->whereHas('trainingAssignments', fn ($ta) => $ta->forTrainingTrack((string) $filters['training_track']));
         }
         if ($filters['attendance_status']) {
             $status = (string) $filters['attendance_status'];
             if (in_array($status, ['present', 'absent', 'late'], true)) {
-                $query->whereHas('attendances', fn ($q) => $q->where('status', $status));
+                $query->whereHas('trainingAssignments', fn ($ta) => $ta->whereHas('attendances', fn ($q) => $q->where('status', $status)));
             }
         }
         if ($filters['daily_log_status']) {
             $logStatus = (string) $filters['daily_log_status'];
             if (in_array($logStatus, ['draft', 'submitted', 'approved', 'returned'], true)) {
-                $query->whereHas('trainingLogs', fn ($q) => $q->where('status', $logStatus));
+                $query->whereHas('trainingAssignments', fn ($ta) => $ta->whereHas('trainingLogs', fn ($q) => $q->where('status', $logStatus)));
             }
         }
         if ($filters['portfolio_status']) {
             $portfolioFilter = (string) $filters['portfolio_status'];
             if ($portfolioFilter === 'missing_files') {
-                $query->whereHas('studentPortfolio.entries', fn ($q) => $q->whereNull('file_path'));
+                $query->whereHas('trainingAssignments', fn ($ta) => $ta->whereHas('studentPortfolio.entries', fn ($q) => $q->whereNull('file_path')));
             } elseif (in_array($portfolioFilter, ['complete_files', 'no_missing_files'], true)) {
-                $query->whereHas('studentPortfolio')
-                    ->whereDoesntHave('studentPortfolio.entries', fn ($q) => $q->whereNull('file_path'));
+                $query->whereHas('trainingAssignments', function ($ta) {
+                    $ta->whereHas('studentPortfolio')
+                        ->whereDoesntHave('studentPortfolio.entries', fn ($q) => $q->whereNull('file_path'));
+                });
             }
         }
         if ($filters['evaluation_status']) {
             $evalFilter = (string) $filters['evaluation_status'];
             if ($evalFilter === 'final') {
-                $query->whereHas('evaluations', fn ($q) => $q->where('is_final', true));
+                $query->whereHas('trainingAssignments', fn ($ta) => $ta->whereHas('evaluations', fn ($q) => $q->where('is_final', true)));
             } elseif (in_array($evalFilter, ['draft', 'pending', 'not_final', 'draft_or_missing'], true)) {
-                $query->whereDoesntHave('evaluations', fn ($q) => $q->where('is_final', true));
+                $query->whereHas('trainingAssignments', fn ($ta) => $ta->whereDoesntHave('evaluations', fn ($q) => $q->where('is_final', true)));
             }
         }
         if ($filters['search']) {
             $search = (string) $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->whereHas('enrollment.user', function ($userQuery) use ($search) {
+                $q->whereHas('user', function ($userQuery) use ($search) {
                     $userQuery->where('name', 'like', '%' . $search . '%')
                         ->orWhere('university_id', 'like', '%' . $search . '%');
-                })->orWhereHas('trainingSite', function ($siteQuery) use ($search) {
+                })->orWhereHas('trainingAssignments.trainingSite', function ($siteQuery) use ($search) {
                     $siteQuery->where('name', 'like', '%' . $search . '%');
                 });
             });
         }
 
+        $query->orderByDesc('id');
+
+        $enrolledUserIds = (clone $query)->pluck('user_id')->unique();
+
         $paginator = $query->paginate($perPage);
-        $assignmentIds = $paginator->getCollection()->pluck('id')->filter()->values();
+
+        $pivotExtraAssignmentIds = collect();
+        if ($paginator->currentPage() === 1 && ! $this->supervisorStudentListFiltersRequireAssignment($filters)) {
+            $pivotExtraAssignmentIds = $this->pivotOnlySupervisorStudentAssignmentIds($user, $filters, $enrolledUserIds);
+        }
+
+        $assignmentIds = $paginator->getCollection()
+            ->map(fn (Enrollment $enrollment) => $enrollment->latestTrainingAssignment?->id)
+            ->merge($pivotExtraAssignmentIds)
+            ->filter()
+            ->unique()
+            ->values();
 
         $attendanceAggregates = Attendance::query()
             ->whereIn('training_assignment_id', $assignmentIds)
@@ -287,7 +322,7 @@ class SupervisorWorkspaceController extends Controller
             ->groupBy('training_assignment_id')
             ->pluck('last_activity_at', 'training_assignment_id');
 
-        $rows = $paginator->getCollection()->map(function ($assignment) use (
+        $rows = $paginator->getCollection()->map(function (Enrollment $enrollment) use (
             $attendanceAggregates,
             $approvedLogsCount,
             $portfolioEntryCount,
@@ -296,54 +331,41 @@ class SupervisorWorkspaceController extends Controller
             $pendingSubmissionExists,
             $lastActivityByAssignment
         ) {
-            $student = $assignment->enrollment?->user;
+            $student = $enrollment->user;
             if (! $student) {
                 return null;
             }
-            $attendanceSummary = $attendanceAggregates->get($assignment->id);
-            $portfolioCount = (int) ($portfolioEntryCount[$assignment->id] ?? 0);
-            $submissionPending = (bool) ($pendingSubmissionExists[$assignment->id] ?? false);
-            $totalAttendance = (int) ($attendanceSummary?->total ?? 0);
-            $presentAttendance = (int) ($attendanceSummary?->present ?? 0);
-            $attendanceRate = $totalAttendance > 0 ? round(($presentAttendance / $totalAttendance) * 100) : null;
-            $absentCount = (int) ($attendanceSummary?->absent ?? 0);
-            $lateCount = (int) ($attendanceSummary?->late_count ?? 0);
-            $riskLevel = 'low';
-            if (($attendanceRate !== null && $attendanceRate < 60) || $absentCount >= 3) {
-                $riskLevel = 'critical';
-            } elseif ($submissionPending || ($attendanceRate !== null && $attendanceRate < 80) || $lateCount >= 3) {
-                $riskLevel = 'medium';
-            }
 
-            return [
-                'student_id' => $student->id,
-                'name' => $student->name,
-                'university_id' => $student->university_id,
-                'department' => data_get($student, 'department.name'),
-                'specialization' => data_get($student, 'department.name'),
-                'section_id' => data_get($assignment, 'enrollment.section.id'),
-                'section' => data_get($assignment, 'enrollment.section.name'),
-                'course' => data_get($assignment, 'enrollment.section.course.name'),
-                'training_site' => data_get($assignment, 'trainingSite.name'),
-                'field_supervisor_name' => data_get($assignment, 'teacher.name'),
-                'attendance_status_summary' => $totalAttendance > 0
-                    ? $attendanceRate . '%'
-                    : 'n/a',
-                'daily_log_status_summary' => (int) ($approvedLogsCount[$assignment->id] ?? 0),
-                'portfolio_completion' => $portfolioCount,
-                'field_evaluation_status' => isset($fieldEvaluationFinalExists[$assignment->id]) ? 'submitted' : 'pending',
-                'academic_evaluation_status' => isset($academicEvaluationFinalExists[$assignment->id]) ? 'final' : 'draft_or_missing',
-                'risk_level' => $riskLevel,
-                'last_activity_at' => $lastActivityByAssignment[$assignment->id] ?? null,
-                'training_track' => $this->trackResolver->resolveForAssignment($assignment),
-                'training_assignment_id' => $assignment->id,
-                'academic_status' => $assignment->academic_status ?? 'not_started',
-                'academic_status_label' => $this->academicStatusLabel($assignment->academic_status ?? 'not_started'),
-                'academic_status_note' => $assignment->academic_status_note,
-                'academic_status_updated_at' => $assignment->academic_status_updated_at,
-                'academic_status_updated_by' => $assignment->academicStatusUpdatedBy?->name,
-            ];
+            return $this->buildSupervisorWorkspaceStudentRow(
+                $student,
+                $enrollment->section,
+                $enrollment->latestTrainingAssignment,
+                $attendanceAggregates,
+                $approvedLogsCount,
+                $portfolioEntryCount,
+                $fieldEvaluationFinalExists,
+                $academicEvaluationFinalExists,
+                $pendingSubmissionExists,
+                $lastActivityByAssignment
+            );
         })->filter()->values();
+
+        $pivotOnlyTotal = $this->countPivotOnlySupervisorStudents($user, $filters, $enrolledUserIds);
+        if ($paginator->currentPage() === 1 && ! $this->supervisorStudentListFiltersRequireAssignment($filters)) {
+            $pivotRows = $this->pivotOnlySupervisorStudentRows(
+                $user,
+                $filters,
+                $enrolledUserIds,
+                $attendanceAggregates,
+                $approvedLogsCount,
+                $portfolioEntryCount,
+                $fieldEvaluationFinalExists,
+                $academicEvaluationFinalExists,
+                $pendingSubmissionExists,
+                $lastActivityByAssignment
+            );
+            $rows = $rows->concat($pivotRows)->values();
+        }
 
         return $this->successResponse(
             SupervisorStudentResource::collection($rows),
@@ -351,14 +373,14 @@ class SupervisorWorkspaceController extends Controller
             200,
             [
                 'meta' => [
-                    'total' => $paginator->total(),
+                    'total' => $paginator->total() + $pivotOnlyTotal,
                     'page' => $paginator->currentPage(),
                     'per_page' => $paginator->perPage(),
                     'last_page' => $paginator->lastPage(),
                 ],
                 'filters' => $filters,
                 'summary' => [
-                    'students_count' => $paginator->total(),
+                    'students_count' => $paginator->total() + $pivotOnlyTotal,
                     'critical_count' => $rows->where('risk_level', 'critical')->count(),
                     'warning_count' => $rows->where('risk_level', 'medium')->count(),
                 ],
@@ -369,7 +391,7 @@ class SupervisorWorkspaceController extends Controller
     public function sections(Request $request)
     {
         $supervisor = $request->user();
-        $perPage = max(1, min((int) $request->input('per_page', 15), 100));
+        $perPage = max(1, min((int) $request->input('per_page', 15), 500));
         $filters = [
             'department' => $request->input('department'),
             'course_id' => $request->input('course_id'),
@@ -1108,16 +1130,11 @@ class SupervisorWorkspaceController extends Controller
             ->filter()
             ->values();
 
-        $assignmentIds = collect();
-        if ($targetType === 'student' || $targetType === 'group') {
-            $assignmentIds = $this->studentService->supervisedAssignmentsQuery($user)
-                ->whereHas('enrollment', fn ($q) => $q->whereIn('user_id', $targetIds->all()))
-                ->pluck('id');
-        } elseif ($targetType === 'section') {
-            $assignmentIds = $this->studentService->supervisedAssignmentsQuery($user)
-                ->whereHas('enrollment', fn ($q) => $q->whereIn('section_id', $targetIds->all()))
-                ->pluck('id');
-        }
+        $assignmentIds = $this->studentService->trainingAssignmentIdsForTaskTargets(
+            $user,
+            $targetType,
+            $targetIds->all()
+        );
 
         foreach ($assignmentIds->unique()->values() as $assignmentId) {
             $created->push(Task::create([
@@ -1139,7 +1156,7 @@ class SupervisorWorkspaceController extends Controller
             ]));
         }
 
-        abort_if($created->isEmpty(), 422, 'No valid targets found for task assignment.');
+        abort_if($created->isEmpty(), 422, 'تعذر إنشاء المهمة: لا يوجد تعيين تدريب (training assignment) للطلاب المختارين. أكمل تعيين الميدان أو طلب التدريب أولاً. | No valid targets: missing training placement for the selected student(s).');
 
         $this->createActivity($user->id, 'task_created', 'Supervisor created new task(s).');
 
@@ -1786,6 +1803,237 @@ class SupervisorWorkspaceController extends Controller
         }
 
         return $query->value('id');
+    }
+
+    private function buildSupervisorWorkspaceStudentRow(
+        User $student,
+        ?Section $section,
+        ?TrainingAssignment $assignment,
+        $attendanceAggregates,
+        $approvedLogsCount,
+        $portfolioEntryCount,
+        $fieldEvaluationFinalExists,
+        $academicEvaluationFinalExists,
+        $pendingSubmissionExists,
+        $lastActivityByAssignment
+    ): array {
+        $assignmentId = $assignment?->id;
+
+        $attendanceSummary = $assignmentId ? $attendanceAggregates->get($assignmentId) : null;
+        $portfolioCount = $assignmentId ? (int) ($portfolioEntryCount[$assignmentId] ?? 0) : 0;
+        $submissionPending = $assignmentId ? (bool) ($pendingSubmissionExists[$assignmentId] ?? false) : false;
+        $totalAttendance = (int) ($attendanceSummary?->total ?? 0);
+        $presentAttendance = (int) ($attendanceSummary?->present ?? 0);
+        $attendanceRate = $totalAttendance > 0 ? round(($presentAttendance / $totalAttendance) * 100) : null;
+        $absentCount = (int) ($attendanceSummary?->absent ?? 0);
+        $lateCount = (int) ($attendanceSummary?->late_count ?? 0);
+        $riskLevel = 'low';
+        if (($attendanceRate !== null && $attendanceRate < 60) || $absentCount >= 3) {
+            $riskLevel = 'critical';
+        } elseif ($submissionPending || ($attendanceRate !== null && $attendanceRate < 80) || $lateCount >= 3) {
+            $riskLevel = 'medium';
+        }
+
+        $trainingTrack = $assignment
+            ? $this->trackResolver->resolveForAssignment($assignment)
+            : null;
+        if (! $trainingTrack) {
+            $deptName = (string) data_get($student, 'department.name', '');
+            if ($deptName !== '' && (str_contains(strtolower($deptName), 'psych') || str_contains($deptName, 'علم النفس'))) {
+                $trainingTrack = 'psychology';
+            } elseif ($deptName !== '') {
+                $trainingTrack = 'education';
+            }
+        }
+
+        return [
+            'id' => $student->id,
+            'student_id' => $student->id,
+            'name' => $student->name,
+            'university_id' => $student->university_id,
+            'department' => data_get($student, 'department.name'),
+            'specialization' => data_get($student, 'department.name'),
+            'section_id' => $section?->id,
+            'section' => $section?->name,
+            'course_id' => data_get($section, 'course.id'),
+            'course' => data_get($section, 'course.name'),
+            'training_site' => $assignment ? data_get($assignment, 'trainingSite.name') : null,
+            'field_supervisor_name' => $assignment ? data_get($assignment, 'teacher.name') : null,
+            'attendance_status_summary' => $totalAttendance > 0
+                ? $attendanceRate . '%'
+                : 'n/a',
+            'daily_log_status_summary' => $assignmentId ? (int) ($approvedLogsCount[$assignmentId] ?? 0) : 0,
+            'portfolio_completion' => $portfolioCount,
+            'field_evaluation_status' => $assignmentId && isset($fieldEvaluationFinalExists[$assignmentId]) ? 'submitted' : 'pending',
+            'academic_evaluation_status' => $assignmentId && isset($academicEvaluationFinalExists[$assignmentId]) ? 'final' : 'draft_or_missing',
+            'risk_level' => $riskLevel,
+            'last_activity_at' => $assignmentId ? ($lastActivityByAssignment[$assignmentId] ?? null) : null,
+            'training_track' => $trainingTrack,
+            'training_assignment_id' => $assignmentId,
+            'academic_status' => $assignment?->academic_status ?? 'not_started',
+            'academic_status_label' => $this->academicStatusLabel($assignment?->academic_status ?? 'not_started'),
+            'academic_status_note' => $assignment?->academic_status_note,
+            'academic_status_updated_at' => $assignment?->academic_status_updated_at,
+            'academic_status_updated_by' => $assignment?->academicStatusUpdatedBy?->name,
+        ];
+    }
+
+    private function supervisorStudentListFiltersRequireAssignment(array $filters): bool
+    {
+        foreach (['training_track', 'attendance_status', 'daily_log_status', 'portfolio_status', 'evaluation_status'] as $key) {
+            if (! empty($filters[$key])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function supervisedSectionIdsForPivotStudents(User $supervisor, array $filters): Collection
+    {
+        $q = Section::query()->withArchived()->where('academic_supervisor_id', $supervisor->id);
+        if ($supervisor->department_id) {
+            $q->where(function ($sq) use ($supervisor) {
+                $sq->whereHas('course', fn ($c) => $c->where('department_id', $supervisor->department_id))
+                    ->orWhereHas('enrollments.user', fn ($u) => $u->where('department_id', $supervisor->department_id))
+                    ->orWhereHas('students', fn ($u) => $u->where('department_id', $supervisor->department_id));
+            });
+        }
+        if (! empty($filters['section_id'])) {
+            $q->where('id', (int) $filters['section_id']);
+        }
+
+        return $q->pluck('id');
+    }
+
+    /**
+     * طلاب مربوطون بالشعبة عبر section_students فقط (بدون صف enrollment لنفس الشعبة) — يطابق عدّ بطاقة الشعبة في الواجهة.
+     */
+    private function pivotOnlySupervisorStudentUserIds(User $supervisor, array $filters, Collection $enrolledUserIds): ?Collection
+    {
+        $sectionIds = $this->supervisedSectionIdsForPivotStudents($supervisor, $filters);
+        if ($sectionIds->isEmpty()) {
+            return null;
+        }
+
+        $pivotUserIds = DB::table('section_students')
+            ->whereIn('section_id', $sectionIds)
+            ->where('status', 'accepted')
+            ->whereNotExists(function ($q) {
+                $q->selectRaw('1')
+                    ->from('enrollments')
+                    ->whereColumn('enrollments.user_id', 'section_students.student_id')
+                    ->whereColumn('enrollments.section_id', 'section_students.section_id');
+            })
+            ->pluck('student_id')
+            ->unique()
+            ->diff($enrolledUserIds);
+
+        if ($pivotUserIds->isEmpty()) {
+            return null;
+        }
+
+        $q = User::query()->whereIn('id', $pivotUserIds)
+            ->whereHas('role', fn ($r) => $r->where('name', 'student'));
+        if (! empty($filters['department'])) {
+            $q->whereHas('department', fn ($dq) => $dq->where('name', 'like', '%' . $filters['department'] . '%'));
+        }
+        if (! empty($filters['search'])) {
+            $search = (string) $filters['search'];
+            $q->where(function ($qq) use ($search) {
+                $qq->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('university_id', 'like', '%' . $search . '%');
+            });
+        }
+
+        $ids = $q->pluck('id');
+
+        return $ids->isEmpty() ? null : $ids;
+    }
+
+    private function countPivotOnlySupervisorStudents(User $supervisor, array $filters, Collection $enrolledUserIds): int
+    {
+        if ($this->supervisorStudentListFiltersRequireAssignment($filters)) {
+            return 0;
+        }
+        $ids = $this->pivotOnlySupervisorStudentUserIds($supervisor, $filters, $enrolledUserIds);
+
+        return $ids?->count() ?? 0;
+    }
+
+    private function pivotOnlySupervisorStudentAssignmentIds(User $supervisor, array $filters, Collection $enrolledUserIds): Collection
+    {
+        $ids = $this->pivotOnlySupervisorStudentUserIds($supervisor, $filters, $enrolledUserIds);
+        if ($ids === null || $ids->isEmpty()) {
+            return collect();
+        }
+
+        $assignmentIds = collect();
+        foreach ($ids as $userId) {
+            $aid = TrainingAssignment::query()->withArchived()
+                ->whereHas('enrollment', fn ($e) => $e->withArchived()->where('user_id', $userId))
+                ->latest('id')
+                ->value('id');
+            if ($aid) {
+                $assignmentIds->push($aid);
+            }
+        }
+
+        return $assignmentIds->unique()->values();
+    }
+
+    private function pivotOnlySupervisorStudentRows(
+        User $supervisor,
+        array $filters,
+        Collection $enrolledUserIds,
+        $attendanceAggregates,
+        $approvedLogsCount,
+        $portfolioEntryCount,
+        $fieldEvaluationFinalExists,
+        $academicEvaluationFinalExists,
+        $pendingSubmissionExists,
+        $lastActivityByAssignment
+    ): Collection {
+        $ids = $this->pivotOnlySupervisorStudentUserIds($supervisor, $filters, $enrolledUserIds);
+        if ($ids === null || $ids->isEmpty()) {
+            return collect();
+        }
+
+        $sectionIds = $this->supervisedSectionIdsForPivotStudents($supervisor, $filters);
+        $rows = collect();
+
+        foreach ($ids as $userId) {
+            $student = User::with('department')->find($userId);
+            if (! $student) {
+                continue;
+            }
+            $sectionId = (int) DB::table('section_students')
+                ->where('student_id', $userId)
+                ->whereIn('section_id', $sectionIds)
+                ->where('status', 'accepted')
+                ->value('section_id');
+            $section = $sectionId ? Section::withArchived()->with('course')->find($sectionId) : null;
+            $assignment = TrainingAssignment::query()->withArchived()
+                ->with(['trainingSite', 'teacher', 'academicStatusUpdatedBy:id,name'])
+                ->whereHas('enrollment', fn ($e) => $e->withArchived()->where('user_id', $userId))
+                ->latest('id')
+                ->first();
+
+            $rows->push($this->buildSupervisorWorkspaceStudentRow(
+                $student,
+                $section,
+                $assignment,
+                $attendanceAggregates,
+                $approvedLogsCount,
+                $portfolioEntryCount,
+                $fieldEvaluationFinalExists,
+                $academicEvaluationFinalExists,
+                $pendingSubmissionExists,
+                $lastActivityByAssignment
+            ));
+        }
+
+        return $rows;
     }
 
     private function normalizeCriteriaScores(array $criteriaScores): array
