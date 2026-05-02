@@ -36,9 +36,8 @@ export default function CoordinatorFilters({
       padding: "14px 18px",
       background: "#fff",
       border: "1px solid var(--border)",
-      borderRadius: 16,
+      borderRadius: 12,
       marginBottom: 16,
-      boxShadow: "var(--shadow-sm)",
     }}>
       {showSearch && (
         <div style={{ position: "relative", flex: "1 1 220px", minWidth: 200 }}>

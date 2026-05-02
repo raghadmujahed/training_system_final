@@ -200,6 +200,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
         training_request_rejected_student: { title: "رفض طلب التدريب", color: "#ef4444", bg: "#fef2f2", dot: "#ef4444" },
         training_request_new_from_student: { title: "طلب جديد", color: "#0ea5e9", bg: "#f0f9ff", dot: "#0ea5e9" },
         training_request_student_resubmitted: { title: "إعادة تقديم طلب", color: "#f59e0b", bg: "#fffbeb", dot: "#f59e0b" },
+        announcement: { title: "إعلان جديد", color: "#8b5cf6", bg: "#f5f3ff", dot: "#8b5cf6" },
       };
       const formattedNotif = notifications.slice(0, 3).map(notif => {
         const meta = typeLabels[notif.type] || { title: "تحديث جديد", color: "#6b7280", bg: "#f9fafb", dot: "#6b7280" };

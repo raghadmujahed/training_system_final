@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateAnnouncementRequest;
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
 use App\Models\AnnouncementTarget;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class AnnouncementController extends Controller
@@ -124,6 +126,10 @@ class AnnouncementController extends Controller
             }
         }
 
+        if ($status === 'active') {
+            $this->dispatchNotifications($announcement);
+        }
+
         return new AnnouncementResource($announcement->load('targets'));
     }
 
@@ -158,6 +164,10 @@ class AnnouncementController extends Controller
             }
         }
 
+        if ($announcement->wasChanged('status') && $announcement->status === 'active') {
+            $this->dispatchNotifications($announcement);
+        }
+
         return new AnnouncementResource($announcement->load('targets'));
     }
 
@@ -171,5 +181,42 @@ class AnnouncementController extends Controller
         $announcement->delete();
 
         return response()->json(['message' => 'تم حذف الإعلان']);
+    }
+
+    protected function dispatchNotifications(Announcement $announcement): void
+    {
+        $notificationService = app(NotificationService::class);
+        $title = $announcement->title;
+        $message = 'إعلان جديد: ' . $title;
+        $data = [
+            'announcement_id' => $announcement->id,
+            'type' => 'announcement',
+            'title' => $title,
+        ];
+
+        if ($announcement->all_students) {
+            $notificationService->sendToRole('student', 'announcement', $message, $data);
+        }
+
+        foreach ($announcement->targets as $target) {
+            if ($target->user_id) {
+                $user = User::find($target->user_id);
+                if ($user) {
+                    $notificationService->sendToUser($user, 'announcement', $message, $data);
+                }
+            }
+            if ($target->role_id) {
+                $role = $target->role?->name;
+                if ($role && $role !== 'student') {
+                    $notificationService->sendToRole($role, 'announcement', $message, $data);
+                }
+            }
+            if ($target->department_id) {
+                $users = User::where('department_id', $target->department_id)->get();
+                foreach ($users as $user) {
+                    $notificationService->sendToUser($user, 'announcement', $message, $data);
+                }
+            }
+        }
     }
 }

@@ -43,7 +43,7 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <GitBranch size={44} />
+            <GitBranch size={24} />
           </div>
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">{isPsych ? "متابعة حالة الطلبات — علم النفس" : "حالة التوزيع"}</h1>
@@ -81,8 +81,8 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
       ) : (
         <div className="section-card">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
-              <GitBranch size={20} />
+            <div className="section-icon" style={{ color: "var(--info)" }}>
+              <GitBranch size={16} />
             </div>
             <h4 style={{ margin: 0 }}>مسارات التوزيع ({requests.length})</h4>
           </div>

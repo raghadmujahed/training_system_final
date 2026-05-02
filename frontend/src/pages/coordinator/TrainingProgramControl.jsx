@@ -121,7 +121,7 @@ export default function TrainingProgramControl() {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <Settings size={44} />
+            <Settings size={24} />
           </div>
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">التحكم بجدول الحصص الأسبوعية</h1>
@@ -228,25 +228,25 @@ export default function TrainingProgramControl() {
       {/* Submitted Programs Section */}
       <div className="section-card">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
-            <BookOpen size={18} />
+          <div className="section-icon" style={{ color: "var(--info)" }}>
+            <BookOpen size={16} />
           </div>
           <h5 style={{ margin: 0 }}>{"برامج التدريب المرسلة"}</h5>
         </div>
 
         {/* Summary Cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10, marginBottom: 16 }}>
-          <div style={{ padding: "12px", borderRadius: 10, background: "#cce5ff", textAlign: "center" }}>
-            <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#004085" }}>{submittedCount}</div>
-            <div style={{ fontSize: "0.75rem", color: "#004085", opacity: 0.8 }}>{"مرسل"}</div>
+          <div style={{ padding: "12px", borderRadius: 10, border: "1px solid var(--border)", background: "#fff", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--info)" }}>{submittedCount}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-faint)" }}>{"مرسل"}</div>
           </div>
-          <div style={{ padding: "12px", borderRadius: 10, background: "#d4edda", textAlign: "center" }}>
-            <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#155724" }}>{approvedCount}</div>
-            <div style={{ fontSize: "0.75rem", color: "#155724", opacity: 0.8 }}>{"موافق عليه"}</div>
+          <div style={{ padding: "12px", borderRadius: 10, border: "1px solid var(--border)", background: "#fff", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--success)" }}>{approvedCount}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-faint)" }}>{"موافق عليه"}</div>
           </div>
-          <div style={{ padding: "12px", borderRadius: 10, background: "#f8d7da", textAlign: "center" }}>
-            <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#721c24" }}>{rejectedCount}</div>
-            <div style={{ fontSize: "0.75rem", color: "#721c24", opacity: 0.8 }}>{"مرفوض"}</div>
+          <div style={{ padding: "12px", borderRadius: 10, border: "1px solid var(--border)", background: "#fff", textAlign: "center" }}>
+            <div style={{ fontSize: "1.2rem", fontWeight: 700, color: "var(--danger)" }}>{rejectedCount}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-faint)" }}>{"مرفوض"}</div>
           </div>
         </div>
 

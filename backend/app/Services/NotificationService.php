@@ -8,13 +8,15 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 
 class NotificationService
 {
-    public function sendToUser(User $user, string $type, string $message, array $data = []): Notification
+    public function sendToUser(User $user, string $type, string $message, array $data = [], ?string $notifiableType = null, ?int $notifiableId = null): Notification
     {
         return Notification::create([
             'user_id' => $user->id,
             'type' => $type,
             'message' => $message,
             'data' => $data,
+            'notifiable_type' => $notifiableType ?? get_class($user),
+            'notifiable_id' => $notifiableId ?? $user->id,
         ]);
     }
 

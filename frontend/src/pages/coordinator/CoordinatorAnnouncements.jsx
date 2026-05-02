@@ -24,8 +24,6 @@ export default function CoordinatorAnnouncements() {
     title: "",
     content: "",
     status: "draft",
-    published_at: "",
-    expires_at: "",
     all_students: true,
   });
 
@@ -64,15 +62,11 @@ export default function CoordinatorAnnouncements() {
         status: form.status,
         all_students: form.all_students,
       };
-      if (form.published_at) payload.published_at = form.published_at;
-      if (form.expires_at) payload.expires_at = form.expires_at;
       await createAnnouncement(payload);
       setForm({
         title: "",
         content: "",
         status: "draft",
-        published_at: "",
-        expires_at: "",
         all_students: true,
       });
       await load();
@@ -118,7 +112,7 @@ export default function CoordinatorAnnouncements() {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <Megaphone size={44} />
+            <Megaphone size={24} />
           </div>
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">إعلان عام للطلبة</h1>
@@ -171,24 +165,6 @@ export default function CoordinatorAnnouncements() {
               <span>جميع الطلبة</span>
             </label>
           </div>
-          <div className="col-md-6">
-            <label className="form-label-custom">تاريخ النشر (اختياري)</label>
-            <input
-              type="datetime-local"
-              className="form-input-custom"
-              value={form.published_at}
-              onChange={(e) => setForm((p) => ({ ...p, published_at: e.target.value }))}
-            />
-          </div>
-          <div className="col-md-6">
-            <label className="form-label-custom">انتهاء الصلاحية (اختياري)</label>
-            <input
-              type="datetime-local"
-              className="form-input-custom"
-              value={form.expires_at}
-              onChange={(e) => setForm((p) => ({ ...p, expires_at: e.target.value }))}
-            />
-          </div>
           <div className="col-12">
             <label className="form-label-custom">المحتوى</label>
             <textarea
@@ -236,10 +212,10 @@ export default function CoordinatorAnnouncements() {
               <li
                 key={a.id}
                 style={{
-                  border: "1px solid var(--border, #e2e8f0)",
-                  borderRadius: 12,
+                  border: "1px solid var(--border)",
+                  borderRadius: 10,
                   padding: "14px 16px",
-                  background: "#fafbfc",
+                  background: "#fff",
                 }}
               >
                 <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">

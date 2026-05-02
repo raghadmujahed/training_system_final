@@ -61,6 +61,7 @@ export default function NotificationsUpdates() {
       training_request_school_approved_student: "موافقة جهة التدريب",
       training_request_directorate_rejected: "رفض الجهة الرسمية",
       training_request_rejected_student: "رفض طلب",
+      announcement: "إعلان جديد",
     };
     return typeMap[n.type] || n.data?.title || "تحديث جديد";
   };

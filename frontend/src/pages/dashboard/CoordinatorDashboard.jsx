@@ -56,7 +56,7 @@ export default function CoordinatorDashboard() {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <Settings2 size={44} />
+            <Settings2 size={24} />
           </div>
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">مساحة عمل المنسق</h1>
@@ -92,25 +92,25 @@ export default function CoordinatorDashboard() {
       <div className="section-card mb-4">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
           <div className="section-icon">
-            <Lightbulb size={20} />
+            <Lightbulb size={16} />
           </div>
           <h4 style={{ margin: 0 }}>إجراءات سريعة</h4>
         </div>
         <div className="quick-actions-grid">
           <Link className="quick-action-btn" to="/coordinator/training-requests">
-            <ClipboardList size={22} style={{ color: "var(--primary)" }} />
+            <ClipboardList size={18} style={{ color: "var(--primary)" }} />
             <span>مراجعة الطلبات</span>
           </Link>
           <Link className="quick-action-btn" to="/coordinator/distribution">
-            <Layers size={22} style={{ color: "var(--accent)" }} />
+            <Layers size={18} style={{ color: "var(--accent)" }} />
             <span>التوزيع والدفعات</span>
           </Link>
           <Link className="quick-action-btn" to="/coordinator/official-letters">
-            <FileText size={22} style={{ color: "var(--info)" }} />
+            <FileText size={18} style={{ color: "var(--info)" }} />
             <span>دفعات طلبات التدريب</span>
           </Link>
           <Link className="quick-action-btn" to="/coordinator/distribution-status">
-            <Send size={22} style={{ color: "var(--success)" }} />
+            <Send size={18} style={{ color: "var(--success)" }} />
             <span>حالة التوزيع</span>
           </Link>
         </div>
@@ -123,7 +123,7 @@ export default function CoordinatorDashboard() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div className="section-icon">
-                <ClipboardList size={20} />
+                <ClipboardList size={16} />
               </div>
               <h4 style={{ margin: 0 }}>أحدث طلبات التدريب</h4>
             </div>
@@ -191,7 +191,7 @@ export default function CoordinatorDashboard() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div className="section-icon">
-                  <Layers size={20} />
+                  <Layers size={16} />
                 </div>
                 <h4 style={{ margin: 0 }}>أحدث الدفعات</h4>
               </div>

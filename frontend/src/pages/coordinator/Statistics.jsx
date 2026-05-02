@@ -14,34 +14,33 @@ const LIMIT = 5;
 function SummaryCard({ icon: Icon, label, value, gradient }) {
   return (
     <div style={{
-      background: gradient,
-      borderRadius: 16,
-      padding: "18px 20px",
-      color: "#fff",
+      background: "#fff",
+      borderRadius: 12,
+      padding: "16px 18px",
+      border: "1px solid var(--border)",
       display: "flex",
       alignItems: "center",
       gap: 14,
-      boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
       position: "relative",
       overflow: "hidden",
     }}>
       <div style={{
-        position: "absolute", right: -18, bottom: -18,
-        width: 90, height: 90, borderRadius: "50%",
-        background: "rgba(255,255,255,0.08)",
-        pointerEvents: "none",
+        position: "absolute", top: 0, right: 0, bottom: 0,
+        width: 3, background: gradient,
+        borderRadius: "0 12px 12px 0",
       }} />
       <div style={{
-        width: 50, height: 50, borderRadius: 14,
-        background: "rgba(255,255,255,0.22)",
+        width: 40, height: 40, borderRadius: 10,
+        background: "var(--bg)",
+        color: "var(--primary)",
         display: "flex", alignItems: "center", justifyContent: "center",
         flexShrink: 0,
       }}>
-        <Icon size={24} />
+        <Icon size={20} />
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: "0.78rem", opacity: 0.88, marginBottom: 2 }}>{label}</div>
-        <div style={{ fontSize: "1.8rem", fontWeight: 800, lineHeight: 1 }}>{value ?? 0}</div>
+        <div style={{ fontSize: "0.78rem", color: "var(--text-faint)", marginBottom: 2 }}>{label}</div>
+        <div style={{ fontSize: "1.5rem", fontWeight: 700, lineHeight: 1, color: "var(--text)" }}>{value ?? 0}</div>
       </div>
     </div>
   );
@@ -93,41 +92,38 @@ function StatSection({ icon: Icon, title, iconGradient, items, renderRow, showAl
   return (
     <div style={{
       background: "#fff",
-      borderRadius: 16,
-      border: "1px solid #edf0f4",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+      borderRadius: 12,
+      border: "1px solid var(--border)",
       overflow: "hidden",
     }}>
       <div style={{
-        padding: "15px 18px 13px",
-        borderBottom: "1px solid #f0f2f5",
+        padding: "14px 16px 12px",
+        borderBottom: "1px solid var(--border)",
         display: "flex", alignItems: "center", gap: 10,
-        background: "linear-gradient(135deg, #fafbfc 0%, #f4f6f9 100%)",
       }}>
         <div style={{
-          width: 38, height: 38, borderRadius: 10,
-          background: iconGradient,
+          width: 32, height: 32, borderRadius: 8,
+          background: "var(--bg)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          color: "#fff",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+          color: accentColor || "var(--primary)",
           flexShrink: 0,
         }}>
-          <Icon size={18} />
+          <Icon size={16} />
         </div>
-        <h6 style={{ margin: 0, fontWeight: 700, fontSize: "0.93rem", color: "var(--text)" }}>{title}</h6>
+        <h6 style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>{title}</h6>
         <span style={{
           marginRight: "auto",
-          background: accentColor ? accentColor + "22" : "#e8edf5",
+          background: accentColor ? accentColor + "18" : "var(--bg)",
           color: accentColor || "var(--primary)",
-          fontSize: "0.72rem", fontWeight: 700,
-          borderRadius: 99, padding: "2px 9px",
+          fontSize: "0.72rem", fontWeight: 600,
+          borderRadius: 99, padding: "2px 8px",
         }}>
           {items.length} عنصر
         </span>
       </div>
-      <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 7 }}>
+      <div style={{ padding: "10px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
         {items.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "24px 0", color: "var(--text-faint)", fontSize: "0.85rem" }}>
+          <div style={{ textAlign: "center", padding: "20px 0", color: "var(--text-faint)", fontSize: "0.85rem" }}>
             لا توجد بيانات
           </div>
         ) : (
@@ -135,21 +131,21 @@ function StatSection({ icon: Icon, title, iconGradient, items, renderRow, showAl
         )}
       </div>
       {hasMore && (
-        <div style={{ padding: "0 14px 14px" }}>
+        <div style={{ padding: "0 14px 12px" }}>
           <button
             onClick={() => setShowAll(!showAll)}
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-              width: "100%", padding: "8px",
+              width: "100%", padding: "7px",
               background: "transparent",
-              border: "1.5px dashed #cbd5e1",
-              borderRadius: 10,
-              color: "var(--info)", fontSize: "0.82rem", fontWeight: 700, cursor: "pointer",
+              border: "1px dashed var(--border)",
+              borderRadius: 8,
+              color: "var(--text-soft)", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
             }}
           >
             {showAll
-              ? <><ChevronUp size={15} /> إخفاء</>
-              : <><ChevronDown size={15} /> عرض الكل ({items.length})</>}
+              ? <><ChevronUp size={14} /> إخفاء</>
+              : <><ChevronDown size={14} /> عرض الكل ({items.length})</>}
           </button>
         </div>
       )}
@@ -210,35 +206,30 @@ export default function CoordinatorStatistics() {
 
       {/* ── Hero ── */}
       <div style={{
-        background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
-        borderRadius: 18,
+        background: "var(--primary)",
+        borderRadius: 14,
         padding: "24px 28px",
         color: "#fff",
-        display: "flex", alignItems: "center", gap: 18,
-        boxShadow: "0 6px 24px rgba(20,42,66,0.18)",
+        display: "flex", alignItems: "center", gap: 16,
         position: "relative", overflow: "hidden",
       }}>
         <div style={{
-          position: "absolute", left: -30, top: -30,
-          width: 160, height: 160, borderRadius: "50%",
-          background: "rgba(255,255,255,0.05)", pointerEvents: "none",
+          position: "absolute", top: "-30%", left: "-8%",
+          width: 200, height: 200, borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%)",
+          pointerEvents: "none",
         }} />
         <div style={{
-          position: "absolute", right: 20, bottom: -40,
-          width: 120, height: 120, borderRadius: "50%",
-          background: "rgba(255,255,255,0.06)", pointerEvents: "none",
-        }} />
-        <div style={{
-          width: 60, height: 60, borderRadius: 16,
-          background: "rgba(255,255,255,0.18)",
+          width: 44, height: 44, borderRadius: 10,
+          background: "rgba(255,255,255,0.12)", color: "#fff",
           display: "flex", alignItems: "center", justifyContent: "center",
           flexShrink: 0,
         }}>
-          <BarChart3 size={30} />
+          <BarChart3 size={22} />
         </div>
         <div>
-          <h2 style={{ margin: "0 0 4px", fontWeight: 800, fontSize: "1.3rem" }}>الإحصائيات العامة</h2>
-          <p style={{ margin: 0, opacity: 0.85, fontSize: "0.88rem" }}>
+          <h2 style={{ margin: "0 0 2px", fontWeight: 700, fontSize: "1.1rem", color: "#fff" }}>الإحصائيات العامة</h2>
+          <p style={{ margin: 0, fontSize: "0.85rem", color: "rgba(255,255,255,0.7)" }}>
             ملخص شامل لحالات الطلبات والطلبة وجهات التدريب والدفعات
           </p>
         </div>
@@ -385,36 +376,34 @@ export default function CoordinatorStatistics() {
       {/* ── Batch Stats ── */}
       <div style={{
         background: "#fff",
-        borderRadius: 16,
-        border: "1px solid #edf0f4",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+        borderRadius: 12,
+        border: "1px solid var(--border)",
         overflow: "hidden",
       }}>
         <div style={{
-          padding: "15px 20px 13px",
-          borderBottom: "1px solid #f0f2f5",
+          padding: "14px 18px 12px",
+          borderBottom: "1px solid var(--border)",
           display: "flex", alignItems: "center", gap: 10,
-          background: "linear-gradient(135deg, #fafbfc 0%, #f4f6f9 100%)",
         }}>
           <div style={{
-            width: 38, height: 38, borderRadius: 10,
-            background: "linear-gradient(135deg, #5b3a8c 0%, #8b5fcf 100%)",
+            width: 32, height: 32, borderRadius: 8,
+            background: "var(--bg)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+            color: "#5b21b6",
           }}>
-            <Send size={17} />
+            <Send size={16} />
           </div>
-          <h6 style={{ margin: 0, fontWeight: 700, fontSize: "0.93rem", color: "var(--text)" }}>إحصائيات الدفعات</h6>
+          <h6 style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem", color: "var(--text)" }}>إحصائيات الدفعات</h6>
           <span style={{
             marginRight: "auto",
-            background: "#ede9fe", color: "#5b21b6",
-            fontSize: "0.72rem", fontWeight: 700,
-            borderRadius: 99, padding: "2px 9px",
+            background: "#ede9fe55", color: "#5b21b6",
+            fontSize: "0.72rem", fontWeight: 600,
+            borderRadius: 99, padding: "2px 8px",
           }}>
             {batchStats.total} دفعة
           </span>
         </div>
-        <div style={{ padding: "16px 18px" }}>
+        <div style={{ padding: "14px 16px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 10 }}>
             <BatchMiniCard
               label="إجمالي الدفعات"

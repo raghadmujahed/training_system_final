@@ -197,7 +197,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <ClipboardList size={44} />
+            <ClipboardList size={24} />
           </div>
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">
@@ -240,7 +240,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
         <div className="section-card mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <div className="section-icon">
-              <ClipboardList size={20} />
+              <ClipboardList size={16} />
             </div>
             <h4 style={{ margin: 0 }}>طلبات واردة ({filteredSearch.length})</h4>
           </div>
@@ -263,8 +263,8 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       {coordinatorRejected.length > 0 && (
         <div className="section-card mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--danger) 0%, #bb2d3b 100%)" }}>
-              <XCircle size={20} />
+            <div className="section-icon" style={{ color: "var(--danger)" }}>
+              <XCircle size={16} />
             </div>
             <h4 style={{ margin: 0 }}>مرفوضة ({coordinatorRejected.length})</h4>
           </div>
@@ -280,8 +280,8 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       {/* المرحلة ٤: دفعات الإرسال */}
       <div className="section-card mb-4">
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
-            <Layers size={20} />
+          <div className="section-icon" style={{ color: "var(--info)" }}>
+            <Layers size={16} />
           </div>
           <h4 style={{ margin: 0 }}>دفعات الإرسال</h4>
         </div>
