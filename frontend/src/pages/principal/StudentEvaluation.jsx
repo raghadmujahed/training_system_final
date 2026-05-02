@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { readStoredUser } from "../../utils/session";
 import {
   getMySiteStudents,
   createStudentEvaluation,
-  getStudentEvaluationsByStudent,
 } from "../../services/api";
 import {
   Users,
@@ -12,7 +12,6 @@ import {
   MapPin,
   School,
   Star,
-  MessageSquare,
   FileText,
   ChevronDown,
   CheckCircle,
@@ -20,43 +19,50 @@ import {
   Loader2,
 } from "lucide-react";
 
-const personName = (user) => user?.name ?? user?.data?.name ?? "";
+const SCHOOL_EVAL_FIELDS = [
+  { key: "attendance", label: "الالتزام بالدوام" },
+  { key: "cooperation_with_staff", label: "التعاون مع الهيئة التعليمية" },
+  { key: "professionalism", label: "الاحترافية والمهنية" },
+  { key: "dealing_with_students", label: "التعامل مع الطلبة" },
+  { key: "participation_in_activities", label: "المشاركة في الأنشطة" },
+  { key: "school", label: "الالتزام بأنظمة المدرسة" },
+  { key: "professional_ethics", label: "أخلاقيات المهنة" },
+  { key: "manners", label: "السلوك والأخلاق العامة" },
+  { key: "comfort", label: "القدرة على التكيف" },
+  { key: "supervisor", label: "الاستجابة لتوجيهات المشرف" },
+];
 
-const normalizeStudentFromRequest = (request) =>
-  (request.students || []).map((student) => ({
-    requestId: request.id,
-    studentRowId: student.id,
-    studentName: personName(student.user) || "طالب غير معروف",
-    universityId: student.user?.university_id || student.user?.data?.university_id || "—",
-    specialization: student.course?.name || student.course?.data?.name || "—",
-    status: student.status_label || student.status || "قيد المراجعة",
-    site: request.training_site?.name || request.trainingSite?.name || "—",
-    siteLocation: request.training_site?.location || request.trainingSite?.location || "—",
-    siteDirectorate: request.training_site?.directorate || request.trainingSite?.directorate || "—",
-    period: request.training_period?.name || request.trainingPeriod?.name || "—",
-  }));
+const PSYCH_CENTER_EVAL_FIELDS = [
+  { key: "attendance", label: "يلتزم الطالب بالدوام وفق برنامج الدوام المحدد" },
+  { key: "rules_compliance", label: "يلتزم الطالب بالأنظمة والقوانين الناظمة للعمل في المركز" },
+  { key: "initiative", label: "الطالب مبادر ومشارك في الأنشطة الداعمة للعمل الإرشادي في المركز" },
+  { key: "communication", label: "لديه مهارات تواصل فعال مع جميع العاملين في المركز" },
+  { key: "responsibility", label: "لديه حس المسؤولية والالتزام في تنفيذ المهام المطلوبة منه" },
+];
 
 export default function StudentEvaluation() {
+  const savedUser = useMemo(() => readStoredUser(), []);
+  const isPsychCenter = savedUser?.role?.name === 'psychology_center_manager';
+
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+
+  const evalFields = useMemo(() => {
+    if (isPsychCenter) return PSYCH_CENTER_EVAL_FIELDS;
+    if (selectedStudent?.track === 'psychology') return PSYCH_CENTER_EVAL_FIELDS;
+    return SCHOOL_EVAL_FIELDS;
+  }, [isPsychCenter, selectedStudent]);
   const [loading, setLoading] = useState(true);
   const [savedMessage, setSavedMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Form state - matching the evaluation image exactly
-  const [evaluation, setEvaluation] = useState({
-    supervisor: "",
-    attendance: "",
-    cooperation_with_staff: "",
-    professionalism: "",
-    dealing_with_students: "",
-    manners: "",
-    participation_in_activities: "",
-    school: "",
-    comfort: "",
-    professional_ethics: "",
-    general_notes: "",
-  });
+  const getFieldsForStudent = (student) => {
+    if (isPsychCenter) return PSYCH_CENTER_EVAL_FIELDS;
+    if (student?.track === 'psychology') return PSYCH_CENTER_EVAL_FIELDS;
+    return SCHOOL_EVAL_FIELDS;
+  };
+  const buildEmptyEval = (student) => Object.fromEntries([...getFieldsForStudent(student).map(f => [f.key, ""]), ["general_notes", ""]]);
+  const [evaluation, setEvaluation] = useState(() => buildEmptyEval(null));
 
   useEffect(() => {
     fetchStudents();
@@ -67,7 +73,6 @@ export default function StudentEvaluation() {
       setLoading(true);
       const response = await getMySiteStudents();
       
-      // Transform the new API response to match the expected format
       const allStudents = (response.students || []).map((student) => ({
         studentRowId: student.id,
         userId: student.student_id,
@@ -80,8 +85,8 @@ export default function StudentEvaluation() {
         siteDirectorate: student.site_directorate || "—",
         period: student.period || "—",
         requestId: student.request_id,
+        track: student.track || null,
       }));
-      
       setStudents(allStudents);
       setErrorMessage("");
     } catch (error) {
@@ -97,6 +102,7 @@ export default function StudentEvaluation() {
     setSelectedStudent(student);
     setSavedMessage("");
     setErrorMessage("");
+    setEvaluation(buildEmptyEval(student));
   };
 
   const handleEvaluationChange = (field, value) => {
@@ -113,20 +119,11 @@ export default function StudentEvaluation() {
     }
 
     try {
-      // Prepare evaluation data - matching image fields
+      const dynamicFields = Object.fromEntries(evalFields.map(f => [f.key, evaluation[f.key] || null]));
       const evaluationData = {
         student_id: selectedStudent.userId,
         training_request_student_id: selectedStudent.studentRowId,
-        supervisor: evaluation.supervisor || null,
-        attendance: evaluation.attendance || null,
-        cooperation_with_staff: evaluation.cooperation_with_staff || null,
-        professionalism: evaluation.professionalism || null,
-        dealing_with_students: evaluation.dealing_with_students || null,
-        manners: evaluation.manners || null,
-        participation_in_activities: evaluation.participation_in_activities || null,
-        school: evaluation.school || null,
-        comfort: evaluation.comfort || null,
-        professional_ethics: evaluation.professional_ethics || null,
+        ...dynamicFields,
         general_notes: evaluation.general_notes || null,
         evaluation_date: new Date().toISOString().split('T')[0],
       };
@@ -134,21 +131,7 @@ export default function StudentEvaluation() {
       await createStudentEvaluation(evaluationData);
       setSavedMessage("تم حفظ التقييم بنجاح.");
       setErrorMessage("");
-      
-      // Reset form - matching image fields
-      setEvaluation({
-        supervisor: "",
-        attendance: "",
-        cooperation_with_staff: "",
-        professionalism: "",
-        dealing_with_students: "",
-        manners: "",
-        participation_in_activities: "",
-        school: "",
-        comfort: "",
-        professional_ethics: "",
-        general_notes: "",
-      });
+      setEvaluation(buildEmptyEval(selectedStudent));
     } catch (error) {
       console.error("Failed to save evaluation:", error);
       if (error.response?.status === 422) {
@@ -314,19 +297,51 @@ export default function StudentEvaluation() {
             </div>
 
             {/* Rating Fields */}
+            {isPsychCenter ? (
+              <div style={{ overflowX: "auto", marginBottom: "2rem" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", direction: "rtl", fontSize: "0.9rem" }}>
+                  <thead>
+                    <tr style={{ background: "#0e7490", color: "white" }}>
+                      <th style={{ padding: "0.75rem 1rem", border: "1px solid #0891b2", fontWeight: 600, width: 40 }}>الرقم</th>
+                      <th style={{ padding: "0.75rem 1rem", border: "1px solid #0891b2", fontWeight: 600 }}>المؤشر</th>
+                      {[1,2,3,4,5].map(n => <th key={n} style={{ padding: "0.75rem 0.5rem", border: "1px solid #0891b2", fontWeight: 600, width: 52, textAlign: "center" }}>{n}</th>)}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {PSYCH_CENTER_EVAL_FIELDS.map((field, idx) => (
+                      <tr key={field.key} style={{ background: idx % 2 === 0 ? "#f0f9ff" : "white" }}>
+                        <td style={{ padding: "0.75rem", border: "1px solid #bae6fd", textAlign: "center", fontWeight: 600, color: "#0e7490" }}>{idx + 1}</td>
+                        <td style={{ padding: "0.75rem 1rem", border: "1px solid #bae6fd" }}>{field.label}</td>
+                        {[1,2,3,4,5].map(rating => (
+                          <td key={rating} style={{ padding: "0.5rem", border: "1px solid #bae6fd", textAlign: "center" }}>
+                            <button
+                              type="button"
+                              onClick={() => handleEvaluationChange(field.key, rating)}
+                              style={{
+                                width: 36, height: 36, borderRadius: "50%",
+                                border: evaluation[field.key] === rating ? "none" : "1.5px solid #cbd5e1",
+                                background: evaluation[field.key] === rating ? "#0e7490" : "#f8fafc",
+                                color: evaluation[field.key] === rating ? "white" : "#64748b",
+                                fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
+                                fontSize: "0.85rem",
+                              }}
+                            >{rating}</button>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    <tr style={{ background: "#f0f9ff", fontWeight: 700 }}>
+                      <td colSpan={2} style={{ padding: "0.75rem 1rem", border: "1px solid #bae6fd", textAlign: "center" }}>المجموع</td>
+                      <td colSpan={5} style={{ padding: "0.75rem 1rem", border: "1px solid #bae6fd", textAlign: "center", color: "#0e7490", fontSize: "1.05rem" }}>
+                        {PSYCH_CENTER_EVAL_FIELDS.reduce((sum, f) => sum + (Number(evaluation[f.key]) || 0), 0)} / 25
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
-              {[
-                { key: "supervisor", label: "المخبر" },
-                { key: "attendance", label: "القوام" },
-                { key: "cooperation_with_staff", label: "التعاون مع الهيئة" },
-                { key: "professionalism", label: "التربحية" },
-                { key: "dealing_with_students", label: "التعامل مع الطلبة" },
-                { key: "manners", label: "العظمة" },
-                { key: "participation_in_activities", label: "الخراجة في الأنشطة" },
-                { key: "school", label: "المدرسة" },
-                { key: "comfort", label: "الراحة" },
-                { key: "professional_ethics", label: "أخلاقيات المهنة" },
-              ].map((field) => (
+              {evalFields.map((field) => (
                 <div key={field.key}>
                   <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.5rem" }}>
                     {field.label}
@@ -366,6 +381,7 @@ export default function StudentEvaluation() {
                 </div>
               ))}
             </div>
+            )}
 
             {/* General Notes */}
             <div style={{ marginTop: "1.5rem" }}>

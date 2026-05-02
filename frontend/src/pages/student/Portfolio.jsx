@@ -122,6 +122,7 @@ export default function Portfolio() {
     else if (title.includes("تقرير مختصر") || title.includes("المختصر")) formKey = "weekly_brief_report";
     else if (title.includes("تقرير الأسبوعي") || title.includes("الأسبوعي")) formKey = "weekly_full_report";
     else if (title.includes("حصص")) formKey = "classes_count";
+    else if (title.includes("المهام والأعمال اليومية") || title.includes("مهام") && title.includes("يومي")) formKey = "daily_tasks_report";
 
     if (formKey) {
       navigate("/student/e-forms", { state: { editEntry: { id: en.id, formKey, title: en.title, content: en.content } } });
@@ -204,23 +205,6 @@ export default function Portfolio() {
       {error ? (
         <div className="alert-custom alert-danger mb-3" style={{ animation: "fadeIn 0.3s ease" }}>{error}</div>
       ) : null}
-
-      {/* Add New Entry Card */}
-      <div style={{
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        borderRadius: "16px",
-        padding: "1.5rem 2rem",
-        color: "white",
-        marginBottom: "1.5rem"
-      }}>
-        <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <Plus size={24} />
-          إضافة مدخل جديد
-        </h4>
-        <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-          أرفق ملفاتك وأعمالك لتوثيق تدريبك
-        </p>
-      </div>
 
       <div style={{
         backgroundColor: "white",

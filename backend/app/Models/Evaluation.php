@@ -12,7 +12,7 @@ class Evaluation extends Model
     use HasFactory, HidesArchived;
 
     protected $fillable = [
-        'training_assignment_id', 'evaluator_id', 'template_id',
+        'training_assignment_id', 'evaluator_id', 'template_id', 'evaluation_type',
         'total_score', 'notes', 'status', 'is_final', 'strengths',
         'areas_for_improvement', 'recommendation', 'criteria_scores', 'submitted_at'
     ];

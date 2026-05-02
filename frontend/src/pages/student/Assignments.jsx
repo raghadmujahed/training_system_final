@@ -197,77 +197,29 @@ export default function Assignments() {
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
-      {/* Professional Header */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #4f46e5 100%)",
-          borderRadius: 16,
-          padding: "32px 28px",
-          marginBottom: 28,
-          color: "white",
-          boxShadow: "0 10px 40px rgba(79, 70, 229, 0.3)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -50,
-            right: -50,
-            width: 200,
-            height: 200,
-            background: "rgba(255,255,255,0.1)",
-            borderRadius: "50%",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -30,
-            left: -30,
-            width: 150,
-            height: 150,
-            background: "rgba(255,255,255,0.08)",
-            borderRadius: "50%",
-          }}
-        />
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div className="d-flex align-items-center gap-3 mb-3">
-            <div
-              style={{
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: 12,
-                padding: 12,
-                backdropFilter: "blur(10px)",
-              }}
-            >
-              <BookOpen size={32} />
-            </div>
-            <div>
-              <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>التكليفات الدراسية</h1>
-              <p style={{ margin: "4px 0 0", opacity: 0.9, fontSize: "1rem" }}>
-                متابعة المهام ورفع الحلول
-              </p>
-            </div>
-          </div>
-          <div className="d-flex gap-4 mt-4 flex-wrap" style={{ fontSize: "0.9rem" }}>
-            <span className="d-flex align-items-center gap-2">
-              <ClipboardList size={16} />
-              {tasks.length} تكليف إجمالي
-            </span>
-            <span className="d-flex align-items-center gap-2">
-              <Clock size={16} />
-              {tasks.filter((t) => !["submitted","graded"].includes(t.status)).length} قيد الانتظار
-            </span>
-            <span className="d-flex align-items-center gap-2">
-              <CheckCircle2 size={16} />
-              {tasks.filter((t) => t.status === "submitted").length} مُسلَّم
-            </span>
-            <span className="d-flex align-items-center gap-2">
-              <Award size={16} />
-              {tasks.filter((t) => t.status === "graded").length} مُقيَّم
-            </span>
+      {/* Header */}
+      <div style={{
+        background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
+        borderRadius: 20,
+        padding: "1.75rem 2.5rem",
+        marginBottom: "1.5rem",
+        color: "white",
+        boxShadow: "0 8px 32px rgba(30,58,95,0.3)",
+        display: "flex",
+        alignItems: "center",
+        gap: "1rem",
+      }}>
+        <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <BookOpen size={26} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800 }}>التكليفات الدراسية</h1>
+          <p style={{ margin: "0.25rem 0 0", opacity: 0.9, fontSize: "0.92rem" }}>متابعة المهام ورفع الحلول</p>
+          <div style={{ display: "flex", gap: "1.25rem", marginTop: "0.6rem", flexWrap: "wrap", fontSize: "0.85rem", opacity: 0.9 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><ClipboardList size={14} /> {tasks.length} تكليف إجمالي</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Clock size={14} /> {tasks.filter((t) => !["submitted","graded"].includes(t.status)).length} قيد الانتظار</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><CheckCircle2 size={14} /> {tasks.filter((t) => t.status === "submitted").length} مُسلَّم</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Award size={14} /> {tasks.filter((t) => t.status === "graded").length} مُقيَّم</span>
           </div>
         </div>
       </div>

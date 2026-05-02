@@ -30,7 +30,7 @@ class TrainingAssignmentController extends Controller
                 'teacher',
                 'academicSupervisor',
             ]
-            : ['enrollment.user', 'trainingSite', 'teacher', 'academicSupervisor'];
+            : ['enrollment.user.department', 'trainingSite', 'teacher', 'academicSupervisor'];
 
         $query = $isAcademicSupervisor
             ? TrainingAssignment::query()->withArchived()->with($eager)

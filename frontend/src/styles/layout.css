@@ -84,12 +84,8 @@
   max-width: var(--content-max);
 }
 
-.content-header {
-  margin-bottom: 16px;
-}
-
 .content-header.compact {
-  margin-bottom: 12px;
+  padding: 1.25rem 2rem;
 }
 
 .breadcrumb-text {

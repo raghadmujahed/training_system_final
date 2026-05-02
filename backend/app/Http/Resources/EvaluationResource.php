@@ -11,6 +11,7 @@ class EvaluationResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'evaluation_type' => $this->evaluation_type,
             'total_score' => $this->total_score,
             'notes' => $this->notes,
             'training_assignment' => new TrainingAssignmentResource($this->whenLoaded('trainingAssignment')),

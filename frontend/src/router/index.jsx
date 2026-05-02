@@ -125,6 +125,7 @@ import PrincipalOfficialLetters from "../pages/principal/OfficialLetters";
 import PrincipalTrainingRequests from "../pages/principal/TrainingRequests";
 import MentorAssignment from "../pages/principal/MentorAssignment";
 import TraineeStudents from "../pages/principal/TraineeStudents";
+import TraineeStudentsList from "../pages/principal/TraineeStudentsList";
 import StudentEvaluation from "../pages/principal/StudentEvaluation";
 
 // Health Directorate
@@ -336,12 +337,15 @@ export default function AppRouter() {
           <Route path="/principal/training-requests" element={<PrincipalTrainingRequests />} />
           <Route path="/principal/official-letters" element={<PrincipalOfficialLetters />} />
           <Route path="/principal/student-evaluation" element={<StudentEvaluation />} />
+          <Route path="/principal/trainee-students" element={<TraineeStudents siteType="school" />} />
+          <Route path="/principal/trainees-list" element={<TraineeStudentsList siteType="school" />} />
 
           {/* Psychology Center */}
           <Route path="/psychology-center/dashboard" element={<PrincipalDashboard siteType="health_center" />} />
           <Route path="/psychology-center/profile" element={<PrincipalProfile siteType="health_center" />} />
           <Route path="/psychology-center/mentor-assignment" element={<MentorAssignment siteType="health_center" />} />
           <Route path="/psychology-center/trainee-students" element={<TraineeStudents siteType="health_center" />} />
+          <Route path="/psychology-center/trainees-list" element={<TraineeStudentsList siteType="health_center" />} />
 
           {/* Health */}
           <Route path="/health/dashboard" element={<HealthDirectorateDashboard />} />

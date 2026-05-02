@@ -28,18 +28,23 @@ const fadeInStyles = `
 `;
 
 const allForms = [
-  { key: "weekly_reflection", title: "نموذج التأمل الأسبوعي", desc: "تأمل ذاتي أسبوعي في التجربة التدريبية", icon: BookOpen, color: "#6366f1", gradient: "linear-gradient(135deg, #6366f1, #8b5cf6)", educationOnly: false },
-  { key: "field_visit_summary", title: "ملخص الزيارة الميدانية", desc: "توثيق الزيارات الميدانية والملاحظات", icon: ClipboardCheck, color: "#0891b2", gradient: "linear-gradient(135deg, #0891b2, #06b6d4)", educationOnly: false },
-  { key: "learning_experience_review", title: "نقد خبرات التعلم", desc: "تقييم وتقويم الخبرات التعليمية المكتسبة", icon: FileText, color: "#059669", gradient: "linear-gradient(135deg, #059669, #34d399)", educationOnly: false },
-  { key: "weekly_brief_report", title: "التقرير المختصر الأسبوعي", desc: "تقرير شامل عن الأنشطة والتأمل الذاتي", icon: FileBarChart, color: "#d97706", gradient: "linear-gradient(135deg, #d97706, #fbbf24)", educationOnly: false },
-  { key: "weekly_full_report", title: "التقرير الأسبوعي", desc: "تقرير مفصل عن الأنشطة والمهام المنفذة", icon: FileSpreadsheet, color: "#dc2626", gradient: "linear-gradient(135deg, #e11d48, #f43f5e)", educationOnly: false },
+  { key: "weekly_reflection", title: "نموذج التأمل الأسبوعي", desc: "تأمل ذاتي أسبوعي في التجربة التدريبية", icon: BookOpen, color: "#6366f1", gradient: "linear-gradient(135deg, #6366f1, #8b5cf6)", educationOnly: true },
+  { key: "field_visit_summary", title: "ملخص الزيارة الميدانية", desc: "توثيق الزيارات الميدانية والملاحظات", icon: ClipboardCheck, color: "#0891b2", gradient: "linear-gradient(135deg, #0891b2, #06b6d4)", educationOnly: true },
+  { key: "learning_experience_review", title: "نقد خبرات التعلم", desc: "تقييم وتقويم الخبرات التعليمية المكتسبة", icon: FileText, color: "#059669", gradient: "linear-gradient(135deg, #059669, #34d399)", educationOnly: true },
+  { key: "weekly_brief_report", title: "التقرير المختصر الأسبوعي", desc: "تقرير شامل عن الأنشطة والتأمل الذاتي", icon: FileBarChart, color: "#d97706", gradient: "linear-gradient(135deg, #d97706, #fbbf24)", educationOnly: true },
+  { key: "weekly_full_report", title: "التقرير الأسبوعي", desc: "تقرير مفصل عن الأنشطة والمهام المنفذة", icon: FileSpreadsheet, color: "#dc2626", gradient: "linear-gradient(135deg, #e11d48, #f43f5e)", educationOnly: true },
   { key: "classes_count", title: "عدد الحصص التي درسها الطالب", desc: "تسجيل الحصص النوعية التي قام الطالب بتدريسها", icon: GraduationCap, color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)", educationOnly: true },
+  { key: "daily_tasks_report", title: "تقرير المهام والأعمال اليومية", desc: "توثيق المهام والأعمال اليومية وملاحظات المرشد التربوي", icon: ClipboardCheck, color: "#0e7490", gradient: "linear-gradient(135deg, #0e7490, #06b6d4)", psychologyOnly: true },
 ];
 
 export default function EForms() {
   const location = useLocation();
   const { config } = useStudentTrack();
-  const availableForms = allForms.filter(f => config.isEducation || !f.educationOnly);
+  const availableForms = allForms.filter(f => {
+    if (f.educationOnly && !config.isEducation) return false;
+    if (f.psychologyOnly && !config.isPsychology) return false;
+    return true;
+  });
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -106,6 +111,15 @@ export default function EForms() {
     supervisorSupportNeeds: ""
   });
 
+  // Daily tasks report state (تقرير المهام والأعمال اليومية)
+  const emptyDailyTaskRow = () => ({ id: Date.now() + Math.random(), tasksCompleted: "", goals: "", skills: "", challenges: "", effortOnChallenges: "", supervisorNotes: "" });
+  const [dailyTaskRows, setDailyTaskRows] = useState(() => Array.from({ length: 5 }, emptyDailyTaskRow));
+
+  const addDailyTaskRow = () => setDailyTaskRows(prev => [...prev, emptyDailyTaskRow()]);
+  const deleteDailyTaskRow = (id) => { if (dailyTaskRows.length > 1) setDailyTaskRows(prev => prev.filter(r => r.id !== id)); };
+  const updateDailyTaskRow = (id, field, value) => setDailyTaskRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
+  const resetDailyTaskRows = () => setDailyTaskRows(Array.from({ length: 5 }, emptyDailyTaskRow));
+
   const load = async () => {
     setLoading(true);
     setError("");
@@ -144,6 +158,8 @@ export default function EForms() {
         setWeeklyBriefReport(prev => ({ ...prev, ...parsed }));
       } else if (formKey === "classes_count" && Array.isArray(parsed)) {
         setTeachingSessions(parsed);
+      } else if (formKey === "daily_tasks_report" && Array.isArray(parsed)) {
+        setDailyTaskRows(parsed);
       }
     } catch {
       // Content may not be valid JSON — ignore
@@ -168,6 +184,7 @@ export default function EForms() {
     else if (formKey === "weekly_full_report") resetWeeklyReport();
     else if (formKey === "weekly_brief_report") resetWeeklyBriefReport();
     else if (formKey === "classes_count") resetTeachingSessions();
+    else if (formKey === "daily_tasks_report") resetDailyTaskRows();
   };
 
   // Weekly brief report handlers
@@ -321,6 +338,9 @@ export default function EForms() {
       } else if (selectedForm === "weekly_brief_report") {
         await saveStudentEForm({ form_key: "weekly_brief_report", title: formTitle, payload: weeklyBriefReport });
         formData = weeklyBriefReport;
+      } else if (selectedForm === "daily_tasks_report") {
+        await saveStudentEForm({ form_key: "daily_tasks_report", title: formTitle, payload: dailyTaskRows });
+        formData = dailyTaskRows;
       }
 
       // Update existing entry or add new one to portfolio
@@ -390,6 +410,12 @@ export default function EForms() {
         <div style={{ textAlign: "center", padding: "4rem" }}>
           <Loader2 className="spin" size={40} color="var(--primary, #007bff)" />
           <p style={{ color: "#666", marginTop: "1rem" }}>جاري التحميل...</p>
+        </div>
+      ) : availableForms.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#64748b" }}>
+          <FileText size={52} color="#cbd5e1" style={{ marginBottom: "1rem" }} />
+          <h3 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>لا توجد نماذج متاحة حالياً</h3>
+          <p style={{ margin: 0 }}>النماذج الخاصة بمسار علم النفس ستُضاف قريباً.</p>
         </div>
       ) : (
         <>
@@ -1568,6 +1594,65 @@ export default function EForms() {
                       {saving ? "جاري الحفظ..." : "حفظ النموذج"}
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+            {selectedForm === "daily_tasks_report" && (
+              <div style={{ marginTop: "2rem", animation: "fadeIn 0.4s ease-out" }}>
+                <div style={{ background: "white", borderRadius: "16px", padding: "2rem", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
+                  <h4 style={{ fontWeight: 700, color: "#0e7490", marginBottom: "0.25rem" }}>تقرير المهام والأعمال اليومية</h4>
+                  <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.5rem" }}>توثيق المهام والأعمال اليومية وملاحظات المرشد التربوي</p>
+
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem", direction: "rtl" }}>
+                      <thead>
+                        <tr style={{ background: "#0e7490", color: "white" }}>
+                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 140 }}>المهام والأعمال التي تم تنفيذها</th>
+                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 110 }}>الأهداف</th>
+                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 120 }}>المهارات المكتسبة</th>
+                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 130 }}>الصعوبات والتحديات</th>
+                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 150 }}>المجهود المبذول للتغلب على الصعوبات</th>
+                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 150 }}>ملاحظات المرشد التربوي</th>
+                          <th className="no-print" style={{ padding: "0.75rem 0.5rem", border: "1px solid #0891b2", width: 44 }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dailyTaskRows.map((row, idx) => (
+                          <tr key={row.id} style={{ background: idx % 2 === 0 ? "#f0f9ff" : "white" }}>
+                            {["tasksCompleted", "goals", "skills", "challenges", "effortOnChallenges", "supervisorNotes"].map(field => (
+                              <td key={field} style={{ border: "1px solid #bae6fd", padding: "0.3rem" }}>
+                                <textarea
+                                  value={row[field]}
+                                  onChange={e => updateDailyTaskRow(row.id, field, e.target.value)}
+                                  rows={3}
+                                  style={{ width: "100%", border: "none", background: "transparent", resize: "vertical", fontSize: "0.85rem", fontFamily: "inherit", outline: "none", padding: "2px 4px" }}
+                                />
+                              </td>
+                            ))}
+                            <td className="no-print" style={{ border: "1px solid #bae6fd", textAlign: "center", padding: "0.3rem" }}>
+                              <button onClick={() => deleteDailyTaskRow(row.id)} disabled={dailyTaskRows.length <= 1} style={{ background: "none", border: "none", cursor: dailyTaskRows.length <= 1 ? "not-allowed" : "pointer", color: "#ef4444", opacity: dailyTaskRows.length <= 1 ? 0.3 : 1 }}>
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <button className="no-print" onClick={addDailyTaskRow} style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 1.2rem", background: "#f0f9ff", border: "1.5px dashed #0891b2", borderRadius: "8px", color: "#0e7490", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>
+                    <Plus size={16} /> إضافة صف
+                  </button>
+                </div>
+
+                <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.5rem" }}>
+                  <button onClick={resetDailyTaskRows} style={{ padding: "0.875rem 1.5rem", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 500 }}>
+                    <RotateCcw size={18} /> إعادة تعيين
+                  </button>
+                  <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
+                    {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                    {saving ? "جاري الحفظ..." : "حفظ التقرير"}
+                  </button>
                 </div>
               </div>
             )}

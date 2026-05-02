@@ -235,7 +235,7 @@ class StudentEvaluationController extends Controller
         // Get all training requests for this site that have been sent to or approved by school
         $trainingRequests = TrainingRequest::with([
             'trainingSite',
-            'trainingRequestStudents.user',
+            'trainingRequestStudents.user.department',
             'trainingRequestStudents.course',
             'trainingPeriod',
         ])
@@ -247,6 +247,7 @@ class StudentEvaluationController extends Controller
         $students = [];
         foreach ($trainingRequests as $request) {
             foreach ($request->trainingRequestStudents as $student) {
+                $departmentName = $student->user?->department?->name;
                 $students[] = [
                     'id' => $student->id,
                     'student_id' => $student->user_id,
@@ -261,6 +262,8 @@ class StudentEvaluationController extends Controller
                     'period' => $request->trainingPeriod?->name ?? '—',
                     'training_status' => $request->status,
                     'book_status' => $request->book_status,
+                    'department_name' => $departmentName,
+                    'track' => $student->user?->resolveStudentTrack(),
                 ];
             }
         }
