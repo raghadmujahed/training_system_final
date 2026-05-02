@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   FileText,
   Loader2,
@@ -6,6 +6,7 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  Printer,
 } from "lucide-react";
 import { sendTrainingRequestBatch, getTrainingRequestBatch } from "../../services/api";
 import useCoordinatorBatches from "../../hooks/useCoordinatorBatches";
@@ -17,6 +18,7 @@ import { BATCH_STATUS_LABELS, BATCH_STATUS_COLORS } from "../../config/coordinat
 import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies";
 import EmptyState from "../../components/common/EmptyState";
 import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
+import { printBatchTrainingRequests } from "../../utils/trainingRequestPrint";
 
 export default function CoordinatorOfficialLetters({ audience = "coordinator" }) {
   const isPsych = audience === "psychologySupervisor";
@@ -36,9 +38,15 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
   const [batchDetail, setBatchDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [showAllBatches, setShowAllBatches] = useState(false);
+  const [printingBatchId, setPrintingBatchId] = useState(null);
 
-  const visibleBatches = showAllBatches ? batches : batches.slice(0, 5);
-  const hasMoreBatches = batches.length > 5;
+  const listBatches = useMemo(() => {
+    if (isPsych) return batches;
+    return batches.filter((b) => b.governing_body !== "ministry_of_health");
+  }, [batches, isPsych]);
+
+  const visibleBatches = showAllBatches ? listBatches : listBatches.slice(0, 5);
+  const hasMoreBatches = listBatches.length > 5;
 
   const selectedBatch = selectedBatchId
     ? batches.find((b) => b.id === selectedBatchId)
@@ -130,7 +138,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
             <p className="hero-subtitle">
               {isPsych
                 ? "متابعة دفعاتك كمشرف أكاديمي لقسم علم النفس وإرسالها للجهة الرسمية المناسبة."
-                : "عرض وإرسال دفعات طلبات التدريب (معاملة رسمية) إلى مديريات التربية أو وزارة الصحة."}
+                : "عرض وإرسال دفعات طلبات التدريب (معاملة رسمية) إلى مديريات التربية والتعليم فقط."}
             </p>
           </div>
         </div>
@@ -162,9 +170,9 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
           <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
             <FileText size={20} />
           </div>
-          <h4 style={{ margin: 0 }}>قائمة الدفعات ({batches.length})</h4>
+          <h4 style={{ margin: 0 }}>قائمة الدفعات ({listBatches.length})</h4>
         </div>
-        {batches.length === 0 ? (
+        {listBatches.length === 0 ? (
           <EmptyState title="لا توجد دفعات" description="لم تُنشأ أي دفعات طلبات تدريب بعد." />
         ) : (
           <div className="table-wrapper">
@@ -179,6 +187,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
                   <th>تاريخ الإنشاء</th>
                   <th>تاريخ الإرسال</th>
                   <th>رقم المعاملة</th>
+                  <th>طباعة</th>
                   <th></th>
                 </tr>
               </thead>
@@ -216,6 +225,44 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
                         {b.sent_at ? new Date(b.sent_at).toLocaleString("ar-SA") : "—"}
                       </td>
                       <td>{b.letter_number || "—"}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-primary-custom"
+                          onClick={async () => {
+                            setPrintingBatchId(b.id);
+                            try {
+                              const detail = await getTrainingRequestBatch(b.id);
+                              const list = detail?.training_requests || detail?.trainingRequests || [];
+                              const ok = printBatchTrainingRequests({
+                                batch: { ...b, ...detail },
+                                trainingRequests: list,
+                                senderFooter: isPsych
+                                  ? "مشرف التدريب الأكاديمي — قسم علم النفس — جامعة الخليل"
+                                  : "منسّق التدريب الميداني — كلية التربية — جامعة الخليل",
+                              });
+                              if (!ok) window.alert("لا توجد طلبات في هذه الدفعة للطباعة.");
+                            } catch {
+                              window.alert("تعذّر تحميل تفاصيل الدفعة للطباعة.");
+                            } finally {
+                              setPrintingBatchId(null);
+                            }
+                          }}
+                          disabled={printingBatchId === b.id}
+                          title="كشف أسماء هذه الدفعة فقط"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "4px 10px",
+                            fontSize: "0.8rem",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <Printer size={14} />
+                          {printingBatchId === b.id ? "..." : "طباعة"}
+                        </button>
+                      </td>
                       <td>
                         <button
                           className="btn-primary-custom"
@@ -260,7 +307,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
               </>
             ) : (
               <>
-                عرض الكل ({batches.length - 5} إضافي) <ChevronDown size={18} />
+                عرض الكل ({listBatches.length - 5} إضافي) <ChevronDown size={18} />
               </>
             )}
           </button>

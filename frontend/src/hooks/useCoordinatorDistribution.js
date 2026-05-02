@@ -4,10 +4,7 @@ import {
   getTrainingRequestBatches,
   createTrainingRequestBatch,
   sendTrainingRequestBatch,
-  getCourses,
-  getTrainingPeriods,
   getTrainingSites,
-  getUsers,
   coordinatorReviewTrainingRequest,
   itemsFromPagedResponse,
 } from "../services/api";
@@ -32,49 +29,25 @@ export default function useCoordinatorDistribution() {
 
   const [requests, setRequests] = useState([]);
   const [batches, setBatches] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [courses, setCourses] = useState([]);
   const [sites, setSites] = useState([]);
-  const [periods, setPeriods] = useState([]);
-
-  const [selectedForBatch, setSelectedForBatch] = useState({});
-  const [batchForm, setBatchForm] = useState({
-    governing_body: "directorate_of_education",
-    directorate: "",
-  });
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const [reqRes, usersRes, coursesRes, sitesRes, periodsRes, batchesRes] =
-        await Promise.allSettled([
-          getTrainingRequests({ per_page: 200 }),
-          getUsers({ per_page: 200, status: "active" }),
-          getCourses({ per_page: 200 }),
-          getTrainingSites({ per_page: 200 }),
-          getTrainingPeriods({ per_page: 200 }),
-          getTrainingRequestBatches({ per_page: 50 }),
-        ]);
+      const [reqRes, sitesRes, batchesRes] = await Promise.allSettled([
+        getTrainingRequests({ per_page: 200 }),
+        getTrainingSites({ per_page: 200 }),
+        getTrainingRequestBatches({ per_page: 50 }),
+      ]);
       setRequests(
         reqRes.status === "fulfilled" ? itemsFromPagedResponse(reqRes.value) : []
-      );
-      setStudents(
-        usersRes.status === "fulfilled" ? itemsFromPagedResponse(usersRes.value) : []
-      );
-      setCourses(
-        coursesRes.status === "fulfilled" ? itemsFromPagedResponse(coursesRes.value) : []
       );
       setSites(
         sitesRes.status === "fulfilled" ? itemsFromPagedResponse(sitesRes.value) : []
       );
       setBatches(
         batchesRes.status === "fulfilled" ? itemsFromPagedResponse(batchesRes.value) : []
-      );
-      setPeriods(
-        periodsRes.status === "fulfilled"
-          ? itemsFromPagedResponse(periodsRes.value?.data ?? periodsRes.value)
-          : []
       );
 
       if (reqRes.status === "rejected" || batchesRes.status === "rejected") {
@@ -180,43 +153,6 @@ export default function useCoordinatorDistribution() {
     [load]
   );
 
-  const toggleSelect = useCallback((reqId, checked) => {
-    setSelectedForBatch((prev) => ({ ...prev, [reqId]: checked }));
-  }, []);
-
-  const clearSelection = useCallback(() => {
-    setSelectedForBatch({});
-  }, []);
-
-  const createBatch = useCallback(async () => {
-    const ids = Object.entries(selectedForBatch)
-      .filter(([, v]) => v)
-      .map(([k]) => Number(k));
-    if (ids.length === 0) {
-      setError("اختر طلبًا واحدًا على الأقل لإنشاء دفعة.");
-      return;
-    }
-    setSaving(true);
-    setError("");
-    try {
-      await createTrainingRequestBatch({
-        governing_body: batchForm.governing_body,
-        directorate:
-          batchForm.governing_body === "directorate_of_education"
-            ? batchForm.directorate || null
-            : null,
-        training_request_ids: ids,
-      });
-      setSelectedForBatch({});
-      setSuccess("تم إنشاء الدفعة بنجاح");
-      await load();
-    } catch (e) {
-      setError(getApiErrorMessage(e, "فشل إنشاء الدفعة"));
-    } finally {
-      setSaving(false);
-    }
-  }, [selectedForBatch, batchForm, load]);
-
   const sendBatch = useCallback(
     async (batchId, letterData = {}) => {
       setSaving(true);
@@ -244,22 +180,13 @@ export default function useCoordinatorDistribution() {
     setSuccess,
     requests,
     batches,
-    students,
-    courses,
     sites,
-    periods,
-    selectedForBatch,
-    batchForm,
-    setBatchForm,
     incomingRequests,
     prelimApproved,
     prelimApprovedByGroup,
     batchedPending,
     coordinatorRejected,
     reviewDecision,
-    toggleSelect,
-    clearSelection,
-    createBatch,
     createBatchForGroup,
     sendBatch,
     reload: load,

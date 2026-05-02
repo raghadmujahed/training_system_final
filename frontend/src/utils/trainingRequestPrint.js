@@ -21,6 +21,70 @@ export function filterTrainingRequestsForPrint(requests) {
   return (requests || []).filter((r) => isTrainingRequestAcceptedForPrint(r.book_status));
 }
 
+/** للكشف الجماعي حسب المديرية فقط: طلبات «معتمدة مبدئيًا» ولم تُدْرَج بعد في دفعة — يُفصل عن طباعة «كشف الدفعة» لتجنّب تكرار الأسماء. */
+export function filterPrelimOnlyForAggregateDirectoratePrint(requests) {
+  return (requests || []).filter((r) => r.book_status === "prelim_approved");
+}
+
+/**
+ * مطبوعة رسمية لدفعة واحدة (أسماء الطلبات المضمّنة في هذه الدفعة فقط).
+ * @param {{ batch: object, trainingRequests: object[], senderFooter?: string }} opts
+ */
+export function printBatchTrainingRequests({ batch, trainingRequests, senderFooter }) {
+  const list = trainingRequests || [];
+  if (list.length === 0) return false;
+
+  const variant = batch.governing_body === "ministry_of_health" ? "health" : "education";
+  const dirLabel = (batch.directorate || "").trim();
+  const orgLines =
+    batch.governing_body === "ministry_of_health"
+      ? [
+          "كلية التربية — جامعة الخليل",
+          "وزارة الصحة الفلسطينية",
+          "قطاع التدريب الميداني — وزارة الصحة",
+        ]
+      : [
+          "كلية التربية — جامعة الخليل",
+          "وزارة التربية والتعليم",
+          `المنطقة: ${formatEducationRegionSubtitle(dirLabel)}`,
+        ];
+  const recipientTo =
+    batch.governing_body === "ministry_of_health"
+      ? "وزارة الصحة الفلسطينية — لمتابعة ملفات التدريب الميداني"
+      : formatEducationDirectorateRecipient(dirLabel);
+  const bodyIntro =
+    variant === "health" ? HEALTH_MINISTRY_TO_CENTERS_PRINT_INTRO : DEFAULT_COORDINATOR_TO_DIRECTORATE_INTRO;
+
+  const rawDate = batch.letter_date || new Date().toISOString().slice(0, 10);
+  let dateDisplay = new Date().toLocaleDateString("ar-SA");
+  try {
+    const d = new Date(String(rawDate).includes("T") ? rawDate : `${rawDate}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) dateDisplay = d.toLocaleDateString("ar-SA");
+  } catch {
+    /* keep default */
+  }
+
+  const html = buildFormalTrainingLetterHtml({
+    variant,
+    orgLines,
+    referenceNumber: batch.letter_number || null,
+    letterDate: dateDisplay,
+    recipientTo,
+    subject: `دفعة طلبات تدريب رقم ${batch.id}`,
+    bodyIntro,
+    sections: [
+      {
+        title: `كشف الطلبات — الدفعة #${batch.id} (${list.length} طلب)`,
+        rows: list.map(trainingRequestToPrintRow),
+      },
+    ],
+    senderFooter: senderFooter || "كلية التربية — جامعة الخليل",
+    attachmentsNote: null,
+  });
+  printHtmlDocument(html);
+  return true;
+}
+
 /** صياغة رسمية لسطر «إلى / …» حسب منطقة محافظة الخليل في النظام */
 const REGION_TO_FORMAL_RECIPIENT = {
   شمال: "مديرية التربية والتعليم — شمال الخليل",

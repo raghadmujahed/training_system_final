@@ -1,5 +1,5 @@
 // src/stores/AuthContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { login as apiLogin, logout as apiLogout, getCurrentUser } from '../services/api';
 
 const AuthContext = createContext();
@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // محاولة استعادة المستخدم عند تحميل التطبيق
         const token = localStorage.getItem('access_token');
         if (token) {
             getCurrentUser()
@@ -24,19 +23,24 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    const login = async (credentials) => {
+    const login = useCallback(async (credentials) => {
         const data = await apiLogin(credentials);
         setUser(data.user);
         return data;
-    };
+    }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         await apiLogout();
         setUser(null);
-    };
+    }, []);
+
+    const value = useMemo(
+        () => ({ user, loading, login, logout }),
+        [user, loading, login, logout]
+    );
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );

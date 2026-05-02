@@ -21,15 +21,8 @@ import { getGoverningBodyLabel } from "../../config/coordinator/governingBodies"
 import { STATUS_LABELS } from "../../config/coordinator/statusLabels";
 import EmptyState from "../../components/common/EmptyState";
 import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/CoordinatorPsychologyReadOnlyNotice";
-import {
-  buildFormalTrainingLetterHtml,
-  printHtmlDocument,
-  trainingRequestToPrintRow,
-  filterTrainingRequestsForPrint,
-  formatEducationDirectorateRecipient,
-  formatEducationRegionSubtitle,
-  DEFAULT_COORDINATOR_TO_DIRECTORATE_INTRO,
-} from "../../utils/trainingRequestPrint";
+import { printBatchTrainingRequests } from "../../utils/trainingRequestPrint";
+import { getTrainingRequestBatch } from "../../services/api";
 
 export default function CoordinatorTrainingRequests({ variant = "coordinator" }) {
   const isPsychSupervisor = variant === "psychologySupervisor";
@@ -41,7 +34,6 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
     error,
     success,
     batches,
-    requests,
     incomingRequests,
     coordinatorRejected,
     prelimApprovedByGroup,
@@ -55,6 +47,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [presetDecision, setPresetDecision] = useState("");
   const [batchSendForm, setBatchSendForm] = useState({});
+  const [printingBatchId, setPrintingBatchId] = useState(null);
 
   const today = new Date().toISOString().slice(0, 10);
   const [filters, setFilters] = useState({
@@ -157,62 +150,37 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       })
     : filteredIncoming;
 
-  const requestsByDirectorate = useMemo(() => {
-    const map = new Map();
-    for (const r of requests) {
-      const gb = r.governing_body || "directorate_of_education";
-      const dir = (r.training_site?.directorate || r.directorate || "").trim();
-      const key = `${gb}::${dir || "__none__"}`;
-      if (!map.has(key)) {
-        map.set(key, { governing_body: gb, directorate: dir, requests: [] });
-      }
-      map.get(key).requests.push(r);
-    }
-    return Array.from(map.values()).sort((a, b) => {
-      const la = `${getGoverningBodyLabel(a.governing_body)} ${a.directorate || ""}`;
-      const lb = `${getGoverningBodyLabel(b.governing_body)} ${b.directorate || ""}`;
-      return la.localeCompare(lb, "ar");
-    });
-  }, [requests]);
+  const batchBuilderGroups = useMemo(() => {
+    if (isPsychSupervisor) return prelimApprovedByGroup;
+    return prelimApprovedByGroup.filter((g) => g.governing_body !== "ministry_of_health");
+  }, [prelimApprovedByGroup, isPsychSupervisor]);
 
-  const printCoordinatorGroup = (group) => {
-    const acceptedOnly = filterTrainingRequestsForPrint(group.requests);
-    if (acceptedOnly.length === 0) {
-      window.alert("لا توجد طلبات «معتمدة» ضمن هذه المجموعة للطباعة (يُستبعد المسودة والمرفوضة وبانتظار المراجعة).");
-      return;
+  const batchesForCoordinatorTable = useMemo(() => {
+    if (isPsychSupervisor) return batches;
+    return batches.filter((b) => b.governing_body !== "ministry_of_health");
+  }, [batches, isPsychSupervisor]);
+
+  async function handlePrintBatch(b) {
+    setPrintingBatchId(b.id);
+    try {
+      const detail = await getTrainingRequestBatch(b.id);
+      const list = detail?.training_requests || detail?.trainingRequests || [];
+      const ok = printBatchTrainingRequests({
+        batch: { ...b, ...detail },
+        trainingRequests: list,
+        senderFooter: isPsychSupervisor
+          ? "مشرف التدريب الأكاديمي — قسم علم النفس — جامعة الخليل"
+          : "منسّق التدريب الميداني — كلية التربية — جامعة الخليل",
+      });
+      if (!ok) {
+        window.alert("لا توجد طلبات في هذه الدفعة للطباعة.");
+      }
+    } catch {
+      window.alert("تعذّر تحميل تفاصيل الدفعة للطباعة.");
+    } finally {
+      setPrintingBatchId(null);
     }
-    const variant = group.governing_body === "ministry_of_health" ? "health" : "education";
-    const dirLabel = group.directorate || "";
-    const orgLines =
-      group.governing_body === "ministry_of_health"
-        ? [
-            "كلية التربية — جامعة الخليل",
-            "وزارة الصحة الفلسطينية",
-            "قطاع التدريب الميداني — وزارة الصحة",
-          ]
-        : [
-            "كلية التربية — جامعة الخليل",
-            "وزارة التربية والتعليم",
-            `المنطقة: ${formatEducationRegionSubtitle(dirLabel)}`,
-          ];
-    const recipientTo =
-      group.governing_body === "ministry_of_health"
-        ? "وزارة الصحة الفلسطينية — لمتابعة ملفات التدريب الميداني"
-        : formatEducationDirectorateRecipient(dirLabel);
-    const html = buildFormalTrainingLetterHtml({
-      variant,
-      orgLines,
-      referenceNumber: null,
-      letterDate: new Date().toLocaleDateString("ar-SA"),
-      recipientTo,
-      subject: "طلبات التدريب الميداني",
-      bodyIntro: DEFAULT_COORDINATOR_TO_DIRECTORATE_INTRO,
-      sections: [{ title: "كشف بأسماء الطلبة — طلبات معتمدة", rows: acceptedOnly.map(trainingRequestToPrintRow) }],
-      senderFooter: "منسّق التدريب الميداني — كلية التربية — جامعة الخليل",
-      attachmentsNote: null,
-    });
-    printHtmlDocument(html);
-  };
+  }
 
   if (loading) {
     return (
@@ -267,80 +235,6 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
         statusOptions={statusOptions}
       />
 
-      <div className="section-card mb-4">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-          <div
-            className="section-icon"
-            style={{ background: "linear-gradient(135deg, #1e5a8e 0%, #1e3a5f 100%)" }}
-          >
-            <Printer size={20} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <h4 style={{ margin: 0 }}>طباعة حسب الجهة والمديرية</h4>
-            <p style={{ margin: "6px 0 0", fontSize: "0.82rem", color: "var(--text-faint)" }}>
-              تُطبَع الطلبات المعتمدة فقط (بلا مسودة أو مرفوض أو قيد المراجعة عند المنسّق)، بصيغة كتاب رسمي.
-            </p>
-          </div>
-        </div>
-        {requestsByDirectorate.length === 0 ? (
-          <EmptyState title="لا توجد طلبات" description="لم تُحمَّل أي طلبات بعد." />
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gap: 10,
-              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-            }}
-          >
-            {requestsByDirectorate.map((g) => (
-              <div
-                key={`${g.governing_body}-${g.directorate || "x"}`}
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: 12,
-                  padding: "14px 16px",
-                  background: "linear-gradient(180deg, #fff, #f8fafc)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "var(--primary)" }}>
-                    {getGoverningBodyLabel(g.governing_body)}
-                  </div>
-                  <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: 4 }}>
-                    {g.governing_body === "ministry_of_health"
-                      ? "طلبات موجهة إلى وزارة الصحة"
-                      : `المديرية: ${g.directorate || "غير محددة"}`}
-                  </div>
-                  <div style={{ fontSize: "0.78rem", color: "var(--text-faint)", marginTop: 6 }}>
-                    {g.requests.length} طلب
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="btn-primary-custom"
-                  onClick={() => printCoordinatorGroup(g)}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 8,
-                    fontSize: "0.84rem",
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                  }}
-                >
-                  <Printer size={16} />
-                  طباعة هذه المجموعة
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {/* المرحلة ١: طلبات واردة — غير مستخدمة في مسار علم النفس (المشرف يُنشئ الطلب مباشرة) */}
       {!isPsychSupervisor && (
         <div className="section-card mb-4">
@@ -360,7 +254,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
 
       {/* المرحلة ٢: معتمد مبدئيًا — تجميع كتب رسمية */}
       <BatchBuilder
-        groups={prelimApprovedByGroup}
+        groups={batchBuilderGroups}
         onCreateBatchForGroup={createBatchForGroup}
         saving={saving}
       />
@@ -391,7 +285,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
           </div>
           <h4 style={{ margin: 0 }}>دفعات الإرسال</h4>
         </div>
-        {batches.length === 0 ? (
+        {batchesForCoordinatorTable.length === 0 ? (
           <EmptyState title="لا توجد دفعات" description="لم تُنشأ دفعات بعد." />
         ) : (
           <>
@@ -404,11 +298,12 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                   <th>المديرية/المنطقة</th>
                   <th>عدد الطلبات</th>
                   <th>الحالة</th>
+                  <th>طباعة</th>
                   <th>إرسال</th>
                 </tr>
               </thead>
               <tbody>
-                {batches.slice(0, 4).map((b) => {
+                {batchesForCoordinatorTable.slice(0, 4).map((b) => {
                   const statusLabel = BATCH_STATUS_LABELS[b.status] || b.status;
                   const statusColors = BATCH_STATUS_COLORS[b.status] || { bg: "#e9ecef", text: "#495057" };
                   const defaultLetterNumber = `كتاب-${b.id}/${new Date().getFullYear()}`;
@@ -439,6 +334,27 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                         >
                           {statusLabel}
                         </span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn-primary-custom"
+                          onClick={() => handlePrintBatch(b)}
+                          disabled={printingBatchId === b.id}
+                          title="طباعة كشف أسماء هذه الدفعة فقط"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "6px 10px",
+                            fontSize: "0.8rem",
+                            borderRadius: 8,
+                            opacity: printingBatchId === b.id ? 0.7 : 1,
+                          }}
+                        >
+                          <Printer size={14} />
+                          {printingBatchId === b.id ? "..." : "طباعة الدفعة"}
+                        </button>
                       </td>
                       <td style={{ minWidth: 340 }}>
                         {b.status === "draft" ? (
@@ -533,7 +449,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
               to={lettersLink}
               style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.85rem", color: "var(--info)", fontWeight: 700 }}
             >
-              عرض الكل <ArrowLeft size={14} />
+              عرض كل الدفعات <ArrowLeft size={14} />
             </Link>
           </div>
           </>
