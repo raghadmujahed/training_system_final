@@ -7,6 +7,11 @@ export function departmentName(user) {
 }
 
 export function isPsychologyDepartmentUser(user) {
+  // 1) مقارنة صريحة باسم القسم (من API)
+  const deptName = user?.department?.name ?? user?.department;
+  if (deptName === "psychology") return true;
+  if (deptName === "usool_tarbiah") return false;
+  // 2) fallback: تحليل نصي
   const n = departmentName(user);
   return n.includes("psych") || n.includes("psychology") || n.includes("نفس");
 }

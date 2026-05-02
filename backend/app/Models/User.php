@@ -187,17 +187,27 @@ public function enrollments()
             return null;
         }
 
+        // 1) مقارنة صريحة باسم القسم (المسار الرئيسي)
+        $departmentName = $this->department?->name;
+        if ($departmentName === 'psychology') {
+            return 'psychology';
+        }
+        if ($departmentName === 'usool_tarbiah') {
+            return 'education';
+        }
+
+        // 2) fallback: تحليل نصي في حال عدم وجود قسم
         $enrollment = $this->currentEnrollment();
         $courseCode = strtolower((string) data_get($enrollment, 'section.course.code', ''));
         $courseName = strtolower((string) data_get($enrollment, 'section.course.name', ''));
-        $departmentName = strtolower((string) data_get($this, 'department.name', ''));
+        $deptLower = strtolower((string) $departmentName);
 
         if (
             str_contains($courseCode, 'psyc') ||
             str_contains($courseName, 'نفسي') ||
             str_contains($courseName, 'نفس') ||
-            str_contains($departmentName, 'psych') ||
-            str_contains($departmentName, 'نفس')
+            str_contains($deptLower, 'psych') ||
+            str_contains($deptLower, 'نفس')
         ) {
             return 'psychology';
         }
@@ -208,12 +218,12 @@ public function enrollments()
             str_contains($courseName, 'تربيه') ||
             str_contains($courseName, 'اصول') ||
             str_contains($courseName, 'أصول') ||
-            str_contains($departmentName, 'usool') ||
-            str_contains($departmentName, 'tarb') ||
-            str_contains($departmentName, 'تربية') ||
-            str_contains($departmentName, 'تربيه') ||
-            str_contains($departmentName, 'اصول') ||
-            str_contains($departmentName, 'أصول')
+            str_contains($deptLower, 'usool') ||
+            str_contains($deptLower, 'tarb') ||
+            str_contains($deptLower, 'تربية') ||
+            str_contains($deptLower, 'تربيه') ||
+            str_contains($deptLower, 'اصول') ||
+            str_contains($deptLower, 'أصول')
         ) {
             return 'education';
         }

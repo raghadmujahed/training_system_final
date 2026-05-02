@@ -21,7 +21,20 @@ class TrainingTrackResolver
         }
 
         $siteType = strtolower((string) data_get($assignment, 'trainingSite.site_type', ''));
-        $department = strtolower((string) data_get($assignment, 'enrollment.user.department.name', ''));
+        $departmentName = data_get($assignment, 'enrollment.user.department.name');
+
+        // 1) مقارنة صريحة باسم القسم
+        if ($departmentName === self::PSYCHOLOGY) {
+            return in_array($siteType, ['health_center', 'clinic', 'center', 'psychology_center'], true)
+                ? self::PSYCHOLOGY_CLINIC
+                : self::PSYCHOLOGY_SCHOOL;
+        }
+        if ($departmentName === self::USOOL_TARBIAH) {
+            return self::USOOL_TARBIAH_SCHOOL;
+        }
+
+        // 2) fallback: تحليل نصي
+        $department = strtolower((string) $departmentName);
         $courseCode = strtolower((string) data_get($assignment, 'enrollment.section.course.code', ''));
         $courseName = strtolower((string) data_get($assignment, 'enrollment.section.course.name', ''));
 
@@ -40,7 +53,17 @@ class TrainingTrackResolver
 
     public function resolveDepartment(User $user): ?string
     {
-        $department = strtolower((string) data_get($user, 'department.name', ''));
+        // 1) مقارنة صريحة باسم القسم
+        $departmentName = $user->department?->name;
+        if ($departmentName === self::PSYCHOLOGY) {
+            return self::PSYCHOLOGY;
+        }
+        if ($departmentName === self::USOOL_TARBIAH) {
+            return self::USOOL_TARBIAH;
+        }
+
+        // 2) fallback: تحليل نصي
+        $department = strtolower((string) $departmentName);
 
         if ($this->looksLikePsychology($department)) {
             return self::PSYCHOLOGY;
