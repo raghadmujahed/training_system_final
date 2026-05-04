@@ -74,6 +74,11 @@
   box-shadow: 0 4px 12px rgba(17, 38, 56, 0.04);
 }
 
+/* زر فتح السايد بار: الهواتف فقط (نفس عرض breakpoint السايد بار) */
+.mobile-menu-btn {
+  display: none;
+}
+
 .page-content {
   flex: 1;
   padding: 18px 20px;

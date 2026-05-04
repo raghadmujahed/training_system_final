@@ -26,7 +26,7 @@ const COPY = {
     queueEmptyTitle: "لا مهام حضور معلّقة اليوم",
     queueEmptyDescription:
       "جميع الطلبة المرتبطين لديهم سجل حضور ليوم اليوم في النظام. يمكنك مراجعة الأيام السابقة من ملف الطالب.",
-    primaryActionLabel: "تسجيل / اعتماد الحضور",
+    primaryActionLabel: "تسجيل حضور الطالب",
     primaryTab: "attendance",
   },
   "daily-reports": {
