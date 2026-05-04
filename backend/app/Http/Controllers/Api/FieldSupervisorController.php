@@ -821,6 +821,8 @@ class FieldSupervisorController extends Controller
                 'general_notes' => $evaluation->general_notes,
                 'strengths' => $evaluation->strengths,
                 'areas_for_improvement' => $evaluation->areas_for_improvement,
+                'supervisor_name' => $evaluation->supervisor_name,
+                'evaluation_date' => $evaluation->evaluation_date,
                 'is_final' => $evaluation->is_final,
                 'is_editable' => $evaluation->isEditable(),
                 'submitted_at' => $evaluation->submitted_at?->format('Y-m-d H:i'),
@@ -841,6 +843,8 @@ class FieldSupervisorController extends Controller
             'general_notes' => 'nullable|string',
             'strengths' => 'nullable|string',
             'areas_for_improvement' => 'nullable|string',
+            'supervisor_name' => 'nullable|string|max:255',
+            'evaluation_date' => 'nullable|date',
             'template_id' => 'required|exists:field_evaluation_templates,id',
         ]);
 
@@ -876,6 +880,8 @@ class FieldSupervisorController extends Controller
                 'general_notes' => $request->general_notes,
                 'strengths' => $request->strengths,
                 'areas_for_improvement' => $request->areas_for_improvement,
+                'supervisor_name' => $request->supervisor_name,
+                'evaluation_date' => $request->evaluation_date,
                 'status' => FieldEvaluation::STATUS_DRAFT,
             ]
         );
@@ -903,6 +909,8 @@ class FieldSupervisorController extends Controller
             'general_notes' => 'nullable|string',
             'strengths' => 'nullable|string',
             'areas_for_improvement' => 'nullable|string',
+            'supervisor_name' => 'nullable|string|max:255',
+            'evaluation_date' => 'nullable|date',
             'template_id' => 'required|exists:field_evaluation_templates,id',
         ]);
 
@@ -938,6 +946,8 @@ class FieldSupervisorController extends Controller
                 'general_notes' => $request->general_notes,
                 'strengths' => $request->strengths,
                 'areas_for_improvement' => $request->areas_for_improvement,
+                'supervisor_name' => $request->supervisor_name,
+                'evaluation_date' => $request->evaluation_date,
             ]
         );
 

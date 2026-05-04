@@ -21,6 +21,8 @@ class FieldEvaluation extends Model
         'general_notes',
         'strengths',
         'areas_for_improvement',
+        'supervisor_name',
+        'evaluation_date',
         'status',
         'is_final',
         'submitted_at',

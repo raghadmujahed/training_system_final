@@ -5,7 +5,6 @@ import {
   getDailyReportQueueReason,
   getEvaluationQueueReason,
   getMessagesQueueReason,
-  getQueuePriority,
 } from "../../utils/fieldSupervisorQueues";
 import { ListTodo } from "lucide-react";
 
@@ -108,15 +107,11 @@ export default function FieldSupervisorTaskQueuePanel({
             <tr>
               <th>الطالب</th>
               <th>الجهة والمسار</th>
-              <th>سبب الظهور</th>
-              <th>الأولوية</th>
               <th>إجراءات</th>
             </tr>
           </thead>
           <tbody>
             {students.filter((s) => s?.id != null || s?.user_id != null).map((student) => {
-              const pri = getQueuePriority(mode, student);
-              const reason = queueReason(mode, student);
               const sid = student.id ?? student.user_id;
               const primaryTo = `/field-supervisor/students/${sid}?tab=${encodeURIComponent(primaryTab)}`;
               const fileTo = `/field-supervisor/students/${sid}?tab=overview`;
@@ -130,19 +125,13 @@ export default function FieldSupervisorTaskQueuePanel({
                     <div className="fs-task-queue__cell-strong">{student.training_site || "—"}</div>
                     <div className="fs-task-queue__meta">{student.training_type || "—"}</div>
                   </td>
-                  <td data-label="سبب الظهور" className="fs-task-queue__reason">
-                    {reason}
-                  </td>
-                  <td data-label="الأولوية">
-                    <span className={`fs-queue-pill ${pri.className}`}>{pri.label}</span>
-                  </td>
                   <td data-label="إجراءات">
                     <div className="fs-task-queue__actions">
                       <Link to={primaryTo} className="btn-primary-custom btn-sm-custom">
                         {primaryActionLabel}
                       </Link>
                       <Link to={fileTo} className="btn-outline-custom btn-sm-custom">
-                        فتح الملف
+                        فتح ملف الطالب
                       </Link>
                     </div>
                   </td>

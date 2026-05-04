@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useFieldSupervisorStudents, useMessageQueueStudents } from "../../hooks/useFieldSupervisorApi";
 import FieldSupervisorTaskQueuePanel from "./FieldSupervisorTaskQueuePanel";
 import PageHeader from "../../components/common/PageHeader";
@@ -76,6 +77,7 @@ const COPY = {
 };
 
 export default function FieldSupervisorHubPage({ mode }) {
+  const navigate = useNavigate();
   const { students, loading, error, refresh } = useFieldSupervisorStudents();
   const {
     queueStudents: messageQueueStudents,
@@ -94,6 +96,15 @@ export default function FieldSupervisorHubPage({ mode }) {
     if (mode === "communication") return messageQueueStudents;
     return students;
   }, [mode, students, messageQueueStudents]);
+
+  // Redirect to student detail if only one student in evaluation mode
+  useEffect(() => {
+    if (!loading && !error && mode === "evaluation" && displayedStudents.length === 1) {
+      const student = displayedStudents[0];
+      const sid = student.id ?? student.user_id;
+      navigate(`/field-supervisor/students/${sid}?tab=evaluation`, { replace: true });
+    }
+  }, [loading, error, mode, displayedStudents, navigate]);
 
   const listLoading = loading || (mode === "communication" && msgLoading);
   const listError = error || msgError || "";

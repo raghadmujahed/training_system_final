@@ -90,7 +90,6 @@ function buildFieldStaffMenu(roleKey) {
 function buildFieldSupervisorMenu() {
   return [
     { name: "الرئيسية", path: "/field-supervisor" },
-    { name: "الطلبة المتدربون", path: "/field-supervisor/students" },
     { name: "الحضور والغياب", path: "/field-supervisor/attendance" },
     { name: "السجلات والتقارير اليومية", path: "/field-supervisor/daily-reports" },
     { name: "التقييم الميداني", path: "/field-supervisor/evaluation" },

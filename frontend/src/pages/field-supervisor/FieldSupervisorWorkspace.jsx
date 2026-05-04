@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   useFieldSupervisorDashboard,
   useFieldSupervisorStudents,
@@ -5,15 +6,13 @@ import {
 } from "../../hooks/useFieldSupervisorApi";
 import FieldSupervisorStudentsPanel from "./FieldSupervisorStudentsPanel";
 import PageHeader from "../../components/common/PageHeader";
-import { LayoutDashboard } from "lucide-react";
+import { getAnnouncements, itemsFromPagedResponse } from "../../services/api";
+import { LayoutDashboard, Megaphone } from "lucide-react";
 
 const COLOR_HEX = {
   blue: "#0d6efd",
   yellow: "#ffc107",
   orange: "#fd7e14",
-  purple: "#6f42c1",
-  red: "#dc3545",
-  green: "#198754",
   indigo: "#6610f2",
   cyan: "#0dcaf0",
 };
@@ -33,6 +32,34 @@ export default function FieldSupervisorWorkspace() {
   const { students, loading: studentsLoading, error: studentsError, refresh: refreshStudents } =
     useFieldSupervisorStudents();
 
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [announcementsError, setAnnouncementsError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setAnnouncementsLoading(true);
+      setAnnouncementsError("");
+      try {
+        const res = await getAnnouncements({ per_page: 10, status: "active" });
+        if (!cancelled) setAnnouncements(itemsFromPagedResponse(res));
+      } catch (e) {
+        if (!cancelled) {
+          setAnnouncements([]);
+          setAnnouncementsError(
+            e?.response?.data?.message || e?.response?.data?.error || "تعذر تحميل الإعلانات"
+          );
+        }
+      } finally {
+        if (!cancelled) setAnnouncementsLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const supervisorTypeRaw = dashboardData?.supervisor_type || "mentor_teacher";
   const supervisorType = normalizeSubtype(supervisorTypeRaw);
   const labels = useSubtypeLabels(supervisorTypeRaw);
@@ -43,9 +70,6 @@ export default function FieldSupervisorWorkspace() {
       { title: "الطلبة المرتبطون", value: stats.students_count ?? 0, color: "blue" },
       { title: "تقارير تحتاج مراجعة (اليوم)", value: stats.unreviewed_reports_today ?? 0, color: "yellow" },
       { title: "حضور غير مسجّل اليوم", value: stats.pending_attendance_today ?? 0, color: "orange" },
-      { title: "تقييمات ميدانية غير مكتملة", value: stats.incomplete_evaluations ?? 0, color: "purple" },
-      { title: "تنبيهات جديدة", value: stats.new_alerts ?? 0, color: "red" },
-      { title: "رسائل من المشرف الأكاديمي (غير مقروءة)", value: stats.messages_from_supervisor ?? 0, color: "green" },
     ];
 
     if (supervisorType === "mentor_teacher") {
@@ -110,11 +134,61 @@ export default function FieldSupervisorWorkspace() {
             ))}
           </div>
 
+          <div
+            className="section-card fs-announcements-panel"
+            style={{ marginBottom: "1.25rem", borderRight: "4px solid var(--primary)" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div
+                className="section-icon"
+                style={{
+                  background: "linear-gradient(135deg, var(--primary) 0%, #0a2540 100%)",
+                  color: "#fff",
+                  flexShrink: 0,
+                }}
+              >
+                <Megaphone size={20} aria-hidden />
+              </div>
+              <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "var(--primary)" }}>
+                الإعلانات
+              </h4>
+            </div>
+
+            {announcementsLoading ? (
+              <p className="text-soft" style={{ margin: 0 }}>
+                جاري تحميل الإعلانات…
+              </p>
+            ) : announcementsError ? (
+              <p style={{ margin: 0, color: "var(--danger)", fontSize: "0.92rem" }}>{announcementsError}</p>
+            ) : announcements.length === 0 ? (
+              <p className="text-soft" style={{ margin: 0, fontSize: "0.92rem" }}>
+                لا توجد إعلانات موجّهة إليك حالياً. تظهر هنا الإعلانات النشطة التي يحددها المنسّق أو الإدارة
+                (حسب الدور أو القسم أو المستخدم).
+              </p>
+            ) : (
+              <ul className="fs-announcements-list">
+                {announcements.map((a) => (
+                  <li key={a.id} className="fs-announcement-item">
+                    <div className="fs-announcement-item__title">{a.title}</div>
+                    <div className="fs-announcement-item__body">{a.content}</div>
+                    {a.published_at ? (
+                      <div className="fs-announcement-item__meta">
+                        نُشر في {new Date(a.published_at).toLocaleString("ar-SA")}
+                      </div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
           <FieldSupervisorStudentsPanel
             students={students}
             loading={studentsLoading}
             error={studentsError}
             onRetry={refreshStudents}
+            panelTitle="الطلبة المتدربون"
+            titleHref="/field-supervisor/students"
           />
         </>
       )}

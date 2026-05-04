@@ -26,6 +26,8 @@ export default function FieldSupervisorStudentsPanel({
   columnHighlight,
   /** عند عرض قائمة مهام: إذا كانت القائمة المصفّاة فارغة لكن هناك طلاب مرتبطون */
   workQueueMeta = null,
+  /** إن وُجد، يصبح عنوان اللوحة رابطاً إلى هذه الصفحة (مثلاً من الرئيسية إلى قائمة الطلبة). */
+  titleHref = null,
 }) {
   const navigate = useNavigate();
 
@@ -70,7 +72,15 @@ export default function FieldSupervisorStudentsPanel({
 
   return (
     <div className="section-card fs-students-panel" style={cardStyle}>
-      <h4 className="fs-panel-title">{panelTitle}</h4>
+      {titleHref ? (
+        <h4 className="fs-panel-title">
+          <Link to={titleHref} className="fs-panel-title-link">
+            {panelTitle}
+          </Link>
+        </h4>
+      ) : (
+        <h4 className="fs-panel-title">{panelTitle}</h4>
+      )}
       {panelHint && <p className="fs-panel-hint">{panelHint}</p>}
 
       {!students.length ? (

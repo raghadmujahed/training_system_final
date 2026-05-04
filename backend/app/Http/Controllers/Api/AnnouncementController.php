@@ -51,6 +51,20 @@ class AnnouncementController extends Controller
             });
         }
 
+        $isAnnouncementConsumer = !in_array($roleName, ['coordinator', 'training_coordinator'], true)
+            && $roleName !== 'admin';
+
+        if ($isAnnouncementConsumer) {
+            $now = now();
+            $query->where('status', 'active')
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('published_at')->orWhere('published_at', '<=', $now);
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
+                });
+        }
+
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));
         }

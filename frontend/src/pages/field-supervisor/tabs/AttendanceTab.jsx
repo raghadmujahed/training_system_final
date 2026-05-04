@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStudentAttendance } from "../../../hooks/useFieldSupervisorApi";
 import {
   CheckCircle,
@@ -74,7 +74,7 @@ export default function AttendanceTab({ studentId }) {
     useStudentAttendance(studentId);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split("T")[0],
+    date: todayYmdLocal(),
     status: "present",
     check_in: "",
     check_out: "",
@@ -94,6 +94,7 @@ export default function AttendanceTab({ studentId }) {
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [supNotesDraft, setSupNotesDraft] = useState({});
   const [supBusy, setSupBusy] = useState(null);
+  const editFormRef = useRef(null);
 
   const records = data?.records ?? EMPTY_RECORDS;
   useEffect(() => {
@@ -137,7 +138,10 @@ export default function AttendanceTab({ studentId }) {
 
   const openEdit = (record) => {
     if (record.is_locked) return;
+    const todayYmd = todayYmdLocal();
+    if (record.date !== todayYmd) return;
     setEditError("");
+    setUpdateSuccess(false);
     setEditingRecord(record);
     setEditForm({
       status: record.status,
@@ -145,6 +149,9 @@ export default function AttendanceTab({ studentId }) {
       check_out: timeForInput(record.check_out),
       notes: record.notes || "",
     });
+    setTimeout(() => {
+      editFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   const handleEditSubmit = async (e) => {
@@ -161,10 +168,11 @@ export default function AttendanceTab({ studentId }) {
       });
       setUpdateSuccess(true);
       setEditingRecord(null);
-      setTimeout(() => setUpdateSuccess(false), 3000);
+      await refresh();
+      setTimeout(() => setUpdateSuccess(false), 4000);
     } catch (err) {
-      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || "فشل التحديث";
-      setEditError(typeof msg === "string" ? msg : "فشل التحديث");
+      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || "فشل تعديل سجل اليوم، يرجى المحاولة مرة أخرى";
+      setEditError(typeof msg === "string" ? msg : "فشل تعديل سجل اليوم، يرجى المحاولة مرة أخرى");
     } finally {
       setEditSubmitting(false);
     }
@@ -237,9 +245,10 @@ export default function AttendanceTab({ studentId }) {
         {updateSuccess && (
           <div
             className="section-card"
-            style={{ padding: 12, marginBottom: 12, background: "rgba(25, 135, 84, 0.08)", borderColor: "rgba(25, 135, 84, 0.25)" }}
+            style={{ padding: 12, marginBottom: 12, background: "rgba(25, 135, 84, 0.08)", borderColor: "rgba(25, 135, 84, 0.25)", display: "flex", alignItems: "center", gap: 8 }}
           >
-            تم تحديث سجل الحضور بنجاح
+            <CheckCircle size={18} style={{ color: "var(--success)", flexShrink: 0 }} />
+            <strong>تم تعديل سجل اليوم بنجاح</strong>
           </div>
         )}
 
@@ -274,7 +283,7 @@ export default function AttendanceTab({ studentId }) {
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                {todayRecord && !todayRecord.is_locked ? (
+                {todayRecord && !todayRecord.is_locked && !editingRecord ? (
                   <button
                     type="button"
                     className="btn-outline-custom btn-sm-custom"
@@ -289,12 +298,112 @@ export default function AttendanceTab({ studentId }) {
           </div>
         )}
 
+        {editingRecord && (
+          <form
+            ref={editFormRef}
+            onSubmit={handleEditSubmit}
+            className="section-card"
+            style={{ marginTop: 16, padding: 16, border: "1px solid var(--primary)", background: "var(--bg-paper)" }}
+          >
+            <h5 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              <Save size={18} />
+              تعديل سجل حضور اليوم ({editingRecord.date})
+            </h5>
+            {editError ? (
+              <div
+                className="section-card"
+                style={{ padding: 10, marginBottom: 12, background: "rgba(220, 53, 69, 0.08)", borderColor: "rgba(220, 53, 69, 0.25)", display: "flex", alignItems: "center", gap: 8 }}
+              >
+                <AlertTriangle size={18} style={{ color: "var(--danger)", flexShrink: 0 }} />
+                <span style={{ color: "var(--danger)" }}>{editError}</span>
+              </div>
+            ) : null}
+            <p className="text-soft" style={{ margin: "0 0 12px", fontSize: "0.85rem" }}>
+              يُسمح بتعديل سجل حضور اليوم فقط. لا يمكن تغيير التاريخ.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+              <div className="form-field">
+                <label className="form-label-custom" htmlFor="edit-attendance-status">
+                  الحالة
+                </label>
+                <select
+                  id="edit-attendance-status"
+                  className="form-select-custom"
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                >
+                  <option value="present">حاضر</option>
+                  <option value="absent">غائب</option>
+                  <option value="late">متأخر</option>
+                  <option value="excused">مُعذر</option>
+                </select>
+              </div>
+              {editForm.status !== "absent" ? (
+                <>
+                  <div className="form-field">
+                    <label className="form-label-custom" htmlFor="edit-check-in">
+                      وقت الدخول
+                    </label>
+                    <input
+                      id="edit-check-in"
+                      type="time"
+                      className="form-input-custom"
+                      value={editForm.check_in}
+                      onChange={(e) => setEditForm({ ...editForm, check_in: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label className="form-label-custom" htmlFor="edit-check-out">
+                      وقت الخروج
+                    </label>
+                    <input
+                      id="edit-check-out"
+                      type="time"
+                      className="form-input-custom"
+                      value={editForm.check_out}
+                      onChange={(e) => setEditForm({ ...editForm, check_out: e.target.value })}
+                    />
+                  </div>
+                </>
+              ) : null}
+              <div className="form-field" style={{ gridColumn: "1 / -1" }}>
+                <label className="form-label-custom" htmlFor="edit-attendance-notes">
+                  ملاحظات
+                </label>
+                <input
+                  id="edit-attendance-notes"
+                  type="text"
+                  className="form-input-custom"
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="table-actions" style={{ marginTop: 16 }}>
+              <button type="submit" className="btn-primary-custom btn-sm-custom" disabled={editSubmitting} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Save size={16} />
+                {editSubmitting ? "جاري الحفظ..." : "حفظ التعديلات"}
+              </button>
+              <button
+                type="button"
+                className="btn-outline-custom btn-sm-custom"
+                onClick={() => {
+                  setEditingRecord(null);
+                  setEditError("");
+                }}
+              >
+                إلغاء
+              </button>
+            </div>
+          </form>
+        )}
+
         {showForm && canRecordToday && (
           <form onSubmit={handleSubmit} style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
               <div className="form-field">
                 <label className="form-label-custom" htmlFor="attendance-date">
-                  التاريخ
+                  التاريخ (اليوم فقط)
                 </label>
                 <input
                   id="attendance-date"
@@ -302,7 +411,7 @@ export default function AttendanceTab({ studentId }) {
                   type="date"
                   className="form-input-custom"
                   value={formData.date}
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                  readOnly
                   required
                 />
               </div>
@@ -492,96 +601,6 @@ export default function AttendanceTab({ studentId }) {
       <div className="section-card">
         <h4 style={{ marginTop: 0 }}>سجل الحضور</h4>
 
-        {editingRecord ? (
-          <form
-            onSubmit={handleEditSubmit}
-            className="section-card"
-            style={{ marginBottom: 16, padding: 16, border: "1px solid var(--border)", background: "var(--bg-paper)" }}
-          >
-            <h5 style={{ marginTop: 0 }}>تعديل سجل يوم {editingRecord.date}</h5>
-            {editError ? (
-              <p style={{ margin: "0 0 12px", color: "var(--danger)", fontSize: "0.9rem" }}>{editError}</p>
-            ) : null}
-            <p className="text-soft" style={{ margin: "0 0 12px", fontSize: "0.85rem" }}>
-              يُسمح بالتعديل خلال 24 ساعة من إنشاء السجل فقط. لا يمكن تغيير التاريخ من هنا.
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
-              <div className="form-field">
-                <label className="form-label-custom" htmlFor="edit-attendance-status">
-                  الحالة
-                </label>
-                <select
-                  id="edit-attendance-status"
-                  className="form-select-custom"
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                >
-                  <option value="present">حاضر</option>
-                  <option value="absent">غائب</option>
-                  <option value="late">متأخر</option>
-                  <option value="excused">مُعذر</option>
-                </select>
-              </div>
-              {editForm.status !== "absent" ? (
-                <>
-                  <div className="form-field">
-                    <label className="form-label-custom" htmlFor="edit-check-in">
-                      وقت الدخول
-                    </label>
-                    <input
-                      id="edit-check-in"
-                      type="time"
-                      className="form-input-custom"
-                      value={editForm.check_in}
-                      onChange={(e) => setEditForm({ ...editForm, check_in: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label className="form-label-custom" htmlFor="edit-check-out">
-                      وقت الخروج
-                    </label>
-                    <input
-                      id="edit-check-out"
-                      type="time"
-                      className="form-input-custom"
-                      value={editForm.check_out}
-                      onChange={(e) => setEditForm({ ...editForm, check_out: e.target.value })}
-                    />
-                  </div>
-                </>
-              ) : null}
-              <div className="form-field" style={{ gridColumn: "1 / -1" }}>
-                <label className="form-label-custom" htmlFor="edit-attendance-notes">
-                  ملاحظات
-                </label>
-                <input
-                  id="edit-attendance-notes"
-                  type="text"
-                  className="form-input-custom"
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="table-actions" style={{ marginTop: 16 }}>
-              <button type="submit" className="btn-primary-custom btn-sm-custom" disabled={editSubmitting}>
-                <Save size={16} />
-                {editSubmitting ? "جاري الحفظ..." : "حفظ التعديلات"}
-              </button>
-              <button
-                type="button"
-                className="btn-outline-custom btn-sm-custom"
-                onClick={() => {
-                  setEditingRecord(null);
-                  setEditError("");
-                }}
-              >
-                إلغاء
-              </button>
-            </div>
-          </form>
-        ) : null}
-
         {records.length === 0 ? (
           <div style={{ textAlign: "center", padding: 32 }} className="text-soft">
             <Calendar size={40} style={{ margin: "0 auto 12px", opacity: 0.35 }} />
@@ -614,10 +633,10 @@ export default function AttendanceTab({ studentId }) {
                     <td>{record.check_out || "—"}</td>
                     <td className="text-soft">{record.notes || "—"}</td>
                     <td>
-                      <span className="badge-custom badge-primary">{record.is_locked ? "مُغلق" : "قابل للتعديل"}</span>
+                      <span className="badge-custom badge-primary">{record.is_locked ? "مُغلق" : record.date === todayYmd ? "قابل للتعديل" : "مُغلق"}</span>
                     </td>
                     <td>
-                      {!record.is_locked ? (
+                      {!record.is_locked && record.date === todayYmd ? (
                         <button type="button" className="btn-outline-custom btn-sm-custom" onClick={() => openEdit(record)}>
                           تعديل
                         </button>

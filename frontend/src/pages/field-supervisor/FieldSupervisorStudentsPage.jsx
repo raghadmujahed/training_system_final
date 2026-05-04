@@ -10,8 +10,8 @@ export default function FieldSupervisorStudentsPage() {
     <>
       <PageHeader
         icon={Users}
-        title="الطلبة المتدربون"
-        subtitle="قائمة عامة بكل الطلبة المرتبطين بك — الأعمدة الكاملة (حضور، تقرير اليوم، تقييم…). للمهام اليومية استخدم عناصر القائمة الجانبية «الحضور»، «السجلات»، إلخ."
+        title="الطلبة المرتبطون"
+        subtitle="قائمة بكل الطلبة المرتبطين بحسابك — الأعمدة الكاملة (حضور، تقرير اليوم، تقييم…). للمهام اليومية استخدم «الحضور»، «السجلات»، وغيرها من القائمة الجانبية."
       />
       <div className="fs-students-list-banner">
         <span className="fs-students-list-banner__tag">قائمة عامة</span>
@@ -22,6 +22,7 @@ export default function FieldSupervisorStudentsPage() {
         loading={loading}
         error={error}
         onRetry={refresh}
+        panelTitle="الطلبة المرتبطون"
       />
     </>
   );
