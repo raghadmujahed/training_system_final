@@ -371,9 +371,15 @@ class StudentAttendanceController extends Controller
             return true;
         }
 
-        return TrainingAssignment::query()
-            ->where('teacher_id', $actor->id)
-            ->whereHas('enrollment', fn ($q) => $q->where('user_id', $studentUserId))
-            ->exists();
+        $query = TrainingAssignment::query()
+            ->where(function ($q) use ($actor) {
+                $q->where('teacher_id', $actor->id);
+                if ($actor->role?->name === 'field_supervisor') {
+                    $q->orWhere('field_supervisor_id', $actor->id);
+                }
+            })
+            ->whereHas('enrollment', fn ($q) => $q->where('user_id', $studentUserId));
+
+        return $query->exists();
     }
 }

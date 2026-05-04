@@ -33,8 +33,8 @@ class FieldSupervisorSeeder extends Seeder
                 'department' => 'قسم أصول التربية',
             ],
             [
-                'name' => 'سارة أحمد - مرشدة تربوية',
-                'email' => 'school.counselor@example.com',
+                'name' => 'أ. لينا محسن',
+                'email' => 'lina.mohsen@hebron.edu',
                 'university_id' => 'COUNSEL001',
                 'type' => 'school_counselor',
                 'workplace' => 'مدرسة النور الأساسية',
@@ -60,19 +60,33 @@ class FieldSupervisorSeeder extends Seeder
         ];
 
         foreach ($supervisors as $supervisorData) {
-            // إنشاء المستخدم
-            $user = User::firstOrCreate(
-                ['email' => $supervisorData['email']],
-                [
-                    'name' => $supervisorData['name'],
-                    'university_id' => $supervisorData['university_id'],
-                    'password' => Hash::make('password123'),
-                    'role_id' => $role->id,
-                    'department_id' => $deptMap[$supervisorData['type']] ?? null,
-                    'phone' => '0599000000',
-                    'status' => 'active',
-                ]
-            );
+            // حل المستخدم الحالي: البريد الجديد، أو (للمرشدة) الحساب القديم / نفس الرقم الجامعي
+            // لتفادي duplicate university_id عند تغيير البريد من school.counselor@example.com
+            $user = User::query()->where('email', $supervisorData['email'])->first();
+            if (!$user && $supervisorData['type'] === 'school_counselor') {
+                $user = User::query()
+                    ->where('email', 'school.counselor@example.com')
+                    ->orWhere('university_id', $supervisorData['university_id'])
+                    ->first();
+            }
+
+            $attributes = [
+                'name' => $supervisorData['name'],
+                'email' => $supervisorData['email'],
+                'university_id' => $supervisorData['university_id'],
+                'password' => Hash::make('password123'),
+                'role_id' => $role->id,
+                'department_id' => $deptMap[$supervisorData['type']] ?? null,
+                'phone' => '0599000000',
+                'status' => 'active',
+            ];
+
+            if ($user) {
+                $user->update($attributes);
+                $user = $user->fresh();
+            } else {
+                $user = User::query()->create($attributes);
+            }
 
             // إنشاء ملف المشرف الميداني
             FieldSupervisorProfile::firstOrCreate(
@@ -95,7 +109,8 @@ class FieldSupervisorSeeder extends Seeder
         // ═══════════════════════════════════════════════════════════
 
         $mentorTeacher = User::where('email', 'mentor.teacher@example.com')->first();
-        $counselor = User::where('email', 'school.counselor@example.com')->first();
+        $counselor = User::where('email', 'lina.mohsen@hebron.edu')->first()
+            ?? User::where('email', 'school.counselor@example.com')->first();
         $psychologist = User::where('email', 'psychologist@example.com')->first();
 
         // تحديث بعض التعيينات لتكون مرتبطة بالمشرفين الميدانيين
@@ -115,6 +130,19 @@ class FieldSupervisorSeeder extends Seeder
             TrainingAssignment::inRandomOrder()->limit(3)->whereNull('teacher_id')->update([
                 'teacher_id' => $psychologist->id,
             ]);
+        }
+
+        // تعيين Demo (stu02) مرتبط بـ «أ. لينا محسن» — وإلا لن تظهر له طلبة في واجهة المشرف الميداني
+        // (DemoDataSeeder يضع teacher_id كمعلم عادي، وليس كمشرف ميداني)
+        $demoStudent = User::where('email', 'stu02@hebron.edu')->first();
+        if ($counselor && $demoStudent) {
+            $n = TrainingAssignment::query()
+                ->whereHas('enrollment', static fn ($q) => $q->where('user_id', $demoStudent->id))
+                ->whereIn('status', ['assigned', 'ongoing'])
+                ->update(['teacher_id' => $counselor->id]);
+            if ($n > 0) {
+                $this->command->info("✅ رُبطت {$n} تعيين(ات) تجريبية بالمشرف الميداني: {$counselor->name}");
+            }
         }
 
         $this->command->info('✅ تم ربط المشرفين الميدانيين بالطلاب');

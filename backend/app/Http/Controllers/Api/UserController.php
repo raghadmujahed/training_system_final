@@ -258,9 +258,18 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|regex:/^(056|059)\d{7}$/',
-        ], [
-            'phone.regex' => 'رقم الهاتف يجب أن يكون مكون من 10 أرقام ويبدأ بـ 056 أو 059',
+            'phone' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+                    if (! is_string($value) || ! preg_match('/^(056|059)\d{7}$/', $value)) {
+                        $fail('رقم الهاتف يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059');
+                    }
+                },
+            ],
         ]);
 
         $user->update([

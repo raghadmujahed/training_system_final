@@ -86,7 +86,7 @@ class FieldSupervisorProfile extends Model
         return match($this->supervisor_type) {
             self::TYPE_MENTOR_TEACHER => 'المعلم المرشد',
             self::TYPE_SCHOOL_COUNSELOR => 'المرشد التربوي',
-            self::TYPE_PSYCHOLOGIST => 'الأخصائي النفسي',
+            self::TYPE_PSYCHOLOGIST, 'clinical_psychologist' => 'الأخصائي النفسي / المؤسسة',
             default => 'مشرف ميداني',
         };
     }

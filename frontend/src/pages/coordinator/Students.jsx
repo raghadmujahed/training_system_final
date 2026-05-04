@@ -56,7 +56,7 @@ export default function CoordinatorStudents() {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <Users size={24} />
+            <Users size={44} />
           </div>
           <div style={{ flex: 1 }}>
             <h1 className="hero-title">الطلبة</h1>
@@ -105,8 +105,8 @@ export default function CoordinatorStudents() {
       ) : (
         <div className="section-card">
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div className="section-icon" style={{ color: "var(--success)" }}>
-              <GraduationCap size={16} />
+            <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--success) 0%, #5cb85c 100%)" }}>
+              <GraduationCap size={20} />
             </div>
             <h4 style={{ margin: 0 }}>قائمة الطلبة ({items.length})</h4>
           </div>

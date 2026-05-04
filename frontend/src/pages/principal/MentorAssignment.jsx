@@ -44,6 +44,7 @@ const normalizeRowsFromRequest = (request) =>
         student.course?.name || student.course?.data?.name || "—",
       status: student.status_label || student.status || "قيد المراجعة",
       mentorId: mid ? String(mid) : "",
+      fieldSupervisorId: "",
       notes: student.notes || "",
     };
   });
@@ -133,7 +134,18 @@ export default function MentorAssignment({ siteType = "school" }) {
   const handleMentorChange = (studentRowId, mentorIdVal) => {
     setRows((prev) =>
       prev.map((row) =>
-        row.studentRowId === studentRowId ? { ...row, mentorId: mentorIdVal } : row
+        row.studentRowId === studentRowId
+          ? { ...row, mentorId: mentorIdVal, fieldSupervisorId: "" }
+          : row
+      )
+    );
+    setSavedMessage("");
+  };
+
+  const handleFieldSupervisorChange = (studentRowId, fsIdVal) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        row.studentRowId === studentRowId ? { ...row, fieldSupervisorId: fsIdVal } : row
       )
     );
     setSavedMessage("");
@@ -164,12 +176,18 @@ export default function MentorAssignment({ siteType = "school" }) {
       setErrorMessage("");
       await schoolManagerApproveRequest(requestId, {
         status: "approved",
-        students: requestRows.map((row) => ({
-          id: row.studentRowId,
-          assigned_teacher_id: Number(row.mentorId),
-        })),
+        students: requestRows.map((row) => {
+          const payload = {
+            id: row.studentRowId,
+            assigned_teacher_id: Number(row.mentorId),
+          };
+          if (siteType === "school" && row.fieldSupervisorId) {
+            payload.field_supervisor_id = Number(row.fieldSupervisorId);
+          }
+          return payload;
+        }),
       });
-      setSavedMessage(`تم اعتماد الطلب وتعيين ${siteType === "health_center" ? "الأخصائيين" : "المعلمين"} المرشدين بنجاح.`);
+      setSavedMessage("تم اعتماد الطلب وتعيين المشرف الميداني بنجاح.");
       await fetchData();
     } catch (error) {
       console.error("Failed to approve request:", error);
@@ -205,6 +223,11 @@ export default function MentorAssignment({ siteType = "school" }) {
   const totalStudents = rows.length;
   const assignedCount = rows.filter(r => r.mentorId).length;
 
+  const platformFieldSupervisors = useMemo(
+    () => (teachers || []).filter((u) => u.role?.name === "field_supervisor"),
+    [teachers]
+  );
+
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "var(--text-soft)" }}>
@@ -237,7 +260,7 @@ export default function MentorAssignment({ siteType = "school" }) {
           { title: "إجمالي الطلبات", value: requests.length, icon: FileText, color: "#3b82f6", bg: "#dbeafe" },
           { title: "طلبات معلقة", value: pendingCount, icon: Clock, color: "#f59e0b", bg: "#fef3c7" },
           { title: "إجمالي الطلبة", value: totalStudents, icon: Users, color: "#8b5cf6", bg: "#ede9fe" },
-          { title: "تم تعيين مرشد", value: assignedCount, icon: CheckCircle2, color: "#10b981", bg: "#d1fae5" },
+          { title: "تم تعيين مشرف ميداني", value: assignedCount, icon: CheckCircle2, color: "#10b981", bg: "#d1fae5" },
         ].map((card, i) => {
           const Icon = card.icon;
           return (
@@ -272,7 +295,7 @@ export default function MentorAssignment({ siteType = "school" }) {
           <ClipboardList size={56} style={{ marginBottom: "1rem", opacity: 0.3, color: "#94a3b8" }} />
           <h3 style={{ margin: "0 0 0.5rem", color: "#64748b", fontSize: "1.1rem" }}>{"لا توجد طلبات حاليًا"}</h3>
           <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.9rem" }}>
-            {"عند وصول كتاب من المديرية سيظهر الطلب هنا"}
+            {"عند وصول كتاب من الجهة الرسمية سيظهر الطلب هنا"}
           </p>
         </div>
       ) : (
@@ -282,6 +305,16 @@ export default function MentorAssignment({ siteType = "school" }) {
           const period = req.training_period || req.trainingPeriod;
           const reqRows = rowsByRequest[req.id] || [];
           const isSaving = savingRequestId === req.id;
+          const tableHeadCells = [
+            "الطالب",
+            "الرقم الجامعي",
+            "المساق",
+            "حالة السجل",
+            labels.mentorCol,
+            ...(siteType === "school" ? ["حساب المشرف في المنصة (اختياري)"] : []),
+            "ملاحظات",
+          ];
+          const emptyColSpan = siteType === "school" ? 7 : 6;
 
           const isHighlighted = highlightedId === req.id;
           return (
@@ -354,7 +387,7 @@ export default function MentorAssignment({ siteType = "school" }) {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
                   <thead>
                     <tr style={{ background: "#f8fafc" }}>
-                      {["الطالب", "الرقم الجامعي", "المساق", "حالة السجل", labels.mentorCol, "ملاحظات"].map((h) => (
+                      {tableHeadCells.map((h) => (
                         <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
                       ))}
                     </tr>
@@ -362,12 +395,21 @@ export default function MentorAssignment({ siteType = "school" }) {
                   <tbody>
                     {reqRows.length === 0 ? (
                       <tr>
-                        <td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
+                        <td colSpan={emptyColSpan} style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
                           {"لا يوجد طلاب مرتبطون بهذا الطلب"}
                         </td>
                       </tr>
                     ) : (
-                      reqRows.map((student, idx) => (
+                      reqRows.map((student, idx) => {
+                        const mentorRole = student.mentorId
+                          ? teachers.find((t) => String(t.id) === String(student.mentorId))?.role?.name
+                          : null;
+                        const showPlatformFs =
+                          siteType === "school" &&
+                          mentorRole &&
+                          ["teacher", "adviser"].includes(mentorRole);
+
+                        return (
                         <tr key={student.studentRowId} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
                           <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -400,6 +442,36 @@ export default function MentorAssignment({ siteType = "school" }) {
                               ))}
                             </select>
                           </td>
+                          {siteType === "school" ? (
+                            <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", minWidth: 200 }}>
+                              {showPlatformFs ? (
+                                <select
+                                  value={student.fieldSupervisorId}
+                                  onChange={(e) =>
+                                    handleFieldSupervisorChange(student.studentRowId, e.target.value)
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "0.375rem 0.5rem",
+                                    borderRadius: 6,
+                                    border: student.fieldSupervisorId ? "1px solid #6366f1" : "1px solid #e2e8f0",
+                                    fontSize: "0.8rem",
+                                    background: student.fieldSupervisorId ? "#eef2ff" : "#f8fafc",
+                                    outline: "none",
+                                  }}
+                                >
+                                  <option value="">{"— اختياري —"}</option>
+                                  {platformFieldSupervisors.map((fs) => (
+                                    <option key={fs.id} value={fs.id}>
+                                      {fs.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>{"—"}</span>
+                              )}
+                            </td>
+                          ) : null}
                           <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", minWidth: 180 }}>
                             <textarea value={student.notes} onChange={(e) => handleNotesChange(student.studentRowId, e.target.value)}
                               placeholder={"ملاحظات (اختياري)"} rows={2}
@@ -407,7 +479,8 @@ export default function MentorAssignment({ siteType = "school" }) {
                             />
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

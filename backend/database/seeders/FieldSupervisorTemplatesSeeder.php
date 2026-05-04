@@ -310,62 +310,28 @@ class FieldSupervisorTemplatesSeeder extends Seeder
             ],
 
             // ═══════════════════════════════════════════════════════════
-            // School Counselor Evaluation
+            // School counselor — نموذج تقييم المرشد/المدرب (علم النفس في المدارس)
             // ═══════════════════════════════════════════════════════════
             [
-                'name' => 'تقييم ميداني - إرشاد مدرسي',
+                'name' => 'نموذج تقييم المرشد/المدرب — إرشاد مدرسي',
                 'code' => 'counselor_evaluation',
                 'applies_to' => 'school_counselor',
                 'criteria' => [
-                    [
-                        'id' => 'commitment',
-                        'label' => 'الالتزام والانضباط',
-                        'description' => 'الحضور، الالتزام بالمواعيد والسياسات',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'communication_skills',
-                        'label' => 'مهارات التواصل',
-                        'description' => 'القدرة على التواصل الفعال مع الطلاب والكادر',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'observation_analysis',
-                        'label' => 'الملاحظة والتحليل',
-                        'description' => 'دقة الملاحظة وعمق التحليل للحالات',
-                        'weight' => 20,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'intervention_implementation',
-                        'label' => 'تنفيذ الأنشطة الإرشادية',
-                        'description' => 'جودة التدخلات والأنشطة الإرشادية',
-                        'weight' => 20,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'confidentiality',
-                        'label' => 'السرية والمهنية',
-                        'description' => 'الحفاظ على السرية، الالتزام بالأخلاقيات',
-                        'weight' => 10,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'case_management',
-                        'label' => 'التعامل مع الحالات',
-                        'description' => 'إدارة الحالات، المتابعة، التوثيق',
-                        'weight' => 10,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'report_quality',
-                        'label' => 'جودة التقارير الإرشادية',
-                        'description' => 'وضوح وشمول التقارير المرفوعة',
-                        'weight' => 10,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
+                    ['id' => 'guidance_plan_comprehensive', 'label' => 'وضع خطة إرشادية متكاملة', 'description' => 'شمول الخطة وملاءمتها للبرنامج والمستفيدين', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'collective_guidance_sessions', 'label' => 'تطبيق جلسات التوجيه الجمعي', 'description' => 'تصميم وتنفيذ جلسات التوجيه الجمعي', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'individual_counseling_sessions', 'label' => 'تطبيق جلسات الإرشاد الفردي', 'description' => 'مهارات الجلسة الفردية والمتابعة', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'group_counseling_sessions', 'label' => 'تطبيق جلسات الإرشاد الجماعي وإدارتها', 'description' => 'إدارة المجموعة والأنشطة الجماعية الإرشادية', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'positive_relationships', 'label' => 'بناء علاقة إرشادية إيجابية مع عناصر المدرسة', 'description' => 'التواصل المهني مع الإدارة والكادر', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'session_relationship_quality', 'label' => 'بناء علاقة ناجحة أثناء الجلسات', 'description' => 'الثقة والاحترام والحدود المهنية داخل الجلسة', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'theory_application', 'label' => 'التوظيف الصحيح للنظريات الإرشادية', 'description' => 'ربط الممارسة بالمرجع النظري', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'initiative', 'label' => 'المبادرة', 'description' => 'اقتراح وتنفيذ ما يخدم الإرشاد', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'accepting_supervision', 'label' => 'تقبل التوجيهات', 'description' => 'الاستجابة لملاحظات المشرف والتحسن', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'school_regulations', 'label' => 'الالتزام بأنظمة المدرسة', 'description' => 'السياسات والإجراءات المعتمدة', 'weight' => 7, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'counselee_problems', 'label' => 'التعامل مع مشكلات المسترشدين', 'description' => 'تحليل المشكلات والتدخل المناسب', 'weight' => 6, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'attendance_punctuality', 'label' => 'الالتزام بأوقات الحضور والمغادرة', 'description' => 'المواعيد والدوام التدريبي', 'weight' => 6, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'counseling_ethics', 'label' => 'الالتزام بأخلاقيات مهنة الإرشاد', 'description' => 'السرية والحدود والاحترام', 'weight' => 6, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'data_gathering_analysis', 'label' => 'جمع وتحليل البيانات', 'description' => 'جمع المعلومات وتحليلها لدعم القرار الإرشادي', 'weight' => 6, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'human_communication', 'label' => 'التواصل الإنساني', 'description' => 'أسلوب التواصل والتعاطف المهني', 'weight' => 6, 'scale' => [1, 2, 3, 4, 5]],
                 ],
                 'total_score' => 100,
                 'score_ranges' => [
@@ -379,69 +345,33 @@ class FieldSupervisorTemplatesSeeder extends Seeder
             ],
 
             // ═══════════════════════════════════════════════════════════
-            // Psychologist Evaluation
+            // Clinical / institution supervisor — تقييم مشرف المؤسسة
             // ═══════════════════════════════════════════════════════════
             [
-                'name' => 'تقييم ميداني - متابعة نفسية',
+                'name' => 'نموذج تقييم مشرف المؤسسة — تدريب نفسي/مؤسسي',
                 'code' => 'psychologist_evaluation',
                 'applies_to' => 'psychologist',
                 'criteria' => [
-                    [
-                        'id' => 'commitment',
-                        'label' => 'الالتزام والانضباط',
-                        'description' => 'الحضور، الالتزام بالمواعيد والسياسات',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'professional_ethics',
-                        'label' => 'المهنية والأخلاقيات',
-                        'description' => 'الالتزام بأخلاقيات المهنة، السرية',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'documentation',
-                        'label' => 'جودة التوثيق',
-                        'description' => 'دقة وشمول التوثيق والتقارير',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'case_understanding',
-                        'label' => 'فهم الحالة',
-                        'description' => 'عمق الفهم، التشخيص، التحليل',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'tools_usage',
-                        'label' => 'استخدام الأدوات والأساليب',
-                        'description' => 'اختيار واستخدام الأدوات المناسبة',
-                        'weight' => 15,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'communication',
-                        'label' => 'مهارات التواصل المهني',
-                        'description' => 'التواصل الفعال مع الحالات والفريق',
-                        'weight' => 10,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'report_quality',
-                        'label' => 'جودة التقارير النفسية',
-                        'description' => 'الوضوح، الدقة، الاستنتاجات المنطقية',
-                        'weight' => 10,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
-                    [
-                        'id' => 'guidelines_compliance',
-                        'label' => 'الالتزام بالتوجيهات',
-                        'description' => 'الالتزام بالبروتوكولات والإشراف',
-                        'weight' => 5,
-                        'scale' => [1, 2, 3, 4, 5],
-                    ],
+                    ['id' => 'task_planning', 'label' => 'بناء خطة لتنفيذ المهام المطلوبة بطريقة سليمة', 'description' => 'تنظيم المهام والأولويات', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'task_execution_portfolio', 'label' => 'تنفيذ المهمات وتوثيقها في ملف الإنجاز', 'description' => 'الإنجاز والتوثيق في الملف', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'supervisor_feedback_use', 'label' => 'الاستفادة من ملاحظات مشرف المؤسسة', 'description' => 'تطبيق التوجيهات والتحسن', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'info_gathering_diagnosis', 'label' => 'استخدام أدوات جمع المعلومات في التشخيص', 'description' => 'المقابلات والملاحظة والأدوات المساندة', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'intervention_methods', 'label' => 'استخدام أساليب التدخل المناسبة', 'description' => 'ملاءمة التدخل للحالة والإطار المؤسسي', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'counseling_skills_application', 'label' => 'تطبيق مهارات الإرشاد بشكل مناسب', 'description' => 'مهارات الجلسة والمتابعة', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'session_communication_language', 'label' => 'استخدام لغة تواصل مناسبة أثناء الجلسات', 'description' => 'الوضوح والاحترام والتعديل حسب الحالة', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'constructive_criticism', 'label' => 'تقبل النقد البناء', 'description' => 'الاستجابة للملاحظات دون دفاعية', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'professional_ethics', 'label' => 'الالتزام بأخلاقيات ممارسة المهنة', 'description' => 'السرية والحدود والاحترام', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'training_punctuality', 'label' => 'الالتزام بمواعيد التدريب والحضور والمغادرة', 'description' => 'الانضباط الزمني', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'session_documentation', 'label' => 'التوثيق المهني للجلسات', 'description' => 'Progress notes والسجلات المطلوبة', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'initiative', 'label' => 'المبادرة', 'description' => 'المبادرة دون انتظار تكليف دائم', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'theory_practice_link', 'label' => 'الربط بين النظري والعملي', 'description' => 'تطبيق المعرفة الأكاديمية ميدانيًا', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'multi_source_information', 'label' => 'جمع المعلومات من مصادر متعددة', 'description' => 'تكامل مصادر البيانات', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'responsibility', 'label' => 'تحمل المسؤولية', 'description' => 'المسؤولية عن المهام والمتابعة', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'institutional_goals_alignment', 'label' => 'العمل ضمن أهداف المؤسسة', 'description' => 'دعم أهداف الجهة التدريبية', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'tests_measures_use', 'label' => 'استخدام الاختبارات والمقاييس عند الحاجة', 'description' => 'الاختيار والتفسير المهني', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'psychological_report_writing', 'label' => 'كتابة التقارير النفسية', 'description' => 'الوضوح والدقة والاستنتاج', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'team_professional_relationship', 'label' => 'بناء علاقة مهنية مع طاقم العمل', 'description' => 'التعاون والاحترام المهني', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
+                    ['id' => 'institution_rules_compliance', 'label' => 'الالتزام بأنظمة المؤسسة', 'description' => 'البروتوكولات والسياسات الداخلية', 'weight' => 5, 'scale' => [1, 2, 3, 4, 5]],
                 ],
                 'total_score' => 100,
                 'score_ranges' => [
@@ -456,9 +386,9 @@ class FieldSupervisorTemplatesSeeder extends Seeder
         ];
 
         foreach ($templates as $template) {
-            FieldEvaluationTemplate::firstOrCreate(
+            FieldEvaluationTemplate::updateOrCreate(
                 ['code' => $template['code']],
-                $template
+                array_merge($template, ['is_active' => true])
             );
         }
     }

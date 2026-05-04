@@ -259,6 +259,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Attendance
         Route::get('/students/{studentId}/attendance', [FieldSupervisorController::class, 'studentAttendance']);
         Route::post('/attendance', [FieldSupervisorController::class, 'recordAttendance']);
+        Route::patch('/attendance/{attendance}', [FieldSupervisorController::class, 'updateAttendance']);
+        Route::patch('/attendance/{attendance}/supervisor', [FieldSupervisorController::class, 'patchAttendanceSupervisor']);
+
+        Route::get('/forms-workboard', [FieldSupervisorController::class, 'formsWorkboard']);
         
         // Daily Reports
         Route::get('/report-templates', [FieldSupervisorController::class, 'getReportTemplates']);

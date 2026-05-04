@@ -17,6 +17,7 @@ class FormInstanceResource extends JsonResource
             'subject_user_id' => $this->subject_user_id,
             'owner_type' => $this->owner_type,
             'status' => $this->status,
+            'current_reviewer_id' => $this->current_reviewer_id,
             'status_label' => $this->statusLabel(),
             'payload' => $this->payload ?? [],
             'visibility_roles' => $this->visibility_roles ?? [],

@@ -37,7 +37,12 @@ class AttendanceController extends Controller
             $query->whereDate('date', '<=', $request->date_to);
         }
 
-        if (in_array($request->user()->role?->name, ['teacher', 'adviser', 'psychologist', 'field_supervisor'], true)) {
+        if ($request->user()->role?->name === 'field_supervisor') {
+            $query->whereHas('trainingAssignment', function ($q) use ($request) {
+                $uid = $request->user()->id;
+                $q->where('teacher_id', $uid)->orWhere('field_supervisor_id', $uid);
+            });
+        } elseif (in_array($request->user()->role?->name, ['teacher', 'adviser', 'psychologist'], true)) {
             $query->whereHas('trainingAssignment', function ($q) use ($request) {
                 $q->where('teacher_id', $request->user()->id);
             });

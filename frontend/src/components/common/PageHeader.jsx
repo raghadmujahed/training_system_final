@@ -1,7 +1,7 @@
-export default function PageHeader({ title, subtitle, icon: Icon }) {
+export default function PageHeader({ title, subtitle, icon: Icon, background }) {
   return (
     <div style={{
-      background: "var(--primary)",
+      background: background || "var(--primary)",
       borderRadius: 14,
       padding: "1.25rem 1.5rem",
       color: "#fff",

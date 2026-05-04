@@ -1,268 +1,273 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
 import {
   useFieldSupervisorStudent,
   useSubtypeLabels,
 } from "../../hooks/useFieldSupervisorApi";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PageHeader from "../../components/common/PageHeader";
 import {
-  ArrowRight,
   User,
-  Calendar,
-  MapPin,
   CheckCircle,
   FileText,
   Star,
   MessageCircle,
   Activity,
-  Clock,
+  FileStack,
 } from "lucide-react";
+import { ymdLocal } from "../../utils/fieldSupervisorQueues";
 
-// Import Tab Components
 import OverviewTab from "./tabs/OverviewTab";
 import AttendanceTab from "./tabs/AttendanceTab";
 import DailyReportsTab from "./tabs/DailyReportsTab";
 import EvaluationTab from "./tabs/EvaluationTab";
+import StudentFormsTab from "./tabs/StudentFormsTab";
 import CommunicationTab from "./tabs/CommunicationTab";
 import TimelineTab from "./tabs/TimelineTab";
 
-/**
- * صفحة تفاصيل الطالب للمشرف الميداني
- * تحتوي على 6 تبويبات
- */
+const VALID_TABS = [
+  "overview",
+  "attendance",
+  "daily-reports",
+  "evaluation",
+  "forms",
+  "communication",
+  "timeline",
+];
+
+const TAB_ROWS = [
+  { id: "overview", label: "نظرة عامة", icon: User },
+  { id: "attendance", label: "الحضور والغياب", icon: CheckCircle },
+  { id: "daily-reports", labelKey: "dailyReport", icon: FileText },
+  { id: "evaluation", labelKey: "evaluation", icon: Star },
+  { id: "forms", label: "النماذج والتقارير", icon: FileStack },
+  { id: "communication", label: "الملاحظات والرسائل", icon: MessageCircle },
+  { id: "timeline", label: "السجل الزمني", icon: Activity },
+];
+
 export default function StudentDetail() {
   const { studentId } = useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(
+    tabFromUrl && VALID_TABS.includes(tabFromUrl) ? tabFromUrl : "overview"
+  );
 
   const { student, loading, error, refresh } = useFieldSupervisorStudent(studentId);
   const supervisorType = student?.supervisor_type || "mentor_teacher";
   const labels = useSubtypeLabels(supervisorType);
 
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && VALID_TABS.includes(t)) {
+      setActiveTab(t);
+    }
+  }, [searchParams]);
+
+  const onTabChange = (value) => {
+    setActiveTab(value);
+    const next = new URLSearchParams(searchParams);
+    if (value === "overview") {
+      next.delete("tab");
+    } else {
+      next.set("tab", value);
+    }
+    setSearchParams(next, { replace: true });
+  };
+
   if (loading) {
-    return <StudentDetailSkeleton />;
+    return (
+      <>
+        <PageHeader title="ملف الطالب" subtitle="جاري تحميل البيانات..." />
+        <div className="section-card fs-panel-loading" aria-busy="true">
+          جاري التحميل…
+        </div>
+      </>
+    );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <Card className="border-red-200">
-          <CardContent className="p-6">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-red-600 mb-2">حدث خطأ</h2>
-              <p className="text-gray-600">{error}</p>
-              <Button onClick={refresh} className="mt-4">
-                إعادة المحاولة
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <PageHeader title="ملف الطالب" subtitle="تعذر تحميل البيانات" />
+        <div className="section-card fs-panel-error">
+          <p className="text-danger mb-0">{error}</p>
+          <button type="button" className="btn-primary-custom btn-sm-custom fs-forms-retry" onClick={refresh}>
+            إعادة المحاولة
+          </button>
+        </div>
+      </>
     );
   }
 
   if (!student) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <User className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">الطالب غير موجود</p>
-            <Button onClick={() => navigate("/field-supervisor")} className="mt-4">
-              العودة للقائمة
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <PageHeader title="ملف الطالب" />
+        <div className="section-card text-center">
+          <p className="text-soft">الطالب غير موجود</p>
+          <button type="button" className="btn-outline-custom fs-forms-retry" onClick={() => navigate("/field-supervisor/students")}>
+            العودة لقائمة الطلبة
+          </button>
+        </div>
+      </>
     );
   }
 
   const studentData = student?.student || student;
+  const attendance = student?.attendance || {};
+  const evaluation = student?.evaluation || {};
+  const requiredHours = attendance.required_training_hours ?? 0;
+  const todayYmd = ymdLocal();
+  const lastReport = student?.last_report;
+  const todayReportSummary =
+    lastReport && lastReport.date === todayYmd
+      ? lastReport.status_label || lastReport.status || "—"
+      : "لا يوجد تقرير لليوم";
+  const attendanceTodayLabel =
+    student?.last_attendance === todayYmd ? "حضور اليوم: مسجّل" : "حضور اليوم: غير مسجّل";
+
+  const evaluationSummary = (() => {
+    if (!evaluation || Object.keys(evaluation).length === 0) {
+      return "لم يبدأ";
+    }
+    if (evaluation.is_final || evaluation.status === "submitted" || evaluation.status === "reviewed") {
+      const parts = [evaluation.status_label || "مُكتمل"];
+      if (evaluation.total_score != null) {
+        parts.push(`${evaluation.total_score}`);
+      }
+      if (evaluation.grade_label) {
+        parts.push(`(${evaluation.grade_label})`);
+      }
+      return parts.filter(Boolean).join(" ");
+    }
+    return evaluation.status_label || evaluation.status || "—";
+  })();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/field-supervisor")}
-          className="mb-4"
+    <>
+      <div className="fs-back-row">
+        <button
+          type="button"
+          className="btn-outline-custom btn-sm-custom"
+          onClick={() => navigate("/field-supervisor/students")}
         >
-          <ArrowRight className="w-4 h-4 ml-2" />
-          العودة للقائمة
-        </Button>
+          ← العودة لقائمة الطلبة
+        </button>
+      </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-              <User className="w-8 h-8 text-blue-600" />
-            </div>
+      <PageHeader
+        icon={User}
+        title={studentData.name || "ملف الطالب"}
+        subtitle={
+          <>
+            <span className="text-soft">
+              {studentData.university_id} — {studentData.specialization || "—"}
+              {studentData.department ? ` — ${studentData.department}` : ""}
+            </span>
+            {studentData.section && (
+              <span className="badge-custom badge-primary" style={{ marginInlineStart: 8 }}>
+                {studentData.section}
+              </span>
+            )}
+            {studentData.training_type && (
+              <span className="badge-custom badge-info" style={{ marginInlineStart: 8 }}>
+                {studentData.training_type}
+              </span>
+            )}
+          </>
+        }
+      />
+
+      <div className="section-card fs-student-header-summary" style={{ marginBottom: "1rem" }}>
+        <div className="fs-student-header-summary__grid">
+          <div>
+            <span className="text-soft fs-forms-meta">جهة التدريب</span>
+            <div className="fw-bold">{studentData.training_site || "—"}</div>
+          </div>
+          <div>
+            <span className="text-soft fs-forms-meta">نوع المشرف الميداني</span>
+            <div className="fw-bold">{student?.supervisor_type_label || "—"}</div>
+          </div>
+          <div>
+            <span className="text-soft fs-forms-meta">حالة الحضور اليوم</span>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{studentData.name}</h1>
-              <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-600">
-                <span>{studentData.university_id}</span>
-                <span>•</span>
-                <span>{studentData.specialization || "—"}</span>
-                <Badge variant="outline" className="text-xs">
-                  {studentData.section || "—"}
-                </Badge>
+              <span className={`badge-custom ${student?.last_attendance === todayYmd ? "badge-success" : "badge-warning"}`}>
+                {attendanceTodayLabel}
+              </span>
+            </div>
+          </div>
+          <div>
+            <span className="text-soft fs-forms-meta">تقرير اليوم</span>
+            <div>
+              <span className="badge-custom badge-info">{todayReportSummary}</span>
+            </div>
+          </div>
+          <div>
+            <span className="text-soft fs-forms-meta">التقييم الميداني</span>
+            <div className="fw-bold">{evaluationSummary}</div>
+          </div>
+          <div>
+            <span className="text-soft fs-forms-meta">نسبة الحضور (أيام مسجّلة)</span>
+            <div className="fw-bold">{attendance.attendance_rate ?? 0}%</div>
+          </div>
+          <div>
+            <span className="text-soft fs-forms-meta">تاريخ بدء التدريب</span>
+            <div className="fw-bold">{studentData.training_start || "—"}</div>
+          </div>
+          {student?.last_attendance ? (
+            <div>
+              <span className="text-soft fs-forms-meta">آخر يوم حضور مسجّل</span>
+              <div className="fw-bold">{student.last_attendance}</div>
+            </div>
+          ) : null}
+          {requiredHours > 0 ? (
+            <div>
+              <span className="text-soft fs-forms-meta">الساعات (منجز / مطلوب)</span>
+              <div className="fw-bold">
+                {attendance.completed_training_hours ?? 0} / {requiredHours}
+                {attendance.remaining_training_hours != null ? (
+                  <span className="text-soft fs-forms-meta" style={{ marginInlineStart: 6 }}>
+                    (متبقي {attendance.remaining_training_hours})
+                  </span>
+                ) : null}
               </div>
             </div>
-          </div>
+          ) : null}
+        </div>
+      </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Badge
-              className={
-                student?.health_status === "healthy"
-                  ? "bg-green-100 text-green-800"
-                  : student?.health_status === "warning"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-red-100 text-red-800"
-              }
+      <div className="tabs">
+        {TAB_ROWS.map((row) => {
+          const label = row.labelKey ? labels[row.labelKey] : row.label;
+          const Icon = row.icon;
+          return (
+            <button
+              key={row.id}
+              type="button"
+              className={activeTab === row.id ? "tab-active" : "tab"}
+              onClick={() => onTabChange(row.id)}
             >
-              {student?.health_status === "healthy"
-                ? "حالة ممتازة"
-                : student?.health_status === "warning"
-                ? "تحت المتابعة"
-                : "يتطلب تدخل"}
-            </Badge>
-          </div>
-        </div>
+              <span className="fs-tab-label">
+                <Icon size={16} aria-hidden />
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Quick Info Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-white">
-          <CardContent className="p-4 flex items-center gap-3">
-            <MapPin className="w-5 h-5 text-blue-500" />
-            <div>
-              <p className="text-xs text-gray-500">جهة التدريب</p>
-              <p className="text-sm font-medium">{studentData.training_site || "—"}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Calendar className="w-5 h-5 text-green-500" />
-            <div>
-              <p className="text-xs text-gray-500">تاريخ البدء</p>
-              <p className="text-sm font-medium">{studentData.training_start || "—"}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white">
-          <CardContent className="p-4 flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-purple-500" />
-            <div>
-              <p className="text-xs text-gray-500">نسبة الحضور</p>
-              <p className="text-sm font-medium">
-                {student?.attendance?.attendance_rate || 0}%
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Star className="w-5 h-5 text-yellow-500" />
-            <div>
-              <p className="text-xs text-gray-500">حالة التقييم</p>
-              <p className="text-sm font-medium">
-                {student?.evaluation?.status_label || "لم يبدأ"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <div style={{ marginTop: 8 }}>
+        {activeTab === "overview" && <OverviewTab studentId={studentId} labels={labels} />}
+        {activeTab === "attendance" && <AttendanceTab studentId={studentId} />}
+        {activeTab === "daily-reports" && <DailyReportsTab studentId={studentId} />}
+        {activeTab === "evaluation" && <EvaluationTab studentId={studentId} labels={labels} />}
+        {activeTab === "forms" && (
+          <StudentFormsTab studentId={studentId} studentName={studentData.name} />
+        )}
+        {activeTab === "communication" && <CommunicationTab studentId={studentId} />}
+        {activeTab === "timeline" && <TimelineTab studentId={studentId} />}
       </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start bg-white mb-4 flex-wrap h-auto">
-          <TabsTrigger value="overview" className="gap-2">
-            <User className="w-4 h-4" />
-            نظرة عامة
-          </TabsTrigger>
-          <TabsTrigger value="attendance" className="gap-2">
-            <CheckCircle className="w-4 h-4" />
-            الحضور
-          </TabsTrigger>
-          <TabsTrigger value="daily-reports" className="gap-2">
-            <FileText className="w-4 h-4" />
-            {labels.dailyReport}
-          </TabsTrigger>
-          <TabsTrigger value="evaluation" className="gap-2">
-            <Star className="w-4 h-4" />
-            {labels.evaluation}
-          </TabsTrigger>
-          <TabsTrigger value="communication" className="gap-2">
-            <MessageCircle className="w-4 h-4" />
-            التواصل
-          </TabsTrigger>
-          <TabsTrigger value="timeline" className="gap-2">
-            <Activity className="w-4 h-4" />
-            سجل النشاط
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-0">
-          <OverviewTab studentId={studentId} labels={labels} />
-        </TabsContent>
-
-        <TabsContent value="attendance" className="mt-0">
-          <AttendanceTab studentId={studentId} />
-        </TabsContent>
-
-        <TabsContent value="daily-reports" className="mt-0">
-          <DailyReportsTab studentId={studentId} labels={labels} />
-        </TabsContent>
-
-        <TabsContent value="evaluation" className="mt-0">
-          <EvaluationTab studentId={studentId} labels={labels} />
-        </TabsContent>
-
-        <TabsContent value="communication" className="mt-0">
-          <CommunicationTab studentId={studentId} />
-        </TabsContent>
-
-        <TabsContent value="timeline" className="mt-0">
-          <TimelineTab studentId={studentId} />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Skeleton Loading
-// ═══════════════════════════════════════════════════════════════════════════
-function StudentDetailSkeleton() {
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <Skeleton className="h-10 w-32 mb-4" />
-
-      <div className="flex items-center gap-4 mb-6">
-        <Skeleton className="w-16 h-16 rounded-full" />
-        <div>
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton key={i} className="h-20" />
-        ))}
-      </div>
-
-      <Skeleton className="h-12 w-full mb-4" />
-      <Skeleton className="h-96 w-full" />
-    </div>
+    </>
   );
 }

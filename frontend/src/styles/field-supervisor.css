@@ -1,0 +1,777 @@
+/**
+ * واجهة المشرف الميداني — بطاقات إحصاء، شريط فلاتر، جدول طلبة
+ * يعتمد على tokens في global.css
+ */
+
+/* ——— لوحة الطلبة ——— */
+.fs-students-panel.section-card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-paper);
+  padding: 1.35rem 1.5rem;
+}
+
+.fs-panel-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.fs-panel-hint {
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+/* ——— جدول داخل إطار ——— */
+.fs-table-shell {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--white);
+}
+
+.fs-table-shell .table-wrapper {
+  margin: 0;
+}
+
+.fs-table-shell .data-table {
+  width: 100%;
+  margin: 0;
+}
+
+.fs-table-shell .data-table thead th {
+  background: linear-gradient(180deg, #eef2f7 0%, #e4eaf2 100%);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 2px solid var(--border-strong);
+  white-space: nowrap;
+}
+
+.fs-table-shell .data-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.fs-table-shell .data-table tbody tr:hover {
+  background: rgba(20, 42, 66, 0.04);
+}
+
+.fs-table-shell .data-table tbody td {
+  padding: 0.95rem 1rem;
+  vertical-align: middle;
+  font-size: 0.88rem;
+}
+
+.fs-table-shell .data-table tbody tr:not(:last-child) td {
+  border-bottom: 1px solid rgba(213, 221, 232, 0.75);
+}
+
+.fs-student-name {
+  display: block;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.fs-student-meta {
+  font-size: 0.82rem;
+  color: var(--text-faint);
+  margin-top: 0.2rem;
+}
+
+.fs-badge-track {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.35rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(20, 42, 66, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(20, 42, 66, 0.12);
+}
+
+.fs-table-shell .badge-custom {
+  font-weight: 700;
+  padding: 0.28rem 0.55rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+}
+
+.fs-open-profile-btn {
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+
+/* ——— حالات تحميل / خطأ ——— */
+.fs-panel-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 2.75rem 1.5rem;
+  color: var(--text-soft);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.fs-panel-error {
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(163, 52, 66, 0.35);
+  background: rgba(163, 52, 66, 0.06);
+  padding: 1.1rem 1.25rem;
+}
+
+/* ——— شبكة بطاقات الإحصاء (الرئيسية) ——— */
+.fs-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.fs-stat-card {
+  --fs-stat-accent: var(--accent);
+  position: relative;
+  padding: 1.2rem 1.25rem 1.3rem;
+  text-align: center;
+  border-radius: var(--radius-md);
+  background: var(--bg-paper);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.fs-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--fs-stat-accent);
+}
+
+.fs-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.fs-stat-card__value {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--fs-stat-accent);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.fs-stat-card__label {
+  margin: 0.55rem 0 0;
+  font-size: 0.84rem;
+  color: var(--text-soft);
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.fs-dash-alert {
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(163, 52, 66, 0.35);
+  background: rgba(163, 52, 66, 0.06);
+  padding: 1rem 1.2rem;
+}
+
+/* ——— ملف الطالب (بطاقات ملخص) ——— */
+.fs-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.35rem;
+}
+
+.fs-detail-tile.section-card {
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-paper);
+  box-shadow: var(--shadow-sm);
+}
+
+.fs-detail-tile .text-soft {
+  font-size: 0.82rem;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+}
+
+.fs-back-row {
+  margin-bottom: 1rem;
+}
+
+.fs-back-row .btn-outline-custom {
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+}
+
+/* ——— صفحة النماذج والتقارير (FieldSupervisorFormsPage) ——— */
+.fs-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.fs-student-header-summary {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-paper);
+  box-shadow: var(--shadow-sm);
+}
+
+.fs-student-header-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 1rem 1.35rem;
+}
+
+.fs-forms-page-alert {
+  margin-bottom: 1rem;
+}
+
+.fs-info-callout .fs-panel-hint {
+  margin-bottom: 0;
+}
+
+.fs-info-callout {
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid var(--primary);
+  background: var(--bg-paper);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem 1.2rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.fs-info-callout strong {
+  color: var(--primary);
+}
+
+.fs-forms-card-title {
+  margin: 0 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.fs-forms-section-title {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.fs-forms-section-title--first {
+  margin-top: 0.75rem;
+}
+
+.fs-forms-section-title--spaced {
+  margin-top: 1.5rem;
+}
+
+.fs-forms-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.fs-forms-list:last-child {
+  margin-bottom: 0;
+}
+
+.fs-forms-list--tight-top {
+  margin-top: 0.5rem;
+}
+
+.fs-forms-retry {
+  margin-top: 0.75rem;
+}
+
+.fs-forms-desc {
+  margin: 0.35rem 0 0;
+}
+
+.fs-forms-row--top {
+  align-items: flex-start;
+}
+
+.fs-forms-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.fs-forms-row:last-child {
+  border-bottom: none;
+}
+
+.fs-forms-meta {
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.fs-forms-inline-meta {
+  margin-inline-start: 0.5rem;
+}
+
+.fs-dash-alert--warning {
+  border-color: rgba(180, 83, 9, 0.28);
+  background: rgba(251, 191, 36, 0.09);
+}
+
+.fs-dash-alert--warning .fs-dash-alert__text {
+  margin: 0;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* بطاقات إجراءات — تبويب «أعبئها أنا» */
+.fs-forms-action-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.35rem;
+}
+
+.fs-forms-action-card {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 1.1rem 1.35rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.fs-forms-action-card::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+}
+
+.fs-forms-action-card--evaluation::before {
+  background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 100%);
+}
+
+.fs-forms-action-card--attendance::before {
+  background: linear-gradient(180deg, #0d9488 0%, #0f766e 100%);
+}
+
+.fs-forms-action-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.fs-forms-action-card__text {
+  flex: 1;
+  min-width: min(100%, 14rem);
+}
+
+.fs-forms-action-card__title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+  line-height: 1.35;
+}
+
+.fs-forms-action-card__hint {
+  margin: 0.45rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-soft);
+}
+
+.fs-forms-action-card__cta {
+  flex-shrink: 0;
+}
+
+/* قسم القوالب كمرجع (التعبئة من الطالب) */
+.fs-forms-ref-block {
+  margin-top: 0.35rem;
+  padding: 0.85rem 1rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px dashed rgba(20, 42, 66, 0.2);
+  background: rgba(20, 42, 66, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.fs-forms-ref-block .fs-forms-list {
+  margin: 0;
+}
+
+.fs-forms-ref-item {
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(213, 221, 232, 0.75);
+}
+
+.fs-forms-ref-item:first-child {
+  padding-top: 0.15rem;
+}
+
+.fs-forms-ref-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.fs-forms-ref-item__name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.fs-forms-ref-item__desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-soft);
+}
+
+/* ——— صفحات مهام المشرف الميداني (ليست قائمة الطلبة العامة) ——— */
+.fs-students-list-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.fs-students-list-banner__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  background: rgba(20, 42, 66, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(20, 42, 66, 0.12);
+}
+
+.fs-task-queue {
+  position: relative;
+  padding: 1.35rem 1.4rem 1.15rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #f4f7fb 0%, #ffffff 55%);
+  box-shadow: var(--shadow-md);
+  border-inline-start: 6px solid var(--primary);
+}
+
+.fs-task-queue--mode-attendance {
+  border-inline-start-color: #0f766e;
+}
+
+.fs-task-queue--mode-daily-reports {
+  border-inline-start-color: #1d4ed8;
+}
+
+.fs-task-queue--mode-evaluation {
+  border-inline-start-color: #6d28d9;
+}
+
+.fs-task-queue--mode-communication {
+  border-inline-start-color: #ca8a04;
+}
+
+.fs-task-queue--loading {
+  border-inline-start-color: var(--primary);
+}
+
+.fs-task-queue__ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(20, 42, 66, 0.07);
+  border: 1px solid rgba(20, 42, 66, 0.12);
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  margin-bottom: 0.85rem;
+}
+
+.fs-task-queue--mode-attendance .fs-task-queue__ribbon {
+  color: #0f766e;
+  background: rgba(13, 148, 136, 0.1);
+  border-color: rgba(13, 148, 136, 0.22);
+}
+
+.fs-task-queue--mode-daily-reports .fs-task-queue__ribbon {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.fs-task-queue--mode-evaluation .fs-task-queue__ribbon {
+  color: #6d28d9;
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.22);
+}
+
+.fs-task-queue--mode-communication .fs-task-queue__ribbon {
+  color: #92400e;
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(202, 138, 4, 0.28);
+}
+
+.fs-task-queue__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.22rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -0.02em;
+}
+
+.fs-task-queue__hint {
+  margin: 0 0 1.1rem;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+.fs-task-queue__table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.fs-task-queue__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.fs-task-queue__table thead th {
+  background: linear-gradient(180deg, #e4eaf2 0%, #d6e0ec 100%);
+  color: var(--primary);
+  font-weight: 800;
+  padding: 0.78rem 0.9rem;
+  text-align: right;
+  border-bottom: 2px solid rgba(20, 42, 66, 0.12);
+  white-space: nowrap;
+}
+
+.fs-task-queue__table tbody td {
+  padding: 0.9rem 0.9rem;
+  border-bottom: 1px solid rgba(213, 221, 232, 0.85);
+  vertical-align: top;
+}
+
+.fs-task-queue__table tbody tr:hover {
+  background: rgba(20, 42, 66, 0.035);
+}
+
+.fs-task-queue__name {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.fs-task-queue__meta {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin-top: 0.15rem;
+}
+
+.fs-task-queue__cell-strong {
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.fs-task-queue__reason {
+  line-height: 1.55;
+  color: var(--text);
+  max-width: 32rem;
+}
+
+.fs-task-queue__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: flex-start;
+}
+
+.fs-task-queue__foot-note {
+  margin: 1rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.fs-task-queue__footer-actions {
+  margin-top: 1rem;
+}
+
+.fs-queue-pill {
+  display: inline-flex;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.fs-queue-pill--high {
+  background: rgba(163, 52, 66, 0.11);
+  color: #9b2c3a;
+  border: 1px solid rgba(163, 52, 66, 0.28);
+}
+
+.fs-queue-pill--med {
+  background: rgba(37, 99, 235, 0.09);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+/* ——— بطاقة المرجع التنظيمي للمشرف الميداني ——— */
+.fs-ref-card {
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 100%);
+  box-shadow: var(--shadow-sm);
+  border-inline-start: 4px solid var(--primary);
+}
+
+.fs-ref-card--compact {
+  padding: 1rem 1.15rem;
+}
+
+.fs-ref-card:not(.fs-ref-card--compact) {
+  padding: 1.15rem 1.25rem 1.1rem;
+}
+
+.fs-ref-card__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  color: var(--primary);
+}
+
+.fs-ref-card__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.fs-ref-card__track {
+  font-size: 1.02rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.fs-ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.fs-ref-grid--triple {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+}
+
+.fs-ref-list ul {
+  margin: 0.35rem 0 0;
+  padding-inline-start: 1.15rem;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.fs-ref-list__title {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.fs-ref-list--fill .fs-ref-list__title {
+  color: #0f766e;
+}
+
+.fs-ref-list--review .fs-ref-list__title {
+  color: #1d4ed8;
+}
+
+.fs-ref-list--ui .fs-ref-list__title,
+.fs-ref-list--effect .fs-ref-list__title,
+.fs-ref-list--where .fs-ref-list__title {
+  color: var(--primary);
+}
+
+.fs-ref-card__forbidden {
+  margin: 0.85rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: rgba(163, 52, 66, 0.06);
+  border: 1px solid rgba(163, 52, 66, 0.2);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #7a2630;
+}
+
+.fs-eval-ref-note {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(20, 42, 66, 0.12);
+  background: rgba(20, 42, 66, 0.04);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text);
+}

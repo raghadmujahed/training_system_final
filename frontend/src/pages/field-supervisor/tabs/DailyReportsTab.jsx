@@ -1,16 +1,5 @@
 import { useState } from "react";
-import {
-  useStudentDailyReports,
-  useDailyReport,
-} from "../../../hooks/useFieldSupervisorApi";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useStudentDailyReports, useDailyReport } from "../../../hooks/useFieldSupervisorApi";
 import {
   FileText,
   CheckCircle,
@@ -24,367 +13,333 @@ import {
   RotateCcw,
 } from "lucide-react";
 
-/**
- * تبويب التقارير اليومية مع دعم النماذج الديناميكية
- */
+function reportStatusBadge(status) {
+  if (status === "confirmed") return "badge-success";
+  if (status === "returned") return "badge-danger";
+  if (status === "submitted") return "badge-info";
+  return "badge-primary";
+}
+
 export default function DailyReportsTab({ studentId }) {
   const { reports, loading, error, refresh } = useStudentDailyReports(studentId);
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewComment, setReviewComment] = useState("");
-  const [reviewAction, setReviewAction] = useState(null); // 'confirm' or 'return'
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const { confirm, returnForEdit } = useDailyReport(selectedReportId);
+  const list = Array.isArray(reports) ? reports : [];
+  const pendingReports = list.filter((r) => r.status === "submitted" || r.status === "under_review");
 
-  const handleReview = async () => {
-    if (!selectedReportId || !reviewAction) return;
+  const closeDialog = () => {
+    setShowReviewDialog(false);
+    setReviewComment("");
+    setSelectedReportId(null);
+  };
 
-    setProcessing(true);
-    try {
-      if (reviewAction === "confirm") {
-        await confirm(reviewComment);
-      } else {
-        await returnForEdit(reviewComment);
-      }
-
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-      setShowReviewDialog(false);
-      setReviewComment("");
-      refresh();
-    } catch {
-      // Error handled
-    } finally {
-      setProcessing(false);
-    }
+  const onReviewSuccess = () => {
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+    refresh();
+    closeDialog();
   };
 
   if (loading) {
-    return <DailyReportsSkeleton />;
+    return <div className="section-card">جاري التحميل...</div>;
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
+        <p style={{ margin: 0 }}>{error}</p>
+      </div>
     );
   }
 
-  const pendingReports = reports.filter(
-    (r) => r.status === "submitted" || r.status === "under_review"
-  );
-
   return (
-    <div className="space-y-6">
-      {/* التقارير قيد المراجعة */}
+    <div>
       {pendingReports.length > 0 && (
-        <Card className="border-yellow-200 bg-yellow-50/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5 text-yellow-600" />
-              تقارير بحاجة للمراجعة ({pendingReports.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {pendingReports.map((report) => (
-                <div
-                  key={report.id}
-                  className="flex items-center justify-between p-3 bg-white rounded-lg border border-yellow-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                      <FileText className="w-5 h-5 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{report.template_name}</p>
-                      <p className="text-sm text-gray-500">
-                        <Calendar className="w-3 h-3 inline ml-1" />
-                        {report.date}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedReportId(report.id);
-                      setShowReviewDialog(true);
-                    }}
-                  >
-                    <Eye className="w-4 h-4 ml-1" />
-                    مراجعة
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* جميع التقارير */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-500" />
-            سجل التقارير اليومية
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {success && (
-            <Alert className="mb-4 bg-green-50 border-green-200">
-              <Check className="w-4 h-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                تمت العملية بنجاح
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {reports.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">لا يوجد تقارير مسجلة</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {reports.map((report) => (
-                <div
-                  key={report.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        report.status === "confirmed"
-                          ? "bg-green-100"
-                          : report.status === "returned"
-                          ? "bg-red-100"
-                          : report.status === "submitted"
-                          ? "bg-blue-100"
-                          : "bg-gray-100"
-                      }`}
-                    >
-                      {report.status === "confirmed" ? (
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      ) : report.status === "returned" ? (
-                        <RotateCcw className="w-6 h-6 text-red-600" />
-                      ) : report.status === "submitted" ? (
-                        <Clock className="w-6 h-6 text-blue-600" />
-                      ) : (
-                        <FileText className="w-6 h-6 text-gray-600" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium">{report.template_name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-gray-500">{report.date}</span>
-                        <Badge
-                          className={
-                            report.status === "confirmed"
-                              ? "bg-green-100 text-green-800"
-                              : report.status === "returned"
-                              ? "bg-red-100 text-red-800"
-                              : report.status === "submitted"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                          }
-                        >
-                          {report.status_label}
-                        </Badge>
-                        {report.has_attachments && (
-                          <Paperclip className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    variant={report.can_review ? "default" : "outline"}
-                    onClick={() => {
-                      setSelectedReportId(report.id);
-                      setShowReviewDialog(true);
-                    }}
-                  >
-                    <Eye className="w-4 h-4 ml-1" />
-                    عرض
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* نافذة المراجعة */}
-      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>مراجعة التقرير اليومي</DialogTitle>
-          </DialogHeader>
-
-          <ReportReview
-            reportId={selectedReportId}
-            onConfirm={() => {
-              setReviewAction("confirm");
-              handleReview();
-            }}
-            onReturn={() => {
-              setReviewAction("return");
-              handleReview();
-            }}
-            comment={reviewComment}
-            setComment={setReviewComment}
-            processing={processing}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
-
-/**
- * مكون مراجعة التقرير مع النموذج الديناميكي
- */
-function ReportReview({ reportId, onConfirm, onReturn, comment, setComment, processing }) {
-  const { report, loading } = useDailyReport(reportId);
-
-  if (loading || !report) {
-    return <Skeleton className="h-64 w-full" />;
-  }
-
-  const template = report.template || {};
-  const fields = template.fields || [];
-  const content = report.content || {};
-
-  const canReview = report.can_confirm || report.can_return;
-
-  return (
-    <div className="space-y-6">
-      {/* معلومات التقرير */}
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Calendar className="w-4 h-4 text-gray-500" />
-          <span className="text-sm font-medium">التاريخ:</span>
-          <span>{report.date}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className={`bg-${report.status_color}-100 text-${report.status_color}-800`}>
-            {report.status_label}
-          </Badge>
-          {report.reviewed_at && (
-            <span className="text-sm text-gray-500">
-              تمت المراجعة: {report.reviewed_at}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* محتوى التقرير - النموذج الديناميكي */}
-      <div className="space-y-4">
-        <h3 className="font-medium">محتوى التقرير:</h3>
-        {fields.map((field) => (
-          <div key={field.name} className="border-b pb-3">
-            <Label className="font-medium text-gray-700">{field.label}</Label>
-            <div className="mt-1 text-gray-900 bg-gray-50 p-2 rounded">
-              {content[field.name] || "—"}
-            </div>
-          </div>
-        ))}
-
-        {fields.length === 0 && (
-          <div className="text-gray-500 text-center py-4">
-            لا يوجد محتوى مفصل
-          </div>
-        )}
-      </div>
-
-      {/* المرفقات */}
-      {report.attachments?.length > 0 && (
-        <div>
-          <h3 className="font-medium mb-2 flex items-center gap-2">
-            <Paperclip className="w-4 h-4" />
-            المرفقات
-          </h3>
-          <div className="space-y-2">
-            {report.attachments.map((attachment) => (
+        <div
+          className="section-card"
+          style={{ marginBottom: 16, background: "rgba(255, 193, 7, 0.06)", borderColor: "rgba(255, 193, 7, 0.35)" }}
+        >
+          <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+            <Clock size={20} />
+            تقارير بحاجة للمراجعة ({pendingReports.length})
+          </h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {pendingReports.map((report) => (
               <div
-                key={attachment.id}
-                className="flex items-center gap-2 p-2 bg-gray-50 rounded"
+                key={report.id}
+                className="section-card"
+                style={{
+                  padding: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                }}
               >
-                <Paperclip className="w-4 h-4 text-gray-400" />
-                <span className="text-sm">{attachment.name}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <FileText size={22} color="var(--warning)" />
+                  <div>
+                    <strong>{report.template_name}</strong>
+                    <div className="text-soft" style={{ fontSize: "0.9rem" }}>
+                      {report.date}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="btn-primary-custom btn-sm-custom"
+                  onClick={() => {
+                    setSelectedReportId(report.id);
+                    setShowReviewDialog(true);
+                  }}
+                >
+                  <Eye size={16} />
+                  مراجعة
+                </button>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* ملاحظات سابقة */}
-      {report.supervisor_comment && (
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <h4 className="font-medium text-yellow-800 mb-1 flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            ملاحظات المشرف
-          </h4>
-          <p className="text-yellow-700">{report.supervisor_comment}</p>
-        </div>
-      )}
+      <div className="section-card">
+        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <FileText size={20} />
+          سجل التقارير اليومية
+        </h4>
 
-      {/* نموذج المراجعة */}
-      {canReview && (
-        <div className="space-y-4 border-t pt-4">
-          <div>
-            <Label htmlFor="review-comment">ملاحظات المراجعة</Label>
-            <Textarea
-              id="review-comment"
-              name="review_comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="أضف ملاحظاتك هنا..."
-              className="mt-1"
-            />
+        {success && (
+          <div
+            className="section-card"
+            style={{ padding: 12, marginBottom: 12, background: "rgba(25, 135, 84, 0.08)", borderColor: "rgba(25, 135, 84, 0.25)" }}
+          >
+            <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+            تمت العملية بنجاح
           </div>
+        )}
 
-          <div className="flex gap-2">
-            <Button
-              onClick={onConfirm}
-              disabled={processing}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="w-4 h-4 ml-1" />
-              {processing ? "جاري الحفظ..." : "تأكيد التقرير"}
-            </Button>
-            <Button
-              onClick={onReturn}
-              disabled={processing || !comment.trim()}
-              variant="destructive"
-            >
-              <XCircle className="w-4 h-4 ml-1" />
-              إعادة للتعديل
-            </Button>
+        {list.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 40 }} className="text-soft">
+            <FileText size={44} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
+            لا يوجد تقارير مسجلة
           </div>
-          {!comment.trim() && (
-            <p className="text-sm text-red-500">
-              يجب إضافة ملاحظة قبل إعادة التقرير للتعديل
-            </p>
-          )}
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {list.map((report) => (
+              <div
+                key={report.id}
+                className="section-card"
+                style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background:
+                        report.status === "confirmed"
+                          ? "rgba(25, 135, 84, 0.15)"
+                          : report.status === "returned"
+                            ? "rgba(220, 53, 69, 0.15)"
+                            : report.status === "submitted"
+                              ? "rgba(13, 110, 253, 0.12)"
+                              : "#f7f9fc",
+                    }}
+                  >
+                    {report.status === "confirmed" && <CheckCircle size={22} color="var(--success)" />}
+                    {report.status === "returned" && <RotateCcw size={22} color="var(--danger)" />}
+                    {report.status === "submitted" && <Clock size={22} color="var(--primary)" />}
+                    {!["confirmed", "returned", "submitted"].includes(report.status) && <FileText size={22} />}
+                  </div>
+                  <div>
+                    <strong>{report.template_name}</strong>
+                    <div style={{ marginTop: 6 }} className="table-actions">
+                      <span className="text-soft" style={{ fontSize: "0.9rem" }}>
+                        {report.date}
+                      </span>
+                      <span className={`badge-custom ${reportStatusBadge(report.status)}`}>{report.status_label}</span>
+                      {report.has_attachments && <Paperclip size={16} className="text-soft" />}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={report.can_review ? "btn-primary-custom btn-sm-custom" : "btn-outline-custom btn-sm-custom"}
+                  onClick={() => {
+                    setSelectedReportId(report.id);
+                    setShowReviewDialog(true);
+                  }}
+                >
+                  <Eye size={16} />
+                  عرض
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showReviewDialog && selectedReportId && (
+        <div className="modal-overlay" onClick={closeDialog}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 720, maxHeight: "90vh", overflowY: "auto" }}>
+            <div className="modal-header">
+              <h3>مراجعة التقرير اليومي</h3>
+              <button type="button" className="modal-close-btn" onClick={closeDialog}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <ReportReviewBody
+                reportId={selectedReportId}
+                comment={reviewComment}
+                setComment={setReviewComment}
+                processing={processing}
+                setProcessing={setProcessing}
+                onSuccess={onReviewSuccess}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Skeleton Loading
-// ═══════════════════════════════════════════════════════════════════════════
-function DailyReportsSkeleton() {
+function ReportReviewBody({ reportId, comment, setComment, processing, setProcessing, onSuccess }) {
+  const { report, loading, confirm, returnForEdit } = useDailyReport(reportId);
+
+  const handleConfirm = async () => {
+    setProcessing(true);
+    try {
+      await confirm(comment);
+      onSuccess();
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!comment.trim()) return;
+    setProcessing(true);
+    try {
+      await returnForEdit(comment);
+      onSuccess();
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  if (loading || !report) {
+    return <div className="section-card">جاري تحميل التقرير...</div>;
+  }
+
+  const template = report.template || {};
+  const fields = template.fields || [];
+  const content = report.content || {};
+  const canReview = report.can_confirm || report.can_return;
+
   return (
-    <div className="space-y-6">
-      <Skeleton className="h-40 w-full" />
-      <Skeleton className="h-80 w-full" />
+    <div>
+      <div className="section-card" style={{ padding: 14, marginBottom: 16, background: "#f7f9fc" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <Calendar size={18} />
+          <strong>التاريخ:</strong> {report.date}
+        </div>
+        <span className={`badge-custom ${reportStatusBadge(report.status)}`}>{report.status_label}</span>
+        {report.reviewed_at && (
+          <div className="text-soft" style={{ marginTop: 8, fontSize: "0.9rem" }}>
+            تمت المراجعة: {report.reviewed_at}
+          </div>
+        )}
+      </div>
+
+      <h4>محتوى التقرير</h4>
+      {fields.length === 0 ? (
+        <p className="text-soft">لا يوجد محتوى مفصل</p>
+      ) : (
+        fields.map((field) => (
+          <div key={field.name} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+            <div className="form-label-custom">{field.label}</div>
+            <div className="section-card" style={{ padding: 12, marginTop: 6 }}>
+              {content[field.name] ?? "—"}
+            </div>
+          </div>
+        ))
+      )}
+
+      {report.attachments?.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <h4 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Paperclip size={18} />
+            المرفقات
+          </h4>
+          {report.attachments.map((attachment) => (
+            <div key={attachment.id} className="section-card" style={{ padding: 10, marginTop: 8 }}>
+              {attachment.name}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {report.supervisor_comment && (
+        <div
+          className="section-card"
+          style={{ marginTop: 16, background: "rgba(255, 193, 7, 0.08)", borderColor: "rgba(255, 193, 7, 0.3)" }}
+        >
+          <h4 style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 0 }}>
+            <MessageSquare size={18} />
+            ملاحظات المشرف
+          </h4>
+          <p style={{ margin: 0 }}>{report.supervisor_comment}</p>
+        </div>
+      )}
+
+      {canReview && (
+        <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+          <div className="form-field">
+            <label className="form-label-custom" htmlFor="review-comment">
+              ملاحظات المراجعة
+            </label>
+            <textarea
+              id="review-comment"
+              name="review_comment"
+              className="form-textarea-custom"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="أضف ملاحظاتك هنا..."
+            />
+          </div>
+          <div className="table-actions" style={{ marginTop: 12 }}>
+            <button type="button" className="btn-success-custom btn-sm-custom" onClick={handleConfirm} disabled={processing}>
+              <CheckCircle size={16} />
+              {processing ? "جاري الحفظ..." : "تأكيد التقرير"}
+            </button>
+            <button
+              type="button"
+              className="btn-danger-custom btn-sm-custom"
+              onClick={handleReturn}
+              disabled={processing || !comment.trim()}
+            >
+              <XCircle size={16} />
+              إعادة للتعديل
+            </button>
+          </div>
+          {!comment.trim() && (
+            <p className="form-error-text" style={{ marginTop: 8 }}>
+              يجب إضافة ملاحظة قبل إعادة التقرير للتعديل
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

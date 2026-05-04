@@ -41,7 +41,7 @@ export const ROLE_LABELS = {
 const DASHBOARD_PATHS = {
   [ROLES.ADMIN]: "/dashboard",
   [ROLES.COORDINATOR]: "/coordinator/dashboard",
-  [ROLES.FIELD_SUPERVISOR]: "/field-staff/dashboard",
+  [ROLES.FIELD_SUPERVISOR]: "/field-supervisor",
   [ROLES.MENTOR]: "/field-staff/dashboard",
   [ROLES.ADVISER]: "/field-staff/dashboard",
   [ROLES.SUPERVISOR]: "/supervisor/workspace",
@@ -54,10 +54,15 @@ const DASHBOARD_PATHS = {
 };
 
 export function normalizeRole(role) {
-  if (!role) return "";
+  if (role == null || role === "") return "";
+  let r = role;
+  if (typeof r === "object") {
+    r = r?.name;
+  }
+  if (typeof r !== "string" || !r) return "";
   // Handle head_of_department directly since it's not in ROLE_ALIASES
-  if (role === "head_of_department") return "head_of_department";
-  return ROLE_ALIASES[role] || role;
+  if (r === "head_of_department") return "head_of_department";
+  return ROLE_ALIASES[r] || r;
 }
 
 export function getRoleLabel(role) {

@@ -141,7 +141,8 @@ class FormEngineService
         }
 
         return match ($role) {
-            'teacher', 'adviser', 'psychologist', 'field_supervisor' => (int) $assignment->teacher_id === (int) $user->id,
+            'field_supervisor' => FieldSupervisorAssignmentResolver::userIsFieldSupervisorActor($user, $assignment),
+            'teacher', 'adviser', 'psychologist' => (int) $assignment->teacher_id === (int) $user->id,
             'academic_supervisor' => (int) $assignment->academic_supervisor_id === (int) $user->id,
             'school_manager', 'psychology_center_manager' => $user->training_site_id && (int) $assignment->training_site_id === (int) $user->training_site_id,
             'coordinator', 'training_coordinator' => (int) $assignment->coordinator_id === (int) $user->id,
@@ -154,9 +155,10 @@ class FormEngineService
         $role = $user->role?->name;
 
         return TrainingAssignment::query()
-            ->with(['enrollment.user.department', 'enrollment.section.course.department', 'trainingSite', 'teacher', 'academicSupervisor'])
+            ->with(['enrollment.user.department', 'enrollment.section.course.department', 'trainingSite', 'teacher', 'fieldSupervisorAccount', 'academicSupervisor'])
             ->when($role === 'student', fn ($q) => $q->whereHas('enrollment', fn ($qq) => $qq->where('user_id', $user->id)))
-            ->when(in_array($role, ['teacher', 'adviser', 'psychologist', 'field_supervisor'], true), fn ($q) => $q->where('teacher_id', $user->id))
+            ->when($role === 'field_supervisor', fn ($q) => FieldSupervisorAssignmentResolver::assignmentsForFieldSupervisorUser($user))
+            ->when(in_array($role, ['teacher', 'adviser', 'psychologist'], true), fn ($q) => $q->where('teacher_id', $user->id))
             ->when($role === 'academic_supervisor', fn ($q) => $q->where('academic_supervisor_id', $user->id))
             ->when(in_array($role, ['school_manager', 'psychology_center_manager'], true) && $user->training_site_id, fn ($q) => $q->where('training_site_id', $user->training_site_id))
             ->when(in_array($role, ['coordinator', 'training_coordinator'], true), fn ($q) => $q->where('coordinator_id', $user->id))
@@ -186,7 +188,7 @@ class FormEngineService
     {
         return match ($template->owner_type) {
             'student' => $assignment->enrollment?->user,
-            'field_supervisor' => $assignment->teacher,
+            'field_supervisor' => $assignment->fieldSupervisorAccount ?? $assignment->teacher,
             'academic_supervisor' => $assignment->academicSupervisor,
             'institution_manager' => User::where('training_site_id', $assignment->training_site_id)
                 ->whereHas('role', fn ($q) => $q->whereIn('name', ['school_manager', 'psychology_center_manager']))
@@ -228,7 +230,8 @@ class FormEngineService
     {
         return match ($user->role?->name) {
             'student' => (int) $assignment->enrollment?->user_id === (int) $user->id,
-            'teacher', 'adviser', 'psychologist', 'field_supervisor' => (int) $assignment->teacher_id === (int) $user->id,
+            'field_supervisor' => FieldSupervisorAssignmentResolver::userIsFieldSupervisorActor($user, $assignment),
+            'teacher', 'adviser', 'psychologist' => (int) $assignment->teacher_id === (int) $user->id,
             'academic_supervisor' => (int) $assignment->academic_supervisor_id === (int) $user->id,
             'school_manager', 'psychology_center_manager' => $user->training_site_id && (int) $assignment->training_site_id === (int) $user->training_site_id,
             'coordinator', 'training_coordinator' => (int) $assignment->coordinator_id === (int) $user->id,
@@ -323,7 +326,8 @@ class FormEngineService
         }
 
         return match ($role) {
-            'field_supervisor', 'teacher', 'adviser', 'psychologist' => $assignment->teacher_id,
+            'field_supervisor' => $assignment->field_supervisor_id ?: $assignment->teacher_id,
+            'teacher', 'adviser', 'psychologist' => $assignment->teacher_id,
             'academic_supervisor' => $assignment->academic_supervisor_id,
             'institution_manager', 'school_manager', 'psychology_center_manager' => User::where('training_site_id', $assignment->training_site_id)
                 ->whereHas('role', fn ($q) => $q->whereIn('name', ['school_manager', 'psychology_center_manager']))

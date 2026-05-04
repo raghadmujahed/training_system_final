@@ -216,7 +216,7 @@ class TrainingRequestService
             TrainingRequestNotifications::forSchoolManager(
                 $trainingRequest->training_site_id,
                 'training_request_received_from_directorate',
-                'تم إرسال طلب تدريب من الجهة الرسمية بانتظار موافقتك وتعيين المعلمين المرشدين.',
+                'تم إرسال طلب تدريب من الجهة الرسمية بانتظار موافقتك وتعيين المشرف الميداني.',
                 [
                     'training_request_id' => $trainingRequest->id,
                     'book_status' => BookStatus::SENT_TO_SCHOOL->value,
@@ -226,36 +226,72 @@ class TrainingRequestService
     }
 
     /**
-     * موافقة مدير المدرسة وتعيين المعلمين المرشدين
+     * موافقة جهة التدريب وتعيين المشرف الميداني (المعلم/المرشد/الأخصائي أو حساب مشرف ميداني في المنصة)
      */
     public function schoolApprove(TrainingRequest $trainingRequest, int $schoolManagerId, array $studentsData): void
     {
         DB::transaction(function () use ($trainingRequest, $schoolManagerId, $studentsData) {
             $activeTrainingPeriodId = $this->requireActiveTrainingPeriodId();
             $manager = User::with('role')->findOrFail($schoolManagerId);
-            $allowedRoles = $manager->role?->name === 'psychology_center_manager'
+            $isPsychCenterManager = $manager->role?->name === 'psychology_center_manager';
+            $allowedRoles = $isPsychCenterManager
                 ? ['psychologist']
-                : ['teacher', 'adviser'];
+                : ['teacher', 'adviser', 'field_supervisor'];
 
             $this->assertTrainingSiteAcceptsNewStudents($trainingRequest, count($studentsData));
 
             foreach ($studentsData as $studentData) {
                 $studentRequest = TrainingRequestStudent::findOrFail($studentData['id']);
                 $enrollmentId = $this->requireEnrollmentId($studentRequest);
-                $fieldSupervisor = User::with('role')->findOrFail($studentData['assigned_teacher_id']);
+                $assignedUser = User::with('role')->findOrFail($studentData['assigned_teacher_id']);
 
                 abort_unless(
-                    in_array($fieldSupervisor->role?->name, $allowedRoles, true),
+                    in_array($assignedUser->role?->name, $allowedRoles, true),
                     422,
                     'المستخدم المحدد ليس من نوع المشرف الميداني المناسب لجهة التدريب.'
                 );
 
                 if ($manager->training_site_id) {
                     abort_unless(
-                        (int) $fieldSupervisor->training_site_id === (int) $manager->training_site_id,
+                        (int) $assignedUser->training_site_id === (int) $manager->training_site_id,
                         422,
                         'المشرف الميداني المحدد غير مرتبط بجهة التدريب الخاصة بك.'
                     );
+                }
+
+                $platformFieldSupervisorId = $studentData['field_supervisor_id'] ?? null;
+                if ($platformFieldSupervisorId !== null && $platformFieldSupervisorId !== '') {
+                    abort_if($isPsychCenterManager, 422, 'لا يمكن إرفاق حساب مشرف ميداني منفصل في مسار المركز النفسي ضمن هذا الإجراء.');
+                    $platformFs = User::with('role')->findOrFail((int) $platformFieldSupervisorId);
+                    abort_unless(
+                        $platformFs->role?->name === 'field_supervisor',
+                        422,
+                        'حساب المشرف الميداني في المنصة غير صالح.'
+                    );
+                    if ($manager->training_site_id) {
+                        abort_unless(
+                            (int) $platformFs->training_site_id === (int) $manager->training_site_id,
+                            422,
+                            'حساب المشرف الميداني في المنصة غير مرتبط بجهة التدريب الخاصة بك.'
+                        );
+                    }
+                    abort_if(
+                        (int) $platformFs->id === (int) $assignedUser->id,
+                        422,
+                        'لا حاجة لتحديد مشرف منصة منفصل عندما يكون المعيّن الأساسي هو نفسه حساب المشرف الميداني.'
+                    );
+                    abort_unless(
+                        in_array($assignedUser->role?->name, ['teacher', 'adviser'], true),
+                        422,
+                        'حقل المشرف الميداني في المنصة يُستخدم فقط عند تعيين معلم أو مرشد تربوي كمشرف ميداني أساسي.'
+                    );
+                }
+
+                $assignmentFieldSupervisorId = null;
+                if ($assignedUser->role?->name === 'field_supervisor') {
+                    $assignmentFieldSupervisorId = (int) $assignedUser->id;
+                } elseif ($platformFieldSupervisorId !== null && $platformFieldSupervisorId !== '') {
+                    $assignmentFieldSupervisorId = (int) $platformFieldSupervisorId;
                 }
 
                 $studentRequest->update([
@@ -270,6 +306,7 @@ class TrainingRequestService
                     'training_site_id' => $trainingRequest->training_site_id,
                     'training_period_id' => $activeTrainingPeriodId,
                     'teacher_id' => $studentData['assigned_teacher_id'],
+                    'field_supervisor_id' => $assignmentFieldSupervisorId,
                     'academic_supervisor_id' => $this->getAcademicSupervisorId($studentRequest->course_id),
                     'status' => 'assigned',
                     'start_date' => $studentRequest->start_date,

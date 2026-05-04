@@ -8,6 +8,7 @@ import "./styles/sidebar.css";
 import "./styles/auth.css";
 import "./styles/dashboard.css";
 import "./styles/admin.css";
+import "./styles/field-supervisor.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

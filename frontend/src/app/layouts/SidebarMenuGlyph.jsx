@@ -51,6 +51,14 @@ const ROUTE_ICON = {
   "/field-staff/tasks": "task",
   "/field-staff/final-evaluation": "star",
 
+  "/field-supervisor": "home",
+  "/field-supervisor/students": "graduation",
+  "/field-supervisor/attendance": "clipboardCheck",
+  "/field-supervisor/daily-reports": "journal",
+  "/field-supervisor/evaluation": "star",
+  "/field-supervisor/forms": "clipboard",
+  "/field-supervisor/messages": "fileText",
+
   // Legacy mentor paths (still used for attendance/schedule)
   "/mentor/attendance": "clipboardCheck",
   "/mentor/schedule": "calendar",

@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\TrainingAssignment;
+use App\Services\FieldSupervisorAssignmentResolver;
 
 class TrainingAssignmentPolicy
 {
@@ -29,9 +30,8 @@ class TrainingAssignmentPolicy
         if ($user->id === $assignment->academic_supervisor_id) {
             return true;
         }
-        // المشرف الميداني يرى تعيينات طلابه
         if ($user->role?->name === 'field_supervisor') {
-            return $user->id === $assignment->teacher_id;
+            return FieldSupervisorAssignmentResolver::userIsFieldSupervisorActor($user, $assignment);
         }
         if ($user->id === $assignment->coordinator_id) return true;
         if ($user->id === $assignment->enrollment->user_id) {

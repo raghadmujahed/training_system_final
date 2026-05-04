@@ -28,8 +28,8 @@ function buildFieldStaffMenu(roleKey) {
     { name: "الملاحظات", path: "/field-staff/notes" },
   ];
 
-  // المهام والسجلات اليومية والتقييم النهائي: للكادر الميداني والمشرف الأكاديمي
-  if (roleKey === "mentor" || roleKey === "adviser" || roleKey === "supervisor" || roleKey === "field_supervisor") {
+  // المهام والسجلات اليومية والتقييم النهائي: للكادر الميداني والمشرف الأكاديمي (دون المشرف الميداني المستقل)
+  if (roleKey === "mentor" || roleKey === "adviser" || roleKey === "supervisor") {
     menu.push(
       { name: "المهام", path: "/field-staff/tasks" },
       { name: "السجلات اليومية", path: "/field-staff/daily-reports" },
@@ -86,6 +86,21 @@ function buildFieldStaffMenu(roleKey) {
   return menu;
 }
 
+/** قائمة المشرف الميداني — مسارات /field-supervisor فقط (منفصلة عن المشرف الأكاديمي وعن field-staff الموحّد). */
+function buildFieldSupervisorMenu() {
+  return [
+    { name: "الرئيسية", path: "/field-supervisor" },
+    { name: "الطلبة المتدربون", path: "/field-supervisor/students" },
+    { name: "الحضور والغياب", path: "/field-supervisor/attendance" },
+    { name: "السجلات والتقارير اليومية", path: "/field-supervisor/daily-reports" },
+    { name: "التقييم الميداني", path: "/field-supervisor/evaluation" },
+    { name: "النماذج والتقارير", path: "/field-supervisor/forms" },
+    { name: "الملاحظات والرسائل", path: "/field-supervisor/messages" },
+    { name: "الإشعارات", path: "/notifications" },
+    { name: "الملف الشخصي", path: "/profile" },
+  ];
+}
+
 const menus = {
   admin: [
     { name: "الرئيسية", path: "/dashboard" },
@@ -128,15 +143,12 @@ const menus = {
   psychologist: buildFieldStaffMenu("psychologist"),
   supervisor: buildFieldStaffMenu("supervisor"),
   school_manager: [
-    { name: "الرئيسية", path: "/principal/dashboard" },
-    { name: "الملف الشخصي", path: "/principal/profile" },
-    { name: "طلبات التدريب", path: "/principal/training-requests" },
-    { name: "الطلبة المتدربون", path: "/principal/trainees-list" },
-    { name: "تقييم الطلبة", path: "/principal/trainee-students" },
+    { name: "\u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629", path: "/principal/dashboard" },
+    { name: "\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a", path: "/principal/profile" },
+    { name: "\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u062a\u062f\u0631\u064a\u0628", path: "/principal/training-requests" },
   ],
   
-  // ???????????? ???????????????? ??? ???????????? ?????? ?????????? ???????????? ????????????????
-    field_supervisor: buildFieldStaffMenu("field_supervisor"),
+  field_supervisor: buildFieldSupervisorMenu(),
 
   student: [
     { name: "الرئيسية", path: "/student/dashboard" },
@@ -177,16 +189,13 @@ const menus = {
     { name: "الرئيسية", path: "/principal/dashboard" },
     { name: "الملف الشخصي", path: "/principal/profile" },
     { name: "طلبات التدريب", path: "/principal/training-requests" },
-    { name: "الطلبة المتدربون", path: "/principal/trainees-list" },
-    { name: "تقييم الطلبة", path: "/principal/trainee-students" },
   ],
 
   psychology_center_manager: [
     { name: "الرئيسية", path: "/psychology-center/dashboard" },
     { name: "الملف الشخصي", path: "/psychology-center/profile" },
     { name: "طلبات التدريب", path: "/psychology-center/mentor-assignment" },
-    { name: "الطلبة المتدربون", path: "/psychology-center/trainees-list" },
-    { name: "تقييم الطلبة", path: "/psychology-center/trainee-students" },
+    { name: "المتدربون في المركز", path: "/psychology-center/trainee-students" },
   ],
 
   health_directorate: [
@@ -243,7 +252,7 @@ export default function Sidebar({ isOpen, onClose }) {
     if (role === "student") {
       const full = menus.student;
       if (isPsychologyStudentUser(savedUser)) {
-        return full.filter((i) => !["/student/training-request", "/student/schedule"].includes(i.path));
+        return full.filter((i) => i.path !== "/student/training-request");
       }
       return full;
     }

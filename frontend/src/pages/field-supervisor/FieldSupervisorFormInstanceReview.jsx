@@ -1,0 +1,162 @@
+import { useEffect, useState, useCallback } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { apiClient } from "../../services/api";
+import PageHeader from "../../components/common/PageHeader";
+import { FileText, CheckCircle, RotateCcw } from "lucide-react";
+
+function renderPayload(payload) {
+  if (!payload || typeof payload !== "object") {
+    return <p className="text-soft">لا توجد بيانات معبأة.</p>;
+  }
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      {Object.entries(payload).map(([k, v]) => (
+        <div key={k} className="section-card" style={{ padding: 12 }}>
+          <div className="text-soft" style={{ fontSize: "0.85rem", marginBottom: 4 }}>
+            {k}
+          </div>
+          <div style={{ whiteSpace: "pre-wrap", fontSize: "0.95rem" }}>
+            {typeof v === "object" ? JSON.stringify(v, null, 2) : String(v ?? "—")}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function FieldSupervisorFormInstanceReview() {
+  const { instanceId } = useParams();
+  const navigate = useNavigate();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(async () => {
+    if (!instanceId) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiClient.get(`/form-instances/${instanceId}`);
+      setData(res.data?.data ?? res.data);
+    } catch (e) {
+      setError(e?.response?.data?.message || "تعذر فتح النموذج");
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [instanceId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const submitReview = async (decision) => {
+    if (!instanceId) return;
+    setBusy(true);
+    setError("");
+    try {
+      await apiClient.post(`/form-instances/${instanceId}/review`, {
+        decision,
+        comment: comment.trim() || null,
+      });
+      navigate("/field-supervisor/forms");
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.response?.data?.error || "فشل إرسال المراجعة");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const tpl = data?.template;
+  const subject = data?.subject;
+
+  return (
+    <>
+      <div className="fs-back-row">
+        <Link to="/field-supervisor/forms" className="btn-outline-custom btn-sm-custom">
+          ← العودة للنماذج
+        </Link>
+      </div>
+
+      <PageHeader
+        icon={FileText}
+        title={tpl?.title_ar || "مراجعة نموذج"}
+        subtitle={subject?.name ? `الطالب: ${subject.name}` : "مراجعة فقط — لا تعبئة من هنا"}
+      />
+
+      {loading && <div className="section-card">جاري التحميل...</div>}
+      {error && (
+        <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
+          <p style={{ margin: 0 }}>{error}</p>
+        </div>
+      )}
+
+      {!loading && data && (
+        <>
+          <div className="section-card" style={{ marginBottom: 16 }}>
+            <p style={{ margin: 0 }} className="text-soft">
+              الحالة: <strong>{data.status_label || data.status}</strong>
+              {tpl?.owner_type ? ` — نوع المالك في القالب: ${tpl.owner_type}` : null}
+            </p>
+          </div>
+
+          <div className="section-card" style={{ marginBottom: 16 }}>
+            <h4 style={{ marginTop: 0 }}>محتوى النموذج (قراءة)</h4>
+            {renderPayload(data.payload)}
+          </div>
+
+          {data.status === "pending_review" ? (
+            <div className="section-card">
+              <h4 style={{ marginTop: 0 }}>قرار المراجعة</h4>
+              <div className="form-field">
+                <label className="form-label-custom" htmlFor="review-comment">
+                  ملاحظاتك (اختياري عند الموافقة، يُفضّل عند الإعادة)
+                </label>
+                <textarea
+                  id="review-comment"
+                  className="form-input-custom"
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="تعليق للطالب أو للمسجل..."
+                />
+              </div>
+              <div className="table-actions" style={{ marginTop: 12 }}>
+                <button
+                  type="button"
+                  className="btn-primary-custom btn-sm-custom"
+                  disabled={busy}
+                  onClick={() => submitReview("approved")}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <CheckCircle size={16} />
+                  موافقة / اعتماد
+                </button>
+                <button
+                  type="button"
+                  className="btn-outline-custom btn-sm-custom"
+                  disabled={busy}
+                  onClick={() => {
+                    if (!comment.trim()) {
+                      alert("يرجى كتابة سبب الإعادة في الملاحظات.");
+                      return;
+                    }
+                    submitReview("returned");
+                  }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                >
+                  <RotateCcw size={16} />
+                  إعادة للتعديل
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-soft">لا يتطلب هذا السجل مراجعة حالية من هذه الشاشة.</p>
+          )}
+        </>
+      )}
+    </>
+  );
+}

@@ -38,7 +38,11 @@ class TrainingAssignmentController extends Controller
 
         if ($user->role?->name === 'student') {
             $query->whereHas('enrollment', fn ($q) => $q->where('user_id', $user->id));
-        } elseif (in_array($user->role?->name, ['teacher', 'adviser', 'psychologist', 'field_supervisor'], true)) {
+        } elseif ($user->role?->name === 'field_supervisor') {
+            $query->where(function ($q) use ($user) {
+                $q->where('teacher_id', $user->id)->orWhere('field_supervisor_id', $user->id);
+            });
+        } elseif (in_array($user->role?->name, ['teacher', 'adviser', 'psychologist'], true)) {
             $query->where('teacher_id', $user->id);
         } elseif ($isAcademicSupervisor) {
             $this->supervisorStudentService->ensureShellAssignmentsForSupervisedEnrollments($user);

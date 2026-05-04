@@ -34,6 +34,54 @@ class FieldEvaluationTemplate extends Model
     const TYPE_PSYCHOLOGIST = 'psychologist';
 
     /**
+     * توحيد نوع المشرف الميداني مع قيم applies_to في القوالب (clinical → psychologist).
+     */
+    public static function normalizedSupervisorType(?string $type): string
+    {
+        return match ($type) {
+            self::TYPE_SCHOOL_COUNSELOR => self::TYPE_SCHOOL_COUNSELOR,
+            self::TYPE_PSYCHOLOGIST, 'clinical_psychologist' => self::TYPE_PSYCHOLOGIST,
+            default => self::TYPE_MENTOR_TEACHER,
+        };
+    }
+
+    /**
+     * مجموع الدرجة من 100 بناءً على أوزان المحاور ودرجة كل محور على سلم المعايير.
+     * scores: [criterion_id => درجة على السلم]
+     */
+    public function weightedTotalFromScores(array $scores): int
+    {
+        $criteria = $this->criteria ?? [];
+        if ($criteria === []) {
+            return (int) round(array_sum($scores));
+        }
+
+        $total = 0.0;
+        foreach ($criteria as $c) {
+            $id = $c['id'] ?? null;
+            if (! $id) {
+                continue;
+            }
+            $raw = (float) ($scores[$id] ?? $scores[(string) $id] ?? 0);
+            $weight = (float) ($c['weight'] ?? 0);
+            $scale = $c['scale'] ?? [1, 2, 3, 4, 5];
+            if (! is_array($scale) || $scale === []) {
+                continue;
+            }
+            $maxScale = (float) max($scale);
+            $minScale = (float) min($scale);
+            if ($maxScale <= $minScale) {
+                continue;
+            }
+            $norm = ($raw - $minScale) / ($maxScale - $minScale);
+            $norm = max(0.0, min(1.0, $norm));
+            $total += $norm * $weight;
+        }
+
+        return (int) round($total);
+    }
+
+    /**
      * نطاق: القوالب النشطة
      */
     public function scopeActive($query)
@@ -102,8 +150,11 @@ class FieldEvaluationTemplate extends Model
      */
     public static function getDefaultForType(string $type): ?self
     {
+        $normalized = self::normalizedSupervisorType($type);
+
         return self::active()
-            ->forType($type)
+            ->forType($normalized)
+            ->orderBy('code')
             ->first();
     }
 }

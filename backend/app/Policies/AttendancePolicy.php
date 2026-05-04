@@ -24,6 +24,8 @@ class AttendancePolicy
     {
         if ($user->id === $attendance->user_id) return true;
         if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
+        if ($attendance->trainingAssignment->field_supervisor_id
+            && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
         if ($user->id === $attendance->trainingAssignment->academic_supervisor_id) return true;
         return $user->role?->name === 'admin';
     }
@@ -35,6 +37,9 @@ class AttendancePolicy
 
     public function approve(User $user, Attendance $attendance): bool
     {
-        return $user->id === $attendance->trainingAssignment->teacher_id || $user->role?->name === 'admin';
+        if ($user->role?->name === 'admin') return true;
+        if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
+        return $attendance->trainingAssignment->field_supervisor_id
+            && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id;
     }
 }

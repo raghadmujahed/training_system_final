@@ -32,7 +32,11 @@ class FormInstanceController extends Controller
                     ->orWhere('current_reviewer_id', $user->id)
                     ->orWhereHas('trainingAssignment', function ($assignmentQuery) use ($user) {
                         $role = $user->role?->name;
-                        if (in_array($role, ['teacher', 'adviser', 'psychologist', 'field_supervisor'], true)) {
+                        if ($role === 'field_supervisor') {
+                            $assignmentQuery->where(function ($q) use ($user) {
+                                $q->where('teacher_id', $user->id)->orWhere('field_supervisor_id', $user->id);
+                            });
+                        } elseif (in_array($role, ['teacher', 'adviser', 'psychologist'], true)) {
                             $assignmentQuery->where('teacher_id', $user->id);
                         } elseif ($role === 'academic_supervisor') {
                             $assignmentQuery->where('academic_supervisor_id', $user->id);

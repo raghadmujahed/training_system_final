@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { apiClient } from "../services/api";
 
 /**
@@ -58,6 +58,68 @@ export function useFieldSupervisorStudents() {
   return { students, loading, error, refresh: load };
 }
 
+/**
+ * طلاب لديهم رسائل واردة غير مقروءة من الطالب (نفس GET messages لكل طالب — N طلبات متوازية).
+ * يعتمد على مفتاح ids ثابت + ref حتى لا يحدث حلقات تصيير عند تمرير `[]` جديدة كل render.
+ */
+export function useMessageQueueStudents(students) {
+  const [queueStudents, setQueueStudents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [reloadToken, setReloadToken] = useState(0);
+  const studentsRef = useRef(students);
+  studentsRef.current = students;
+
+  const idsKey = [...(students || []).map((s) => Number(s.id))]
+    .sort((a, b) => a - b)
+    .join(",");
+
+  useEffect(() => {
+    let cancelled = false;
+    const list = studentsRef.current || [];
+    if (!list.length) {
+      setQueueStudents([]);
+      setLoading(false);
+      return undefined;
+    }
+    setLoading(true);
+    setError("");
+    (async () => {
+      try {
+        const results = await Promise.all(
+          list.map(async (s) => {
+            try {
+              const res = await apiClient.get(`/field-supervisor/students/${s.id}/messages`);
+              const msgs = Array.isArray(res.data) ? res.data : [];
+              const unread = msgs.filter((m) => !m.is_from_me && !m.is_read).length;
+              return unread > 0 ? { ...s, _queueUnread: unread } : null;
+            } catch {
+              return null;
+            }
+          })
+        );
+        if (!cancelled) {
+          setQueueStudents(results.filter(Boolean));
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError(e?.response?.data?.message || "تعذر تحميل قائمة الرسائل");
+          setQueueStudents([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [idsKey, reloadToken]);
+
+  const refresh = useCallback(() => setReloadToken((t) => t + 1), []);
+
+  return { queueStudents, loading, error, refresh };
+}
+
 export function useFieldSupervisorStudent(studentId) {
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,7 +177,48 @@ export function useStudentAttendance(studentId) {
     return res.data;
   }, [studentId, load]);
 
-  return { data, loading, error, refresh: load, recordAttendance };
+  const updateAttendance = useCallback(async (attendanceId, payload) => {
+    const res = await apiClient.patch(`/field-supervisor/attendance/${attendanceId}`, payload);
+    await load();
+    return res.data;
+  }, [load]);
+
+  const patchAttendanceSupervisor = useCallback(async (attendanceId, payload) => {
+    const res = await apiClient.patch(`/field-supervisor/attendance/${attendanceId}/supervisor`, payload);
+    await load();
+    return res.data;
+  }, [load]);
+
+  return { data, loading, error, refresh: load, recordAttendance, updateAttendance, patchAttendanceSupervisor };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Forms workboard (علم النفس — للمراجعة vs ما يعبئه المشرف)
+// ═══════════════════════════════════════════════════════════════════════════
+export function useFormsWorkboard() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await apiClient.get("/field-supervisor/forms-workboard");
+      const body = res.data;
+      setData(body?.data ?? body);
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.response?.data?.error || "فشل تحميل لوحة النماذج");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { data, loading, error, refresh: load };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -308,8 +411,9 @@ export function useStudentMessages(studentId) {
       `/field-supervisor/students/${studentId}/message-academic-supervisor`,
       { content, related_to: relatedTo }
     );
+    await load();
     return res.data;
-  }, [studentId]);
+  }, [studentId, load]);
 
   return { messages, loading, error, refresh: load, sendMessage, messageAcademicSupervisor };
 }
@@ -345,44 +449,52 @@ export function useStudentTimeline(studentId) {
 // Labels & Helpers
 // ═══════════════════════════════════════════════════════════════════════════
 
+const SUBTYPE_LABELS_BASE = {
+  mentor_teacher: {
+    title: "المعلم المرشد / المتعاون",
+    dailyReport: "التقرير اليومي للتدريس",
+    evaluation: "تقييم الأداء التدريسي",
+    lesson: "الحصة / الدرس",
+    topic: "موضوع الدرس",
+    classroom: "إدارة الصف",
+    preparation: "التحضير",
+    teaching_aids: "الوسائل التعليمية",
+  },
+  school_counselor: {
+    title: "المرشد المدرب / التربوي في المدرسة",
+    dailyReport: "التقرير الإرشادي اليومي",
+    evaluation: "تقييم الأداء الإرشادي",
+    lesson: "النشاط الإرشادي",
+    topic: "الحالة / الموقف",
+    classroom: "الملاحظة التربوية",
+    preparation: "التقرير الإرشادي",
+    teaching_aids: "نماذج المتابعة",
+  },
+  psychologist: {
+    title: "الأخصائي النفسي / مشرف المؤسسة",
+    dailyReport: "التقرير المهني اليومي",
+    evaluation: "تقييم الأداء المهني (ميداني)",
+    lesson: "الجلسة / النشاط",
+    topic: "طبيعة الحالة",
+    classroom: "الملاحظة المهنية",
+    preparation: "التقرير المهني",
+    teaching_aids: "الأدوات المستخدمة",
+  },
+};
+
+/** يوافق الباكند (psychologist) والتسمية المعتمدة (clinical_psychologist) */
+function normalizeSupervisorSubtype(supervisorType) {
+  if (supervisorType === "clinical_psychologist") return "psychologist";
+  return supervisorType;
+}
+
 /**
- * الحصول على التسميات حسب نوع المشرف الميداني
+ * التسميات حسب نوع المشرف الميداني
  */
 export function useSubtypeLabels(supervisorType) {
-  return useCallback(() => {
-    const labels = {
-      mentor_teacher: {
-        title: "المعلم المرشد",
-        dailyReport: "التقرير اليومي للتدريس",
-        evaluation: "تقييم الأداء التدريسي",
-        lesson: "الحصة / الدرس",
-        topic: "موضوع الدرس",
-        classroom: "إدارة الصف",
-        preparation: "التحضير",
-        teaching_aids: "الوسائل التعليمية",
-      },
-      school_counselor: {
-        title: "المرشد التربوي",
-        dailyReport: "التقرير الإرشادي اليومي",
-        evaluation: "تقييم الأداء الإرشادي",
-        lesson: "النشاط الإرشادي",
-        topic: "الحالة / الموقف",
-        classroom: "الملاحظة التربوية",
-        preparation: "التقرير الإرشادي",
-        teaching_aids: "نماذج المتابعة",
-      },
-      psychologist: {
-        title: "الأخصائي النفسي",
-        dailyReport: "التقرير المهني اليومي",
-        evaluation: "تقييم الأداء المهني",
-        lesson: "الجلسة / النشاط",
-        topic: "طبيعة الحالة",
-        classroom: "الملاحظة العلاجية",
-        preparation: "التقرير المهني",
-        teaching_aids: "الأدوات المستخدمة",
-      },
-    };
-
-    return labels[supervisorType] || labels.mentor_teacher;
-  }, [supervisorType])();
+  const key = normalizeSupervisorSubtype(supervisorType);
+  return useMemo(
+    () => SUBTYPE_LABELS_BASE[key] || SUBTYPE_LABELS_BASE.mentor_teacher,
+    [key]
+  );
 }

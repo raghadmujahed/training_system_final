@@ -1,19 +1,5 @@
 import { useState } from "react";
 import { useStudentMessages } from "../../../hooks/useFieldSupervisorApi";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   MessageCircle,
   Send,
@@ -21,31 +7,23 @@ import {
   AlertTriangle,
   Check,
   CheckCircle,
-  Clock,
   FileText,
   Star,
 } from "lucide-react";
 
-/**
- * تبويب التواصل مع الطالب والمشرف الأكاديمي
- */
 export default function CommunicationTab({ studentId }) {
-  const { messages, loading, error, refresh, sendMessage, messageAcademicSupervisor } =
-    useStudentMessages(studentId);
-
+  const { messages, loading, error, sendMessage, messageAcademicSupervisor } = useStudentMessages(studentId);
   const [newMessage, setNewMessage] = useState("");
   const [relatedTo, setRelatedTo] = useState("general");
   const [sending, setSending] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [messageTo, setMessageTo] = useState("student"); // 'student' or 'supervisor'
+  const [messageTo, setMessageTo] = useState("student");
 
   const handleSend = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
-
     setSending(true);
     setSuccess(false);
-
     try {
       if (messageTo === "student") {
         await sendMessage(newMessage, relatedTo);
@@ -56,40 +34,42 @@ export default function CommunicationTab({ studentId }) {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch {
-      // Error handled by hook
+      // —
     } finally {
       setSending(false);
     }
   };
 
   if (loading) {
-    return <CommunicationSkeleton />;
+    return <div className="section-card">جاري التحميل...</div>;
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="w-4 h-4" />
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
+        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <AlertTriangle size={20} />
+          {error}
+        </p>
+      </div>
     );
   }
 
-  const getRelatedIcon = (relatedTo) => {
-    switch (relatedTo) {
+  const getRelatedIcon = (rel) => {
+    switch (rel) {
       case "attendance":
-        return <CheckCircle className="w-4 h-4" />;
+        return <CheckCircle size={16} />;
       case "daily_report":
-        return <FileText className="w-4 h-4" />;
+        return <FileText size={16} />;
       case "evaluation":
-        return <Star className="w-4 h-4" />;
+        return <Star size={16} />;
       default:
-        return <MessageCircle className="w-4 h-4" />;
+        return <MessageCircle size={16} />;
     }
   };
 
-  const getRelatedLabel = (relatedTo) => {
-    switch (relatedTo) {
+  const getRelatedLabel = (rel) => {
+    switch (rel) {
       case "attendance":
         return "حضور";
       case "daily_report":
@@ -104,155 +84,134 @@ export default function CommunicationTab({ studentId }) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* نموذج إرسال الرسالة */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Send className="w-5 h-5 text-blue-500" />
-            إرسال رسالة جديدة
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {success && (
-            <Alert className="mb-4 bg-green-50 border-green-200">
-              <Check className="w-4 h-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                تم إرسال الرسالة بنجاح
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={handleSend} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="comm-message-to">المرسل إليه</Label>
-                <Select id="comm-message-to" name="message_to" value={messageTo} onValueChange={setMessageTo}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر المستلم" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">الطالب</SelectItem>
-                    <SelectItem value="supervisor">المشرف الأكاديمي</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="comm-related-to">الموضوع</Label>
-                <Select id="comm-related-to" name="related_to" value={relatedTo} onValueChange={setRelatedTo}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر الموضوع" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">متابعة عامة</SelectItem>
-                    <SelectItem value="attendance">حضور</SelectItem>
-                    <SelectItem value="daily_report">تقرير يومي</SelectItem>
-                    <SelectItem value="evaluation">تقييم</SelectItem>
-                    <SelectItem value="issue">مشكلة ميدانية</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+    <div>
+      <div className="section-card" style={{ marginBottom: 16 }}>
+        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <Send size={20} />
+          إرسال رسالة جديدة
+        </h4>
+        {success && (
+          <div className="section-card" style={{ padding: 12, marginBottom: 12, background: "rgba(25, 135, 84, 0.08)" }}>
+            <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+            تم إرسال الرسالة بنجاح
+          </div>
+        )}
+        <form onSubmit={handleSend}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+            <div className="form-field">
+              <label className="form-label-custom" htmlFor="comm-message-to">
+                المرسل إليه
+              </label>
+              <select
+                id="comm-message-to"
+                className="form-select-custom"
+                value={messageTo}
+                onChange={(e) => setMessageTo(e.target.value)}
+              >
+                <option value="student">الطالب</option>
+                <option value="supervisor">المشرف الأكاديمي</option>
+              </select>
             </div>
-
-            <div>
-              <Label htmlFor="comm-message">الرسالة</Label>
-              <Textarea
-                id="comm-message"
-                name="message_content"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="اكتب رسالتك هنا..."
-                className="mt-1 min-h-[100px]"
-                required
-              />
+            <div className="form-field">
+              <label className="form-label-custom" htmlFor="comm-related-to">
+                الموضوع
+              </label>
+              <select
+                id="comm-related-to"
+                className="form-select-custom"
+                value={relatedTo}
+                onChange={(e) => setRelatedTo(e.target.value)}
+              >
+                <option value="general">متابعة عامة</option>
+                <option value="attendance">حضور</option>
+                <option value="daily_report">تقرير يومي</option>
+                <option value="evaluation">تقييم</option>
+                <option value="issue">مشكلة ميدانية</option>
+              </select>
             </div>
+          </div>
+          <div className="form-field">
+            <label className="form-label-custom" htmlFor="comm-message">
+              الرسالة
+            </label>
+            <textarea
+              id="comm-message"
+              className="form-textarea-custom"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="اكتب رسالتك هنا..."
+              required
+            />
+          </div>
+          <button type="submit" className="btn-primary-custom btn-sm-custom" disabled={sending || !newMessage.trim()}>
+            <Send size={16} />
+            {sending ? "جاري الإرسال..." : "إرسال الرسالة"}
+          </button>
+        </form>
+      </div>
 
-            <Button type="submit" disabled={sending || !newMessage.trim()} className="gap-2">
-              <Send className="w-4 h-4" />
-              {sending ? "جاري الإرسال..." : "إرسال الرسالة"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* سجل الرسائل */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-green-500" />
-            سجل الرسائل
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {messages.length === 0 ? (
-            <div className="text-center py-12">
-              <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">لا توجد رسائل مسجلة</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message) => (
+      <div className="section-card">
+        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <MessageCircle size={20} />
+          سجل الرسائل
+        </h4>
+        {messages.length === 0 ? (
+          <div style={{ textAlign: "center", padding: 32 }} className="text-soft">
+            لا توجد رسائل مسجلة
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                style={{
+                  display: "flex",
+                  justifyContent: message.is_from_me ? "flex-start" : "flex-end",
+                }}
+              >
                 <div
-                  key={message.id}
-                  className={`flex ${message.is_from_me ? "justify-start" : "justify-end"}`}
+                  className="section-card"
+                  style={{
+                    maxWidth: "85%",
+                    padding: 14,
+                    background: message.is_from_me ? "rgba(13, 110, 253, 0.07)" : "#f7f9fc",
+                    borderColor: message.is_from_me ? "rgba(13, 110, 253, 0.2)" : "var(--border)",
+                  }}
                 >
-                  <div
-                    className={`
-                      max-w-[80%] rounded-lg p-4
-                      ${
-                        message.is_from_me
-                          ? "bg-blue-50 border border-blue-200"
-                          : "bg-gray-50 border border-gray-200"
-                      }
-                    `}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <div
-                        className={`
-                          w-8 h-8 rounded-full flex items-center justify-center
-                          ${message.is_from_me ? "bg-blue-100" : "bg-gray-200"}
-                        `}
-                      >
-                        <User className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">
-                          {message.is_from_me ? "أنت" : message.sender_name}
-                        </p>
-                        <p className="text-xs text-gray-500">{message.created_at}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        background: message.is_from_me ? "rgba(13, 110, 253, 0.15)" : "#e9ecef",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <User size={16} />
+                    </div>
+                    <div>
+                      <strong style={{ fontSize: "0.95rem" }}>{message.is_from_me ? "أنت" : message.sender_name}</strong>
+                      <div className="text-soft" style={{ fontSize: "0.82rem" }}>
+                        {message.created_at}
                       </div>
                     </div>
-
-                    {message.related_to && (
-                      <div className="flex items-center gap-1 mb-2">
-                        {getRelatedIcon(message.related_to)}
-                        <Badge variant="outline" className="text-xs">
-                          {getRelatedLabel(message.related_to)}
-                        </Badge>
-                      </div>
-                    )}
-
-                    <p className="text-gray-900">{message.content}</p>
                   </div>
+                  {message.related_to && (
+                    <div className="table-actions" style={{ marginBottom: 8 }}>
+                      {getRelatedIcon(message.related_to)}
+                      <span className="badge-custom badge-primary">{getRelatedLabel(message.related_to)}</span>
+                    </div>
+                  )}
+                  <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{message.content}</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Skeleton Loading
-// ═══════════════════════════════════════════════════════════════════════════
-function CommunicationSkeleton() {
-  return (
-    <div className="space-y-6">
-      <Skeleton className="h-64 w-full" />
-      <Skeleton className="h-80 w-full" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -104,8 +104,13 @@ import FieldStaffGuidance from "../pages/fieldStaff/Guidance";
 import FieldStaffTasks from "../pages/fieldStaff/Tasks";
 import FieldStaffFinalEvaluation from "../pages/fieldStaff/FinalEvaluation";
 import StudentTrainingProgram from "../pages/fieldStaff/StudentTrainingProgram";
+import FieldSupervisorRoute from "./FieldSupervisorRoute";
 import FieldSupervisorWorkspace from "../pages/field-supervisor/FieldSupervisorWorkspace";
 import FieldSupervisorStudentDetail from "../pages/field-supervisor/StudentDetail";
+import FieldSupervisorStudentsPage from "../pages/field-supervisor/FieldSupervisorStudentsPage";
+import FieldSupervisorHubPage from "../pages/field-supervisor/FieldSupervisorHubPage";
+import FieldSupervisorFormsPage from "../pages/field-supervisor/FieldSupervisorFormsPage";
+import FieldSupervisorFormInstanceReview from "../pages/field-supervisor/FieldSupervisorFormInstanceReview";
 
 // Coordinator
 import CoordinatorDashboard from "../pages/dashboard/CoordinatorDashboard";
@@ -125,7 +130,6 @@ import PrincipalOfficialLetters from "../pages/principal/OfficialLetters";
 import PrincipalTrainingRequests from "../pages/principal/TrainingRequests";
 import MentorAssignment from "../pages/principal/MentorAssignment";
 import TraineeStudents from "../pages/principal/TraineeStudents";
-import TraineeStudentsList from "../pages/principal/TraineeStudentsList";
 import StudentEvaluation from "../pages/principal/StudentEvaluation";
 
 // Health Directorate
@@ -277,9 +281,79 @@ export default function AppRouter() {
           <Route path="/field-staff/final-evaluation" element={<FieldStaffFinalEvaluation />} />
           <Route path="/field-staff/students/:studentId/training-program" element={<StudentTrainingProgram />} />
 
-          {/* Dedicated Field Supervisor workspace */}
-          <Route path="/field-supervisor" element={<FieldSupervisorWorkspace />} />
-          <Route path="/field-supervisor/students/:studentId" element={<FieldSupervisorStudentDetail />} />
+          {/* المشرف الميداني — معزول عن المشرف الأكاديمي ومسارات field-staff */}
+          <Route
+            path="/field-supervisor"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorWorkspace />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/students"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorStudentsPage />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/students/:studentId"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorStudentDetail />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/attendance"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorHubPage mode="attendance" />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/daily-reports"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorHubPage mode="daily-reports" />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/evaluation"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorHubPage mode="evaluation" />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/messages"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorHubPage mode="communication" />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/forms"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorFormsPage />
+              </FieldSupervisorRoute>
+            }
+          />
+          <Route
+            path="/field-supervisor/form-instances/:instanceId"
+            element={
+              <FieldSupervisorRoute>
+                <FieldSupervisorFormInstanceReview />
+              </FieldSupervisorRoute>
+            }
+          />
 
           {/* Legacy Mentor routes - redirect to unified field-staff */}
           <Route path="/mentor/dashboard" element={<FieldStaffDashboard />} />
@@ -337,15 +411,12 @@ export default function AppRouter() {
           <Route path="/principal/training-requests" element={<PrincipalTrainingRequests />} />
           <Route path="/principal/official-letters" element={<PrincipalOfficialLetters />} />
           <Route path="/principal/student-evaluation" element={<StudentEvaluation />} />
-          <Route path="/principal/trainee-students" element={<TraineeStudents siteType="school" />} />
-          <Route path="/principal/trainees-list" element={<TraineeStudentsList siteType="school" />} />
 
           {/* Psychology Center */}
           <Route path="/psychology-center/dashboard" element={<PrincipalDashboard siteType="health_center" />} />
           <Route path="/psychology-center/profile" element={<PrincipalProfile siteType="health_center" />} />
           <Route path="/psychology-center/mentor-assignment" element={<MentorAssignment siteType="health_center" />} />
           <Route path="/psychology-center/trainee-students" element={<TraineeStudents siteType="health_center" />} />
-          <Route path="/psychology-center/trainees-list" element={<TraineeStudentsList siteType="health_center" />} />
 
           {/* Health */}
           <Route path="/health/dashboard" element={<HealthDirectorateDashboard />} />

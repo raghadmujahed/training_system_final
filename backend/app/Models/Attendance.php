@@ -12,9 +12,9 @@ class Attendance extends Model
     use HasFactory, HidesArchived;
 
     protected $fillable = [
-        'training_assignment_id', 'user_id', 'notes', 'date',
+        'training_assignment_id', 'user_id', 'notes', 'field_supervisor_notes', 'date',
         'check_in', 'check_out', 'approved_by', 'approved_at', 'status',
-        'academic_note', 'academic_alert_status', 'academic_commented_at', 'visible_to_academic'
+        'academic_note', 'academic_alert_status', 'academic_commented_at', 'visible_to_academic',
     ];
 
     protected $casts = [

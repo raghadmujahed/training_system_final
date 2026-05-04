@@ -22,7 +22,10 @@ final class PsychologyAcademicWorkflow
             return false;
         }
 
-        return $departmentId === TrainingTrackResolver::psychologyDeptId();
+        return Department::query()
+            ->where('id', $departmentId)
+            ->where('name', TrainingTrackResolver::PSYCHOLOGY)
+            ->exists();
     }
 
     public static function userHasPsychologyDepartment(?User $user): bool

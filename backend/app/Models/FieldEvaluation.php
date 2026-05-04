@@ -106,10 +106,13 @@ class FieldEvaluation extends Model
     public function submit(): void
     {
         $template = $this->template;
-        
-        // حساب الدرجة الإجمالية
-        $totalScore = array_sum($this->scores ?? []);
-        $gradeInfo = $template ? $template->calculateGrade($totalScore) : 
+
+        $scores = $this->scores ?? [];
+        $totalScore = $template
+            ? $template->weightedTotalFromScores($scores)
+            : (int) round(array_sum($scores));
+
+        $gradeInfo = $template ? $template->calculateGrade($totalScore) :
             ['grade' => null, 'label' => null];
 
         $this->update([
@@ -138,7 +141,12 @@ class FieldEvaluation extends Model
      */
     public function isEditable(): bool
     {
-        return !$this->is_final && in_array($this->status, [self::STATUS_DRAFT, null]);
+        if ($this->is_final) {
+            return false;
+        }
+        $s = $this->status;
+
+        return $s === null || $s === '' || $s === self::STATUS_DRAFT;
     }
 
     /**

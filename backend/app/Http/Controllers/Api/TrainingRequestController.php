@@ -293,7 +293,7 @@ class TrainingRequestController extends Controller
         }
         $this->trainingRequestService->directorateApprove($trainingRequest, $request->user()->id);
 
-        // Auto-send to school after approval
+        // Auto-send to training site after approval
         $trainingRequest->refresh();
         $letterData = [
             'letter_number' => $request->letter_number,
@@ -302,7 +302,7 @@ class TrainingRequestController extends Controller
         ];
         $this->trainingRequestService->sendToSchool($trainingRequest, $request->user()->id, $letterData);
 
-        return response()->json(['message' => 'تمت موافقة المديرية وإرسال الكتاب إلى المدرسة بنجاح']);
+        return response()->json(['message' => 'تمت موافقة الجهة الرسمية وإرسال الكتاب إلى جهة التدريب بنجاح']);
     }
 
     public function sendToSchool(SendTrainingRequestToSchoolRequest $request, TrainingRequest $trainingRequest)
@@ -313,7 +313,7 @@ class TrainingRequestController extends Controller
             $request->user()->id,
             $request->validated()
         );
-        return response()->json(['message' => 'تم إرسال الكتاب إلى المدرسة بنجاح']);
+        return response()->json(['message' => 'تم إرسال الكتاب إلى جهة التدريب بنجاح']);
     }
 
     public function schoolApprove(SchoolApproveTrainingRequest $request, TrainingRequest $trainingRequest)
@@ -323,11 +323,11 @@ class TrainingRequestController extends Controller
         if ($request->status === 'rejected') {
             $reason = $request->rejection_reason ?? '';
             $this->trainingRequestService->schoolReject($trainingRequest, $reason, $request->user()->id);
-            return response()->json(['message' => 'تم رفض الكتاب من قبل المدرسة']);
+            return response()->json(['message' => 'تم رفض الطلب من جهة التدريب']);
         }
 
         $this->trainingRequestService->schoolApprove($trainingRequest, $request->user()->id, $request->students);
-        return response()->json(['message' => 'تمت موافقة المدرسة وتعيين المعلمين المرشدين بنجاح']);
+        return response()->json(['message' => 'تمت موافقة جهة التدريب وتعيين المشرفين الميدانيين بنجاح']);
     }
 
     public function reject(RejectTrainingRequestRequest $request, TrainingRequest $trainingRequest)
@@ -505,7 +505,7 @@ class TrainingRequestController extends Controller
             && $this->normalizeDirectorate((string) $site->directorate) !== $this->normalizeDirectorate((string) $data['directorate'])
         ) {
             return response()->json([
-                'message' => 'المدرسة المختارة لا تتبع المديرية المحددة.',
+                'message' => 'جهة التدريب المختارة لا تتبع المديرية المحددة.',
             ], 422);
         }
 
@@ -612,7 +612,7 @@ class TrainingRequestController extends Controller
             && $this->normalizeDirectorate((string) $site->directorate) !== $this->normalizeDirectorate((string) $data['directorate'])
         ) {
             return response()->json([
-                'message' => 'المدرسة المختارة لا تتبع المديرية المحددة.',
+                'message' => 'جهة التدريب المختارة لا تتبع المديرية المحددة.',
             ], 422);
         }
         if (! $this->hasManagerAccountForSite($site)) {
@@ -747,12 +747,13 @@ class TrainingRequestController extends Controller
             abort(403, 'هذه الخدمة متاحة فقط لمدير جهة التدريب.');
         }
 
-        // المدرسة يمكنها تعيين المعلم المرشد أو المرشد التربوي، والمركز النفسي يعيّن الأخصائي النفسي.
+        // جهة التدريب (مدرسة): معلم/مرشد أو حساب مشرف ميداني في المنصة. المركز النفسي: أخصائي نفسي فقط.
         $targetRoles = $user->role?->name === 'psychology_center_manager'
             ? ['psychologist']
-            : ['teacher', 'adviser'];
+            : ['teacher', 'adviser', 'field_supervisor'];
 
         $teachers = User::where('status', 'active')
+            ->with('role')
             ->whereHas('role', fn($q) => $q->whereIn('name', $targetRoles))
             ->when($user->training_site_id, fn ($q) => $q->where('training_site_id', $user->training_site_id))
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -779,10 +780,10 @@ class TrainingRequestController extends Controller
         if ($request->status === 'rejected') {
             $reason = $request->rejection_reason ?? '';
             $this->trainingRequestService->schoolReject($trainingRequest, $reason, $request->user()->id);
-            return response()->json(['message' => 'تم رفض الكتاب من قبل المدرسة']);
+            return response()->json(['message' => 'تم رفض الطلب من جهة التدريب']);
         }
 
         $this->trainingRequestService->schoolApprove($trainingRequest, $request->user()->id, $request->students);
-        return response()->json(['message' => 'تمت موافقة المدرسة وتعيين المعلمين المرشدين بنجاح']);
+        return response()->json(['message' => 'تمت موافقة جهة التدريب وتعيين المشرفين الميدانيين بنجاح']);
     }
 }
