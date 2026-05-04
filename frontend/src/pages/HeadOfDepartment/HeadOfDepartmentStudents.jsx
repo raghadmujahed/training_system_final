@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { getHeadDepartmentStudents, getHeadDepartmentStudentDetails } from "../../services/api";
+import { useEffect, useState, useCallback } from "react";
+import { getHeadDepartmentStudents, getHeadDepartmentStudentDetails, getCourses, getSections } from "../../services/api";
 
 export default function HeadOfDepartmentStudents() {
   const [students, setStudents] = useState([]);
@@ -12,6 +12,36 @@ export default function HeadOfDepartmentStudents() {
     section_id: '',
     status: ''
   });
+  const [courses, setCourses] = useState([]);
+  const [sections, setSections] = useState([]);
+
+  // Fetch courses on mount (backend filters by department for head_of_department)
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const res = await getCourses({ per_page: 100 });
+        setCourses(res.data || []);
+      } catch (err) {
+        console.error("Courses fetch error:", err);
+      }
+    };
+    fetchCourses();
+  }, []);
+
+  // Fetch sections when course_id filter changes
+  useEffect(() => {
+    const fetchSections = async () => {
+      try {
+        const params = { per_page: 100 };
+        if (filters.course_id) params.course_id = filters.course_id;
+        const res = await getSections(params);
+        setSections(res.data || []);
+      } catch (err) {
+        console.error("Sections fetch error:", err);
+      }
+    };
+    fetchSections();
+  }, [filters.course_id]);
 
   useEffect(() => {
     fetchStudents();
@@ -20,12 +50,12 @@ export default function HeadOfDepartmentStudents() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (filters.course_id) params.append('course_id', filters.course_id);
-      if (filters.section_id) params.append('section_id', filters.section_id);
-      if (filters.status) params.append('status', filters.status);
+      const params = {};
+      if (filters.course_id) params.course_id = filters.course_id;
+      if (filters.section_id) params.section_id = filters.section_id;
+      if (filters.status) params.status = filters.status;
       
-      const response = await getHeadDepartmentStudents(params.toString());
+      const response = await getHeadDepartmentStudents(params);
       setStudents(response.data?.data || response.data || []);
     } catch (err) {
       const apiMsg = err.response?.data?.message;
@@ -48,11 +78,12 @@ export default function HeadOfDepartmentStudents() {
   };
 
   const getStudentStatus = (student) => {
-    if (!student.sectionStudents || student.sectionStudents.length === 0) {
+    const enrollments = student.section_students || student.sectionStudents || [];
+    if (enrollments.length === 0) {
       return { text: "غير مسجل", color: "#dc3545" };
     }
     
-    const latestAssignment = student.sectionStudents[student.sectionStudents.length - 1];
+    const latestAssignment = enrollments[enrollments.length - 1];
     switch (latestAssignment.status) {
       case 'accepted':
         return { text: "مقبول", color: "#28a745" };
@@ -66,16 +97,20 @@ export default function HeadOfDepartmentStudents() {
   };
 
   const getTrainingPlaceName = (student) => {
-    return student.trainingSite ? student.trainingSite.name : "غير محدد";
+    const site = student.training_site || student.trainingSite;
+    return site ? site.name : "غير محدد";
   };
 
   const getSectionInfo = (student) => {
-    if (!student.sectionStudents || student.sectionStudents.length === 0) {
+    const enrollments = student.section_students || student.sectionStudents || [];
+    if (enrollments.length === 0) {
       return "غير مسجل";
     }
     
-    const latestAssignment = student.sectionStudents[student.sectionStudents.length - 1];
-    return `${latestAssignment.section?.course?.name || 'غير محدد'} - ${latestAssignment.section?.name || 'غير محدد'}`;
+    const latestAssignment = enrollments[enrollments.length - 1];
+    const section = latestAssignment.section || {};
+    const course = section.course || {};
+    return `${course.name || 'غير محدد'} - ${section.name || 'غير محدد'}`;
   };
 
   if (loading) {
@@ -115,10 +150,12 @@ export default function HeadOfDepartmentStudents() {
               id="hod-students-filter-course"
               name="course_id"
               value={filters.course_id}
-              onChange={(e) => setFilters({...filters, course_id: e.target.value})}
+              onChange={(e) => setFilters({...filters, course_id: e.target.value, section_id: ''})}
             >
               <option value="">جميع المساقات</option>
-              {/* Add course options dynamically */}
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>{course.name}</option>
+              ))}
             </select>
           </div>
           
@@ -131,7 +168,11 @@ export default function HeadOfDepartmentStudents() {
               onChange={(e) => setFilters({...filters, section_id: e.target.value})}
             >
               <option value="">جميع الشعب</option>
-              {/* Add section options dynamically */}
+              {sections.map((section) => (
+                <option key={section.id} value={section.id}>
+                  {section.name}{section.course ? ` - ${section.course.name}` : ''}
+                </option>
+              ))}
             </select>
           </div>
           
@@ -251,10 +292,10 @@ export default function HeadOfDepartmentStudents() {
                 </div>
               </div>
               
-              {selectedStudent.sectionStudents && selectedStudent.sectionStudents.length > 0 && (
+              {(selectedStudent.section_students || selectedStudent.sectionStudents)?.length > 0 && (
                 <div className="section-assignments">
                   <h3>الشعب المسجل فيها:</h3>
-                  {selectedStudent.sectionStudents.map((assignment, index) => (
+                  {(selectedStudent.section_students || selectedStudent.sectionStudents).map((assignment, index) => (
                     <div key={index} className="assignment-item">
                       <div className="assignment-info">
                         <strong>{assignment.section?.course?.name}</strong> - {assignment.section?.name}
