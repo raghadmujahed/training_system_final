@@ -17,6 +17,7 @@ class AttendanceService
             'check_in' => $data['check_in'] ?? null,
             'check_out' => $data['check_out'] ?? null,
             'status' => $data['status'],
+            'periods' => $data['periods'] ?? null,
             'notes' => $data['notes'] ?? null,
         ]);
     }
@@ -26,7 +27,19 @@ class AttendanceService
         $attendance->update([
             'approved_by' => $approverId,
             'approved_at' => now(),
+            'status' => 'present',
             'notes' => $notes ?? $attendance->notes,
+        ]);
+        return $attendance;
+    }
+
+    public function rejectAttendance(Attendance $attendance, int $rejecterId, ?string $reason = null): Attendance
+    {
+        $attendance->update([
+            'approved_by' => null,
+            'approved_at' => null,
+            'status' => 'rejected',
+            'rejection_reason' => $reason,
         ]);
         return $attendance;
     }

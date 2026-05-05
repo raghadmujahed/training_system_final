@@ -392,6 +392,21 @@ export const getAttendances = (params = {}) =>
 export const approveAttendance = (id, data) =>
   apiClient.patch(`/attendances/${id}/approve`, data).then((res) => res.data);
 
+export const rejectAttendance = (id, data) =>
+  apiClient.patch(`/attendances/${id}/reject`, data).then((res) => res.data);
+
+export const submitAttendanceToManager = (data) =>
+  apiClient.post('/attendances/submit-to-manager', data).then((res) => res.data);
+
+export const storeAttendance = (data) =>
+  apiClient.post("/attendances", data).then((res) => res.data);
+
+export const updateAttendance = (id, data) =>
+  apiClient.put(`/attendances/${id}`, data).then((res) => res.data);
+
+export const deleteAttendance = (id) =>
+  apiClient.delete(`/attendances/${id}`).then((res) => res.data);
+
 // ==================== Training Logs (مراجعة المشرف/المعلم) ====================
 export const getTrainingLogs = (params = {}) =>
   apiClient.get("/training-logs", { params }).then((res) => res.data);
@@ -689,12 +704,12 @@ export const createAttendance = async (data) => {
   return response.data;
 };
 
-export const updateAttendance = async (id, data) => {
+export const updateStudentAttendance = async (id, data) => {
   const response = await apiClient.put(`/student/attendance/${id}`, data);
   return response.data;
 };
 
-export const deleteAttendance = async (id) => {
+export const deleteStudentAttendance = async (id) => {
   const response = await apiClient.delete(`/student/attendance/${id}`);
   return response.data;
 };

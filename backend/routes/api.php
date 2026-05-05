@@ -113,6 +113,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Présences
     Route::apiResource('attendances', AttendanceController::class);
     Route::patch('attendances/{attendance}/approve', [AttendanceController::class, 'approve']);
+    Route::patch('attendances/{attendance}/reject', [AttendanceController::class, 'reject']);
+    Route::post('attendances/submit-to-manager', [AttendanceController::class, 'submitToManager']);
     Route::get('attendance-summary', [AttendanceController::class, 'summary']);
 
     // Journal de stage

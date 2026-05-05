@@ -3,6 +3,12 @@ import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
 import { getAttendances, itemsFromPagedResponse } from "../../services/api";
 import { CalendarCheck, Clock, CheckCircle2 } from "lucide-react";
+import huLogo from "../../assets/HU Logo.webp";
+
+const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+function dayName(d) { return d ? DAYS[new Date(d).getDay()] : ""; }
+function fmtTime(v) { const m = v?.match(/(\d{2}):(\d{2})/); return m ? `${m[1]}:${m[2]}` : "—"; }
+function fmtDate(v) { return v ? v.slice(0, 10) : "—"; }
 
 /**
  * عرض حضور الطالب فقط — التسجيل يتم من المرشد الميداني عبر سجل التدريب الرسمي (Attendance).
@@ -59,42 +65,116 @@ export default function StudentAttendance() {
           description="عند تسجيل المرشد الميداني لحضورك سيظهر السجل هنا."
         />
       ) : (
-        <div className="table-wrapper">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>الحالة</th>
-                <th>الدخول</th>
-                <th>الخروج</th>
-                <th>ملاحظات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.date || "—"}</td>
-                  <td>
-                    <span className="badge-custom badge-info">{r.status_label || r.status || "—"}</span>
-                    {r.approved_at && (
-                      <span className="badge-custom badge-success ms-1" title={r.approved_at}>
-                        <CheckCircle2 size={12} className="inline" /> معتمد
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <span className="d-inline-flex align-items-center gap-1">
-                      <Clock size={14} /> {r.check_in ? String(r.check_in).slice(0, 5) : "—"}
-                    </span>
-                  </td>
-                  <td>{r.check_out ? String(r.check_out).slice(0, 5) : "—"}</td>
-                  <td>{r.notes || "—"}</td>
+        <div className="sa-form-view">
+          {/* رأسية */}
+          <div className="sa-letterhead">
+            <div className="sa-lh-logo">
+              <img src={huLogo} alt="شعار جامعة الخليل" width="48" height="48" style={{objectFit:"contain"}} />
+              <div>
+                <div className="sa-lh-title">جامعة الخليل</div>
+                <div className="sa-lh-sub">كلية العلوم التربوية — قسم التدريب الميداني</div>
+              </div>
+            </div>
+            <div className="sa-lh-form-title">نموذج الحضور والغياب</div>
+          </div>
+
+          {/* ملخص */}
+          <div className="sa-summary-row">
+            <div className="sa-sum-card">
+              <div className="sa-sum-icon sa-icon-blue"><CalendarCheck size={16} /></div>
+              <div><div className="sa-sum-num">{rows.length}</div><div className="sa-sum-lbl">يوم تدريب</div></div>
+            </div>
+            <div className="sa-sum-card">
+              <div className="sa-sum-icon sa-icon-green"><CheckCircle2 size={16} /></div>
+              <div><div className="sa-sum-num">{rows.filter(r => r.approved_at).length}</div><div className="sa-sum-lbl">معتمد</div></div>
+            </div>
+            <div className="sa-sum-card">
+              <div className="sa-sum-icon sa-icon-purple"><Clock size={16} /></div>
+              <div><div className="sa-sum-num">{rows.filter(r => r.check_in && r.check_out).length}</div><div className="sa-sum-lbl">يوم مكتمل</div></div>
+            </div>
+          </div>
+
+          {/* الجدول */}
+          <div className="sa-table-wrap">
+            <table className="sa-table">
+              <thead>
+                <tr>
+                  <th>رقم السجل</th>
+                  <th>اليوم والتاريخ</th>
+                  <th>ساعة الحضور</th>
+                  <th>ساعة المغادرة</th>
+                  <th>الحصص</th>
+                  <th>ملاحظات</th>
+                  <th>الحالة</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => (
+                  <tr key={r.id} className={r.approved_at ? "sa-row-ok" : r.status === "rejected" ? "sa-row-rej" : ""}>
+                    <td className="sa-td-num">{idx + 1}</td>
+                    <td>
+                      <div className="sa-date-cell">
+                        <span>{fmtDate(r.date)}</span>
+                        <span className="sa-day-badge">{dayName(fmtDate(r.date))}</span>
+                      </div>
+                    </td>
+                    <td className="sa-td-time">{fmtTime(r.check_in)}</td>
+                    <td className="sa-td-time">{fmtTime(r.check_out)}</td>
+                    <td>{r.periods != null && r.periods !== "" ? r.periods : "—"}</td>
+                    <td className="sa-td-notes">{r.notes || "—"}</td>
+                    <td>
+                      {r.approved_at ? (
+                        <span className="sa-badge sa-badge-success"><CheckCircle2 size={11} /> معتمد ✓</span>
+                      ) : r.status === "rejected" ? (
+                        <div>
+                          <span className="sa-badge sa-badge-danger">مرفوض ✗</span>
+                          {r.rejection_reason && <div className="sa-rej-reason">{r.rejection_reason}</div>}
+                        </div>
+                      ) : (
+                        <span className="sa-badge sa-badge-warning">بانتظار</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+      <style>{`
+  .sa-form-view { background: #fff; border: 1.5px solid #e4e2f0; border-radius: 14px; box-shadow: 0 4px 16px rgba(108,60,225,0.07); overflow: hidden; direction: rtl; }
+  .sa-letterhead { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 2px solid #6C3CE1; background: linear-gradient(135deg,#f8f5ff,#f0ecff); }
+  .sa-lh-logo { display: flex; align-items: center; gap: 11px; }
+  .sa-lh-title { font-size: 1rem; font-weight: 800; color: #1e1e2d; }
+  .sa-lh-sub { font-size: 10.5px; color: #888; margin-top: 2px; }
+  .sa-lh-form-title { font-size: 0.9rem; font-weight: 700; color: #6C3CE1; background: #ede9ff; padding: 5px 16px; border-radius: 20px; }
+  .sa-summary-row { display: flex; gap: 10px; padding: 14px 20px; border-bottom: 1px solid #f0eef8; background: #fdfdff; }
+  .sa-sum-card { flex: 1; display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #eee; border-radius: 9px; padding: 10px 12px; }
+  .sa-sum-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sa-icon-blue { background: #eef2ff; color: #4f6ef7; }
+  .sa-icon-purple { background: #f3f0ff; color: #6C3CE1; }
+  .sa-icon-green { background: #e6fcf0; color: #1a9d5c; }
+  .sa-sum-num { font-size: 1.2rem; font-weight: 800; color: #1e1e2d; line-height: 1.2; }
+  .sa-sum-lbl { font-size: 10.5px; color: #999; font-weight: 500; margin-top: 2px; }
+  .sa-table-wrap { overflow-x: auto; }
+  .sa-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 12.5px; }
+  .sa-table th { background: linear-gradient(135deg,#f0ecff,#e8e2ff); color: #5a4a8a; font-weight: 700; font-size: 11px; padding: 10px 11px; text-align: center; border-bottom: 2px solid #d8d0f0; white-space: nowrap; }
+  .sa-table td { padding: 10px 11px; text-align: center; border-bottom: 1px solid #f0eef8; vertical-align: middle; color: #2d2d3a; }
+  .sa-table tbody tr:last-child td { border-bottom: none; }
+  .sa-table tbody tr:hover td { background: #faf8ff; }
+  .sa-row-ok td { background: #f0fdf4 !important; }
+  .sa-row-rej td { background: #fff5f5 !important; }
+  .sa-td-num { color: #b0a8c8; font-weight: 700; font-size: 11px; }
+  .sa-td-time { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .sa-td-notes { color: #666; max-width: 120px; }
+  .sa-date-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .sa-day-badge { font-size: 9.5px; font-weight: 700; color: #6C3CE1; background: #ede9ff; padding: 1px 7px; border-radius: 20px; }
+  .sa-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; }
+  .sa-badge-success { background: #dcfce7; color: #15803d; }
+  .sa-badge-warning { background: #fef9c3; color: #a16207; border: 1px solid #fde68a; }
+  .sa-badge-danger { background: #fee2e2; color: #b91c1c; }
+  .sa-rej-reason { font-size: 9.5px; color: #b91c1c; margin-top: 3px; }
+`}</style>
     </>
   );
 }

@@ -131,6 +131,7 @@ import PrincipalTrainingRequests from "../pages/principal/TrainingRequests";
 import MentorAssignment from "../pages/principal/MentorAssignment";
 import TraineeStudents from "../pages/principal/TraineeStudents";
 import StudentEvaluation from "../pages/principal/StudentEvaluation";
+import AttendanceApproval from "../pages/principal/AttendanceApproval";
 
 // Health Directorate
 import HealthDirectorateDashboard from "../pages/dashboard/HealthDirectorateDashboard";
@@ -411,6 +412,7 @@ export default function AppRouter() {
           <Route path="/principal/training-requests" element={<PrincipalTrainingRequests />} />
           <Route path="/principal/official-letters" element={<PrincipalOfficialLetters />} />
           <Route path="/principal/student-evaluation" element={<StudentEvaluation />} />
+          <Route path="/principal/attendance-approval" element={<AttendanceApproval />} />
 
           {/* Psychology Center */}
           <Route path="/psychology-center/dashboard" element={<PrincipalDashboard siteType="health_center" />} />

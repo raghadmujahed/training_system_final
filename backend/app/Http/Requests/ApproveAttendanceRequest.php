@@ -14,7 +14,6 @@ class ApproveAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'approved' => 'required|boolean',
             'notes' => 'nullable|string',
         ];
     }

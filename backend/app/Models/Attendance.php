@@ -13,7 +13,8 @@ class Attendance extends Model
 
     protected $fillable = [
         'training_assignment_id', 'user_id', 'notes', 'field_supervisor_notes', 'date',
-        'check_in', 'check_out', 'approved_by', 'approved_at', 'status',
+        'check_in', 'check_out', 'approved_by', 'approved_at', 'status', 'rejection_reason', 'periods',
+        'submitted_to_manager_at', 'submitted_to_manager_by',
         'academic_note', 'academic_alert_status', 'academic_commented_at', 'visible_to_academic',
     ];
 
@@ -22,6 +23,7 @@ class Attendance extends Model
         'check_in' => 'datetime:H:i:s',
         'check_out' => 'datetime:H:i:s',
         'approved_at' => 'datetime',
+        'submitted_to_manager_at' => 'datetime',
         'academic_commented_at' => 'datetime',
         'visible_to_academic' => 'boolean',
     ];
