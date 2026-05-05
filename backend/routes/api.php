@@ -379,4 +379,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Search students
         Route::get('/search-students', [HeadOfDepartmentController::class, 'searchStudents']);
     });
+
+    // ========== CHAT MODULE (isolated) ==========
+    Route::prefix('')->group(function () {
+        Route::get('/chats', [\App\Http\Controllers\Api\Chat\ChatController::class, 'index']);
+        Route::post('/chats/create-or-get', [\App\Http\Controllers\Api\Chat\ChatController::class, 'createOrGet']);
+        Route::get('/chat/unread-count', [\App\Http\Controllers\Api\Chat\ChatController::class, 'unreadCount']);
+        Route::get('/chat/allowed-users', [\App\Http\Controllers\Api\Chat\ChatController::class, 'allowedUsers']);
+        Route::get('/chat/user-profile/{id}', [\App\Http\Controllers\Api\Chat\UserProfileController::class, 'show']);
+        Route::get('/chats/{id}/messages', [\App\Http\Controllers\Api\Chat\MessageController::class, 'index']);
+        Route::post('/messages', [\App\Http\Controllers\Api\Chat\MessageController::class, 'store']);
+    });
 });

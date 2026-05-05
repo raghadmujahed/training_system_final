@@ -78,6 +78,9 @@ import Profile from "../pages/common/Profile";
 import ChangePassword from "../pages/common/ChangePassword";
 import Notifications from "../pages/common/Notifications";
 
+// Chat
+import ChatPage from "../pages/chat/ChatPage";
+
 // Supervisor
 import SupervisorWorkspace from "../pages/supervisor/workspace/SupervisorWorkspace";
 import FieldVisits from "../pages/supervisor/FieldVisits";
@@ -434,6 +437,9 @@ export default function AppRouter() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/notifications" element={<Notifications />} />
+
+          {/* Chat */}
+          <Route path="/chat" element={<ChatPage />} />
 
           {/* 404 - أي رابط غير معروف */}
           <Route path="*" element={

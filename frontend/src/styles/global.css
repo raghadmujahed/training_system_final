@@ -1029,6 +1029,48 @@ p {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+.navbar-chat-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: inherit;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.navbar-chat-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.navbar-chat-btn.active {
+  color: var(--primary, #4f46e5);
+  background-color: rgba(79, 70, 229, 0.08);
+}
+
+.navbar-chat-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: #dc3545;
+  color: white;
+  border-radius: 10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+}
+
 .bell-icon {
   font-size: 1.3rem;
 }

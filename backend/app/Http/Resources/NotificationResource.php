@@ -16,10 +16,10 @@ class NotificationResource extends JsonResource
             'data' => $this->data,
             'notifiable_type' => $this->notifiable_type,
             'notifiable_id' => $this->notifiable_id,
-            'read_at' => $this->read_at?->toDateTimeString(),
-            'user' => new UserResource($this->whenLoaded('user')),
-            'created_at' => $this->created_at?->toDateTimeString(),
-            'updated_at' => $this->updated_at?->toDateTimeString(),
+            'read_at'    => $this->getRawOriginal('read_at')    ? str_replace(' ', 'T', $this->getRawOriginal('read_at'))    . 'Z' : null,
+            'user'       => new UserResource($this->whenLoaded('user')),
+            'created_at' => $this->getRawOriginal('created_at') ? str_replace(' ', 'T', $this->getRawOriginal('created_at')) . 'Z' : null,
+            'updated_at' => $this->getRawOriginal('updated_at') ? str_replace(' ', 'T', $this->getRawOriginal('updated_at')) . 'Z' : null,
         ];
     }
 

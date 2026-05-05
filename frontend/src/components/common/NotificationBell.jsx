@@ -312,16 +312,19 @@ export default function NotificationBell() {
 
   const formatTime = (dateString) => {
     if (!dateString) return "";
-
-    const date = new Date(dateString);
+    const str = String(dateString).trim();
+    // If explicit timezone present parse as-is, otherwise treat as local time
+    const date = /Z$|[+-]\d{2}:\d{2}$/.test(str)
+      ? new Date(str)
+      : new Date(str.replace(" ", "T") + "Z");
+    if (isNaN(date)) return "";
     const now = new Date();
     const diff = Math.floor((now - date) / 1000);
-
+    if (diff < 0) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     if (diff < 60) return "الآن";
     if (diff < 3600) return `منذ ${Math.floor(diff / 60)} دقيقة`;
     if (diff < 86400) return `منذ ${Math.floor(diff / 3600)} ساعة`;
-
-    return date.toLocaleDateString("ar-SA");
+    return date.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" });
   };
 
   if (!hasSession()) {

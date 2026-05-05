@@ -367,6 +367,7 @@ export default function Sidebar({ isOpen, onClose }) {
             <span>{item.name}</span>
           </NavLink>
         ))}
+
       </div>
 
       <div className="sidebar-footer">
