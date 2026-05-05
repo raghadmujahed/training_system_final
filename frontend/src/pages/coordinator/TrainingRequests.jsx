@@ -50,6 +50,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
   const [printingBatchId, setPrintingBatchId] = useState(null);
 
   const today = new Date().toISOString().slice(0, 10);
+  const autoLetterNumber = (id) => `TR-${new Date().getFullYear()}-${String(id).padStart(3, "0")}`;
   const [filters, setFilters] = useState({
     status: "",
     search: "",
@@ -104,7 +105,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
 
   async function handleSendBatch(batchId) {
     const data = batchSendForm[batchId] || {};
-    const letterNumber = data.letter_number?.trim() || `كتاب-${batchId}/${new Date().getFullYear()}`;
+    const letterNumber = data.letter_number?.trim() || autoLetterNumber(batchId);
     const letterDate = data.letter_date || today;
     const payload = {
       letter_number: letterNumber,
@@ -306,7 +307,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                 {batchesForCoordinatorTable.slice(0, 4).map((b) => {
                   const statusLabel = BATCH_STATUS_LABELS[b.status] || b.status;
                   const statusColors = BATCH_STATUS_COLORS[b.status] || { bg: "#e9ecef", text: "#495057" };
-                  const defaultLetterNumber = `كتاب-${b.id}/${new Date().getFullYear()}`;
+                  const defaultLetterNumber = autoLetterNumber(b.id);
                   const batchDraft = batchSendForm[b.id] || {};
                   const effectiveLetterNumber = batchDraft.letter_number?.trim() || defaultLetterNumber;
                   const effectiveLetterDate = batchDraft.letter_date || today;
@@ -369,15 +370,18 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                           }}>
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em" }}>رقم الكتاب</label>
+                                <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em", display: "flex", alignItems: "center", gap: 6 }}>
+                                  رقم الكتاب
+                                  <span style={{ fontSize: "0.68rem", background: "#e0f2fe", color: "#0369a1", padding: "1px 7px", borderRadius: 99, fontWeight: 700 }}>تلقائي</span>
+                                </label>
                                 <input
                                   className="form-control-custom"
-                                  placeholder="تلقائي"
+                                  placeholder={defaultLetterNumber}
                                   value={effectiveLetterNumber}
                                   onChange={(e) =>
                                     setBatchSendField(b.id, "letter_number", e.target.value)
                                   }
-                                  style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #cbd5e1", padding: "6px 10px", background: "#fff", outline: "none" }}
+                                  style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #bae6fd", padding: "6px 10px", background: "#f0f9ff", outline: "none", fontWeight: 700, color: "#0c4a6e" }}
                                 />
                               </div>
                               <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>

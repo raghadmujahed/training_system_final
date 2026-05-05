@@ -67,6 +67,26 @@ const OfficialLetters = ({ siteType = "school" }) => {
   const [requestSavingId, setRequestSavingId] = useState(null);
   const [letterFormMap, setLetterFormMap] = useState({});
 
+  const autoLetterNumber = (id) => {
+    const year = new Date().getFullYear();
+    const padded = String(id).padStart(3, "0");
+    return `DIR-${year}-${padded}`;
+  };
+
+  const handleDecisionChange = (requestId, value) => {
+    setRequestDecision((prev) => ({ ...prev, [requestId]: value }));
+    if (value === "approved") {
+      setLetterFormMap((prev) => ({
+        ...prev,
+        [requestId]: {
+          letter_number: prev[requestId]?.letter_number || autoLetterNumber(requestId),
+          letter_date: prev[requestId]?.letter_date || new Date().toISOString().slice(0, 10),
+          content: prev[requestId]?.content || "",
+        },
+      }));
+    }
+  };
+
   useEffect(() => {
     fetchTrainingRequests();
   }, []);
@@ -121,7 +141,6 @@ const OfficialLetters = ({ siteType = "school" }) => {
     if (decision === "approved") {
       const form = letterFormMap[requestId] || {};
       const errors = [];
-      if (!form.letter_number?.trim()) errors.push("رقم الكتاب");
       if (!form.letter_date) errors.push("تاريخ الكتاب");
       if (!form.content?.trim()) errors.push("محتوى الكتاب");
       if (errors.length > 0) {
@@ -141,9 +160,9 @@ const OfficialLetters = ({ siteType = "school" }) => {
       };
       if (decision === "approved") {
         const form = letterFormMap[requestId] || {};
-        payload.letter_number = form.letter_number.trim();
-        payload.letter_date = form.letter_date;
-        payload.content = form.content.trim();
+        payload.letter_number = form.letter_number?.trim() || autoLetterNumber(requestId);
+        payload.letter_date = form.letter_date || new Date().toISOString().slice(0, 10);
+        payload.content = form.content?.trim();
       }
       await directorateApprove(requestId, payload);
 
@@ -163,7 +182,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
     setLetterFormMap((prev) => ({
       ...prev,
       [requestId]: {
-        letter_number: prev[requestId]?.letter_number || "",
+        letter_number: prev[requestId]?.letter_number || autoLetterNumber(requestId),
         letter_date: prev[requestId]?.letter_date || new Date().toISOString().slice(0, 10),
         content: prev[requestId]?.content || "",
         [field]: value,
@@ -439,7 +458,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
                       </td>
                       <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
                         <select value={decision}
-                          onChange={(e) => setRequestDecision((prev) => ({ ...prev, [request.id]: e.target.value }))}
+                          onChange={(e) => handleDecisionChange(request.id, e.target.value)}
                           style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: "0.8rem", background: "#f8fafc" }}
                         >
                           <option value="">{"اختر القرار"}</option>
@@ -457,10 +476,17 @@ const OfficialLetters = ({ siteType = "school" }) => {
                       <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
                         {showLetterFields ? (
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-                            <input type="text" placeholder={"رقم كتاب الإرسال"} value={letterFormMap[request.id]?.letter_number || ""}
-                              onChange={(e) => handleLetterFieldChange(request.id, "letter_number", e.target.value)}
-                              style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #10b981", fontSize: "0.8rem", background: "#f0fdf4" }}
-                            />
+                            <div style={{ position: "relative" }}>
+                              <input type="text"
+                                placeholder={autoLetterNumber(request.id)}
+                                value={letterFormMap[request.id]?.letter_number || ""}
+                                onChange={(e) => handleLetterFieldChange(request.id, "letter_number", e.target.value)}
+                                style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1.5px solid #bae6fd", fontSize: "0.8rem", background: "#f0f9ff", fontWeight: 700, color: "#0c4a6e", width: "100%", boxSizing: "border-box" }}
+                              />
+                              {!letterFormMap[request.id]?.letter_number && (
+                                <span style={{ position: "absolute", top: "50%", right: 6, transform: "translateY(-50%)", fontSize: "0.65rem", background: "#e0f2fe", color: "#0369a1", padding: "1px 6px", borderRadius: 99, fontWeight: 700, pointerEvents: "none" }}>تلقائي</span>
+                              )}
+                            </div>
                             <input type="date" value={letterFormMap[request.id]?.letter_date || new Date().toISOString().slice(0, 10)}
                               onChange={(e) => handleLetterFieldChange(request.id, "letter_date", e.target.value)}
                               style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #10b981", fontSize: "0.8rem", background: "#f0fdf4" }}

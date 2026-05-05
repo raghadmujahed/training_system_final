@@ -18,9 +18,16 @@ export default function OfficialLetterPreview({
   const [letterContent, setLetterContent] = useState("");
   const [formError, setFormError] = useState("");
 
+  const autoLetterNumber = (id) => {
+    const year = new Date().getFullYear();
+    const padded = String(id).padStart(3, "0");
+    return `TR-${year}-${padded}`;
+  };
+
   useEffect(() => {
     if (!batch) return;
-    setLetterNumber(String(letter?.letter_number || batch.letter_number || "").trim());
+    const existing = String(letter?.letter_number || batch.letter_number || "").trim();
+    setLetterNumber(existing || autoLetterNumber(batch.id));
     setLetterDate(
       letter?.letter_date || batch.letter_date || new Date().toISOString().slice(0, 10)
     );
@@ -291,15 +298,18 @@ export default function OfficialLetterPreview({
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>رقم المعاملة</span>
+              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)", display: "flex", alignItems: "center", gap: 6 }}>
+                رقم المعاملة
+                <span style={{ fontSize: "0.72rem", background: "#e0f2fe", color: "#0369a1", padding: "1px 8px", borderRadius: 99, fontWeight: 700 }}>تلقائي</span>
+              </span>
               <input
                 type="text"
                 className="form-control"
                 value={letterNumber}
                 onChange={(e) => setLetterNumber(e.target.value)}
-                placeholder="مثال: كتاب ١٢٣/٢٠٢٦"
+                placeholder={autoLetterNumber(batch.id)}
                 disabled={saving}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)" }}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1.5px solid #bae6fd", background: "#f0f9ff", fontWeight: 700, color: "#0c4a6e" }}
               />
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>

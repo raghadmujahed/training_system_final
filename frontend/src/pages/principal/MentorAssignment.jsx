@@ -311,10 +311,9 @@ export default function MentorAssignment({ siteType = "school" }) {
             "المساق",
             "حالة السجل",
             labels.mentorCol,
-            ...(siteType === "school" ? ["حساب المشرف في المنصة (اختياري)"] : []),
             "ملاحظات",
           ];
-          const emptyColSpan = siteType === "school" ? 7 : 6;
+          const emptyColSpan = 6;
 
           const isHighlighted = highlightedId === req.id;
           return (
@@ -401,14 +400,6 @@ export default function MentorAssignment({ siteType = "school" }) {
                       </tr>
                     ) : (
                       reqRows.map((student, idx) => {
-                        const mentorRole = student.mentorId
-                          ? teachers.find((t) => String(t.id) === String(student.mentorId))?.role?.name
-                          : null;
-                        const showPlatformFs =
-                          siteType === "school" &&
-                          mentorRole &&
-                          ["teacher", "adviser"].includes(mentorRole);
-
                         return (
                         <tr key={student.studentRowId} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
                           <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
@@ -442,36 +433,6 @@ export default function MentorAssignment({ siteType = "school" }) {
                               ))}
                             </select>
                           </td>
-                          {siteType === "school" ? (
-                            <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", minWidth: 200 }}>
-                              {showPlatformFs ? (
-                                <select
-                                  value={student.fieldSupervisorId}
-                                  onChange={(e) =>
-                                    handleFieldSupervisorChange(student.studentRowId, e.target.value)
-                                  }
-                                  style={{
-                                    width: "100%",
-                                    padding: "0.375rem 0.5rem",
-                                    borderRadius: 6,
-                                    border: student.fieldSupervisorId ? "1px solid #6366f1" : "1px solid #e2e8f0",
-                                    fontSize: "0.8rem",
-                                    background: student.fieldSupervisorId ? "#eef2ff" : "#f8fafc",
-                                    outline: "none",
-                                  }}
-                                >
-                                  <option value="">{"— اختياري —"}</option>
-                                  {platformFieldSupervisors.map((fs) => (
-                                    <option key={fs.id} value={fs.id}>
-                                      {fs.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>{"—"}</span>
-                              )}
-                            </td>
-                          ) : null}
                           <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", minWidth: 180 }}>
                             <textarea value={student.notes} onChange={(e) => handleNotesChange(student.studentRowId, e.target.value)}
                               placeholder={"ملاحظات (اختياري)"} rows={2}
