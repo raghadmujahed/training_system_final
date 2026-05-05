@@ -69,13 +69,49 @@ export default function StudentAttendance() {
           {/* رأسية */}
           <div className="sa-letterhead">
             <div className="sa-lh-logo">
-              <img src={huLogo} alt="شعار جامعة الخليل" width="48" height="48" style={{objectFit:"contain"}} />
+              <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" style={{objectFit:"contain"}} />
               <div>
                 <div className="sa-lh-title">جامعة الخليل</div>
                 <div className="sa-lh-sub">كلية العلوم التربوية — قسم التدريب الميداني</div>
               </div>
             </div>
-            <div className="sa-lh-form-title">نموذج الحضور والغياب</div>
+            <div className="sa-lh-actions">
+              <div className="sa-lh-form-title">نموذج الحضور والغياب</div>
+              <button type="button" className="sa-print-btn no-print" onClick={() => window.print()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                طباعة
+              </button>
+            </div>
+          </div>
+
+          {/* معلومات الطالب */}
+          <div className="sa-info-grid">
+            <div className="sa-info-item">
+              <span className="sa-info-label">اسم الطالب</span>
+              <span className="sa-info-value">{rows[0]?.training_assignment?.enrollment?.user?.name || "—"}</span>
+            </div>
+            <div className="sa-info-item">
+              <span className="sa-info-label">الرقم الجامعي</span>
+              <span className="sa-info-value">{rows[0]?.training_assignment?.enrollment?.user?.university_id || "—"}</span>
+            </div>
+            <div className="sa-info-item">
+              <span className="sa-info-label">جهة التدريب</span>
+              <span className="sa-info-value">{rows[0]?.training_assignment?.training_site?.name || "—"}</span>
+            </div>
+            <div className="sa-info-item">
+              <span className="sa-info-label">الفترة من</span>
+              <span className="sa-info-value">{rows[0]?.training_assignment?.start_date || "—"}</span>
+            </div>
+            <div className="sa-info-item">
+              <span className="sa-info-label">الفترة إلى</span>
+              <span className="sa-info-value">{rows[0]?.training_assignment?.end_date || "—"}</span>
+            </div>
+            <div className="sa-info-item">
+              <span className="sa-info-label">الحالة</span>
+              <span className="sa-info-value">
+                {rows[0]?.training_assignment?.status_label || rows[0]?.training_assignment?.status || "—"}
+              </span>
+            </div>
           </div>
 
           {/* ملخص */}
@@ -147,7 +183,15 @@ export default function StudentAttendance() {
   .sa-lh-logo { display: flex; align-items: center; gap: 11px; }
   .sa-lh-title { font-size: 1rem; font-weight: 800; color: #1e1e2d; }
   .sa-lh-sub { font-size: 10.5px; color: #888; margin-top: 2px; }
+  .sa-lh-actions { display: flex; align-items: center; gap: 12px; }
   .sa-lh-form-title { font-size: 0.9rem; font-weight: 700; color: #6C3CE1; background: #ede9ff; padding: 5px 16px; border-radius: 20px; }
+  .sa-print-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: #6C3CE1; background: #f3f0ff; border: 1px solid #e0d8f5; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .sa-print-btn:hover { background: #ede9ff; }
+  @media print { .no-print { display: none !important; } }
+  .sa-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f0eef8; background: #fafaff; }
+  .sa-info-item { background: #fff; border: 1px solid #e8e8ef; border-radius: 8px; padding: 10px 14px; }
+  .sa-info-label { display: block; font-size: 10px; color: #999; font-weight: 600; margin-bottom: 4px; letter-spacing: 0.3px; }
+  .sa-info-value { display: block; font-size: 13px; font-weight: 700; color: #1e1e2d; }
   .sa-summary-row { display: flex; gap: 10px; padding: 14px 20px; border-bottom: 1px solid #f0eef8; background: #fdfdff; }
   .sa-sum-card { flex: 1; display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #eee; border-radius: 9px; padding: 10px 12px; }
   .sa-sum-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }

@@ -24,7 +24,7 @@ class AttendanceController extends Controller
     {
         $role = $request->user()->role?->name;
         $withRelations = ['user', 'trainingAssignment'];
-        if ($role === 'school_manager') {
+        if ($role === 'school_manager' || $role === 'student') {
             $withRelations = ['user', 'trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite', 'trainingAssignment.teacher'];
         }
         $query = Attendance::with($withRelations);
