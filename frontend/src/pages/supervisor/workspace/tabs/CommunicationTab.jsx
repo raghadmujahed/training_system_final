@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 const REASONS = [
   { value: "attendance", label: "حضور", icon: "📊" },
@@ -15,6 +16,7 @@ const TARGETS = [
 ];
 
 export default function CommunicationTab({ studentId }) {
+  const { addToast } = useToast();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,9 +59,10 @@ export default function CommunicationTab({ studentId }) {
       });
       setForm({ target: "student", reason: "general", content: "" });
       setShowForm(false);
+      addToast("تم إرسال الرسالة بنجاح", "success");
       loadMessages();
     } catch {
-      alert("فشل إرسال الرسالة");
+      addToast("فشل إرسال الرسالة", "error");
     } finally {
       setSending(false);
     }

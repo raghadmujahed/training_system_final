@@ -9,6 +9,7 @@ import {
   itemsFromPagedResponse, updateStudentTrainingRequest,
 } from "../../services/api";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
+import { useToast } from "../../components/Toast";
 import {
   getTrainingRequestStatusMeta, isTrainingRequestCancelable, isTrainingRequestEditable,
 } from "../../utils/status";
@@ -52,6 +53,7 @@ const inputStyle = { width: "100%", padding: "0.6rem 0.85rem", borderRadius: 10,
 
 export default function TrainingRequest() {
   const { isEducation: isEducationFlow, isPsychology: isPsychologyFlow, config } = useStudentTrack();
+  const { addToast } = useToast();
   const governingBodyLabel = config.governingBodyLabel;
 
   const [loading, setLoading] = useState(true);
@@ -169,11 +171,11 @@ export default function TrainingRequest() {
         notes: formData.notes || null,
       };
       if (submitTargetRequestId) {
-        try { await updateStudentTrainingRequest(submitTargetRequestId, payload); setEditingId(null); setSuccess("تم حفظ التعديلات على الطلب بنجاح."); }
-        catch (updateErr) { if (updateErr?.response?.status === 404) { setEditingId(null); await createStudentTrainingRequest(payload); setSuccess("تم إرسال الطلب بنجاح (طلب جديد)."); } else throw updateErr; }
-      } else { await createStudentTrainingRequest(payload); setSuccess("تم إرسال الطلب بنجاح."); }
+        try { await updateStudentTrainingRequest(submitTargetRequestId, payload); setEditingId(null); setSuccess("تم حفظ التعديلات على الطلب بنجاح."); addToast("تم حفظ التعديلات على الطلب بنجاح", "success"); }
+        catch (updateErr) { if (updateErr?.response?.status === 404) { setEditingId(null); await createStudentTrainingRequest(payload); setSuccess("تم إرسال الطلب بنجاح (طلب جديد)."); addToast("تم إرسال الطلب بنجاح", "success"); } else throw updateErr; }
+      } else { await createStudentTrainingRequest(payload); setSuccess("تم إرسال الطلب بنجاح."); addToast("تم إرسال الطلب بنجاح", "success"); }
       setFormData({ training_site_id: "", notes: "" }); setSiteSearch(""); await loadMyRequests();
-    } catch (e) { if (e?.response?.status === 409) await loadMyRequests(); setError(e?.response?.data?.message || "فشل حفظ الطلب"); }
+    } catch (e) { if (e?.response?.status === 409) await loadMyRequests(); setError(e?.response?.data?.message || "فشل حفظ الطلب"); addToast(e?.response?.data?.message || "فشل حفظ الطلب", "error"); }
     finally { setSaving(false); }
   };
 
@@ -193,8 +195,8 @@ export default function TrainingRequest() {
       await deleteStudentTrainingRequest(latestRequest.id);
       setEditingId(null); setFormData({ training_site_id: "", notes: "" }); setSiteSearch("");
       setFilters(prev => ({ ...prev, directorate: "" })); setSchools([]);
-      await loadMyRequests(); setSuccess("تم إلغاء الطلب بنجاح. يمكنك الآن إرسال طلب جديد.");
-    } catch (e) { setError(e?.response?.data?.message || "تعذر إلغاء الطلب"); }
+      await loadMyRequests(); setSuccess("تم إلغاء الطلب بنجاح. يمكنك الآن إرسال طلب جديد."); addToast("تم إلغاء الطلب بنجاح", "success");
+    } catch (e) { setError(e?.response?.data?.message || "تعذر إلغاء الطلب"); addToast(e?.response?.data?.message || "تعذر إلغاء الطلب", "error"); }
     finally { setSaving(false); }
   };
 

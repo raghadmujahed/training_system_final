@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 const initialScheduleForm = {
   scheduled_date: "",
@@ -22,6 +23,7 @@ const reportFormInitial = {
 };
 
 export default function FieldVisitsTab({ studentId, student }) {
+  const { addToast } = useToast();
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -58,10 +60,11 @@ export default function FieldVisitsTab({ studentId, student }) {
       });
       setShowScheduleForm(false);
       setScheduleForm(initialScheduleForm);
+      addToast("تم جدولة الزيارة بنجاح", "success");
       loadVisits();
     } catch (err) {
       const message = err?.response?.data?.message || err?.response?.data?.error || "فشل جدولة الزيارة";
-      alert(message);
+      addToast(message, "error");
     } finally {
       setSaving(false);
     }
@@ -78,9 +81,10 @@ export default function FieldVisitsTab({ studentId, student }) {
       });
       setReportVisitId(null);
       setReportForm(reportFormInitial);
+      addToast("تم حفظ تقرير الزيارة بنجاح", "success");
       loadVisits();
     } catch {
-      alert("فشل حفظ تقرير الزيارة");
+      addToast("فشل حفظ تقرير الزيارة", "error");
     } finally {
       setSaving(false);
     }

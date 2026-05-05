@@ -10,6 +10,7 @@ use App\Http\Requests\UpdatePortfolioEntryRequest;
 use App\Http\Resources\StudentPortfolioResource;
 use App\Models\StudentPortfolio;
 use App\Models\PortfolioEntry;
+use App\Models\Notification;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
@@ -59,7 +60,7 @@ class StudentPortfolioController extends Controller
 
         $this->authorize('view', $portfolio);
 
-        return new StudentPortfolioResource($portfolio->load('entries'));
+        return new StudentPortfolioResource($portfolio->load('entries.reviewer'));
     }
 
     /**
@@ -132,6 +133,9 @@ class StudentPortfolioController extends Controller
 
         $entry = PortfolioEntry::create($data);
 
+        // إشعار المشرف الأكاديمي عند إضافة مدخل جديد في ملف الإنجاز
+        $this->notifyAcademicSupervisor($studentPortfolio, $entry, 'created');
+
         return response()->json($entry, 201);
     }
 
@@ -145,6 +149,9 @@ class StudentPortfolioController extends Controller
 
         $entry->update($data);
 
+        // إشعار المشرف الأكاديمي عند تحديث مدخل في ملف الإنجاز
+        $this->notifyAcademicSupervisor($entry->studentPortfolio, $entry, 'updated');
+
         return response()->json($entry);
     }
 
@@ -154,6 +161,50 @@ class StudentPortfolioController extends Controller
 
         return response()->json([
             'message' => 'تم حذف الإدخال'
+        ]);
+    }
+
+    /**
+     * إشعار المشرف الأكاديمي عند تحديث ملف الإنجاز
+     */
+    private function notifyAcademicSupervisor(StudentPortfolio $portfolio, PortfolioEntry $entry, string $action): void
+    {
+        // الحصول على المشرف الأكاديمي من خلال تعيين التدريب
+        $academicSupervisor = null;
+        
+        if ($portfolio->trainingAssignment) {
+            $academicSupervisor = $portfolio->trainingAssignment->academicSupervisor;
+        } else {
+            // محاولة الحصول على المشرف الأكاديمي من خلال قسم الطالب إذا لم يوجد تعيين تدريب
+            $student = $portfolio->user;
+            if ($student && $student->department_id) {
+                $academicSupervisor = \App\Models\User::whereHas('role', function ($q) {
+                    $q->where('name', 'academic_supervisor');
+                })->where('department_id', $student->department_id)->first();
+            }
+        }
+
+        if (!$academicSupervisor) {
+            return; // لا يوجد مشرف أكاديمي للإشعار
+        }
+
+        $student = $portfolio->user;
+        $actionText = $action === 'created' ? 'إضافة' : 'تحديث';
+        $message = "تم {$actionText} مدخل جديد في ملف إنجاز الطالب: {$student->name} - {$entry->title}";
+
+        Notification::create([
+            'user_id' => $academicSupervisor->id,
+            'type' => 'portfolio_update',
+            'message' => $message,
+            'notifiable_type' => PortfolioEntry::class,
+            'notifiable_id' => $entry->id,
+            'data' => [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'portfolio_entry_id' => $entry->id,
+                'entry_title' => $entry->title,
+                'action' => $action,
+            ],
         ]);
     }
 }

@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 export default function OverviewTab({ studentId, student, onOpenTab }) {
+  const { addToast } = useToast();
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,9 +56,9 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
               reason: "general",
               details: "تصعيد عام لحالة الطالب من لوحة المشرف الأكاديمي.",
             });
-            alert("تم تصعيد الحالة بنجاح");
+            addToast("تم تصعيد الحالة بنجاح", "success");
           } catch {
-            alert("فشل تصعيد الحالة");
+            addToast("فشل تصعيد الحالة", "error");
           }
         }
         break;

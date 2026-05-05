@@ -1010,6 +1010,24 @@ class SupervisorWorkspaceController extends Controller
             'reviewed_at' => now(),
         ]);
 
+        // إشعار الطالب عند إضافة ملاحظة المشرف
+        $student = $entry->studentPortfolio->user;
+        if ($student && $request->string('reviewer_note')) {
+            Notification::create([
+                'user_id' => $student->id,
+                'type' => 'portfolio_comment',
+                'message' => "تمت إضافة ملاحظة من المشرف الأكاديمي على مدخل: {$entry->title}",
+                'notifiable_type' => PortfolioEntry::class,
+                'notifiable_id' => $entry->id,
+                'data' => [
+                    'supervisor_name' => $request->user()->name,
+                    'entry_title' => $entry->title,
+                    'comment' => $request->string('reviewer_note'),
+                    'review_status' => $request->string('status'),
+                ],
+            ]);
+        }
+
         $this->createActivity($request->user()->id, 'portfolio_section_reviewed', 'Portfolio section reviewed.');
 
         return $this->successResponse($entry, 'Portfolio section reviewed successfully.');

@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { getStudentTrainingProgram, saveStudentTrainingProgram, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Calendar, Clock, Lock, Edit3, Save, RotateCcw, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
+import { useToast } from "../../components/Toast";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 // Print-specific CSS
@@ -74,6 +75,7 @@ export default function Schedule() {
   const [coordinatorNote, setCoordinatorNote] = useState("");
   const [editingEntry, setEditingEntry] = useState(null);
   const portfolioEntryIdRef = useRef(null);
+  const { addToast } = useToast();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -205,9 +207,11 @@ export default function Schedule() {
 
       const actionText = editingEntry ? "تعديل" : "حفظ";
       setSuccess(`تم ${actionText} جدول الحصص الأسبوعية بنجاح وإضافته للملف الإنجاز.`);
+      addToast(`تم ${actionText} جدول الحصص الأسبوعية بنجاح`, "success");
       setEditingEntry(null);
     } catch (e) {
       setError(e?.response?.data?.message || "تعذر حفظ جدول الحصص الأسبوعية.");
+      addToast(e?.response?.data?.message || "تعذر حفظ جدول الحصص الأسبوعية.", "error");
     } finally {
       setSaving(false);
     }

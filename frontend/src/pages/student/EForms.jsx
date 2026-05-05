@@ -4,6 +4,7 @@ import { getStudentEForms, saveStudentTrainingProgram, saveStudentEForm, addPort
 import html2pdf from "html2pdf.js";
 import { Loader2, Save, Plus, Trash2, RotateCcw, BookOpen, FileText, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, ArrowRight, CheckCircle2, Clock, Edit3 } from "lucide-react";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
+import { useToast } from "../../components/Toast";
 
 // CSS Animation for smooth form appearance
 const fadeInStyles = `
@@ -38,6 +39,7 @@ const allForms = [
 ];
 
 export default function EForms() {
+  const { addToast } = useToast();
   const location = useLocation();
   const { config } = useStudentTrack();
   const availableForms = allForms.filter(f => {
@@ -375,6 +377,7 @@ export default function EForms() {
 
       const actionText = editingEntry ? "تعديل" : "حفظ";
       setSuccess(`تم ${actionText} "${formTitle}" وإضافته لملف الإنجاز بنجاح!`);
+      addToast(`تم ${actionText} "${formTitle}" بنجاح`, "success");
       setEditingEntry(null);
       setTimeout(() => {
         setSuccess("");
@@ -383,6 +386,7 @@ export default function EForms() {
       await load();
     } catch (e) {
       setError(e?.response?.data?.message || "فشل حفظ النموذج.");
+      addToast(e?.response?.data?.message || "فشل حفظ النموذج.", "error");
       setTimeout(() => setError(""), 4000);
     } finally {
       setSaving(false);

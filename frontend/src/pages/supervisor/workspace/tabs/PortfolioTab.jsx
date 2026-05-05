@@ -1,7 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { Download, ExternalLink } from "lucide-react";
+import { useToast } from "../../../../components/Toast";
 
 export default function PortfolioTab({ studentId }) {
+  const { addToast } = useToast();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -41,9 +44,10 @@ export default function PortfolioTab({ studentId }) {
       });
       setCommentingId(null);
       setCommentText("");
+      showToast("تم إضافة الملاحظة بنجاح", "success");
       loadPortfolio();
     } catch {
-      alert("فشل إضافة الملاحظة");
+      showToast("فشل إضافة الملاحظة", "error");
     }
   };
 
@@ -58,8 +62,12 @@ export default function PortfolioTab({ studentId }) {
     approved: { label: "معتمد", color: "#28a745", bg: "#e8f5e9", icon: "✅" },
   };
 
+  const showToast = (message, type = "success") => {
+    addToast(message, type);
+  };
+
   if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
-  if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
+  if (error && !entries.length) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
 
   return (
     <div>
@@ -126,8 +134,37 @@ export default function PortfolioTab({ studentId }) {
                 </div>
 
                 {entry.file_path && (
-                  <div style={{ fontSize: "0.82rem", color: "#0d6efd", marginBottom: "8px" }}>
-                    📎 {entry.file_path}
+                  <div style={{ marginBottom: "8px" }}>
+                    <a
+                      href={`${apiOrigin}/storage/${entry.file_path.replace(/^\//, "")}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.82rem",
+                        color: "#0d6efd",
+                        textDecoration: "none",
+                        padding: "4px 8px",
+                        borderRadius: "6px",
+                        backgroundColor: "#f8f9fa",
+                        border: "1px solid #dee2e6",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#e9ecef";
+                        e.currentTarget.style.borderColor = "#0d6efd";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#f8f9fa";
+                        e.currentTarget.style.borderColor = "#dee2e6";
+                      }}
+                    >
+                      <Download size={14} />
+                      تحميل الملف
+                      <ExternalLink size={12} />
+                    </a>
                   </div>
                 )}
 
@@ -140,6 +177,17 @@ export default function PortfolioTab({ studentId }) {
                 {entry.supervisor_comment && (
                   <div style={{ background: "#e8f5e9", borderRadius: "6px", padding: "8px", marginBottom: "8px", fontSize: "0.85rem" }}>
                     <span style={{ fontWeight: "600", color: "#28a745" }}>🎓 ملاحظتك:</span> {entry.supervisor_comment}
+                    {entry.reviewed_at && (
+                      <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "4px" }}>
+                        {new Date(entry.reviewed_at).toLocaleDateString('ar-SA', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -180,7 +228,7 @@ function normalizePortfolioEntry(entry) {
   return {
     ...entry,
     status,
-    supervisor_comment: entry.supervisor_comment || entry.reviewer_note,
+    supervisor_comment: entry.reviewer_note || entry.supervisor_comment,
     student_note: entry.student_note || entry.description,
     uploaded_at: entry.uploaded_at || entry.created_at,
   };

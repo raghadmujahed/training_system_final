@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 export default function DailyLogsTab({ studentId }) {
+  const { addToast } = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -41,9 +43,10 @@ export default function DailyLogsTab({ studentId }) {
       });
       setCommentingLogId(null);
       setCommentText("");
+      addToast("تم إضافة الملاحظة بنجاح", "success");
       loadLogs();
     } catch {
-      alert("فشل إضافة الملاحظة");
+      addToast("فشل إضافة الملاحظة", "error");
     }
   };
 
@@ -56,9 +59,10 @@ export default function DailyLogsTab({ studentId }) {
       });
       setCommentingLogId(null);
       setCommentText("");
+      addToast("تم إرسال الملاحظة بنجاح", "success");
       loadLogs();
     } catch {
-      alert("فشل إرسال الملاحظة");
+      addToast("فشل إرسال الملاحظة", "error");
     }
   };
 

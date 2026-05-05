@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient, itemsFromPagedResponse, unwrapSupervisorList } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 const TASK_TYPES_API = [
   { value: "general", label: "عام / واجب" },
@@ -34,6 +35,7 @@ const initialForm = {
 };
 
 export default function TasksTab({ studentId }) {
+  const { addToast } = useToast();
   const [tasks, setTasks] = useState([]);
   const [supervisedStudents, setSupervisedStudents] = useState([]);
   const [sections, setSections] = useState([]);
@@ -196,9 +198,10 @@ export default function TasksTab({ studentId }) {
       setForm(initialForm);
       setSelectedStudentIds(new Set([Number(studentId)]));
       loadTasks();
+      addToast(editingId ? "تم تعديل المهمة بنجاح" : "تم إضافة المهمة بنجاح", "success");
     } catch (err) {
       const msg = err?.response?.data?.message || err?.message || "فشل حفظ المهمة";
-      alert(msg);
+      addToast(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -208,9 +211,10 @@ export default function TasksTab({ studentId }) {
     if (!window.confirm("هل تريد حذف هذه المهمة؟")) return;
     try {
       await apiClient.delete(`/supervisor/tasks/${taskId}`);
+      addToast("تم حذف المهمة بنجاح", "success");
       loadTasks();
     } catch {
-      alert("فشل حذف المهمة");
+      addToast("فشل حذف المهمة", "error");
     }
   };
 

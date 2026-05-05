@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 const academicEvalInitial = {
   field_performance: "",
@@ -13,6 +14,7 @@ const academicEvalInitial = {
 };
 
 export default function EvaluationsTab({ studentId }) {
+  const { addToast } = useToast();
   const [fieldEvals, setFieldEvals] = useState([]);
   const [academicEval, setAcademicEval] = useState(null);
   const [rubricTemplate, setRubricTemplate] = useState(null);
@@ -109,9 +111,10 @@ export default function EvaluationsTab({ studentId }) {
         await apiClient.post(`/supervisor/students/${studentId}/academic-evaluation-draft`, payload);
       }
       setShowAcademicForm(false);
+      addToast(form.is_final ? "تم اعتماد التقييم النهائي بنجاح" : "تم حفظ التقييم كمسودة بنجاح", "success");
       loadEvals();
     } catch {
-      alert("فشل حفظ التقييم");
+      addToast("فشل حفظ التقييم", "error");
     } finally {
       setSaving(false);
     }

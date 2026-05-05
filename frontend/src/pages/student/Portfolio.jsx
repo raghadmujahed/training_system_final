@@ -7,6 +7,7 @@ import {
   getStudentPortfolio,
   updatePortfolioEntry,
 } from "../../services/api";
+import { useToast } from "../../components/Toast";
 import { Loader2, Upload, FileText, Trash2, ExternalLink, Plus, FolderOpen, Calendar, FileCheck, BookOpen, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, Edit3, Save as SaveIcon } from "lucide-react";
 
 // CSS Animation
@@ -23,6 +24,7 @@ const fadeInStyles = `
 `;
 
 export default function Portfolio() {
+  const { addToast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,15 +37,17 @@ export default function Portfolio() {
   const [editingId, setEditingId] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [removingFileId, setRemovingFileId] = useState(null);
+  const [replacingFileId, setReplacingFileId] = useState(null);
+  const [replacementFile, setReplacementFile] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const res = await getStudentPortfolio();
-      const p = res?.data ?? res;
-      const list = p?.entries?.data ?? p?.entries ?? [];
-      setEntries(Array.isArray(list) ? list : []);
+      const data = res.data?.data || res.data;
+            setEntries(data.entries || []);
     } catch (e) {
       setError(e?.response?.data?.message || "تعذر تحميل ملف الإنجاز.");
       setEntries([]);
@@ -78,16 +82,17 @@ export default function Portfolio() {
       if (file) fd.append("file", file);
       await addPortfolioEntry(fd);
       setSuccess("تمت إضافة المدخل بنجاح!");
+      addToast("تمت إضافة المدخل بنجاح!", "success");
       setForm({ title: "", content: "" });
       setFile(null);
       await load();
       setTimeout(() => setSuccess(""), 3000);
     } catch (e2) {
-      setError(
-        e2?.response?.data?.errors
+      const errMsg = e2?.response?.data?.errors
           ? Object.values(e2.response.data.errors).flat().join(" | ")
-          : e2?.response?.data?.message || "فشل الحفظ."
-      );
+          : e2?.response?.data?.message || "فشل الحفظ.";
+      setError(errMsg);
+      addToast(errMsg, "error");
     } finally {
       setSaving(false);
     }
@@ -99,10 +104,57 @@ export default function Portfolio() {
     try {
       await deletePortfolioEntry(id);
       setSuccess("تم الحذف بنجاح.");
+      addToast("تم حذف المدخل بنجاح", "success");
       await load();
       setTimeout(() => setSuccess(""), 3000);
     } catch (e) {
       setError(e?.response?.data?.message || "فشل الحذف.");
+      addToast(e?.response?.data?.message || "فشل الحذف.", "error");
+    }
+  };
+
+  const handleRemoveFile = async (entryId) => {
+    if (!window.confirm("هل أنت متأكد من إزالة الملف؟ يمكنك رفع ملف آخر بدلاً منه.")) return;
+    setRemovingFileId(entryId);
+    setError("");
+    try {
+      await updatePortfolioEntry(entryId, { file_path: null });
+      setSuccess("تم إزالة الملف بنجاح. يمكنك الآن رفع ملف جديد.");
+      addToast("تم إزالة الملف بنجاح", "success");
+      await load();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (e) {
+      setError(e?.response?.data?.message || "فشل إزالة الملف.");
+      addToast(e?.response?.data?.message || "فشل إزالة الملف.", "error");
+    } finally {
+      setRemovingFileId(null);
+    }
+  };
+
+  const handleReplaceFile = async (entryId) => {
+    if (!replacementFile) {
+      setError("الرجاء اختيار ملف جديد أولاً.");
+      return;
+    }
+    
+    setReplacingFileId(entryId);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", replacementFile);
+      
+      await updatePortfolioEntry(entryId, fd);
+      setSuccess("تم استبدال الملف بنجاح.");
+      addToast("تم استبدال الملف بنجاح", "success");
+      setReplacingFileId(null);
+      setReplacementFile(null);
+      await load();
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (e) {
+      setError(e?.response?.data?.message || "فشل استبدال الملف.");
+      addToast(e?.response?.data?.message || "فشل استبدال الملف.", "error");
+    } finally {
+      setReplacingFileId(null);
     }
   };
 
@@ -150,11 +202,13 @@ export default function Portfolio() {
     try {
       await updatePortfolioEntry(id, { title: editTitle.trim(), content: editContent.trim() });
       setSuccess("تم تعديل المدخل بنجاح!");
+      addToast("تم تعديل المدخل بنجاح!", "success");
       cancelEdit();
       await load();
       setTimeout(() => setSuccess(""), 3000);
     } catch (e) {
       setError(e?.response?.data?.message || "فشل التعديل.");
+      addToast(e?.response?.data?.message || "فشل التعديل.", "error");
     } finally {
       setSaving(false);
     }
@@ -600,22 +654,54 @@ export default function Portfolio() {
                                 e.currentTarget.style.backgroundColor = style.bg;
                               }}
                             >
-                              <FileText size={15} />
-                              المرفق
-                              <ExternalLink size={12} />
+                              <FileText size={14} />
+                              عرض الملف
                             </a>
                           ) : (
-                            <span style={{
-                              color: "#cbd5e1",
-                              fontSize: "0.78rem",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.25rem",
-                              padding: "0.35rem 0.5rem",
-                            }}>
-                              <FileText size={14} />
-                              بدون مرفق
-                            </span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                              <span style={{
+                                color: "#cbd5e1",
+                                fontSize: "0.78rem",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.25rem",
+                                padding: "0.35rem 0.5rem",
+                              }}>
+                                <FileText size={14} />
+                                بدون مرفق
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setReplacingFileId(en.id)}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.35rem",
+                                  color: "#28a745",
+                                  backgroundColor: "#fff",
+                                  border: "1px solid #28a745",
+                                  textDecoration: "none",
+                                  fontSize: "0.78rem",
+                                  fontWeight: 600,
+                                  padding: "0.35rem 0.7rem",
+                                  borderRadius: "8px",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#28a745";
+                                  e.currentTarget.style.color = "#fff";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#fff";
+                                  e.currentTarget.style.color = "#28a745";
+                                }}
+                                title="رفع ملف جديد"
+                              >
+                                <Upload size={12} />
+                                رفع ملف
+                              </button>
+                            </div>
                           )}
                           <button
                             type="button"
@@ -667,6 +753,192 @@ export default function Portfolio() {
                           </button>
                         </div>
                       </div>
+                    )}
+
+                    {/* نموذج استبدال الملف */}
+                    {replacingFileId === en.id && (
+                      <div style={{
+                        marginTop: "0.75rem",
+                        padding: "0.75rem",
+                        backgroundColor: "#f0fdf4",
+                        borderRadius: "8px",
+                        border: "1px solid #bbf7d0"
+                      }}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          marginBottom: "0.5rem",
+                          fontSize: "0.85rem",
+                          fontWeight: "600",
+                          color: "#166534"
+                        }}>
+                          <Upload size={14} />
+                          استبدال الملف
+                        </div>
+                        <div style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.5rem"
+                        }}>
+                          <input
+                            type="file"
+                            onChange={(e) => setReplacementFile(e.target.files[0])}
+                            style={{
+                              width: "100%",
+                              padding: "8px",
+                              border: "1px solid #d1d5db",
+                              borderRadius: "6px",
+                              fontSize: "0.85rem"
+                            }}
+                          />
+                          {replacementFile && (
+                            <div style={{
+                              fontSize: "0.75rem",
+                              color: "#6b7280",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "0.25rem",
+                              padding: "6px 8px",
+                              backgroundColor: "#f9fafb",
+                              borderRadius: "6px",
+                              border: "1px solid #e5e7eb"
+                            }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                                <FileText size={12} />
+                                {replacementFile.name} ({(replacementFile.size / 1024).toFixed(1)} KB)
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setReplacementFile(null)}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  width: "20px",
+                                  height: "20px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#ef4444",
+                                  color: "white",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  fontSize: "12px",
+                                  fontWeight: "bold",
+                                  transition: "all 0.2s"
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#dc2626";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = "#ef4444";
+                                }}
+                                title="إلغاء اختيار الملف"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
+                          <div style={{ display: "flex", gap: "0.5rem" }}>
+                            <button
+                              type="button"
+                              onClick={() => handleReplaceFile(en.id)}
+                              disabled={!replacementFile || replacingFileId === en.id}
+                              style={{
+                                padding: "6px 12px",
+                                border: "none",
+                                borderRadius: "6px",
+                                backgroundColor: !replacementFile || replacingFileId === en.id ? "#9ca3af" : "#28a745",
+                                color: "white",
+                                fontSize: "0.82rem",
+                                fontWeight: 600,
+                                cursor: !replacementFile || replacingFileId === en.id ? "not-allowed" : "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px"
+                              }}
+                            >
+                              {replacingFileId === en.id ? (
+                                <>
+                                  <Loader2 size={12} className="spin" />
+                                  جارٍ الاستبدال...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload size={12} />
+                                  استبدال الملف
+                                </>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplacingFileId(null);
+                                setReplacementFile(null);
+                              }}
+                              style={{
+                                padding: "6px 12px",
+                                border: "1px solid #d1d5db",
+                                borderRadius: "6px",
+                                backgroundColor: "white",
+                                color: "#6b7280",
+                                fontSize: "0.82rem",
+                                fontWeight: 600,
+                                cursor: "pointer"
+                              }}
+                            >
+                              إلغاء
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* عرض ملاحظات المشرف الأكاديمي */}
+                    {(en.reviewer_note || en.id === 4) && (
+                      <>
+                        <div style={{
+                        marginTop: "0.75rem",
+                        padding: "0.75rem",
+                        backgroundColor: "#f0fdf4",
+                        borderRadius: "8px",
+                        border: "1px solid #bbf7d0"
+                      }}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                          marginBottom: "0.5rem",
+                          fontSize: "0.85rem",
+                          fontWeight: "600",
+                          color: "#166534"
+                        }}>
+                          🎓 ملاحظة المشرف الأكاديمي
+                        </div>
+                        <div style={{
+                          fontSize: "0.9rem",
+                          color: "#374151",
+                          lineHeight: "1.5"
+                        }}>
+                          {en.reviewer_note || "ؤسؤسؤسؤ"}
+                        </div>
+                        {en.reviewed_at && (
+                          <div style={{
+                            fontSize: "0.75rem",
+                            color: "#6b7280",
+                            marginTop: "0.5rem"
+                          }}>
+                            {new Date(en.reviewed_at).toLocaleDateString('ar-SA', { 
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      </>
                     )}
                   </div>
                 </div>

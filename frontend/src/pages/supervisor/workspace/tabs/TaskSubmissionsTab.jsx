@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import { useToast } from "../../../../components/Toast";
 
 export default function TaskSubmissionsTab({ studentId }) {
+  const { addToast } = useToast();
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,9 +44,10 @@ export default function TaskSubmissionsTab({ studentId }) {
       setGradingId(null);
       setGradeValue("");
       setGradeNote("");
+      addToast("تم تسجيل الدرجة بنجاح", "success");
       loadSubmissions();
     } catch {
-      alert("فشل تسجيل الدرجة");
+      addToast("فشل تسجيل الدرجة", "error");
     }
   };
 
@@ -52,9 +55,10 @@ export default function TaskSubmissionsTab({ studentId }) {
     if (!window.confirm("هل تريد إعادة فتح المهمة للطالب؟")) return;
     try {
       await apiClient.patch(`/task-submissions/${submissionId}`, { status: "resubmit" });
+      addToast("تم إعادة فتح المهمة بنجاح", "success");
       loadSubmissions();
     } catch {
-      alert("فشل إعادة الفتح");
+      addToast("فشل إعادة فتح المهمة", "error");
     }
   };
 

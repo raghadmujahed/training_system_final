@@ -27,6 +27,7 @@ import {
   updateStudentTaskSubmission,
 } from "../../services/api";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
+import { useToast } from "../../components/Toast";
 
 const STATUS_CONFIG = {
   pending: { 
@@ -79,6 +80,7 @@ const getAssignerRoleLabel = (role, mentorLabel) => {
 
 export default function Assignments() {
   const { config } = useStudentTrack();
+  const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [tasks, setTasks] = useState([]);
@@ -121,6 +123,7 @@ export default function Assignments() {
       if (n) fd.append("notes", n);
       await submitStudentTask(id, fd);
       setSuccess("تم تسليم التكليف بنجاح.");
+      addToast("تم تسليم التكليف بنجاح", "success");
       setFiles((prev) => ({ ...prev, [id]: null }));
       setNotes((prev) => ({ ...prev, [id]: "" }));
       setExpandedTaskId(null);
@@ -128,6 +131,7 @@ export default function Assignments() {
       setTimeout(() => setSuccess(""), 4000);
     } catch (e) {
       setError(e?.response?.data?.message || "فشل التسليم.");
+      addToast(e?.response?.data?.message || "فشل التسليم.", "error");
       setTimeout(() => setError(""), 4000);
     } finally {
       setSavingId(null);
@@ -150,6 +154,7 @@ export default function Assignments() {
       fd.append("_method", "PUT");
       await updateStudentTaskSubmission(submission.id, fd);
       setSuccess("تم إعادة تسليم التكليف بنجاح.");
+      addToast("تم إعادة تسليم التكليف بنجاح", "success");
       setFiles((prev) => ({ ...prev, [task.id]: null }));
       setNotes((prev) => ({ ...prev, [task.id]: "" }));
       setExpandedTaskId(null);
@@ -157,6 +162,7 @@ export default function Assignments() {
       setTimeout(() => setSuccess(""), 4000);
     } catch (e) {
       setError(e?.response?.data?.message || "فشل إعادة التسليم.");
+      addToast(e?.response?.data?.message || "فشل إعادة التسليم.", "error");
       setTimeout(() => setError(""), 4000);
     } finally {
       setSavingId(null);
