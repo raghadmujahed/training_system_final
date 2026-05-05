@@ -33,6 +33,7 @@ const ROUTE_ICON = {
   "/supervisor/training-logs": "journal",
   "/supervisor/attendance-follow-up": "clock",
   "/supervisor/field-visits": "map",
+  "/supervisor/training-program-control": "flag",
   "/supervisor/sections": "layers",
   "/supervisor/evaluations": "star",
   "/supervisor/reports": "chart",
@@ -80,7 +81,6 @@ const ROUTE_ICON = {
   "/coordinator/announcements": "megaphone",
   "/coordinator/distribution-status": "mapPin",
   "/coordinator/statistics": "chart",
-  "/coordinator/training-program-control": "flag",
 
   "/principal/dashboard": "home",
   "/principal/profile": "user",

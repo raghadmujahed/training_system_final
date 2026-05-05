@@ -68,7 +68,7 @@ export default function Schedule() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
   const [isEditable, setIsEditable] = useState(false);
-  const [studentInfo, setStudentInfo] = useState({ name: "—", university_id: "—", school: "—", semester: "—" });
+  const [studentInfo, setStudentInfo] = useState({ name: "—", university_id: "—", phone: "—", major: "—", school: "—", school_phone: "—", school_location: "—", teacher_name: "—", start_date: "—", semester: "—" });
   const [schedule, setSchedule] = useState(buildEmptySchedule);
   const [hasSavedProgram, setHasSavedProgram] = useState(false);
   const [programStatus, setProgramStatus] = useState(null);
@@ -105,7 +105,13 @@ export default function Schedule() {
         setStudentInfo({
           name: res.student_info.name || "—",
           university_id: res.student_info.university_id || "—",
+          phone: res.student_info.phone || "—",
+          major: res.student_info.major || "—",
           school: res.student_info.school || "—",
+          school_phone: res.student_info.school_phone || "—",
+          school_location: res.student_info.school_location || "—",
+          teacher_name: res.student_info.teacher_name || "—",
+          start_date: res.student_info.start_date || "—",
           semester: res.student_info.semester || "—",
         });
       }
@@ -324,7 +330,7 @@ export default function Schedule() {
       )}
 
       {/* Info Strip */}
-      <div className="section-card mb-3 no-print" style={{ padding: "1rem 1.5rem" }}>
+      <div className="section-card mb-3" style={{ padding: "1rem 1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
           <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem", borderLeft: "1px solid var(--border)" }}>
             <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>الطالب</div>
@@ -346,12 +352,55 @@ export default function Schedule() {
 
       {/* نموذج جدول الحصص الأسبوعية */}
       <div id="printable-area" className="section-card">
-        {/* Print-only header */}
-        <div style={{ display: 'none' }} className="print-header">
-          <h1 style={{ textAlign: 'center', marginBottom: '10px', fontSize: '18px' }}>نموذج جدول الحصص الأسبوعية</h1>
-          <p style={{ textAlign: 'center', marginBottom: '20px', fontSize: '12px' }}>
-            الطالب: {studentInfo.name} | الرقم الجامعي: {studentInfo.university_id} | جهة التدريب: {studentInfo.school}
-          </p>
+        {/* Personal info table — visible on screen and in print */}
+        <div className="print-header" style={{ marginBottom: '16px' }}>
+          <h2 className="no-print" style={{ display: 'none' }}></h2>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '14px', fontSize: '13px', direction: 'rtl', border: '1px solid #dee2e6' }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}><strong>اسم الطالب :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}>{studentInfo.name}</td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}><strong>المدرسة :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}>{studentInfo.school}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>مكان السكن :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.school_location}</td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>البلدة :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>الرقم الجامعي :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.university_id}</td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>رقم المدرسة :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.school_phone}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>التخصص :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.major}</td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>اسم مدير المدرسة :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>رقم الهاتف :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.phone}</td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>اسم المعلم المتعاون :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.teacher_name}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>تاريخ بداية التدريب :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.start_date}</td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>الصفوف التي سيطبق فيها الطالب :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+              </tr>
+              <tr>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>أيام التطبيق :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>المباحث التي سيتم التطبيق فيها :</strong></td>
+                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
         {/* Panel Header */}
         <div className="no-print" style={{

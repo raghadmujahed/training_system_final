@@ -584,6 +584,10 @@ export const getStudentTrainingProgramById = async (studentId) => {
 export const getCoordinatorTrainingPrograms = (params) => apiClient.get('/coordinator/training-programs', { params }).then(res => res.data);
 export const updateTrainingProgramStatus = (id, data) => apiClient.patch(`/coordinator/training-programs/${id}/status`, data).then(res => res.data);
 
+// ==================== Supervisor Training Program ====================
+export const getSupervisorStudentTrainingProgram = (studentId) => apiClient.get(`/supervisor/students/${studentId}/training-program`).then(res => res.data);
+export const updateSupervisorTrainingProgramStatus = (id, data) => apiClient.patch(`/supervisor/training-programs/${id}/status`, data).then(res => res.data);
+
 export const getStudentTrainingLogs = async (config = {}) => {
     const response = await apiClient.get('/student/training-logs', config);
     return response.data;

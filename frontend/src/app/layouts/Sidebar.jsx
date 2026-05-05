@@ -58,6 +58,7 @@ function buildFieldStaffMenu(roleKey) {
     menu.unshift({ name: "🏠 مساحة العمل", path: "/supervisor/workspace" });
     menu.push(
       { name: "الزيارات الميدانية", path: "/supervisor/field-visits" },
+      { name: "التحكم بجدول الحصص الأسبوعية", path: "/supervisor/training-program-control" },
       { name: "الشعب", path: "/supervisor/sections" },
       { name: "حلول الطلبة", path: "/supervisor/submissions" },
     );
@@ -182,7 +183,6 @@ const menus = {
     { name: "حالة التوزيع", path: "/coordinator/distribution-status" },
     { name: "الطلبة", path: "/coordinator/students" },
     { name: "الإحصائيات", path: "/coordinator/statistics" },
-    { name: "التحكم بجدول الحصص الأسبوعية", path: "/coordinator/training-program-control" },
   ],
 
   principal: [

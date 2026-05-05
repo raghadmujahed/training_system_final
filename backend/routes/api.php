@@ -247,6 +247,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/students/{studentId}/messages', [SupervisorWorkspaceController::class, 'sendMessage']);
         Route::get('/students/{studentId}/timeline', [SupervisorWorkspaceController::class, 'studentTimeline']);
         Route::post('/students/{studentId}/escalate', [SupervisorWorkspaceController::class, 'escalate']);
+        Route::get('/students/{studentId}/training-program', [TrainingProgramController::class, 'showForStudent']);
+        Route::patch('/training-programs/{id}/status', [TrainingProgramController::class, 'updateStatus']);
     });
 
     // ========== ROUTES FIELD SUPERVISOR WORKSPACE ==========

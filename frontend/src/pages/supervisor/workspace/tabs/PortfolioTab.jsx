@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiClient } from "../../../../services/api";
+import { apiClient, apiOrigin } from "../../../../services/api";
 import { Download, ExternalLink } from "lucide-react";
 import { useToast } from "../../../../components/Toast";
 

@@ -38,7 +38,13 @@ class TrainingProgramController extends Controller
             'student_info' => [
                 'name' => $user->name,
                 'university_id' => $user->university_id,
+                'phone' => $user->phone ?? '—',
+                'major' => $user->major ?? $user->department?->name ?? '—',
                 'school' => $assignment?->trainingSite?->name ?? '—',
+                'school_phone' => $assignment?->trainingSite?->phone ?? '—',
+                'school_location' => $assignment?->trainingSite?->location ?? '—',
+                'teacher_name' => $assignment?->teacher?->name ?? '—',
+                'start_date' => $assignment?->start_date?->format('Y-m-d') ?? '—',
                 'semester' => $assignment?->trainingPeriod?->name ?? '—',
             ],
         ]);

@@ -88,6 +88,7 @@ import PsychologySupervisorCreateTrainingRequest from "../pages/supervisor/Psych
 import PsychologySupervisorTrainingRequests from "../pages/supervisor/PsychologySupervisorTrainingRequests";
 import PsychologySupervisorOfficialLetters from "../pages/supervisor/PsychologySupervisorOfficialLetters";
 import PsychologySupervisorDistributionStatus from "../pages/supervisor/PsychologySupervisorDistributionStatus";
+import SupervisorTrainingProgramControl from "../pages/supervisor/TrainingProgramControl";
 
 
 // Mentor (المعلم المرشد - دور teacher) - legacy, kept for reference
@@ -117,7 +118,6 @@ import CoordinatorDashboard from "../pages/dashboard/CoordinatorDashboard";
 import CoordinatorStudents from "../pages/coordinator/Students";
 import CoordinatorDistribution from "../pages/coordinator/Distribution";
 import CoordinatorStatistics from "../pages/coordinator/Statistics";
-import TrainingProgramControl from "../pages/coordinator/TrainingProgramControl";
 import CoordinatorTrainingRequests from "../pages/coordinator/TrainingRequests";
 import CoordinatorOfficialLetters from "../pages/coordinator/OfficialLetters";
 import CoordinatorDistributionStatus from "../pages/coordinator/DistributionStatus";
@@ -256,6 +256,7 @@ export default function AppRouter() {
           
           {/* صفحات خاصة بالمشرف الأكاديمي */}
           <Route path="/supervisor/field-visits" element={<FieldVisits />} />
+          <Route path="/supervisor/training-program-control" element={<SupervisorTrainingProgramControl />} />
           <Route path="/supervisor/sections" element={<Sections />} />
           <Route path="/supervisor/submissions" element={<Submissions />} />
           
@@ -402,7 +403,6 @@ export default function AppRouter() {
           <Route path="/coordinator/official-letters" element={<CoordinatorOfficialLetters />} />
           <Route path="/coordinator/announcements" element={<CoordinatorAnnouncements />} />
           <Route path="/coordinator/distribution-status" element={<CoordinatorDistributionStatus />} />
-          <Route path="/coordinator/training-program-control" element={<TrainingProgramControl />} />
           <Route path="/coordinator/students/:studentId/training-program" element={<StudentTrainingProgram />} />
 
           {/* Principal */}
