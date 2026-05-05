@@ -735,12 +735,29 @@ class SupervisorWorkspaceController extends Controller
 
     public function studentAttendance(Request $request, $studentId)
     {
-        $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $studentId);
-        $records = Attendance::where('training_assignment_id', $assignment->id)
+        $isSupervisedStudent = $this->studentService->supervisedAssignmentsBaseQuery($request->user())
+            ->whereHas('enrollment', fn($q) => $q->where('user_id', (int) $studentId))
+            ->exists();
+
+        abort_unless($isSupervisedStudent || $request->user()->role?->name === 'admin', 403, 'غير مصرح.');
+
+        $enrollmentIds = \App\Models\Enrollment::where('user_id', (int) $studentId)->pluck('id');
+
+        $assignmentIds = \App\Models\TrainingAssignment::whereIn('enrollment_id', $enrollmentIds)->pluck('id');
+
+        if ($assignmentIds->isEmpty()) {
+            return $this->successResponse([
+                'records' => [], 'summary' => ['total_days'=>0,'present_days'=>0,'absent_days'=>0,'late_days'=>0,'attendance_rate'=>0],
+                'monthly_aggregation' => [], 'absences_count' => 0, 'late_count' => 0, 'unreviewed_records_count' => 0, 'academic_visibility_status' => 'visible',
+            ], 'Attendance loaded successfully.');
+        }
+
+        $records = Attendance::with(['user', 'trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite'])
+            ->whereIn('training_assignment_id', $assignmentIds)
             ->orderBy('date', 'desc')
             ->paginate($request->per_page ?? 50);
 
-        $summary = Attendance::where('training_assignment_id', $assignment->id)
+        $summary = Attendance::whereIn('training_assignment_id', $assignmentIds)
             ->selectRaw("
                 COUNT(*) as total_days,
                 SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_days,
@@ -761,10 +778,10 @@ class SupervisorWorkspaceController extends Controller
                 'late_days' => $summary?->late_days ?? 0,
                 'attendance_rate' => $total > 0 ? round(($present / $total) * 100) : 0,
             ],
-            'monthly_aggregation' => $this->attendanceMonthlyAggregation($assignment->id),
+            'monthly_aggregation' => $this->attendanceMonthlyAggregation($assignmentIds->first()),
             'absences_count' => (int) ($summary?->absent_days ?? 0),
             'late_count' => (int) ($summary?->late_days ?? 0),
-            'unreviewed_records_count' => Attendance::where('training_assignment_id', $assignment->id)->whereNull('approved_at')->count(),
+            'unreviewed_records_count' => Attendance::whereIn('training_assignment_id', $assignmentIds)->whereNull('approved_at')->count(),
             'academic_visibility_status' => 'visible',
         ], 'Attendance loaded successfully.', 200, [
             'meta' => [

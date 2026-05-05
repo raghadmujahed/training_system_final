@@ -1,7 +1,6 @@
 export { Button } from './Button';
 export { Card, CardHeader, CardTitle, CardContent } from './Card';
 export { Badge } from './Badge';
-export { Skeleton } from './Skeleton';
 export { Input } from './Input';
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './Select';
 export { Label } from './Label';

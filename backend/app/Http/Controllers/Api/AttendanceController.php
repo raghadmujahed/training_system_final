@@ -24,7 +24,7 @@ class AttendanceController extends Controller
     {
         $role = $request->user()->role?->name;
         $withRelations = ['user', 'trainingAssignment'];
-        if ($role === 'school_manager' || $role === 'student') {
+        if (in_array($role, ['school_manager', 'student', 'academic_supervisor'], true)) {
             $withRelations = ['user', 'trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite', 'trainingAssignment.teacher'];
         }
         $query = Attendance::with($withRelations);
@@ -58,6 +58,10 @@ class AttendanceController extends Controller
         } elseif ($request->user()->role?->name === 'student') {
             $query->whereHas('trainingAssignment.enrollment', function ($q) use ($request) {
                 $q->where('user_id', $request->user()->id);
+            });
+        } elseif ($request->user()->role?->name === 'academic_supervisor') {
+            $query->whereHas('trainingAssignment', function ($q) use ($request) {
+                $q->where('academic_supervisor_id', $request->user()->id);
             });
         }
         
