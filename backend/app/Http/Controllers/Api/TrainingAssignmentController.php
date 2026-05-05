@@ -42,8 +42,13 @@ class TrainingAssignmentController extends Controller
             $query->where(function ($q) use ($user) {
                 $q->where('teacher_id', $user->id)->orWhere('field_supervisor_id', $user->id);
             });
-        } elseif (in_array($user->role?->name, ['teacher', 'adviser', 'psychologist'], true)) {
+        } elseif ($user->role?->name === 'teacher') {
             $query->where('teacher_id', $user->id);
+        } elseif (in_array($user->role?->name, ['adviser', 'psychologist'], true)) {
+            // المرشد التربوي / الأخصائي قد يُربط بالتعيين عبر field_supervisor_id وليس teacher_id فقط
+            $query->where(function ($q) use ($user) {
+                $q->where('teacher_id', $user->id)->orWhere('field_supervisor_id', $user->id);
+            });
         } elseif ($isAcademicSupervisor) {
             $this->supervisorStudentService->ensureShellAssignmentsForSupervisedEnrollments($user);
             $scopeIds = $this->supervisorStudentService

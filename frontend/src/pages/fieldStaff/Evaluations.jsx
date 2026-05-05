@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
 import useFieldStaffRole from "../../hooks/useFieldStaffRole";
+import { useFieldSupervisorStudents, useSubtypeLabels } from "../../hooks/useFieldSupervisorApi";
+import EvaluationTab, { CounselorEvaluationForm, PsychologistEvaluationForm } from "../field-supervisor/tabs/EvaluationTab";
 import {
   getEvaluations,
   createEvaluation,
@@ -12,7 +14,20 @@ import {
 } from "../../services/api";
 
 export default function FieldStaffEvaluations() {
-  const { targetRole, label, isSupervisor, isFieldSupervisor, supervisorSubtype, terms } = useFieldStaffRole();
+  const { targetRole, label, isSupervisor, isPsychologist, isFieldSupervisor, supervisorSubtype, terms } =
+    useFieldStaffRole();
+  const { students: fsStudents, loading: fsStudentsLoading, error: fsStudentsError } = useFieldSupervisorStudents();
+  const counselorStudentOptions = useMemo(() => {
+    const byId = new Map();
+    for (const s of fsStudents) {
+      if (s?.id != null && !byId.has(s.id)) byId.set(s.id, s);
+    }
+    return [...byId.values()];
+  }, [fsStudents]);
+  const mentorLabels = useSubtypeLabels("mentor_teacher");
+  const [counselorStudentId, setCounselorStudentId] = useState("");
+  const [mentorStudentId, setMentorStudentId] = useState("");
+  const [psychologistStudentId, setPsychologistStudentId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
@@ -46,8 +61,169 @@ export default function FieldStaffEvaluations() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    if (!isFieldSupervisor || supervisorSubtype !== "school_counselor") return;
+    if (counselorStudentId || !counselorStudentOptions.length) return;
+    setCounselorStudentId(String(counselorStudentOptions[0].id));
+  }, [isFieldSupervisor, supervisorSubtype, counselorStudentOptions, counselorStudentId]);
+
+  useEffect(() => {
+    if (!isFieldSupervisor || supervisorSubtype !== "mentor_teacher") return;
+    if (mentorStudentId || !counselorStudentOptions.length) return;
+    setMentorStudentId(String(counselorStudentOptions[0].id));
+  }, [isFieldSupervisor, supervisorSubtype, counselorStudentOptions, mentorStudentId]);
+
+  const showPsychologistInstitutionEvaluation =
+    (isFieldSupervisor && supervisorSubtype === "psychologist") || isPsychologist;
+
+  useEffect(() => {
+    if (!showPsychologistInstitutionEvaluation) return;
+    if (psychologistStudentId || !counselorStudentOptions.length) return;
+    setPsychologistStudentId(String(counselorStudentOptions[0].id));
+  }, [
+    showPsychologistInstitutionEvaluation,
+    counselorStudentOptions,
+    psychologistStudentId,
+  ]);
+
   if (isSupervisor) {
     return <Navigate to="/supervisor/workspace" replace />;
+  }
+
+  if (isFieldSupervisor && supervisorSubtype === "school_counselor") {
+    return (
+      <>
+        <PageHeader
+          title={terms.evaluation || "تقييم الأداء الإرشادي"}
+          subtitle="نموذج تقييم المرشد/المدرب (٢٠ مؤشرًا). اختر الطالب المتدرب ثم عبّئ النموذج وأرسل التقييم النهائي ليظهر في ملف إنجاز الطالب."
+        />
+        {fsStudentsLoading ? (
+          <div className="section-card">جاري تحميل الطلاب...</div>
+        ) : fsStudentsError ? (
+          <div className="section-card">
+            <p className="text-danger">{fsStudentsError}</p>
+          </div>
+        ) : !counselorStudentOptions.length ? (
+          <EmptyState title="لا يوجد طلاب مرتبطون بك" description="عند تعيين طلاب للتدريب الإرشادي سيظهرون هنا." />
+        ) : (
+          <>
+            <div className="section-card" style={{ marginBottom: 16 }}>
+              <label className="form-label" htmlFor="counselor-eval-student">
+                الطالب المتدرب
+              </label>
+              <select
+                id="counselor-eval-student"
+                className="form-control-custom"
+                value={counselorStudentId}
+                onChange={(e) => setCounselorStudentId(e.target.value)}
+              >
+                {counselorStudentOptions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name || `طالب #${s.id}`}
+                    {s.training_site ? ` — ${s.training_site}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {counselorStudentId ? <CounselorEvaluationForm studentId={Number(counselorStudentId)} /> : null}
+          </>
+        )}
+      </>
+    );
+  }
+
+  if (isFieldSupervisor && supervisorSubtype === "mentor_teacher") {
+    return (
+      <>
+        <PageHeader
+          title={terms.evaluation || "التقييم الميداني"}
+          subtitle="تقرير الزيارة الصفية — مساق التربية العملية (نموذج 6). اختر الطالب المتدرب ثم عبّئ التقرير وأرسله نهائياً ليظهر في ملف إنجاز الطالب."
+        />
+        {fsStudentsLoading ? (
+          <div className="section-card">جاري تحميل الطلاب...</div>
+        ) : fsStudentsError ? (
+          <div className="section-card">
+            <p className="text-danger">{fsStudentsError}</p>
+          </div>
+        ) : !counselorStudentOptions.length ? (
+          <EmptyState
+            title="لا يوجد طلاب مرتبطون بك"
+            description="عند تعيين طلاب للتدريب التدريسي سيظهرون هنا."
+          />
+        ) : (
+          <>
+            <div className="section-card" style={{ marginBottom: 16 }}>
+              <label className="form-label" htmlFor="mentor-eval-student">
+                الطالب المتدرب
+              </label>
+              <select
+                id="mentor-eval-student"
+                className="form-control-custom"
+                value={mentorStudentId}
+                onChange={(e) => setMentorStudentId(e.target.value)}
+              >
+                {counselorStudentOptions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name || `طالب #${s.id}`}
+                    {s.training_site ? ` — ${s.training_site}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {mentorStudentId ? (
+              <EvaluationTab studentId={Number(mentorStudentId)} labels={mentorLabels} />
+            ) : null}
+          </>
+        )}
+      </>
+    );
+  }
+
+  if (showPsychologistInstitutionEvaluation) {
+    return (
+      <>
+        <PageHeader
+          title={terms.evaluation || "تقييم الطالب المتدرب"}
+          subtitle="معايير تقييم أداء الطالب المتدرب في المصحات/المؤسسات النفسية — مشرف المؤسسة (٢٠ معيارًا، سلم 1–5). اختر الطالب ثم أرسل التقييم النهائي ليظهر في ملف الإنجاز."
+        />
+        {fsStudentsLoading ? (
+          <div className="section-card">جاري تحميل الطلاب...</div>
+        ) : fsStudentsError ? (
+          <div className="section-card">
+            <p className="text-danger">{fsStudentsError}</p>
+          </div>
+        ) : !counselorStudentOptions.length ? (
+          <EmptyState
+            title="لا يوجد طلاب مرتبطون بك"
+            description="عند تعيين طلاب للتدريب في المؤسسة سيظهرون هنا."
+          />
+        ) : (
+          <>
+            <div className="section-card" style={{ marginBottom: 16 }}>
+              <label className="form-label" htmlFor="psych-eval-student">
+                الطالب المتدرب
+              </label>
+              <select
+                id="psych-eval-student"
+                className="form-control-custom"
+                value={psychologistStudentId}
+                onChange={(e) => setPsychologistStudentId(e.target.value)}
+              >
+                {counselorStudentOptions.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name || `طالب #${s.id}`}
+                    {s.training_site ? ` — ${s.training_site}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {psychologistStudentId ? (
+              <PsychologistEvaluationForm studentId={Number(psychologistStudentId)} />
+            ) : null}
+          </>
+        )}
+      </>
+    );
   }
 
   async function openCreate() {
@@ -131,7 +307,7 @@ export default function FieldStaffEvaluations() {
       />
 
       <div className="table-actions" style={{ marginBottom: 16 }}>
-        <button className="btn-primary-custom" onClick={openCreate}>
+        <button type="button" className="btn-primary-custom" onClick={openCreate}>
           + تقييم جديد
         </button>
       </div>

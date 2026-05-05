@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import huLogo from "../../assets/HU Logo.webp";
 import { getAttendances, getTrainingAssignments, storeAttendance, updateAttendance, deleteAttendance, submitAttendanceToManager, itemsFromPagedResponse } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
@@ -239,7 +240,7 @@ export default function MentorAttendance() {
                 طباعة
               </button>
               <button type="button" className="att-btn att-btn-submit-mgr" disabled={submittingToManager || !hasUnsubmitted} onClick={handleSubmitToManager}>
-                {submittingToManager ? <span className="att-spinner" /> : (
+                {submittingToManager ? <LoadingSpinner size="button" /> : (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 )}
                 {submittingToManager ? "جاري الإرسال..." : hasUnsubmitted ? "إرسال للمدير" : "تم الإرسال ✓"}
@@ -318,7 +319,7 @@ export default function MentorAttendance() {
                   </div>
                   <div className="att-form-actions">
                     <button type="submit" className="att-btn att-btn-primary" disabled={saving || !form.date}>
-                      {saving && <span className="att-spinner" />}
+                      {saving && <LoadingSpinner size="button" />}
                       {saving ? "جاري الحفظ..." : editingId ? "تحديث السجل" : "إضافة السجل"}
                     </button>
                   </div>

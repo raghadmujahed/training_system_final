@@ -20,6 +20,7 @@ import {
   Award,
   Paperclip,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getStudentTasks,
   itemsFromPagedResponse,
@@ -318,18 +319,7 @@ export default function Assignments() {
 
       {/* Content */}
       {loading ? (
-        <div
-          style={{
-            background: "white",
-            borderRadius: 16,
-            padding: 60,
-            textAlign: "center",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          }}
-        >
-          <RefreshCw size={48} className="animate-spin" style={{ color: "#4f46e5", marginBottom: 16 }} />
-          <p style={{ color: "#6b7280", margin: 0 }}>جاري تحميل التكليفات...</p>
-        </div>
+        <LoadingSpinner size="section" text="جاري تحميل التكليفات..." />
       ) : tasks.length === 0 ? (
         <div
           style={{
@@ -861,7 +851,7 @@ export default function Assignments() {
                           >
                             {savingId === task.id ? (
                               <>
-                                <RefreshCw size={18} className="animate-spin" />
+                                <LoadingSpinner size="button" />
                                 جاري الإرسال...
                               </>
                             ) : (
@@ -1039,7 +1029,7 @@ export default function Assignments() {
                           >
                             {savingId === task.id ? (
                               <>
-                                <RefreshCw size={18} className="animate-spin" />
+                                <LoadingSpinner size="button" />
                                 جاري الإرسال...
                               </>
                             ) : (

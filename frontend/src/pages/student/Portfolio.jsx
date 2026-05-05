@@ -9,6 +9,7 @@ import {
 } from "../../services/api";
 import { useToast } from "../../components/Toast";
 import { Loader2, Upload, FileText, Trash2, ExternalLink, Plus, FolderOpen, Calendar, FileCheck, BookOpen, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, Edit3, Save as SaveIcon } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 // CSS Animation
 const fadeInStyles = `
@@ -22,6 +23,316 @@ const fadeInStyles = `
 }
 .spin { animation: spin 1s linear infinite; }
 `;
+
+function parseCounselorPortfolioPayload(entry) {
+  if (!entry?.content || typeof entry.content !== "string") return null;
+  try {
+    const o = JSON.parse(entry.content);
+    if (o?.type === "counselor_field_evaluation" || entry.category === "counselor_field_evaluation") {
+      return o;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function parseMentorClassroomVisitPayload(entry) {
+  if (!entry?.content || typeof entry.content !== "string") return null;
+  try {
+    const o = JSON.parse(entry.content);
+    if (o?.type === "mentor_classroom_visit" || entry.category === "mentor_classroom_visit") {
+      return o;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function parsePsychologistInstitutionPayload(entry) {
+  if (!entry?.content || typeof entry.content !== "string") return null;
+  try {
+    const o = JSON.parse(entry.content);
+    if (o?.type === "psychologist_institution_evaluation" || entry.category === "psychologist_institution_evaluation") {
+      return o;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function CounselorPortfolioReadOnly({ data }) {
+  const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+  const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
+  const total = data.total_score ?? "—";
+  const school = data.school_name || "—";
+
+  return (
+    <div
+      style={{
+        marginTop: "1rem",
+        padding: "1rem",
+        background: "linear-gradient(180deg, #f8fafc 0%, #fff 100%)",
+        borderRadius: "12px",
+        border: "1px solid #e2e8f0",
+      }}
+    >
+      <div style={{ display: "grid", gap: "0.75rem", marginBottom: "1rem", fontSize: "0.9rem" }}>
+        <div>
+          <span style={{ color: "#64748b" }}>المدرسة: </span>
+          <strong style={{ color: "#1e293b" }}>{school}</strong>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1.25rem", alignItems: "baseline" }}>
+          <div>
+            <span style={{ color: "#64748b" }}>الدرجة المرجّحة: </span>
+            <strong style={{ fontSize: "1.25rem", color: "#0f172a" }}>{total}</strong>
+            <span style={{ color: "#94a3b8" }}> / 100</span>
+          </div>
+          {data.grade_label ? (
+            <div>
+              <span style={{ color: "#64748b" }}>التقدير: </span>
+              <strong>{data.grade_label}</strong>
+            </div>
+          ) : null}
+          {data.supervisor_name ? (
+            <div>
+              <span style={{ color: "#64748b" }}>المرشد/المدرب: </span>
+              <strong>{data.supervisor_name}</strong>
+            </div>
+          ) : null}
+          {data.evaluation_date ? (
+            <div>
+              <span style={{ color: "#64748b" }}>التاريخ: </span>
+              <strong>{data.evaluation_date}</strong>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+          <thead>
+            <tr style={{ background: "#f1f5f9" }}>
+              <th style={{ padding: "8px", textAlign: "center", width: 44 }}>#</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>المؤشر</th>
+              <th style={{ padding: "8px", textAlign: "center", width: 72 }}>1–5</th>
+            </tr>
+          </thead>
+          <tbody>
+            {criteria.map((c, idx) => (
+              <tr key={c.id || idx} style={{ borderTop: "1px solid #e2e8f0" }}>
+                <td style={{ padding: "8px", textAlign: "center", color: "#64748b" }}>{idx + 1}</td>
+                <td style={{ padding: "8px", textAlign: "right", color: "#334155" }}>{c.label}</td>
+                <td style={{ padding: "8px", textAlign: "center", fontWeight: 700 }}>{scores[c.id] ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.general_notes ? (
+        <div style={{ marginTop: "1rem", padding: "0.75rem", background: "#fff", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#334155" }}>ملاحظات ومقترحات</div>
+          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.general_notes}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function MentorClassroomVisitPortfolioReadOnly({ data }) {
+  const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+  const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
+  const fc = data.form_context && typeof data.form_context === "object" ? data.form_context : {};
+  const school = data.school_name || "—";
+
+  return (
+    <div
+      style={{
+        marginTop: "1rem",
+        padding: "1rem",
+        background: "linear-gradient(180deg, #f0f9ff 0%, #fff 100%)",
+        borderRadius: "12px",
+        border: "1px solid #bae6fd",
+      }}
+    >
+      <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0369a1", marginBottom: "0.35rem" }}>
+        نموذج رقم (6) — تقرير زيارة صفية
+      </div>
+      <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.88rem" }}>
+        <div>
+          <span style={{ color: "#64748b" }}>المدرسة: </span>
+          <strong style={{ color: "#0c4a6e" }}>{school}</strong>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+          {data.student_name ? (
+            <div>
+              <span style={{ color: "#64748b" }}>الطالب: </span>
+              <strong>{data.student_name}</strong>
+            </div>
+          ) : null}
+          {fc.university_name ? (
+            <div>
+              <span style={{ color: "#64748b" }}>الجامعة: </span>
+              <strong>{fc.university_name}</strong>
+            </div>
+          ) : null}
+          {fc.academic_year ? (
+            <div>
+              <span style={{ color: "#64748b" }}>العام الدراسي: </span>
+              <strong>{fc.academic_year}</strong>
+            </div>
+          ) : null}
+          {fc.semester ? (
+            <div>
+              <span style={{ color: "#64748b" }}>الفصل: </span>
+              <strong>{fc.semester}</strong>
+            </div>
+          ) : null}
+          {data.supervisor_name ? (
+            <div>
+              <span style={{ color: "#64748b" }}>المعلم المقيم: </span>
+              <strong>{data.supervisor_name}</strong>
+            </div>
+          ) : null}
+          {data.evaluation_date ? (
+            <div>
+              <span style={{ color: "#64748b" }}>التاريخ: </span>
+              <strong>{data.evaluation_date}</strong>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+          <thead>
+            <tr style={{ background: "#e0f2fe" }}>
+              <th style={{ padding: "8px", textAlign: "right", width: "24%" }}>المحور</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>الأمور الإيجابية</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>الأمور التي بحاجة إلى تطوير</th>
+            </tr>
+          </thead>
+          <tbody>
+            {criteria.map((c, idx) => {
+              const row = scores[c.id] || {};
+              return (
+                <tr key={c.id || idx} style={{ borderTop: "1px solid #e2e8f0" }}>
+                  <td style={{ padding: "8px", fontWeight: 700, color: "#0f172a", background: "#f8fafc" }}>{c.label}</td>
+                  <td style={{ padding: "8px", color: "#334155", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>
+                    {row.positive || "—"}
+                  </td>
+                  <td style={{ padding: "8px", color: "#334155", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>
+                    {row.development || "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      {data.general_notes ? (
+        <div
+          style={{
+            marginTop: "1rem",
+            padding: "0.75rem",
+            background: "#fff",
+            borderRadius: "8px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#334155" }}>ملاحظات عامة</div>
+          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.general_notes}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PsychologistInstitutionPortfolioReadOnly({ data }) {
+  const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+  const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
+  const total = data.total_score ?? "—";
+  const institution = data.institution_name || "—";
+
+  return (
+    <div
+      style={{
+        marginTop: "1rem",
+        padding: "1rem",
+        background: "linear-gradient(180deg, #faf5ff 0%, #fff 100%)",
+        borderRadius: "12px",
+        border: "1px solid #e9d5ff",
+      }}
+    >
+      <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "#6b21a8", marginBottom: "0.35rem" }}>
+        تقييم مشرف المؤسسة — تدريب نفسي/مؤسسي
+      </div>
+      <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.88rem" }}>
+        <div>
+          <span style={{ color: "#64748b" }}>المؤسسة: </span>
+          <strong style={{ color: "#4c1d95" }}>{institution}</strong>
+        </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <span style={{ color: "#64748b" }}>الدرجة المرجّحة: </span>
+            <strong style={{ fontSize: "1.15rem" }}>{total}</strong>
+            <span style={{ color: "#94a3b8" }}> / 100</span>
+          </div>
+          {data.grade_label ? (
+            <div>
+              <span style={{ color: "#64748b" }}>التقدير: </span>
+              <strong>{data.grade_label}</strong>
+            </div>
+          ) : null}
+          {data.supervisor_name ? (
+            <div>
+              <span style={{ color: "#64748b" }}>مشرف التدريب: </span>
+              <strong>{data.supervisor_name}</strong>
+            </div>
+          ) : null}
+          {data.evaluation_date ? (
+            <div>
+              <span style={{ color: "#64748b" }}>التاريخ: </span>
+              <strong>{data.evaluation_date}</strong>
+            </div>
+          ) : null}
+        </div>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+          <thead>
+            <tr style={{ background: "#f3e8ff" }}>
+              <th style={{ padding: "8px", textAlign: "center", width: 40 }}>#</th>
+              <th style={{ padding: "8px", textAlign: "right" }}>معيار التقويم</th>
+              <th style={{ padding: "8px", textAlign: "center", width: 56 }}>1–5</th>
+            </tr>
+          </thead>
+          <tbody>
+            {criteria.map((c, idx) => (
+              <tr key={c.id || idx} style={{ borderTop: "1px solid #e9d5ff" }}>
+                <td style={{ padding: "8px", textAlign: "center", color: "#64748b" }}>{idx + 1}</td>
+                <td style={{ padding: "8px", textAlign: "right", color: "#334155" }}>{c.label}</td>
+                <td style={{ padding: "8px", textAlign: "center", fontWeight: 700 }}>{scores[c.id] ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.areas_for_improvement ? (
+        <div style={{ marginTop: "1rem", padding: "0.75rem", background: "#fff", borderRadius: "8px", border: "1px solid #fde68a" }}>
+          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#92400e" }}>جوانب الضعف وتحسينها (أمثلة)</div>
+          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.areas_for_improvement}</div>
+        </div>
+      ) : null}
+      {data.strengths ? (
+        <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fff", borderRadius: "8px", border: "1px solid #c4b5fd" }}>
+          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#5b21b6" }}>الإجراءات المقترحة للتطوير</div>
+          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.strengths}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export default function Portfolio() {
   const { addToast } = useToast();
@@ -159,6 +470,13 @@ export default function Portfolio() {
   };
 
   const startEdit = (en) => {
+    if (
+      parseCounselorPortfolioPayload(en) ||
+      parseMentorClassroomVisitPayload(en) ||
+      parsePsychologistInstitutionPayload(en)
+    ) {
+      return;
+    }
     // Determine the form key from the title
     const title = (en.title || "").toString();
     let formKey = null;
@@ -233,8 +551,17 @@ export default function Portfolio() {
     }
   };
 
-  const getEntryStyle = (title) => {
-    const t = (title || '').toString();
+  const getEntryStyle = (entry) => {
+    const t = (entry?.title || "").toString();
+    if (entry?.category === "counselor_field_evaluation" || t.includes("نموذج تقييم المرشد")) {
+      return { icon: FileCheck, color: "#0d9488", gradient: "linear-gradient(135deg, #0d9488, #14b8a6)", bg: "#f0fdfa" };
+    }
+    if (entry?.category === "mentor_classroom_visit" || t.includes("نموذج 6") || t.includes("زيارة صفية")) {
+      return { icon: FileCheck, color: "#0369a1", gradient: "linear-gradient(135deg, #0369a1, #0284c7)", bg: "#f0f9ff" };
+    }
+    if (entry?.category === "psychologist_institution_evaluation" || t.includes("مشرف المؤسسة")) {
+      return { icon: FileCheck, color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)", bg: "#faf5ff" };
+    }
     if (t.includes('جدول الحصص الأسبوعية') || t.includes('برنامج التدريب')) return { icon: Calendar, color: '#667eea', gradient: 'linear-gradient(135deg, #667eea, #764ba2)', bg: '#f5f3ff' };
     if (t.includes('حضور') || t.includes('غياب')) return { icon: ClipboardCheck, color: '#0891b2', gradient: 'linear-gradient(135deg, #0891b2, #06b6d4)', bg: '#ecfeff' };
     if (t.includes('نقد خبرات') || t.includes('خبرات التعلم')) return { icon: BookOpen, color: '#059669', gradient: 'linear-gradient(135deg, #059669, #34d399)', bg: '#ecfdf5' };
@@ -438,7 +765,7 @@ export default function Portfolio() {
                 e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
               }}
             >
-              {saving ? <Loader2 className="spin" size={20} /> : <Plus size={20} />}
+              {saving ? <LoadingSpinner size="button" /> : <Plus size={20} />}
               {saving ? "جاري الحفظ..." : "إضافة مدخل"}
             </button>
           </div>
@@ -469,10 +796,7 @@ export default function Portfolio() {
         </h4>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: "3rem" }}>
-            <Loader2 className="spin" size={40} color="var(--primary, #007bff)" />
-            <p style={{ color: "#666", marginTop: "1rem" }}>جاري التحميل...</p>
-          </div>
+          <LoadingSpinner size="section" text="جاري التحميل..." />
         ) : entries.length === 0 ? (
           <div style={{
             textAlign: "center",
@@ -492,7 +816,10 @@ export default function Portfolio() {
             gap: "0.75rem"
           }}>
             {entries.map((en) => {
-              const style = getEntryStyle(en.title);
+              const counselorPayload = parseCounselorPortfolioPayload(en);
+              const mentorVisitPayload = parseMentorClassroomVisitPayload(en);
+              const psychInstitutionPayload = parsePsychologistInstitutionPayload(en);
+              const style = getEntryStyle(en);
               const EntryIcon = style.icon;
               return (
                 <div
@@ -574,7 +901,7 @@ export default function Portfolio() {
                               display: "flex", alignItems: "center", gap: 6,
                             }}
                           >
-                            {saving ? <Loader2 className="spin" size={14} /> : <SaveIcon size={14} />}
+                            {saving ? <LoadingSpinner size="button" /> : <SaveIcon size={14} />}
                             {saving ? "جاري الحفظ..." : "حفظ التعديل"}
                           </button>
                         </div>
@@ -703,57 +1030,71 @@ export default function Portfolio() {
                               </button>
                             </div>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => startEdit(en)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              color: "#94a3b8",
-                              padding: "4px",
-                              borderRadius: "6px",
-                              transition: "all 0.2s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.color = "#3b82f6";
-                              e.currentTarget.style.backgroundColor = "#eff6ff";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.color = "#94a3b8";
-                              e.currentTarget.style.backgroundColor = "transparent";
-                            }}
-                            title="تعديل"
-                          >
-                            <Edit3 size={15} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(en.id)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              color: "#cbd5e1",
-                              padding: "4px",
-                              borderRadius: "6px",
-                              transition: "all 0.2s",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.color = "#ef4444";
-                              e.currentTarget.style.backgroundColor = "#fef2f2";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.color = "#cbd5e1";
-                              e.currentTarget.style.backgroundColor = "transparent";
-                            }}
-                            title="حذف"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          {!counselorPayload && !mentorVisitPayload && !psychInstitutionPayload ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => startEdit(en)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: "#94a3b8",
+                                  padding: "4px",
+                                  borderRadius: "6px",
+                                  transition: "all 0.2s",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = "#3b82f6";
+                                  e.currentTarget.style.backgroundColor = "#eff6ff";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = "#94a3b8";
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                }}
+                                title="تعديل"
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(en.id)}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  cursor: "pointer",
+                                  color: "#cbd5e1",
+                                  padding: "4px",
+                                  borderRadius: "6px",
+                                  transition: "all 0.2s",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.color = "#ef4444";
+                                  e.currentTarget.style.backgroundColor = "#fef2f2";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.color = "#cbd5e1";
+                                  e.currentTarget.style.backgroundColor = "transparent";
+                                }}
+                                title="حذف"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          ) : (
+                            <span style={{ fontSize: "0.72rem", color: "#94a3b8", padding: "4px 8px" }}>وثيقة رسمية</span>
+                          )}
                         </div>
                       </div>
                     )}
+
+                    {counselorPayload && editingId !== en.id ? <CounselorPortfolioReadOnly data={counselorPayload} /> : null}
+                    {mentorVisitPayload && editingId !== en.id ? (
+                      <MentorClassroomVisitPortfolioReadOnly data={mentorVisitPayload} />
+                    ) : null}
+                    {psychInstitutionPayload && editingId !== en.id ? (
+                      <PsychologistInstitutionPortfolioReadOnly data={psychInstitutionPayload} />
+                    ) : null}
 
                     {/* نموذج استبدال الملف */}
                     {replacingFileId === en.id && (
@@ -860,7 +1201,7 @@ export default function Portfolio() {
                             >
                               {replacingFileId === en.id ? (
                                 <>
-                                  <Loader2 size={12} className="spin" />
+                                  <LoadingSpinner size="button" />
                                   جارٍ الاستبدال...
                                 </>
                               ) : (
@@ -894,8 +1235,8 @@ export default function Portfolio() {
                       </div>
                     )}
 
-                    {/* عرض ملاحظات المشرف الأكاديمي */}
-                    {(en.reviewer_note || en.id === 4) && (
+                    {/* عرض ملاحظات وتقييم المشرف الأكاديمي */}
+                    {(en.reviewer_note || en.academic_rating) && (
                       <>
                         <div style={{
                         marginTop: "0.75rem",
@@ -915,13 +1256,20 @@ export default function Portfolio() {
                         }}>
                           🎓 ملاحظة المشرف الأكاديمي
                         </div>
+                        {en.academic_rating != null && en.academic_rating !== "" && (
+                          <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#166534", marginBottom: "0.5rem" }}>
+                            التقييم: {en.academic_rating} / 5
+                          </div>
+                        )}
+                        {en.reviewer_note && (
                         <div style={{
                           fontSize: "0.9rem",
                           color: "#374151",
                           lineHeight: "1.5"
                         }}>
-                          {en.reviewer_note || "ؤسؤسؤسؤ"}
+                          {en.reviewer_note}
                         </div>
+                        )}
                         {en.reviewed_at && (
                           <div style={{
                             fontSize: "0.75rem",

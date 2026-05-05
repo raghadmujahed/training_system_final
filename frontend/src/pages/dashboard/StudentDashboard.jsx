@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { Navigate, Link } from "react-router-dom";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getStudentDashboardSummary,
   getAnnouncements,
@@ -275,10 +276,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
 
   if (loading) {
     return (
-      <div className="d-flex flex-column align-items-center justify-content-center py-5">
-        <Loader2 size={40} className="animate-spin text-primary mb-3" />
-        <p className="text-muted">جاري تحميل لوحة التحكم...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل لوحة التحكم..." />
     );
   }
 

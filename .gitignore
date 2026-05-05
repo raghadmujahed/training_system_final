@@ -2,6 +2,8 @@
 .DS_Store
 Thumbs.db
 Desktop.ini
+# Microsoft Office lock / temp (e.g. ~$Document.docx)
+~$*
 
 # Editor/IDE files
 .idea/

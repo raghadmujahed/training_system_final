@@ -10,14 +10,28 @@ class TaskSubmissionPolicy
     public function viewAny(User $user): bool
     {
         // يمكن للمشرف الأكاديمي والمعلم والأدمن رؤية كل التسليمات
-        return in_array($user->role?->name, ['admin', 'academic_supervisor', 'teacher', 'field_supervisor']);
+        return in_array($user->role?->name, [
+            'admin',
+            'academic_supervisor',
+            'teacher',
+            'adviser',
+            'psychologist',
+            'field_supervisor',
+        ]);
     }
 
     public function view(User $user, TaskSubmission $submission): bool
     {
         // يمكن للطالب صاحب التسليم، أو المعلم، أو المشرف، أو الأدمن
         return $user->id === $submission->user_id
-            || in_array($user->role?->name, ['admin', 'academic_supervisor', 'teacher', 'field_supervisor']);
+            || in_array($user->role?->name, [
+                'admin',
+                'academic_supervisor',
+                'teacher',
+                'adviser',
+                'psychologist',
+                'field_supervisor',
+            ]);
     }
 
     public function create(User $user): bool
@@ -41,6 +55,13 @@ class TaskSubmissionPolicy
     public function grade(User $user, TaskSubmission $submission): bool
     {
         // يمكن للمعلم أو المشرف الأكاديمي أو الأدمن تقييم التسليم
-        return in_array($user->role?->name, ['admin', 'academic_supervisor', 'teacher', 'field_supervisor']);
+        return in_array($user->role?->name, [
+            'admin',
+            'academic_supervisor',
+            'teacher',
+            'adviser',
+            'psychologist',
+            'field_supervisor',
+        ]);
     }
 }

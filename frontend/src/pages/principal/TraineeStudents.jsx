@@ -9,6 +9,7 @@ import { readStoredUser } from "../../utils/session";
 import {
   ClipboardCheck, User, School, MapPin, GraduationCap, Calendar, BookOpen, Save, Loader2, CheckCircle2, AlertCircle, Filter
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const fadeIn = `@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`;
 const spin = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`;
@@ -193,9 +194,7 @@ const TraineeStudents = ({ siteType = "school" }) => {
         )}
 
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "#64748b" }}>
-            <Loader2 size={28} className="spin" /> جاري تحميل الطلبة...
-          </div>
+          <LoadingSpinner size="section" text="جاري تحميل الطلبة..." />
         ) : (
           <>
             {/* Student Selection Card */}
@@ -434,7 +433,7 @@ const TraineeStudents = ({ siteType = "school" }) => {
                       boxShadow: "0 4px 12px rgba(30,58,95,0.3)",
                     }}
                   >
-                    {saving ? <Loader2 size={20} className="spin" /> : <Save size={20} />}
+                    {saving ? <LoadingSpinner size="button" /> : <Save size={20} />}
                     {saving ? "جاري الحفظ..." : "حفظ التقييم"}
                   </button>
                 </div>

@@ -26,8 +26,17 @@ class EvaluationPolicy
         if ($user->role?->name === 'admin') return true;
         if ($user->id === $evaluation->evaluator_id) return true;
         if ($user->id === $evaluation->trainingAssignment->academic_supervisor_id) return true;
-        if ($user->id === $evaluation->trainingAssignment->teacher_id) return true;
-        if ($user->id === $evaluation->trainingAssignment->enrollment->user_id) return true;
+        if ($user->id === $evaluation->trainingAssignment->teacher_id) {
+            return true;
+        }
+        if ($evaluation->trainingAssignment->field_supervisor_id
+            && (int) $user->id === (int) $evaluation->trainingAssignment->field_supervisor_id) {
+            return true;
+        }
+        if ($user->id === $evaluation->trainingAssignment->enrollment->user_id) {
+            return true;
+        }
+
         return false;
     }
 

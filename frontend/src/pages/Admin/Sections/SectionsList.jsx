@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getSections, deleteSection } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function SectionsList() {
   const [sections, setSections] = useState([]);
@@ -28,7 +29,7 @@ export default function SectionsList() {
     }
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
   return (
     <div>

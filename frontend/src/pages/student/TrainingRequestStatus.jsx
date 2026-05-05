@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import {
   ClipboardList, Building2, MapPin, UserCheck, Clock, AlertCircle,
-  CheckCircle2, XCircle, Send, History, RefreshCw, Calendar, Loader2,
+  CheckCircle2, XCircle, Send, History, RefreshCw, Calendar,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getActivityLogs,
   getStudentTrainingRequests,
@@ -109,9 +110,7 @@ export default function TrainingRequestStatus() {
 
         {/* Loading */}
         {loading && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "#64748b" }}>
-            <Loader2 size={28} className="spin" /> جاري تحميل البيانات...
-          </div>
+          <LoadingSpinner size="section" text="جاري تحميل البيانات..." />
         )}
 
         {/* Error */}

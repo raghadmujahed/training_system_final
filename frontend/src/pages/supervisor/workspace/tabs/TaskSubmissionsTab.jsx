@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 export default function TaskSubmissionsTab({ studentId }) {
   const { addToast } = useToast();
@@ -75,7 +76,7 @@ export default function TaskSubmissionsTab({ studentId }) {
   const notSubmitted = rows.filter((s) => s.status === "not_submitted").length;
   const lateSubmissions = rows.filter((s) => s.is_late).length;
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
   if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
 
   return (

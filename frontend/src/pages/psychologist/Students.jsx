@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getUsers,
   getNotes,
@@ -134,7 +135,7 @@ export default function PsychologistStudents() {
       </div>
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : error ? (
         <div className="section-card">
           <p className="text-danger">{error}</p>
@@ -191,7 +192,7 @@ export default function PsychologistStudents() {
             </div>
             <div className="modal-body">
               {detailLoading ? (
-                <p>جاري تحميل البيانات...</p>
+                <LoadingSpinner size="inline" text="جاري تحميل البيانات..." />
               ) : (
                 <>
                   <div style={{ marginBottom: 16 }}>

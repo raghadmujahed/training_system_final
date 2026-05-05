@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 import { getRejectedCases } from '../../services/api';
 import EmptyState from '../../components/common/EmptyState';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 export default function HeadOfDepartmentRejectedCases() {
   const [rejectedCases, setRejectedCases] = useState([]);
@@ -56,7 +57,7 @@ export default function HeadOfDepartmentRejectedCases() {
             disabled={loading}
             style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            {loading ? <LoadingSpinner size="button" /> : <RefreshCw size={16} />}
             تحديث
           </button>
         </div>
@@ -69,7 +70,7 @@ export default function HeadOfDepartmentRejectedCases() {
       )}
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : rejectedCases.length === 0 ? (
         <EmptyState
           title="لا توجد حالات مرفوضة"

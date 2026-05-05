@@ -30,7 +30,7 @@ class TrainingAssignmentPolicy
         if ($user->id === $assignment->academic_supervisor_id) {
             return true;
         }
-        if ($user->role?->name === 'field_supervisor') {
+        if (in_array($user->role?->name, ['field_supervisor', 'psychologist'], true)) {
             return FieldSupervisorAssignmentResolver::userIsFieldSupervisorActor($user, $assignment);
         }
         if ($user->id === $assignment->coordinator_id) return true;

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 export default function DailyLogsTab({ studentId }) {
   const { addToast } = useToast();
@@ -78,7 +79,7 @@ export default function DailyLogsTab({ studentId }) {
 
   const filtered = filterStatus ? logs.filter((l) => l.status === filterStatus) : logs;
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
   if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
 
   return (

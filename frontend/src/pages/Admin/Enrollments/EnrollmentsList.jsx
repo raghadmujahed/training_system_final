@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getEnrollments, deleteEnrollment, getUsers, getSections, createEnrollment } from "../../../services/api";
 import * as XLSX from "xlsx";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function EnrollmentsList() {
   const [enrollments, setEnrollments] = useState([]);
@@ -158,7 +159,7 @@ export default function EnrollmentsList() {
     reader.readAsArrayBuffer(bulkFile);
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
   return (
     <div>

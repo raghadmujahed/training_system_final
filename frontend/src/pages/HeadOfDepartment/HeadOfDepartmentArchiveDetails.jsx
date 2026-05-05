@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, Calendar, Users, BookOpen, Database, FileText } from "lucide-react";
 import { getArchivedPeriodDetails } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const TABLE_LABELS = {
   sections: "الشعب",
@@ -73,10 +74,7 @@ export default function HeadOfDepartmentArchiveDetails() {
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <div className="loading-spinner" style={{ margin: "0 auto" }}></div>
-        <p style={{ color: "#666", marginTop: 16 }}>جاري تحميل التفاصيل...</p>
-      </div>
+      <LoadingSpinner size="section" text="جاري تحميل التفاصيل..." />
     );
   }
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { apiClient, apiOrigin } from "../../../../services/api";
 import { Download, ExternalLink } from "lucide-react";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 export default function PortfolioTab({ studentId }) {
   const { addToast } = useToast();
@@ -10,6 +11,7 @@ export default function PortfolioTab({ studentId }) {
   const [error, setError] = useState("");
   const [commentingId, setCommentingId] = useState(null);
   const [commentText, setCommentText] = useState("");
+  const [draftRating, setDraftRating] = useState(null);
 
   const loadPortfolio = useCallback(async () => {
     setLoading(true);
@@ -34,20 +36,41 @@ export default function PortfolioTab({ studentId }) {
 
   useEffect(() => { loadPortfolio(); }, [loadPortfolio]);
 
-  const handleAddComment = async (entryId) => {
-    if (!commentText.trim()) return;
+  const openReviewPanel = (entry) => {
+    setCommentingId(entry.id);
+    setCommentText(entry.supervisor_comment || entry.reviewer_note || "");
+    setDraftRating(
+      entry.academic_rating != null && entry.academic_rating !== ""
+        ? Number(entry.academic_rating)
+        : null
+    );
+  };
+
+  const handleSubmitReview = async (entryId, status) => {
+    const note = commentText.trim();
+    const hasRating = draftRating != null && draftRating >= 1 && draftRating <= 5;
+    if (status === "needs_revision" && !note) {
+      showToast("يرجى توضيح سبب طلب التعديل", "error");
+      return;
+    }
+    if (status === "reviewed" && !note && !hasRating) {
+      showToast("أدخل تقييماً (1–5) أو ملاحظة نصية", "error");
+      return;
+    }
     try {
       await apiClient.post(`/supervisor/students/${studentId}/portfolio/review-section`, {
         entry_id: entryId,
-        status: "reviewed",
-        reviewer_note: commentText.trim(),
+        status,
+        reviewer_note: note || undefined,
+        academic_rating: hasRating ? draftRating : undefined,
       });
       setCommentingId(null);
       setCommentText("");
-      showToast("تم إضافة الملاحظة بنجاح", "success");
+      setDraftRating(null);
+      showToast(status === "reviewed" ? "تم حفظ التقييم والمراجعة" : "تم طلب التعديل على الملف", "success");
       loadPortfolio();
     } catch {
-      showToast("فشل إضافة الملاحظة", "error");
+      showToast("فشل حفظ المراجعة", "error");
     }
   };
 
@@ -66,7 +89,7 @@ export default function PortfolioTab({ studentId }) {
     addToast(message, type);
   };
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
   if (error && !entries.length) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
 
   return (
@@ -174,6 +197,12 @@ export default function PortfolioTab({ studentId }) {
                   </div>
                 )}
 
+                {entry.academic_rating != null && entry.academic_rating !== "" && (
+                  <div style={{ fontSize: "0.82rem", marginBottom: "8px", color: "#0f5132", fontWeight: 600 }}>
+                    ⭐ تقييمك: {entry.academic_rating} / 5
+                  </div>
+                )}
+
                 {entry.supervisor_comment && (
                   <div style={{ background: "#e8f5e9", borderRadius: "6px", padding: "8px", marginBottom: "8px", fontSize: "0.85rem" }}>
                     <span style={{ fontWeight: "600", color: "#28a745" }}>🎓 ملاحظتك:</span> {entry.supervisor_comment}
@@ -193,18 +222,52 @@ export default function PortfolioTab({ studentId }) {
 
                 {commentingId === entry.id ? (
                   <div style={{ marginTop: "8px" }}>
-                    <textarea id="portfolio-comment" name="supervisor_comment" className="form-textarea-custom" rows={2} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="أضف ملاحظة..." />
-                    <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                      <button className="btn-primary-custom" style={{ fontSize: "0.82rem", padding: "6px 12px" }} onClick={() => handleAddComment(entry.id)}>حفظ</button>
-                      <button style={{ fontSize: "0.82rem", padding: "6px 12px", borderRadius: "6px", border: "1px solid #999", background: "#fff", cursor: "pointer" }} onClick={() => { setCommentingId(null); setCommentText(""); }}>إلغاء</button>
+                    <div style={{ marginBottom: "8px" }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "6px" }}>تقييم الملف (1–5)</span>
+                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setDraftRating(n)}
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "8px",
+                              border: draftRating === n ? "2px solid #4361ee" : "1px solid #dee2e6",
+                              background: draftRating === n ? "#eef2ff" : "#fff",
+                              cursor: "pointer",
+                              fontWeight: 700,
+                              fontSize: "0.9rem",
+                              color: draftRating === n ? "#4361ee" : "#495057",
+                            }}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setDraftRating(null)}
+                          style={{ fontSize: "0.75rem", padding: "0 10px", borderRadius: "8px", border: "1px solid #ccc", background: "#f8f9fa", cursor: "pointer" }}
+                        >
+                          إلغاء التقييم
+                        </button>
+                      </div>
+                    </div>
+                    <textarea id="portfolio-comment" name="supervisor_comment" className="form-textarea-custom" rows={2} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="ملاحظة (اختياري عند اعتماد المراجعة؛ مطلوب عند طلب التعديل)..." />
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                      <button className="btn-primary-custom" style={{ fontSize: "0.82rem", padding: "6px 12px" }} type="button" onClick={() => handleSubmitReview(entry.id, "reviewed")}>اعتماد المراجعة</button>
+                      <button style={{ fontSize: "0.82rem", padding: "6px 12px", borderRadius: "6px", border: "1px solid #fd7e14", background: "#fff3e0", color: "#c2410c", cursor: "pointer" }} type="button" onClick={() => handleSubmitReview(entry.id, "needs_revision")}>طلب تعديل</button>
+                      <button style={{ fontSize: "0.82rem", padding: "6px 12px", borderRadius: "6px", border: "1px solid #999", background: "#fff", cursor: "pointer" }} type="button" onClick={() => { setCommentingId(null); setCommentText(""); setDraftRating(null); }}>إلغاء</button>
                     </div>
                   </div>
                 ) : (
                   <button
                     style={{ fontSize: "0.82rem", padding: "4px 12px", borderRadius: "6px", border: "1px solid #4361ee", background: "#fff", color: "#4361ee", cursor: "pointer" }}
-                    onClick={() => setCommentingId(entry.id)}
+                    type="button"
+                    onClick={() => openReviewPanel(entry)}
                   >
-                    💬 إضافة ملاحظة
+                    💬 تقييم وملاحظة
                   </button>
                 )}
               </div>
@@ -228,6 +291,7 @@ function normalizePortfolioEntry(entry) {
   return {
     ...entry,
     status,
+    academic_rating: entry.academic_rating,
     supervisor_comment: entry.reviewer_note || entry.supervisor_comment,
     student_note: entry.student_note || entry.description,
     uploaded_at: entry.uploaded_at || entry.created_at,

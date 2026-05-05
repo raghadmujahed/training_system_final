@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             UsersSeeder::class,
             PsychologyTrainingSitesSeeder::class,
+            BethlehemPsychologyClinicSeeder::class,
             StudentsSeeder::class,
             Students2Seeder::class,
             SectionsSeeder::class,

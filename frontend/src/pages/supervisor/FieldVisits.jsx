@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { apiClient, unwrapSupervisorList } from "../../services/api";
 
 const initialForm = {
@@ -213,7 +214,7 @@ export default function FieldVisits() {
     return (
       <>
         <PageHeader title="الزيارات الميدانية" subtitle="تحميل الشعب والطلبة المرتبطين بك..." />
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       </>
     );
   }
@@ -385,7 +386,7 @@ export default function FieldVisits() {
           description="ستظهر الزيارات الحقيقية بعد اختيار الشعبة ثم الطالب من القوائم أعلاه."
         />
       ) : visitsLoading ? (
-        <div className="section-card">جاري تحميل الزيارات...</div>
+        <LoadingSpinner size="section" text="جاري تحميل الزيارات..." />
       ) : !visits.length ? (
         <EmptyState
           title="لا توجد زيارات ميدانية"

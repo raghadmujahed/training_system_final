@@ -117,7 +117,11 @@ export default function useFieldStaffRole() {
 
   const supervisorSubtype = savedUser?.field_supervisor_profile?.supervisor_type || null;
   const subtypeLabel = SUBTYPE_LABELS[supervisorSubtype] || "";
-  const terms = SUBTYPE_TERMS[supervisorSubtype] || {};
+  let terms = SUBTYPE_TERMS[supervisorSubtype] || {};
+  // أخصائي بموقع تدريب (دور psychologist) بلا سجل مشرف ميداني: نفس مصطلحات مسار المؤسسة
+  if (mapped.roleKey === "psychologist" && !supervisorSubtype) {
+    terms = SUBTYPE_TERMS.psychologist || {};
+  }
   const label = rawRole === "field_supervisor" ? subtypeLabel || mapped.label : mapped.label;
 
   return {

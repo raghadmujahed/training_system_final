@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSection, getSectionEnrollments, deleteEnrollment, addStudentToSection, removeStudentFromSection, searchStudentsHeadDepartment } from "../../services/api";
 import { ArrowLeft, Users, User, BookOpen, Calendar, GraduationCap, Mail, Phone, Trash2, Plus, Search, X } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function HeadOfDepartmentSectionDetails() {
   const { id } = useParams();
@@ -122,12 +123,7 @@ export default function HeadOfDepartmentSectionDetails() {
 
   if (loading) {
     return (
-      <div className="enrollments-list">
-        <div className="page-header">
-          <h1>تفاصيل الشعبة</h1>
-        </div>
-        <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>
-      </div>
+      <LoadingSpinner size="page" text="جاري التحميل..." />
     );
   }
 

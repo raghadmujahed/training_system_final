@@ -41,7 +41,7 @@ export const ROLE_LABELS = {
 const DASHBOARD_PATHS = {
   [ROLES.ADMIN]: "/dashboard",
   [ROLES.COORDINATOR]: "/coordinator/dashboard",
-  [ROLES.FIELD_SUPERVISOR]: "/field-supervisor",
+  [ROLES.FIELD_SUPERVISOR]: "/field-staff/dashboard",
   [ROLES.MENTOR]: "/field-staff/dashboard",
   [ROLES.ADVISER]: "/field-staff/dashboard",
   [ROLES.SUPERVISOR]: "/supervisor/workspace",

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPermissions } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function PermissionsList() {
   const [permissions, setPermissions] = useState([]);
@@ -23,7 +24,7 @@ export default function PermissionsList() {
     fetchPermissions();
   }, []);
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

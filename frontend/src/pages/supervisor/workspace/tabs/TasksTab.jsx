@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient, itemsFromPagedResponse, unwrapSupervisorList } from "../../../../services/api";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 const TASK_TYPES_API = [
   { value: "general", label: "عام / واجب" },
@@ -241,7 +242,7 @@ export default function TasksTab({ studentId }) {
     graded: { label: "مُقيَّمة", color: "#28a745", bg: "#e8f5e9" },
   };
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
 
   return (
     <div>

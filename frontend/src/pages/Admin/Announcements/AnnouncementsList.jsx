@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAnnouncements, deleteAnnouncement } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function AnnouncementsList() {
   const [announcements, setAnnouncements] = useState([]);
@@ -49,7 +50,7 @@ export default function AnnouncementsList() {
     return "غير محدد";
   };
 
-  if (loading) return <div className="text-center">جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

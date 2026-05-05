@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 export default function OverviewTab({ studentId, student, onOpenTab }) {
   const { addToast } = useToast();
@@ -24,7 +25,7 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
   }, [loadOverview]);
 
   if (loading) {
-    return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+    return <LoadingSpinner size="section" text="جاري التحميل..." />;
   }
 
   const data = overview || getDefaultOverview();

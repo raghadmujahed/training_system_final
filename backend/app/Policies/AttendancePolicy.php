@@ -12,6 +12,8 @@ class AttendancePolicy
         return in_array($user->role?->name, [
             'admin',
             'teacher',
+            'adviser',
+            'psychologist',
             'field_supervisor',
             'school_manager',
             'psychology_center_manager',

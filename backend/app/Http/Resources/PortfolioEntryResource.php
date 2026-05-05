@@ -12,8 +12,15 @@ class PortfolioEntryResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'code' => $this->code,
+            'category' => $this->category,
             'content' => $this->content,
             'file_path' => $this->file_path,
+            'review_status' => $this->review_status,
+            'reviewer_note' => $this->reviewer_note,
+            'academic_rating' => $this->academic_rating,
+            'reviewed_at' => $this->reviewed_at?->toDateTimeString(),
+            'reviewed_by' => $this->reviewed_by,
             'student_portfolio' => $this->whenLoaded('studentPortfolio')
     ? new StudentPortfolioResource($this->studentPortfolio)
     : null,

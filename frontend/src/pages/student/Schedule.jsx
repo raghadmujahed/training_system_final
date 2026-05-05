@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { getStudentTrainingProgram, saveStudentTrainingProgram, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Calendar, Clock, Lock, Edit3, Save, RotateCcw, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useToast } from "../../components/Toast";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 
@@ -239,10 +240,7 @@ export default function Schedule() {
 
   if (loading) {
     return (
-      <div className="section-card" style={{ textAlign: "center", padding: "4rem 2rem" }}>
-        <Loader2 className="spin" size={32} style={{ color: "var(--primary)" }} />
-        <p style={{ marginTop: "1rem", color: "var(--text-soft)", fontSize: "1rem" }}>جاري تحميل جدول الحصص...</p>
-      </div>
+      <LoadingSpinner size="section" text="جاري تحميل جدول الحصص..." />
     );
   }
 
@@ -605,7 +603,7 @@ export default function Schedule() {
               className="btn-primary-custom"
               style={{ opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer", minWidth: 130 }}
             >
-              {saving ? <Loader2 className="spin" size={16} /> : <Save size={15} />}
+              {saving ? <LoadingSpinner size="button" /> : <Save size={15} />}
               {saving ? "جاري الحفظ..." : "حفظ الجدول"}
             </button>
           </div>

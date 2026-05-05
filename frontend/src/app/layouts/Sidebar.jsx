@@ -101,6 +101,37 @@ function buildFieldSupervisorMenu() {
   ];
 }
 
+function buildFieldSupervisorUnifiedMenu(savedUser) {
+  // توحيد كامل للواجهة: جميع أنواع field_supervisor تستخدم نفس قائمة المعلم المرشد.
+  // تبقى الفروقات داخل الصفحات (المسميات/النماذج/الطلاب) وليس في بنية الـ sidebar.
+  // بدون «المهام» و«الجدول الأسبوعي» — غير مطلوبين لمسار المشرف الميداني الموحّد.
+  const base = buildFieldStaffMenu("mentor").filter(
+    (item) =>
+      item.path !== "/field-staff/final-evaluation" &&
+      item.path !== "/field-staff/tasks" &&
+      item.path !== "/mentor/schedule"
+  );
+
+  // ترتيب عملي حسب رحلة العمل اليومية للمشرف الميداني.
+  const preferredOrder = [
+    "/field-staff/dashboard",
+    "/field-staff/students",
+    "/mentor/attendance",
+    "/field-staff/daily-reports",
+    "/field-staff/evaluations",
+    "/field-staff/notes",
+  ];
+
+  const rank = new Map(preferredOrder.map((path, index) => [path, index]));
+
+  return [...base].sort((a, b) => {
+    const ra = rank.has(a.path) ? rank.get(a.path) : Number.MAX_SAFE_INTEGER;
+    const rb = rank.has(b.path) ? rank.get(b.path) : Number.MAX_SAFE_INTEGER;
+    if (ra !== rb) return ra - rb;
+    return a.name.localeCompare(b.name, "ar");
+  });
+}
+
 const menus = {
   admin: [
     { name: "الرئيسية", path: "/dashboard" },
@@ -228,6 +259,17 @@ export default function Sidebar({ isOpen, onClose }) {
   const roleName = getRoleLabel(rawRole);
 
   const menu = useMemo(() => {
+    // نفس قائمة المشرف الميداني الموحّدة لأخصائي المؤسسة (دور psychologist) حتى لا يُعامل كمسار منفصل
+    if (role === "field_supervisor" || role === "psychologist") {
+      const unified = buildFieldSupervisorUnifiedMenu(savedUser);
+      if (role === "psychologist") {
+        const guidance = { name: "الإرشاد والدعم", path: "/field-staff/guidance" };
+        if (!unified.some((i) => i.path === guidance.path)) {
+          return [...unified, guidance];
+        }
+      }
+      return unified;
+    }
     if (role === "supervisor") {
       const base = buildFieldStaffMenu("supervisor");
       if (!isPsychologyAcademicSupervisor(savedUser)) {

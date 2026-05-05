@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import StatusBadge from "./StatusBadge";
 import { COORDINATOR_DECISIONS } from "../../config/coordinator/workflowSteps";
 import { GOVERNING_BODIES } from "../../config/coordinator/governingBodies";
@@ -302,7 +303,7 @@ export default function RequestReviewDrawer({
             disabled={!decision || saving}
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
-            {saving && <Loader2 className="spin" size={16} />}
+            {saving && <LoadingSpinner size="button" />}
             تأكيد القرار
           </button>
         </div>

@@ -4,6 +4,7 @@ import {
   getTrainingRequests,
   itemsFromPagedResponse,
 } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { siteLabels } from "../../utils/roles";
 import {
   FileCheck,
@@ -238,10 +239,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "2rem", color: "var(--text-soft)" }}>
-        <Loader2 size={24} className="spin" />
-        {"جاري تحميل طلبات التدريب..."}
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل طلبات التدريب..." />
     );
   }
 
@@ -504,7 +502,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
                         <button type="button" onClick={() => handleRequestDecision(request.id)} disabled={requestSavingId === request.id}
                           style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.5rem 1rem", background: decision === "approved" ? "linear-gradient(135deg, #10b981 0%, #059669 100%)" : decision === "rejected" ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "#64748b", color: "white", border: "none", borderRadius: 8, fontSize: "0.8rem", fontWeight: 600, cursor: requestSavingId === request.id ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}
                         >
-                          {requestSavingId === request.id ? <Loader2 size={14} className="spin" /> : decision === "approved" ? <Send size={14} /> : <Save size={14} />}
+                          {requestSavingId === request.id ? <LoadingSpinner size="button" /> : decision === "approved" ? <Send size={14} /> : <Save size={14} />}
                           {requestSavingId === request.id ? "جاري الحفظ..." : decision === "approved" ? "موافقة وإرسال" : "حفظ القرار"}
                         </button>
                       </td>

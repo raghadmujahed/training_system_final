@@ -7,6 +7,7 @@ import {
   schoolManagerApproveRequest,
 } from "../../services/api";
 import { siteLabels } from "../../utils/roles";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   ClipboardList,
   CheckCircle2,
@@ -230,10 +231,7 @@ export default function MentorAssignment({ siteType = "school" }) {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "var(--text-soft)" }}>
-        <Loader2 size={28} className="spin" />
-        {"جاري تحميل طلبات التدريب..."}
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل طلبات التدريب..." />
     );
   }
 
@@ -370,7 +368,7 @@ export default function MentorAssignment({ siteType = "school" }) {
                   <button type="button" onClick={() => handleRequestApprove(req.id)} disabled={isSaving}
                     style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.5rem 1rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "white", border: "none", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", opacity: isSaving ? 0.7 : 1 }}
                   >
-                    {isSaving ? <Loader2 size={14} className="spin" /> : <CheckCircle2 size={14} />}
+                    {isSaving ? <LoadingSpinner size="button" /> : <CheckCircle2 size={14} />}
                     {labels.approveBtn}
                   </button>
                   <button type="button" onClick={() => handleRequestReject(req.id)} disabled={isSaving}

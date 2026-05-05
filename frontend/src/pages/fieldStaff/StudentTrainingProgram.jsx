@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader2, AlertCircle, ArrowRight, BookOpen, GraduationCap, CheckCircle2 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { getStudentTrainingProgramById } from "../../services/api";
 
 const days = [
@@ -62,10 +63,7 @@ export default function StudentTrainingProgram() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-        <Loader2 size={40} className="spin" style={{ color: "var(--primary)", marginBottom: 12 }} />
-        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل برنامج التدريب...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل برنامج التدريب..." />
     );
   }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getEvaluationTemplates, deleteEvaluationTemplate } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function EvaluationTemplatesList() {
   const [templates, setTemplates] = useState([]);
@@ -37,7 +38,7 @@ export default function EvaluationTemplatesList() {
     }
   };
 
-  if (loading) return <div className="text-center">جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

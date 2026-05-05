@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getStudentNotifications, itemsFromPagedResponse, markNotificationAsRead } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function NotificationsUpdates() {
   const [loading, setLoading] = useState(true);
@@ -74,7 +75,7 @@ export default function NotificationsUpdates() {
       </div>
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : error ? (
         <div className="section-card">
           <p className="text-danger">{error}</p>

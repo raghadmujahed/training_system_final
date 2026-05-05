@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getStaffDirectory } from "../../services/api";
 import { Mail, Phone, Building2, GraduationCap, Users } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 export default function StaffDirectory() {
@@ -72,7 +73,7 @@ export default function StaffDirectory() {
           <h1>دليل الموظفين</h1>
           <p>عرض بيانات الموظفين في القسم ومكان التدريب</p>
         </div>
-        <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       </div>
     );
   }

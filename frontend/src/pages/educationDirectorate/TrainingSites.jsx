@@ -22,6 +22,7 @@ import {
   Building2,
   AlertCircle,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 
 const getSchoolTypeFromItem = (item) => {
@@ -514,9 +515,7 @@ export default function TrainingPlaces() {
         </div>
 
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "2rem", color: "var(--text-soft)" }}>
-            <Loader2 size={24} className="spin" /> {"جاري تحميل أماكن التدريب..."}
-          </div>
+          <LoadingSpinner size="section" text="جاري تحميل أماكن التدريب..." />
         ) : (
           <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>

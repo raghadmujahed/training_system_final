@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import OverviewTab from "./tabs/OverviewTab";
 import AttendanceTab from "./tabs/AttendanceTab";
 import DailyLogsTab from "./tabs/DailyLogsTab";
@@ -153,7 +154,7 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
         </button>
 
         {loading ? (
-          <span style={{ color: "#666" }}>جاري التحميل...</span>
+          <LoadingSpinner size="inline" text="جاري التحميل..." />
         ) : student ? (
           <div style={{ flex: 1 }}>
             <h2 style={{ margin: 0, fontSize: "1.3rem", display: "flex", alignItems: "center", gap: "8px" }}>

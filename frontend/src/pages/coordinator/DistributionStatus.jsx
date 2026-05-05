@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Loader2, GitBranch, GraduationCap, Building2, ChevronDown, ChevronUp } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useCoordinatorRequests from "../../hooks/useCoordinatorRequests";
 import { CoordinatorFilters, StatusBadge, DistributionStatusStepper } from "../../components/coordinator";
 import { STATUS_LABELS } from "../../config/coordinator/statusLabels";
@@ -30,10 +31,7 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-        <Loader2 size={40} className="spin" style={{ color: "var(--primary)", marginBottom: 12 }} />
-        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل حالة التوزيع...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل حالة التوزيع..." />
     );
   }
 

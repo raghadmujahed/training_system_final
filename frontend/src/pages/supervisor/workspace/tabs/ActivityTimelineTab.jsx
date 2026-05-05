@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 const EVENT_CONFIG = {
   attendance_recorded: { label: "تسجيل حضور", icon: "📊", color: "#28a745" },
@@ -46,7 +47,7 @@ export default function ActivityTimelineTab({ studentId }) {
 
   useEffect(() => { loadTimeline(); }, [loadTimeline]);
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
   if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
 
   return (

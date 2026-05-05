@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Megaphone, Loader2, Plus, Archive, FileEdit, CheckCircle2, Calendar } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   createAnnouncement,
   getAnnouncements,
@@ -201,8 +202,7 @@ export default function CoordinatorAnnouncements() {
 
         {loading ? (
           <div className="text-center py-4 text-muted">
-            <Loader2 size={28} className="spin mb-2" />
-            جاري التحميل...
+            <LoadingSpinner size="section" text="جاري التحميل..." />
           </div>
         ) : items.length === 0 ? (
           <p className="text-muted mb-0">لا توجد إعلانات في هذا القسم.</p>

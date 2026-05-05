@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   GraduationCap,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const empty = (v) => (v && v !== "—" ? String(v).trim() : "");
 
@@ -155,10 +156,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "var(--text-soft)" }}>
-        <Loader2 size={28} className="spin" />
-        {"جاري تحميل البيانات الشخصية..."}
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل البيانات الشخصية..." />
     );
   }
 
@@ -346,7 +344,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
             onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.3)"; } }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
           >
-            {saving ? <Loader2 size={18} className="spin" /> : <Save size={18} />}
+            {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
             {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
           </button>
         </div>

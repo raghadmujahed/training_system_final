@@ -102,6 +102,16 @@ const ROUTE_ICON = {
   "/education/training-requests": "fileText",
   "/education/training-sites": "school",
   "/education/official-letters": "document",
+
+  "/head-department/dashboard": "home",
+  "/head-department/students": "graduation",
+  "/head-department/distribution-status": "mapPin",
+  "/head-department/reports": "chart",
+  "/head-department/rejected-cases": "activity",
+  "/head-department/courses": "book",
+  "/head-department/sections": "layers",
+  "/head-department/enrollments/create": "userPlus",
+  "/head-department/archive": "database",
 };
 
 const svgProps = {

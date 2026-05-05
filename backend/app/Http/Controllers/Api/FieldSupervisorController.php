@@ -15,6 +15,7 @@ use App\Models\Message;
 use App\Models\Note;
 use App\Models\Notification;
 use App\Models\FormInstance;
+use App\Services\FieldEvaluationPortfolioEntryService;
 use App\Services\FieldSupervisorAssignmentResolver;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -39,6 +40,27 @@ class FieldSupervisorController extends Controller
     private function getSupervisorProfile(Request $request)
     {
         return $request->user()->fieldSupervisorProfile;
+    }
+
+    /**
+     * نوع قالب التقييم الميداني: من ملف المشرف الميداني إن وُجد، وإلا من دور المستخدم
+     * (مثل أخصائي نفسي بموقع تدريب دون سجل field_supervisor_profiles).
+     */
+    private function expectedTemplateAppliesTo(Request $request): string
+    {
+        $profile = $this->getSupervisorProfile($request);
+        if ($profile && $profile->supervisor_type) {
+            return FieldEvaluationTemplate::normalizedSupervisorType($profile->supervisor_type);
+        }
+
+        $roleName = $request->user()->role?->name;
+
+        return match ($roleName) {
+            'psychologist' => FieldEvaluationTemplate::TYPE_PSYCHOLOGIST,
+            'adviser' => FieldEvaluationTemplate::TYPE_SCHOOL_COUNSELOR,
+            'teacher' => FieldEvaluationTemplate::TYPE_MENTOR_TEACHER,
+            default => FieldEvaluationTemplate::TYPE_MENTOR_TEACHER,
+        };
     }
 
     /**
@@ -159,8 +181,9 @@ class FieldSupervisorController extends Controller
     private function getSubtypeSpecificStats(?string $type, array $studentIds): array
     {
         if (!$type) return [];
+        $normalizedType = FieldEvaluationTemplate::normalizedSupervisorType($type);
 
-        return match($type) {
+        return match($normalizedType) {
             'mentor_teacher' => [
                 'lessons_conducted' => $this->getLessonsCount($studentIds),
                 'preparations_needing_attention' => $this->getPreparationsCount($studentIds),
@@ -221,10 +244,15 @@ class FieldSupervisorController extends Controller
                 'training_site' => $assignment->trainingSite?->name,
                 'training_type' => $this->getTrainingTypeLabel($profile?->supervisor_type),
                 'assignment_id' => $assignment->id,
+                'assignment_status' => $assignment->status,
                 'attendance_rate' => $attendanceRate,
                 'last_attendance' => $this->getLastAttendance($student->id, $assignment->id),
                 'today_report_status' => $reportStatus,
                 'evaluation_status' => $evalStatus,
+                'notes_count' => Note::where('training_assignment_id', $assignment->id)->count(),
+                'field_evaluations_count' => FieldEvaluation::where('student_id', $student->id)
+                    ->where('training_assignment_id', $assignment->id)
+                    ->count(),
             ];
         })->filter()->values();
 
@@ -770,8 +798,7 @@ class FieldSupervisorController extends Controller
      */
     public function getEvaluationTemplates(Request $request)
     {
-        $profile = $this->getSupervisorProfile($request);
-        $type = FieldEvaluationTemplate::normalizedSupervisorType($profile?->supervisor_type ?? 'mentor_teacher');
+        $type = $this->expectedTemplateAppliesTo($request);
 
         $templates = FieldEvaluationTemplate::active()
             ->forType($type)
@@ -792,24 +819,37 @@ class FieldSupervisorController extends Controller
             return response()->json(['error' => 'غير مصرح'], 403);
         }
 
-        $profile = $this->getSupervisorProfile($request);
-        $subtype = FieldEvaluationTemplate::normalizedSupervisorType($profile?->supervisor_type ?? 'mentor_teacher');
-        $template = FieldEvaluationTemplate::getDefaultForType($subtype);
+        $assignment->loadMissing('trainingSite');
+        $subtype = $this->expectedTemplateAppliesTo($request);
+        $defaultTemplate = FieldEvaluationTemplate::getDefaultForType($subtype);
 
         $evaluation = FieldEvaluation::with('template')
             ->where('student_id', $studentId)
             ->where('training_assignment_id', $assignment->id)
             ->first();
 
-        $tplForWeight = $evaluation?->template ?? $template;
+        $template = $evaluation?->template ?? $defaultTemplate;
+
+        $tplForWeight = $template;
         $weightedPreview = ($tplForWeight && $evaluation?->scores)
             ? $tplForWeight->weightedTotalFromScores($evaluation->scores)
             : null;
 
+        $studentUser = User::query()->find((int) $studentId);
+        $suggestedHeader = [
+            'student_name' => $studentUser?->name,
+            'university_name' => 'جامعة الخليل',
+            'evaluating_teacher_name' => $request->user()?->name,
+            'school_name' => $assignment->trainingSite?->name,
+            'directorate' => $assignment->trainingSite?->directorate,
+            'school_address' => $assignment->trainingSite?->location,
+        ];
+
         return response()->json([
-            'template' => $template,
+            'template' => $template ?? $defaultTemplate,
             'supervisor_subtype' => $subtype,
             'weighted_score_preview' => $weightedPreview,
+            'suggested_header' => $suggestedHeader,
             'evaluation' => $evaluation ? [
                 'id' => $evaluation->id,
                 'status' => $evaluation->status,
@@ -823,6 +863,7 @@ class FieldSupervisorController extends Controller
                 'areas_for_improvement' => $evaluation->areas_for_improvement,
                 'supervisor_name' => $evaluation->supervisor_name,
                 'evaluation_date' => $evaluation->evaluation_date,
+                'form_context' => $evaluation->form_context,
                 'is_final' => $evaluation->is_final,
                 'is_editable' => $evaluation->isEditable(),
                 'submitted_at' => $evaluation->submitted_at?->format('Y-m-d H:i'),
@@ -846,6 +887,11 @@ class FieldSupervisorController extends Controller
             'supervisor_name' => 'nullable|string|max:255',
             'evaluation_date' => 'nullable|date',
             'template_id' => 'required|exists:field_evaluation_templates,id',
+            'form_context' => 'nullable|array',
+            'form_context.academic_year' => 'nullable|string|max:120',
+            'form_context.semester' => 'nullable|string|max:120',
+            'form_context.practicum_course_number' => 'nullable|string|max:120',
+            'form_context.university_name' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -866,7 +912,7 @@ class FieldSupervisorController extends Controller
         }
 
         $tpl = FieldEvaluationTemplate::findOrFail((int) $request->template_id);
-        $this->assertFieldEvaluationTemplateForProfile($tpl, $this->getSupervisorProfile($request));
+        $this->assertFieldEvaluationTemplateForProfile($tpl, $this->expectedTemplateAppliesTo($request));
 
         $evaluation = FieldEvaluation::updateOrCreate(
             [
@@ -882,6 +928,7 @@ class FieldSupervisorController extends Controller
                 'areas_for_improvement' => $request->areas_for_improvement,
                 'supervisor_name' => $request->supervisor_name,
                 'evaluation_date' => $request->evaluation_date,
+                'form_context' => $request->input('form_context'),
                 'status' => FieldEvaluation::STATUS_DRAFT,
             ]
         );
@@ -902,7 +949,7 @@ class FieldSupervisorController extends Controller
      * إرسال تقييم نهائي
      * POST /field-supervisor/students/{id}/evaluation-submit
      */
-    public function submitEvaluation(Request $request, $studentId)
+    public function submitEvaluation(Request $request, $studentId, FieldEvaluationPortfolioEntryService $portfolioEntryService)
     {
         $validator = Validator::make($request->all(), [
             'scores' => 'required|array',
@@ -912,6 +959,11 @@ class FieldSupervisorController extends Controller
             'supervisor_name' => 'nullable|string|max:255',
             'evaluation_date' => 'nullable|date',
             'template_id' => 'required|exists:field_evaluation_templates,id',
+            'form_context' => 'nullable|array',
+            'form_context.academic_year' => 'nullable|string|max:120',
+            'form_context.semester' => 'nullable|string|max:120',
+            'form_context.practicum_course_number' => 'nullable|string|max:120',
+            'form_context.university_name' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -932,7 +984,11 @@ class FieldSupervisorController extends Controller
         }
 
         $tpl = FieldEvaluationTemplate::findOrFail((int) $request->template_id);
-        $this->assertFieldEvaluationTemplateForProfile($tpl, $this->getSupervisorProfile($request));
+        $this->assertFieldEvaluationTemplateForProfile($tpl, $this->expectedTemplateAppliesTo($request));
+
+        if ($tpl->code === 'classroom_visit_form_6') {
+            $this->assertClassroomVisitFormSixComplete($tpl, $request->input('scores', []));
+        }
 
         $evaluation = FieldEvaluation::updateOrCreate(
             [
@@ -948,19 +1004,27 @@ class FieldSupervisorController extends Controller
                 'areas_for_improvement' => $request->areas_for_improvement,
                 'supervisor_name' => $request->supervisor_name,
                 'evaluation_date' => $request->evaluation_date,
+                'form_context' => $request->input('form_context'),
             ]
         );
 
         $evaluation->submit();
         $evaluation->refresh();
 
+        $portfolioEntryService->syncCounselorFieldEvaluation($evaluation);
+        $portfolioEntryService->syncMentorClassroomVisitEvaluation($evaluation);
+        $portfolioEntryService->syncPsychologistInstitutionEvaluation($evaluation);
+
         $gradeText = $evaluation->grade_label ?? $evaluation->grade ?? '—';
+        $notifyBody = $evaluation->total_score !== null
+            ? "تم رفع تقييمك الميداني: تم إرسال تقييمك الميداني بنجاح. درجتك: {$gradeText}"
+            : 'تم رفع تقييمك الميداني: تم إرسال تقرير الزيارة الصفية (نموذج 6) بنجاح ويظهر في ملف إنجازك.';
 
         // إشعار للطالب
         $this->notifyInAppUser(
             $studentId,
             'evaluation_submitted',
-            "تم رفع تقييمك الميداني: تم إرسال تقييمك الميداني بنجاح. درجتك: {$gradeText}"
+            $notifyBody
         );
 
         return response()->json([
@@ -1315,9 +1379,9 @@ class FieldSupervisorController extends Controller
         ];
     }
 
-    private function assertFieldEvaluationTemplateForProfile(FieldEvaluationTemplate $template, ?\App\Models\FieldSupervisorProfile $profile): void
+    private function assertFieldEvaluationTemplateForProfile(FieldEvaluationTemplate $template, string $expectedSupervisorType): void
     {
-        $expected = FieldEvaluationTemplate::normalizedSupervisorType($profile?->supervisor_type ?? 'mentor_teacher');
+        $expected = FieldEvaluationTemplate::normalizedSupervisorType($expectedSupervisorType);
         $applies = $template->applies_to;
         if ($applies === 'all') {
             return;
@@ -1326,6 +1390,34 @@ class FieldSupervisorController extends Controller
             return;
         }
         abort(422, 'قالب التقييم لا يطابق نوع المشرف الميداني.');
+    }
+
+    /**
+     * نموذج 6: يشترط ملء عمود واحد على الأقل لكل محور (إيجابيات أو تطوير).
+     */
+    private function assertClassroomVisitFormSixComplete(FieldEvaluationTemplate $template, array $scores): void
+    {
+        if ($template->code !== 'classroom_visit_form_6') {
+            return;
+        }
+        foreach ($template->criteria ?? [] as $c) {
+            if (($c['response_type'] ?? '') !== 'text_pair') {
+                continue;
+            }
+            $id = $c['id'] ?? null;
+            if (! $id) {
+                continue;
+            }
+            $row = $scores[$id] ?? $scores[(string) $id] ?? [];
+            if (! is_array($row)) {
+                abort(422, 'الرجاء تعبئة ملاحظات كل محور قبل الإرسال.');
+            }
+            $p = trim((string) ($row['positive'] ?? ''));
+            $d = trim((string) ($row['development'] ?? ''));
+            if ($p === '' && $d === '') {
+                abort(422, 'الرجاء تعبئة ملاحظات كل محور (إيجابيات أو تطوير) قبل الإرسال.');
+            }
+        }
     }
 
     private function getLastAttendance(int $studentId, ?int $assignmentId = null): ?string

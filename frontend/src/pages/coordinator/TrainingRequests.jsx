@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Printer,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useCoordinatorDistribution from "../../hooks/useCoordinatorDistribution";
 import {
   RequestsTable,
@@ -185,10 +186,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-        <Loader2 size={40} className="spin" style={{ color: "var(--primary)", marginBottom: 12 }} />
-        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل الطلبات والدفعات...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل الطلبات والدفعات..." />
     );
   }
 

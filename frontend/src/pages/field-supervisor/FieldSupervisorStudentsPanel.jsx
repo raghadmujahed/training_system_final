@@ -1,5 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 /** فهرس العمود المرتبط بمسار الـ hub (لتمييز بصري خفيف). */
 const FOCUS_COLUMN_BY_TAB = {
@@ -64,9 +65,7 @@ export default function FieldSupervisorStudentsPanel({
 
   if (loading) {
     return (
-      <div className="section-card fs-panel-loading" aria-busy="true">
-        جاري تحميل قائمة الطلبة…
-      </div>
+      <LoadingSpinner size="section" text="جاري تحميل قائمة الطلبة..." />
     );
   }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 const REASONS = [
   { value: "attendance", label: "حضور", icon: "📊" },
@@ -75,7 +76,7 @@ export default function CommunicationTab({ studentId }) {
   const getReasonIcon = (reason) => REASONS.find((r) => r.value === reason)?.icon || "💬";
   const getTargetLabel = (target) => TARGETS.find((t) => t.value === target)?.label || target;
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
 
   return (
     <div>

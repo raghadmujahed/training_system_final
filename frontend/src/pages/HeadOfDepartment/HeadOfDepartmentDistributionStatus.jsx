@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, Filter } from 'lucide-react';
 import { getDistributionStatus, getCourses } from '../../services/api';
 import EmptyState from '../../components/common/EmptyState';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 export default function HeadOfDepartmentDistributionStatus() {
   const [distribution, setDistribution] = useState([]);
@@ -74,7 +75,7 @@ export default function HeadOfDepartmentDistributionStatus() {
             disabled={loading}
             style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            <RefreshCw size={16} className={loading ? 'spin' : ''} />
+            {loading ? <LoadingSpinner size="button" /> : <RefreshCw size={16} />}
             تحديث
           </button>
         </div>
@@ -143,7 +144,7 @@ export default function HeadOfDepartmentDistributionStatus() {
       </div>
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : distribution.length === 0 ? (
         <EmptyState
           title="لا توجد بيانات"

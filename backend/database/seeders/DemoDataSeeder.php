@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Course;
+use App\Models\Department;
 use App\Models\Enrollment;
 use App\Models\Evaluation;
 use App\Models\EvaluationItem;
@@ -27,6 +28,7 @@ use App\Models\TrainingSite;
 use App\Models\User;
 use App\Models\WeeklySchedule;
 use App\Models\Section;
+use App\Models\SectionStudent;
 use Illuminate\Database\Seeder;
 
 /**
@@ -116,6 +118,56 @@ class DemoDataSeeder extends Seeder
                     ['status' => 'active']
                 );
             }
+        }
+
+        // حالة التوزيع (رئيس القسم) تُقرأ من section_students وليس من enrollments فقط
+        Enrollment::query()
+            ->where('status', 'active')
+            ->get()
+            ->each(function (Enrollment $e) {
+                SectionStudent::query()->firstOrCreate(
+                    [
+                        'section_id' => $e->section_id,
+                        'student_id' => $e->user_id,
+                    ],
+                    ['status' => 'accepted']
+                );
+            });
+
+        // شعبة بمساق قسم علم النفس — ليظهر لرئيس القسم شيء عند فتح «حالة التوزيع»
+        $psychCourse = Course::query()->where('code', 'PSYC210')->first();
+        $psychDeptId = Department::query()->where('name', 'psychology')->value('id');
+        if ($psychCourse && $psychDeptId && $supervisor) {
+            $psychSection = Section::query()->firstOrCreate(
+                ['name' => 'شعبة إرشاد نفسي — تجريبي', 'course_id' => $psychCourse->id],
+                [
+                    'academic_year' => self::ACADEMIC_YEAR,
+                    'semester' => self::SEMESTER,
+                    'academic_supervisor_id' => $supervisor->id,
+                ]
+            );
+            User::query()
+                ->where('role_id', $studentRoleId)
+                ->where('department_id', $psychDeptId)
+                ->get()
+                ->each(function (User $student) use ($psychSection) {
+                    Enrollment::query()->updateOrCreate(
+                        [
+                            'user_id' => $student->id,
+                            'section_id' => $psychSection->id,
+                            'academic_year' => self::ACADEMIC_YEAR,
+                            'semester' => self::SEMESTER,
+                        ],
+                        ['status' => 'active']
+                    );
+                    SectionStudent::query()->firstOrCreate(
+                        [
+                            'section_id' => $psychSection->id,
+                            'student_id' => $student->id,
+                        ],
+                        ['status' => 'accepted']
+                    );
+                });
         }
 
         $stu01 = $students->firstWhere('email', 'stu01@hebron.edu') ?? $students->get(0);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { apiClient, unwrapSupervisorList } from "../../services/api";
 
 async function fetchAllSupervisorSections() {
@@ -66,10 +67,7 @@ export default function Sections() {
 
   if (loading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>⏳</div>
-        <p style={{ color: "#666" }}>جاري تحميل الشعب...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل الشعب..." />
     );
   }
 

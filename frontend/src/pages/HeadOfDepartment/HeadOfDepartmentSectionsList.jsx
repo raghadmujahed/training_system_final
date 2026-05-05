@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSections, deleteSection } from "../../services/api";
 import { Edit, Trash2, Plus, Users, Calendar, BookOpen, GraduationCap, Eye } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function HeadOfDepartmentSectionsList() {
   const navigate = useNavigate();
@@ -99,13 +100,7 @@ export default function HeadOfDepartmentSectionsList() {
 
   if (loading) {
     return (
-      <div className="enrollments-list">
-        <div className="page-header">
-          <h1>إدارة الشعب</h1>
-          <p>عرض وإدارة الشعب الدراسية</p>
-        </div>
-        <div style={{ textAlign: "center", padding: 40 }}>جاري التحميل...</div>
-      </div>
+      <LoadingSpinner size="page" text="جاري التحميل..." />
     );
   }
 

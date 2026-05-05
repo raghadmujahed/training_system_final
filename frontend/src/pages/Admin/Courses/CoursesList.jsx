@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getCourses, deleteCourse, getDepartments } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function CoursesList() {
   const [courses, setCourses] = useState([]);
@@ -67,7 +68,7 @@ export default function CoursesList() {
     }
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

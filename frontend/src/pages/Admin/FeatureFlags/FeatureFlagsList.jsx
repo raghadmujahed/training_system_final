@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getFeatureFlags, updateFeatureFlag } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function FeatureFlagsList() {
   const [flags, setFlags] = useState([]);
@@ -31,7 +32,7 @@ export default function FeatureFlagsList() {
     }
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

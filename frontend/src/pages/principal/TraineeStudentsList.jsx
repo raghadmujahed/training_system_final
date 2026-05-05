@@ -4,6 +4,7 @@ import { siteLabels } from "../../utils/roles";
 import {
   Users, GraduationCap, BookOpen, Activity, Search, Loader2, AlertCircle, User
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const fadeIn = `@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`;
 const spin = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`;
@@ -97,9 +98,7 @@ const TraineeStudentsList = ({ siteType = "school" }) => {
         </div>
 
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "#64748b" }}>
-            <Loader2 size={28} className="spin" /> جاري تحميل البيانات...
-          </div>
+          <LoadingSpinner size="section" text="جاري تحميل البيانات..." />
         ) : error && !students.length ? (
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem 1.25rem", background: "#fef3c7", color: "#92400e", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600 }}>
             <AlertCircle size={20} /> {error}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getTrainingPeriods, deleteTrainingPeriod, setActivePeriod } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function TrainingPeriodsList() {
   const [periods, setPeriods] = useState([]);
@@ -34,7 +35,7 @@ export default function TrainingPeriodsList() {
     fetchPeriods();
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
   return (
     <div>

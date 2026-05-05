@@ -959,10 +959,61 @@ class SupervisorWorkspaceController extends Controller
 
     public function studentPortfolio(Request $request, $studentId)
     {
-        $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $studentId);
-        $portfolio = StudentPortfolio::where('training_assignment_id', $assignment->id)
+        $studentId = (int) $studentId;
+        $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), $studentId);
+
+        // 1) مطابقة التعيين الذي يعتمده المشرف (نفس الطالب)
+        $portfolio = StudentPortfolio::where('user_id', $studentId)
+            ->where('training_assignment_id', $assignment->id)
             ->with('entries.reviewer')
             ->first();
+
+        // 2) سجل قديم بلا تعيين
+        if (! $portfolio) {
+            $portfolio = StudentPortfolio::where('user_id', $studentId)
+                ->whereNull('training_assignment_id')
+                ->with('entries.reviewer')
+                ->orderByDesc('updated_at')
+                ->first();
+        }
+
+        // 3) الطالب ربط الملف بتعيين آخر (مثلاً من currentTrainingAssignment) لكنه نفس enrollment_id
+        if (! $portfolio) {
+            $portfolio = StudentPortfolio::where('user_id', $studentId)
+                ->whereHas('trainingAssignment', fn ($q) => $q->where('enrollment_id', $assignment->enrollment_id))
+                ->with('entries.reviewer')
+                ->withCount('entries')
+                ->orderByDesc('entries_count')
+                ->orderByDesc('updated_at')
+                ->first();
+        }
+
+        // 4) احتياط: أي ملف إنجاز للطالب يحتوي مدخلات (بيانات قديمة / صفوف مكررة)
+        if (! $portfolio) {
+            $portfolio = StudentPortfolio::where('user_id', $studentId)
+                ->with('entries.reviewer')
+                ->get()
+                ->sortByDesc(fn ($p) => $p->entries->count())
+                ->first();
+        }
+
+        if ($portfolio) {
+            $relink = ! $portfolio->training_assignment_id
+                || (int) $portfolio->training_assignment_id !== (int) $assignment->id;
+
+            if ($relink) {
+                $portfolio->loadMissing('trainingAssignment');
+                $sameEnrollment = ! $portfolio->training_assignment_id
+                    || (
+                        $portfolio->trainingAssignment
+                        && (int) $portfolio->trainingAssignment->enrollment_id === (int) $assignment->enrollment_id
+                    );
+
+                if ($sameEnrollment) {
+                    $portfolio->update(['training_assignment_id' => $assignment->id]);
+                }
+            }
+        }
 
         if (! $portfolio) {
             return $this->successResponse([
@@ -999,30 +1050,63 @@ class SupervisorWorkspaceController extends Controller
     public function reviewPortfolioSection(ReviewPortfolioSectionRequest $request, $studentId)
     {
         $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $studentId);
+        $studentId = (int) $studentId;
         $entry = PortfolioEntry::where('id', $request->integer('entry_id'))
-            ->whereHas('studentPortfolio', fn ($q) => $q->where('training_assignment_id', $assignment->id))
+            ->whereHas('studentPortfolio', function ($q) use ($assignment, $studentId) {
+                $q->where('user_id', $studentId)
+                    ->where(function ($sub) use ($assignment) {
+                        $sub->where('training_assignment_id', $assignment->id)
+                            ->orWhereNull('training_assignment_id')
+                            ->orWhereHas('trainingAssignment', fn ($ta) => $ta->where('enrollment_id', $assignment->enrollment_id));
+                    });
+            })
             ->firstOrFail();
+
+        $portfolio = $entry->studentPortfolio;
+        $portfolio->loadMissing('trainingAssignment');
+        $needsRelink = ! $portfolio->training_assignment_id
+            || (int) $portfolio->training_assignment_id !== (int) $assignment->id;
+
+        if ($needsRelink) {
+            $sameEnrollment = ! $portfolio->training_assignment_id
+                || (
+                    $portfolio->trainingAssignment
+                    && (int) $portfolio->trainingAssignment->enrollment_id === (int) $assignment->enrollment_id
+                );
+
+            if ($sameEnrollment) {
+                $portfolio->update(['training_assignment_id' => $assignment->id]);
+            }
+        }
+
+        $note = $request->input('reviewer_note');
+        $rating = $request->input('academic_rating');
 
         $entry->update([
             'review_status' => $request->string('status'),
-            'reviewer_note' => $request->string('reviewer_note'),
+            'reviewer_note' => $note !== null && $note !== '' ? (string) $note : null,
+            'academic_rating' => $rating !== null && $rating !== '' ? (int) $rating : null,
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ]);
 
-        // إشعار الطالب عند إضافة ملاحظة المشرف
-        $student = $entry->studentPortfolio->user;
-        if ($student && $request->string('reviewer_note')) {
+        // إشعار الطالب عند إضافة ملاحظة أو تقييم من المشرف
+        $student = $portfolio->user;
+        $hasNote = is_string($note) && trim($note) !== '';
+        $hasRating = $rating !== null && $rating !== '';
+        if ($student && ($hasNote || $hasRating)) {
+            $ratingText = $hasRating ? " (تقييم: {$rating}/5)" : '';
             Notification::create([
                 'user_id' => $student->id,
                 'type' => 'portfolio_comment',
-                'message' => "تمت إضافة ملاحظة من المشرف الأكاديمي على مدخل: {$entry->title}",
+                'message' => "تمت مراجعة مدخل ملف الإنجاز من المشرف الأكاديمي: {$entry->title}{$ratingText}",
                 'notifiable_type' => PortfolioEntry::class,
                 'notifiable_id' => $entry->id,
                 'data' => [
                     'supervisor_name' => $request->user()->name,
                     'entry_title' => $entry->title,
-                    'comment' => $request->string('reviewer_note'),
+                    'comment' => $hasNote ? (string) $note : null,
+                    'academic_rating' => $hasRating ? (int) $rating : null,
                     'review_status' => $request->string('status'),
                 ],
             ]);

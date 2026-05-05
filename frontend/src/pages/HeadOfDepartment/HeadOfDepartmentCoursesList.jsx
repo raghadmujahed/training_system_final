@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCourses, deleteCourse, archiveCourse } from "../../services/api";
 import { Plus, Edit, Trash2, BookOpen, Archive } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function HeadOfDepartmentCoursesList() {
   const navigate = useNavigate();
@@ -79,9 +80,7 @@ export default function HeadOfDepartmentCoursesList() {
 
   if (loading) {
     return (
-      <div className="container" style={{ textAlign: "center", padding: 40 }}>
-        جاري تحميل المساقات...
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل المساقات..." />
     );
   }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getActivityLogs, getUsers } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function ActivityLogsList() {
   const [logs, setLogs] = useState([]);
@@ -112,7 +113,7 @@ export default function ActivityLogsList() {
       </div>
 
       {loading ? (
-        <div>جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : logs.length === 0 ? (
         <div>لا توجد سجلات</div>
       ) : (

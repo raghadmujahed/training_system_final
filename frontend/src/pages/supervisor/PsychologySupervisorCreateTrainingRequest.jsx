@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   apiClient,
   createTrainingRequest,
@@ -122,10 +123,7 @@ export default function PsychologySupervisorCreateTrainingRequest() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 80 }}>
-        <Loader2 className="spin" size={40} />
-        <p style={{ marginTop: 12, color: "var(--text-faint)" }}>جاري التحميل...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري التحميل..." />
     );
   }
 
@@ -265,7 +263,7 @@ export default function PsychologySupervisorCreateTrainingRequest() {
           </div>
 
           <button type="submit" className="btn-primary-custom" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-            {saving ? <Loader2 className="spin" size={18} /> : <ArrowRight size={18} />}
+            {saving ? <LoadingSpinner size="button" /> : <ArrowRight size={18} />}
             حفظ وإنشاء الطلب
           </button>
         </form>

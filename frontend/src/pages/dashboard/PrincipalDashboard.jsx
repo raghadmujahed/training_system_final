@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getCurrentUser,
   getNotifications,
@@ -192,22 +193,7 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
       </div>
 
       {loading && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.5rem",
-            padding: "1rem",
-            background: "#f8f9fa",
-            borderRadius: "12px",
-            marginBottom: "1rem",
-            color: "var(--text-soft)",
-          }}
-        >
-          <Loader2 size={20} className="spin" />
-          {"جاري تحميل البيانات..."}
-        </div>
+        <LoadingSpinner size="inline" text="جاري تحميل البيانات..." />
       )}
 
       {/* Profile Card */}

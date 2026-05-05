@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
 import { useToast } from "../../../../components/Toast";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 const initialScheduleForm = {
   scheduled_date: "",
@@ -97,7 +98,7 @@ export default function FieldVisitsTab({ studentId, student }) {
     in_progress: { label: "قيد التنفيذ", color: "#ffc107", bg: "#fff8e1", icon: "⏳" },
   };
 
-  if (loading) return <div style={{ textAlign: "center", padding: "40px" }}>⏳ جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
 
   return (
     <div>

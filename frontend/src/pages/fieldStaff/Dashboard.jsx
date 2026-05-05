@@ -15,22 +15,33 @@ export default function FieldStaffDashboard() {
   const [stats, setStats] = useState({ students: 0, evals: 0, attendance: 0, notes: 0, tasks: 0 });
   const [loading, setLoading] = useState(true);
 
+  const showTasksOnDashboard =
+    (isMentor || isAdviser || isSupervisor) && !isFieldSupervisor && !isPsychologist;
+
   useEffect(() => {
     async function load() {
       try {
-        const [assignRes, evalRes, attRes, noteRes, taskRes] = await Promise.all([
+        const reqs = [
           getTrainingAssignments({ per_page: 1 }),
           getEvaluations({ per_page: 1 }),
           getAttendances({ per_page: 1 }),
           getNotes({ per_page: 1 }),
-          getTasks({ per_page: 1 }),
-        ]);
+        ];
+        if (showTasksOnDashboard) {
+          reqs.push(getTasks({ per_page: 1 }));
+        }
+        const results = await Promise.all(reqs);
+        const assignRes = results[0];
+        const evalRes = results[1];
+        const attRes = results[2];
+        const noteRes = results[3];
+        const taskRes = showTasksOnDashboard ? results[4] : null;
         setStats({
           students: assignRes?.total || itemsFromPagedResponse(assignRes).length,
           evals: evalRes?.total || itemsFromPagedResponse(evalRes).length,
           attendance: attRes?.total || itemsFromPagedResponse(attRes).length,
           notes: noteRes?.total || itemsFromPagedResponse(noteRes).length,
-          tasks: taskRes?.total || itemsFromPagedResponse(taskRes).length,
+          tasks: taskRes ? taskRes?.total || itemsFromPagedResponse(taskRes).length : 0,
         });
       } catch {
         // silent
@@ -39,7 +50,7 @@ export default function FieldStaffDashboard() {
       }
     }
     load();
-  }, []);
+  }, [showTasksOnDashboard]);
 
   const cards = [
     { title: "الطلبة المتدربون", value: stats.students, color: "#0d6efd" },
@@ -48,7 +59,7 @@ export default function FieldStaffDashboard() {
     { title: "الملاحظات", value: stats.notes, color: "#fd7e14" },
   ];
 
-  if (isMentor || isAdviser || isSupervisor || isFieldSupervisor) {
+  if (showTasksOnDashboard) {
     cards.push({ title: "المهام", value: stats.tasks, color: "#dc3545" });
   }
 
@@ -89,11 +100,11 @@ export default function FieldStaffDashboard() {
             <li>أضف ملاحظات تربوية مرتبطة بالحالات والتوصيات.</li>
           </ul>
         )}
-        {isPsychologist && (
+        {isPsychologist && !isFieldSupervisor && (
           <ul style={{ paddingRight: 20 }}>
-            <li>سجّل جلسات الإرشاد والدعم النفسي مع الطلبة المتدربين.</li>
-            <li>استخدم نماذج التقييم النفسي المخصصة لدورك.</li>
-            <li>أضف ملاحظات إرشادية مع تصنيف نوع الدعم المقدم.</li>
+            <li>راجع {terms.dailyReport || "التقارير المهنية"} المقدمة من الطلبة.</li>
+            <li>استخدم {terms.evaluation || "تقييم المؤسسة"} (٢٠ معيارًا) من صفحة التقييمات بعد اختيار الطالب.</li>
+            <li>أضف ملاحظات على {terms.topic || "الحالات"} وسجّل الحضور والمهام كباقي مسار المشرف الميداني.</li>
           </ul>
         )}
         {isSupervisor && (

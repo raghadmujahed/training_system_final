@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Download, FileText, BarChart3 } from 'lucide-react';
 import { getHeadDepartmentReports, getCourses } from '../../services/api';
 import EmptyState from '../../components/common/EmptyState';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 export default function HeadOfDepartmentReports() {
   const [reports, setReports] = useState(null);
@@ -188,7 +189,7 @@ export default function HeadOfDepartmentReports() {
             disabled={loading}
             style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            <Download size={16} className={loading ? 'spin' : ''} />
+            {loading ? <LoadingSpinner size="button" /> : <Download size={16} />}
             تحديث
           </button>
         </div>
@@ -237,7 +238,7 @@ export default function HeadOfDepartmentReports() {
       </div>
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : (
         <div style={{ marginTop: 16 }}>
           {renderReportContent()}

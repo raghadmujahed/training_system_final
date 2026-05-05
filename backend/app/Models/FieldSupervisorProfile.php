@@ -83,12 +83,20 @@ class FieldSupervisorProfile extends Model
      */
     public function getTypeLabelAttribute(): string
     {
-        return match($this->supervisor_type) {
+        return match($this->normalized_type) {
             self::TYPE_MENTOR_TEACHER => 'المعلم المرشد',
             self::TYPE_SCHOOL_COUNSELOR => 'المرشد التربوي',
-            self::TYPE_PSYCHOLOGIST, 'clinical_psychologist' => 'الأخصائي النفسي / المؤسسة',
+            self::TYPE_PSYCHOLOGIST => 'الأخصائي النفسي / المؤسسة',
             default => 'مشرف ميداني',
         };
+    }
+
+    /**
+     * النوع الموحّد للمشرف الميداني (يدعم القيم القديمة).
+     */
+    public function getNormalizedTypeAttribute(): string
+    {
+        return FieldEvaluationTemplate::normalizedSupervisorType($this->supervisor_type);
     }
 
     /**
@@ -96,7 +104,7 @@ class FieldSupervisorProfile extends Model
      */
     public function isMentorTeacher(): bool
     {
-        return $this->supervisor_type === self::TYPE_MENTOR_TEACHER;
+        return $this->normalized_type === self::TYPE_MENTOR_TEACHER;
     }
 
     /**
@@ -104,7 +112,7 @@ class FieldSupervisorProfile extends Model
      */
     public function isSchoolCounselor(): bool
     {
-        return $this->supervisor_type === self::TYPE_SCHOOL_COUNSELOR;
+        return $this->normalized_type === self::TYPE_SCHOOL_COUNSELOR;
     }
 
     /**
@@ -112,6 +120,6 @@ class FieldSupervisorProfile extends Model
      */
     public function isPsychologist(): bool
     {
-        return $this->supervisor_type === self::TYPE_PSYCHOLOGIST;
+        return $this->normalized_type === self::TYPE_PSYCHOLOGIST;
     }
 }

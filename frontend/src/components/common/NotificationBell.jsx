@@ -238,7 +238,7 @@ export default function NotificationBell() {
     // ----- Task notifications -----
     if (type.startsWith("task_")) {
       if (role === ROLES.STUDENT) return "/student/assignments";
-      if (role === ROLES.FIELD_SUPERVISOR) return "/field-supervisor";
+      if (role === ROLES.FIELD_SUPERVISOR || role === ROLES.PSYCHOLOGIST) return "/field-staff/dashboard";
       if (role === ROLES.SUPERVISOR || role === ROLES.MENTOR) {
         return "/supervisor/workspace";
       }
@@ -248,7 +248,7 @@ export default function NotificationBell() {
     // ----- Daily reports / attendance / evaluations: supervisor or student -----
     if (type.includes("daily_report") || type.includes("attendance") || type.includes("evaluation")) {
       if (role === ROLES.STUDENT) return "/student/notifications-updates";
-      if (role === ROLES.FIELD_SUPERVISOR) return "/field-supervisor";
+      if (role === ROLES.FIELD_SUPERVISOR || role === ROLES.PSYCHOLOGIST) return "/field-staff/dashboard";
       if (role === ROLES.SUPERVISOR || role === ROLES.MENTOR) {
         return "/supervisor/workspace";
       }
@@ -288,7 +288,8 @@ export default function NotificationBell() {
       case ROLES.MENTOR:
         return "/supervisor/workspace";
       case ROLES.FIELD_SUPERVISOR:
-        return "/field-supervisor";
+      case ROLES.PSYCHOLOGIST:
+        return "/field-staff/dashboard";
       default:
         return "/notifications";
     }

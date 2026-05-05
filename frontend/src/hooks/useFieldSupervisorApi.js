@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { apiClient } from "../services/api";
+import { normalizeFieldSupervisorType } from "../utils/fieldSupervisorType";
 
 /**
  * Hook مركزي لتحميل بيانات المشرف الميداني
@@ -482,17 +483,11 @@ const SUBTYPE_LABELS_BASE = {
   },
 };
 
-/** يوافق الباكند (psychologist) والتسمية المعتمدة (clinical_psychologist) */
-function normalizeSupervisorSubtype(supervisorType) {
-  if (supervisorType === "clinical_psychologist") return "psychologist";
-  return supervisorType;
-}
-
 /**
  * التسميات حسب نوع المشرف الميداني
  */
 export function useSubtypeLabels(supervisorType) {
-  const key = normalizeSupervisorSubtype(supervisorType);
+  const key = normalizeFieldSupervisorType(supervisorType);
   return useMemo(
     () => SUBTYPE_LABELS_BASE[key] || SUBTYPE_LABELS_BASE.mentor_teacher,
     [key]

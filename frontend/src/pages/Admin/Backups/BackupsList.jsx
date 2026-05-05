@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getBackups, createBackup, restoreBackup, deleteBackup, downloadBackup } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function BackupsList() {
   const [backups, setBackups] = useState([]);
@@ -84,7 +85,7 @@ export default function BackupsList() {
     }
   };
 
-  if (loading) return <div className="text-center">جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
   if (error) return <div className="text-center text-danger">{error}</div>;
 

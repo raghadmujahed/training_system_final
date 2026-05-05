@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getRoles } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function RolesList() {
   const [roles, setRoles] = useState([]);
@@ -15,7 +16,7 @@ export default function RolesList() {
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
   return (
     <div>

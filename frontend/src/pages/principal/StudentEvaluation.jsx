@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Loader2,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const SCHOOL_EVAL_FIELDS = [
   { key: "attendance", label: "الالتزام بالدوام" },
@@ -145,10 +146,7 @@ export default function StudentEvaluation() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "var(--text-soft)" }}>
-        <Loader2 size={28} className="spin" />
-        {"جاري تحميل بيانات الطلبة..."}
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل بيانات الطلبة..." />
     );
   }
 

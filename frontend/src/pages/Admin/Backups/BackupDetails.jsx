@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getBackupDetails, downloadBackup } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function BackupDetails() {
   const { id } = useParams();
@@ -37,7 +38,7 @@ export default function BackupDetails() {
     }
   };
 
-  if (loading) return <div>جاري تحميل التفاصيل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري تحميل التفاصيل..." />;
   if (error) return <div className="error">{error}</div>;
   if (!data) return <div>لا توجد بيانات</div>;
 

@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { getStudentEForms, saveStudentTrainingProgram, saveStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Loader2, Save, Plus, Trash2, RotateCcw, BookOpen, FileText, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, ArrowRight, CheckCircle2, Clock, Edit3 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 import { useToast } from "../../components/Toast";
 
@@ -411,10 +412,7 @@ export default function EForms() {
       {success ? <div className="alert-custom alert-success mb-3">{success}</div> : null}
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "4rem" }}>
-          <Loader2 className="spin" size={40} color="var(--primary, #007bff)" />
-          <p style={{ color: "#666", marginTop: "1rem" }}>جاري التحميل...</p>
-        </div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : availableForms.length === 0 ? (
         <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#64748b" }}>
           <FileText size={52} color="#cbd5e1" style={{ marginBottom: "1rem" }} />
@@ -918,7 +916,7 @@ export default function EForms() {
                           e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
                         }}
                       >
-                        {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                        {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                         {saving ? "جاري الحفظ..." : editingEntry ? "حفظ التعديل" : "حفظ النموذج"}
                       </button>
                     </div>
@@ -1075,7 +1073,7 @@ export default function EForms() {
                         e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
                       }}
                     >
-                      {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                      {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                       {saving ? "جاري الحفظ..." : "حفظ التقرير"}
                     </button>
                   </div>
@@ -1434,7 +1432,7 @@ export default function EForms() {
                         e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
                       }}
                     >
-                      {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                      {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                       {saving ? "جاري الحفظ..." : "حفظ التقرير"}
                     </button>
                   </div>
@@ -1594,7 +1592,7 @@ export default function EForms() {
                         e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
                       }}
                     >
-                      {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                      {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                       {saving ? "جاري الحفظ..." : "حفظ النموذج"}
                     </button>
                   </div>
@@ -1654,7 +1652,7 @@ export default function EForms() {
                     <RotateCcw size={18} /> إعادة تعيين
                   </button>
                   <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
-                    {saving ? <Loader2 className="spin" size={18} /> : <Save size={18} />}
+                    {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                     {saving ? "جاري الحفظ..." : "حفظ التقرير"}
                   </button>
                 </div>

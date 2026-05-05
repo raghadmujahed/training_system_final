@@ -26,12 +26,15 @@ class FieldEvaluation extends Model
         'status',
         'is_final',
         'submitted_at',
+        'form_context',
     ];
 
     protected $casts = [
         'scores' => 'array',
+        'form_context' => 'array',
         'is_final' => 'boolean',
         'submitted_at' => 'datetime',
+        'evaluation_date' => 'date',
     ];
 
     const STATUS_DRAFT = 'draft';
@@ -114,14 +117,17 @@ class FieldEvaluation extends Model
             ? $template->weightedTotalFromScores($scores)
             : (int) round(array_sum($scores));
 
-        $gradeInfo = $template ? $template->calculateGrade($totalScore) :
-            ['grade' => null, 'label' => null];
+        $grade = null;
+        if ($totalScore !== null && $template) {
+            $gradeInfo = $template->calculateGrade($totalScore);
+            $grade = $gradeInfo['grade'];
+        }
 
         $this->update([
             'status' => self::STATUS_SUBMITTED,
             'is_final' => true,
             'total_score' => $totalScore,
-            'grade' => $gradeInfo['grade'],
+            'grade' => $grade,
             'submitted_at' => now(),
         ]);
     }

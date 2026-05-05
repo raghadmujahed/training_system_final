@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getCurrentUser,
   getOfficialLetters,
@@ -188,10 +189,7 @@ const EducationDirectorateDashboard = () => {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "2rem", color: "var(--text-soft)" }}>
-        <Loader2 size={24} className="spin" />
-        {"جاري تحميل لوحة مديرية التربية..."}
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل لوحة مديرية التربية..." />
     );
   }
 

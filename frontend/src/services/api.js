@@ -35,7 +35,13 @@ apiClient.interceptors.request.use(
 );
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Development-only delay to make loading spinners visible
+    if (import.meta.env.DEV) {
+      return new Promise((resolve) => setTimeout(() => resolve(response), 600));
+    }
+    return response;
+  },
   (error) => {
     const requestUrl = String(error?.config?.url || "");
     const isOptionalNotificationsRequest = requestUrl.includes("/notifications");

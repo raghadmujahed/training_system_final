@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import useFieldStaffRole from "../../hooks/useFieldStaffRole";
 import {
   getEvaluations,
   getTrainingAssignments,
@@ -9,6 +11,7 @@ import {
 } from "../../services/api";
 
 export default function FieldStaffFinalEvaluation() {
+  const { isFieldSupervisor } = useFieldStaffRole();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [assignments, setAssignments] = useState([]);
@@ -59,6 +62,10 @@ export default function FieldStaffFinalEvaluation() {
 
   function closeModal() {
     setSelectedStudent(null);
+  }
+
+  if (isFieldSupervisor) {
+    return <Navigate to="/field-staff/dashboard" replace />;
   }
 
   return (

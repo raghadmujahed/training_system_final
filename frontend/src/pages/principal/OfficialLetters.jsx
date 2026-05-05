@@ -3,6 +3,7 @@ import { getOfficialLetters, receiveOfficialLetter } from "../../services/api";
 import {
   Mail, Send, CheckCircle2, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, FileText, Inbox
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const fadeIn = `@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`;
 const spin = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`;
@@ -101,9 +102,7 @@ const OfficialLetters = () => {
         )}
 
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "#64748b" }}>
-            <Loader2 size={28} className="spin" /> جاري تحميل طلبات التدريب...
-          </div>
+          <LoadingSpinner size="section" text="جاري تحميل طلبات التدريب..." />
         ) : (
           <>
             {/* Stats */}
@@ -219,7 +218,7 @@ const OfficialLetters = () => {
                                 opacity: isSaving ? 0.7 : 1,
                               }}
                             >
-                              {isSaving ? <Loader2 size={14} className="spin" /> : <CheckCircle2 size={14} />}
+                              {isSaving ? <LoadingSpinner size="button" /> : <CheckCircle2 size={14} />}
                               {isSaving ? "جاري التحديث..." : "تأكيد الاستلام"}
                             </button>
                           )}

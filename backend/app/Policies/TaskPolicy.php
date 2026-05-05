@@ -13,6 +13,8 @@ class TaskPolicy
             'admin',
             'academic_supervisor',
             'teacher',
+            'adviser',
+            'psychologist',
             'field_supervisor',
             'student',
         ], true);
@@ -29,7 +31,13 @@ class TaskPolicy
 
     public function create(User $user): bool
     {
-        return in_array($user->role?->name, ['academic_supervisor', 'teacher', 'field_supervisor']);
+        return in_array($user->role?->name, [
+            'academic_supervisor',
+            'teacher',
+            'adviser',
+            'psychologist',
+            'field_supervisor',
+        ]);
     }
 
     public function update(User $user, Task $task): bool

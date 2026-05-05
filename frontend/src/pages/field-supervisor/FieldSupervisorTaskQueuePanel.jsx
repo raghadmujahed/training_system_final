@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getAttendanceQueueReason,
   getDailyReportQueueReason,
@@ -49,9 +50,7 @@ export default function FieldSupervisorTaskQueuePanel({
   if (loading) {
     return (
       <div className="fs-task-queue fs-task-queue--loading section-card" aria-busy="true">
-        <div className="fs-panel-loading" style={{ border: "none", background: "transparent" }}>
-          جاري تحميل قائمة المهام…
-        </div>
+        <LoadingSpinner size="section" text="جاري تحميل قائمة المهام..." />
       </div>
     );
   }

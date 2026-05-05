@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useFormsWorkboard, useReportTemplates } from "../../hooks/useFieldSupervisorApi";
 import PageHeader from "../../components/common/PageHeader";
 import FieldSupervisorReferenceCard from "./FieldSupervisorReferenceCard";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { FileStack, ClipboardList, Eye, PenLine } from "lucide-react";
 
 export default function FieldSupervisorFormsPage() {
@@ -44,9 +45,7 @@ export default function FieldSupervisorFormsPage() {
       </div>
 
       {loading && (
-        <div className="section-card fs-panel-loading" aria-busy="true">
-          جاري التحميل…
-        </div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       )}
 
       {wbError && (

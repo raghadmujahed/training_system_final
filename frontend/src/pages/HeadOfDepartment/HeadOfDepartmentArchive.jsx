@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Archive, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Database, Eye } from "lucide-react";
 import { getArchivePreview, archiveCurrentPeriod, getArchivedPeriods } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const SEMESTER_LABELS = {
   first: "الفصل الأول",
@@ -85,10 +86,7 @@ export default function HeadOfDepartmentArchive() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24 }}>
-        <div className="loading-spinner" style={{ margin: "40px auto" }}></div>
-        <p style={{ textAlign: "center", color: "#666" }}>جاري تحميل البيانات...</p>
-      </div>
+      <LoadingSpinner size="section" text="جاري تحميل البيانات..." />
     );
   }
 

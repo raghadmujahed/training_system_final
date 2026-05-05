@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { getAttendances, itemsFromPagedResponse } from "../../services/api";
 import { CalendarCheck, Clock, CheckCircle2 } from "lucide-react";
 import huLogo from "../../assets/HU Logo.webp";
@@ -64,7 +65,7 @@ export default function StudentAttendance() {
       </div>
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : error ? (
         <div className="section-card text-danger">{error}</div>
       ) : !rows.length ? (

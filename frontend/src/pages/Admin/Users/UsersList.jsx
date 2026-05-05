@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { getUsers, deleteUser, changeUserStatus, getRoles } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function UsersList() {
   const navigate = useNavigate();
@@ -162,7 +163,7 @@ export default function UsersList() {
     }
   };
 
-  if (loading) return <div className="text-center">جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

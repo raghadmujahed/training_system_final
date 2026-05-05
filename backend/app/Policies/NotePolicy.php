@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Note;
 use App\Models\User;
+use App\Services\FieldSupervisorAssignmentResolver;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class NotePolicy
@@ -43,6 +44,14 @@ class NotePolicy
         // المعلم المرشد يرى ملاحظات طلابه
         if ($user->role?->name === 'teacher') {
             return $this->isMentorOfNoteStudent($user, $note);
+        }
+
+        // المشرف الميداني / الأخصائي / المرشد: نفس نطاق التعيين (teacher_id أو field_supervisor_id)
+        if (in_array($user->role?->name, ['field_supervisor', 'psychologist', 'adviser'], true)) {
+            $assignment = $note->trainingAssignment;
+            if ($assignment) {
+                return FieldSupervisorAssignmentResolver::userIsFieldSupervisorActor($user, $assignment);
+            }
         }
 
         // مدير الجهة

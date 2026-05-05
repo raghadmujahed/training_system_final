@@ -30,8 +30,20 @@ class EvaluationController extends Controller
         }
         if ($request->user()->role?->name === 'student') {
             $query->whereHas('trainingAssignment.enrollment', fn ($q) => $q->where('user_id', $request->user()->id));
-        } elseif (in_array($request->user()->role?->name, ['teacher', 'psychologist'])) {
-            $query->where('evaluator_id', $request->user()->id);
+        } elseif ($request->user()->role?->name === 'teacher') {
+            $query->where(function ($q) use ($request) {
+                $uid = $request->user()->id;
+                $q->where('evaluator_id', $uid)
+                    ->orWhereHas('trainingAssignment', fn ($ta) => $ta->where('teacher_id', $uid));
+            });
+        } elseif (in_array($request->user()->role?->name, ['psychologist', 'field_supervisor', 'adviser'], true)) {
+            $uid = $request->user()->id;
+            $query->where(function ($q) use ($uid) {
+                $q->where('evaluator_id', $uid)
+                    ->orWhereHas('trainingAssignment', function ($ta) use ($uid) {
+                        $ta->where('teacher_id', $uid)->orWhere('field_supervisor_id', $uid);
+                    });
+            });
         } elseif ($request->user()->role?->name === 'school_manager' && $request->user()->training_site_id) {
             $query->whereHas('trainingAssignment', fn ($q) => $q->where('training_site_id', $request->user()->training_site_id));
         }

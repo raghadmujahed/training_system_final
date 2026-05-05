@@ -13,7 +13,7 @@ class PortfolioEntry extends Model
 
     protected $fillable = [
         'student_portfolio_id', 'title', 'code', 'category', 'content', 'file_path',
-        'review_status', 'reviewer_note', 'reviewed_by', 'reviewed_at',
+        'review_status', 'reviewer_note', 'academic_rating', 'reviewed_by', 'reviewed_at',
     ];
 
     protected $casts = [

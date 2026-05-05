@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   useFieldSupervisorDashboard,
   useFieldSupervisorStudents,
@@ -8,6 +9,7 @@ import FieldSupervisorStudentsPanel from "./FieldSupervisorStudentsPanel";
 import PageHeader from "../../components/common/PageHeader";
 import { getAnnouncements, itemsFromPagedResponse } from "../../services/api";
 import { LayoutDashboard, Megaphone } from "lucide-react";
+import { normalizeFieldSupervisorType } from "../../utils/fieldSupervisorType";
 
 const COLOR_HEX = {
   blue: "#0d6efd",
@@ -16,11 +18,6 @@ const COLOR_HEX = {
   indigo: "#6610f2",
   cyan: "#0dcaf0",
 };
-
-function normalizeSubtype(supervisorType) {
-  if (supervisorType === "clinical_psychologist") return "psychologist";
-  return supervisorType;
-}
 
 export default function FieldSupervisorWorkspace() {
   const {
@@ -61,7 +58,7 @@ export default function FieldSupervisorWorkspace() {
   }, []);
 
   const supervisorTypeRaw = dashboardData?.supervisor_type || "mentor_teacher";
-  const supervisorType = normalizeSubtype(supervisorTypeRaw);
+  const supervisorType = normalizeFieldSupervisorType(supervisorTypeRaw);
   const labels = useSubtypeLabels(supervisorTypeRaw);
   const stats = dashboardData?.stats || {};
 
@@ -116,9 +113,7 @@ export default function FieldSupervisorWorkspace() {
       )}
 
       {loading ? (
-        <div className="section-card fs-panel-loading" aria-busy="true">
-          جاري تحميل لوحة المشرف الميداني…
-        </div>
+        <LoadingSpinner size="section" text="جاري تحميل لوحة المشرف الميداني..." />
       ) : (
         <>
           <div className="fs-stats-grid">

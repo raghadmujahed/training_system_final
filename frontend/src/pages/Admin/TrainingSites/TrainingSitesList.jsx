@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getTrainingSites, deleteTrainingSite } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function TrainingSitesList() {
   const [sites, setSites] = useState([]);
@@ -28,7 +29,7 @@ export default function TrainingSitesList() {
     }
   };
 
-  if (loading) return <div>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
   return (
     <div>

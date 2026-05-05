@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   apiClient,
   getTasks,
@@ -490,7 +491,7 @@ export default function FieldStaffTasks() {
                                 onClick={() => handleGrade(submission.id)}
                               >
                                 {gradingSaving ? (
-                                  <><Loader2 size={16} className="animate-spin" /> جاري التقييم...</>
+                                  <><LoadingSpinner size="button" /> جاري التقييم...</>
                                 ) : (
                                   <><Star size={16} /> تسجيل التقييم</>
                                 )}

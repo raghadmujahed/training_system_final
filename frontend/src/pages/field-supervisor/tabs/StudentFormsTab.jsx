@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { FileStack, ExternalLink } from "lucide-react";
 import { useFormsWorkboard } from "../../../hooks/useFieldSupervisorApi";
 import FieldSupervisorReferenceCard from "../FieldSupervisorReferenceCard";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 /**
  * تبويب «النماذج والتقارير» داخل ملف الطالب — يعتمد على forms-workboard مع تصفية محلية حسب الطالب.
@@ -30,7 +31,7 @@ export default function StudentFormsTab({ studentId, studentName }) {
   });
 
   if (loading) {
-    return <div className="section-card fs-panel-loading">جاري تحميل عناصر النماذج…</div>;
+    return <LoadingSpinner size="section" text="جاري تحميل عناصر النماذج..." />;
   }
 
   if (error) {

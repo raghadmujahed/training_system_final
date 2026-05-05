@@ -19,10 +19,31 @@ class NoteController extends Controller
     public function index(Request $request)
     {
         $query = Note::with(['user', 'trainingAssignment']);
-        if ($request->has('user_id')) $query->where('user_id', $request->user_id);
-        if ($request->has('training_assignment_id')) $query->where('training_assignment_id', $request->training_assignment_id);
-        
+        if ($request->has('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+        if ($request->has('training_assignment_id')) {
+            $query->where('training_assignment_id', $request->training_assignment_id);
+        }
+
+        $user = $request->user();
+        $role = $user->role?->name;
+        if ($role === 'student') {
+            $query->whereHas('trainingAssignment.enrollment', fn ($q) => $q->where('user_id', $user->id));
+        } elseif (in_array($role, ['teacher', 'psychologist', 'field_supervisor', 'adviser'], true)) {
+            $uid = $user->id;
+            $query->whereHas('trainingAssignment', function ($q) use ($uid) {
+                $q->where('teacher_id', $uid)->orWhere('field_supervisor_id', $uid);
+            });
+        } elseif ($role === 'academic_supervisor') {
+            $query->whereHas('trainingAssignment', function ($q) use ($user) {
+                $q->where('academic_supervisor_id', $user->id)
+                    ->orWhereHas('enrollment.section', fn ($s) => $s->where('academic_supervisor_id', $user->id));
+            });
+        }
+
         $notes = $query->latest()->paginate($request->per_page ?? 15);
+
         return NoteResource::collection($notes);
     }
 

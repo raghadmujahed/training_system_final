@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { getHeadDepartmentStudents, getHeadDepartmentStudentDetails, getCourses, getSections } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function HeadOfDepartmentStudents() {
   const [students, setStudents] = useState([]);
@@ -115,10 +116,7 @@ export default function HeadOfDepartmentStudents() {
 
   if (loading) {
     return (
-      <div className="students-loading">
-        <div className="loading-spinner"></div>
-        <p>جاري تحميل بيانات الطلاب...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل بيانات الطلاب..." />
     );
   }
 

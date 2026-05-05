@@ -9,6 +9,7 @@ import {
   Settings2,
   Lightbulb,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useCoordinatorDashboard from "../../hooks/useCoordinatorDashboard";
 import { CoordinatorStatsCards } from "../../components/coordinator";
 import { STATUS_LABELS } from "../../config/coordinator/statusLabels";
@@ -43,10 +44,7 @@ export default function CoordinatorDashboard() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-        <Loader2 size={40} className="spin" style={{ color: "var(--primary)", marginBottom: 12 }} />
-        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل لوحة التحكم...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل لوحة التحكم..." />
     );
   }
 

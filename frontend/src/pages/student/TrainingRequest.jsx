@@ -3,6 +3,7 @@ import {
   ClipboardList, Building2, MapPin, School, FileText, Send, Edit3,
   Trash2, AlertCircle, CheckCircle2, XCircle, Loader2, Users, Search,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   createStudentTrainingRequest, deleteStudentTrainingRequest,
   getStudentTrainingRequests, getTrainingPeriods, getTrainingSites,
@@ -202,9 +203,7 @@ export default function TrainingRequest() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "3rem", color: "#64748b" }}>
-        <Loader2 size={28} className="spin" /> جاري تحميل البيانات...
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل البيانات..." />
     );
   }
 
@@ -492,7 +491,7 @@ export default function TrainingRequest() {
                     boxShadow: "0 4px 12px rgba(30,58,95,0.3)",
                   }}
                 >
-                  {saving ? <Loader2 size={18} className="spin" /> : submitTargetRequestId ? <Edit3 size={18} /> : <Send size={18} />}
+                  {saving ? <LoadingSpinner size="button" /> : submitTargetRequestId ? <Edit3 size={18} /> : <Send size={18} />}
                   {saving ? "جاري الحفظ..." : submitTargetRequestId ? "حفظ التعديلات" : "إرسال الطلب"}
                 </button>
                 {editingId && (

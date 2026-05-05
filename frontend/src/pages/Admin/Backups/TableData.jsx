@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getBackupTableData } from "../../../services/api";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function TableData() {
   const { id, tableName } = useParams();
@@ -34,7 +35,7 @@ export default function TableData() {
     fetchData();
   }, [id, tableName]);
 
-  if (loading) return <div>جاري تحميل البيانات...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري تحميل البيانات..." />;
   if (error) return <div className="error">{error}</div>;
 
   return (

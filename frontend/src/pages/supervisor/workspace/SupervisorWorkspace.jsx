@@ -4,6 +4,7 @@ import { apiClient, unwrapSupervisorList, unwrapSupervisorStats } from "../../..
 import DashboardSummary from "./DashboardSummary";
 import StudentsTable from "./StudentsTable";
 import StudentProfile from "./StudentProfile";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 async function fetchAllSupervisorSections() {
   const merged = [];
@@ -158,10 +159,7 @@ export default function SupervisorWorkspace() {
 
   if (loading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>⏳</div>
-        <p style={{ color: "#666" }}>جاري تحميل مساحة العمل...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل مساحة العمل..." />
     );
   }
 

@@ -84,9 +84,13 @@ class RolePermissionSeeder extends Seeder
             $schoolManager->permissions()->sync($managerPerms);
         }
 
-        // 7. الأخصائي النفسي: إطلاع على التقارير وإرسال إشعارات عند التوسعة
+        // 7. الأخصائي النفسي: نفس صلاحيات المشرف الميداني عملياً (مهام، حضور، تقييمات) مع مسار واجهة موحّد
         if ($psychologist) {
             $psychologistPerms = Permission::whereIn('name', [
+                'manage_tasks',
+                'manage_task_submissions',
+                'manage_attendances',
+                'manage_evaluations',
                 'view_reports',
                 'send_notifications',
             ])->get();

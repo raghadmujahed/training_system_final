@@ -1,5 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   useFieldSupervisorStudent,
   useSubtypeLabels,
@@ -79,9 +80,7 @@ export default function StudentDetail() {
     return (
       <>
         <PageHeader title="ملف الطالب" subtitle="جاري تحميل البيانات..." />
-        <div className="section-card fs-panel-loading" aria-busy="true">
-          جاري التحميل…
-        </div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       </>
     );
   }

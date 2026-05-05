@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getDashboardStats, getTrainingRequests, getUsers } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import Papa from "papaparse";
@@ -127,7 +128,7 @@ export default function ReportsDashboard() {
     ],
   };
 
-  if (loading) return <div className="text-center">جاري تحميل التقارير...</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري تحميل التقارير..." />;
   if (error) return <div className="text-danger">{error}</div>;
 
   return (

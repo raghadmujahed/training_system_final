@@ -8,6 +8,7 @@ import {
   ChevronUp,
   Printer,
 } from "lucide-react";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { sendTrainingRequestBatch, getTrainingRequestBatch } from "../../services/api";
 import useCoordinatorBatches from "../../hooks/useCoordinatorBatches";
 import {
@@ -118,10 +119,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 20px" }}>
-        <Loader2 size={40} className="spin" style={{ color: "var(--primary)", marginBottom: 12 }} />
-        <p style={{ color: "var(--text-faint)", fontSize: "0.95rem" }}>جاري تحميل دفعات طلبات التدريب...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل دفعات طلبات التدريب..." />
     );
   }
 
@@ -389,10 +387,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
         {/* Drawer Content */}
         <div style={{ padding: "20px" }}>
           {detailLoading ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 20px" }}>
-              <Loader2 size={32} className="spin" style={{ color: "var(--primary)", marginBottom: 10 }} />
-              <p style={{ color: "var(--text-faint)", fontSize: "0.9rem" }}>جاري تحميل تفاصيل الدفعة...</p>
-            </div>
+            <LoadingSpinner size="section" text="جاري تحميل تفاصيل الدفعة..." />
           ) : selectedBatch && (
             <OfficialLetterPreview
               batch={batchDetail || selectedBatch}

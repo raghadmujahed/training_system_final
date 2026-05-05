@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiClient } from "../../../../services/api";
 import huLogo from "../../../../assets/HU Logo.webp";
+import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 function dayName(d) { return d ? DAYS[new Date(d).getDay()] : ""; }
@@ -50,7 +51,7 @@ export default function AttendanceTab({ studentId, student }) {
     return () => { active = false; };
   }, [studentId]);
 
-  if (loading) return <div style={{ padding: 20, color: "#888" }}>جاري التحميل...</div>;
+  if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
   if (error) return <div style={{ padding: 20, color: "#c0392b" }}>{error}</div>;
 
   const first = records[0];

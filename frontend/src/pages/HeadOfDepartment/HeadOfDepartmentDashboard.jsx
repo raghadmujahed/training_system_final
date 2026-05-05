@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getHeadDepartmentDashboardStats } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function HeadOfDepartmentDashboard() {
   const [stats, setStats] = useState(null);
@@ -25,10 +26,7 @@ export default function HeadOfDepartmentDashboard() {
 
   if (loading) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>جاري تحميل الإحصائيات...</p>
-      </div>
+      <LoadingSpinner size="page" text="جاري تحميل الإحصائيات..." />
     );
   }
 
