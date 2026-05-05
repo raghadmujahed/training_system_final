@@ -12,7 +12,7 @@ class SectionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator', 'head_of_department', 'academic_supervisor']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department', 'academic_supervisor']);
     }
 
     /**
@@ -20,7 +20,7 @@ class SectionPolicy
      */
     public function view(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator', 'head_of_department', 'academic_supervisor']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department', 'academic_supervisor']);
     }
 
     /**
@@ -28,7 +28,7 @@ class SectionPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator', 'head_of_department']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
     }
 
     /**
@@ -36,7 +36,7 @@ class SectionPolicy
      */
     public function update(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator', 'head_of_department']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
     }
 
     /**
@@ -44,7 +44,7 @@ class SectionPolicy
      */
     public function delete(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator', 'head_of_department']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
     }
 
     /**
@@ -52,7 +52,7 @@ class SectionPolicy
      */
     public function restore(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator', 'head_of_department']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
     }
 
     /**
@@ -60,6 +60,6 @@ class SectionPolicy
      */
     public function forceDelete(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'coordinator']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator']);
     }
 }

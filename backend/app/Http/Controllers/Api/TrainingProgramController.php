@@ -101,6 +101,8 @@ class TrainingProgramController extends Controller
             'data' => [
                 'id' => $program->id,
                 'schedule' => $program->schedule,
+                'status' => $program->status,
+                'coordinator_note' => $program->coordinator_note,
                 'student' => [
                     'id' => $program->user->id,
                     'name' => $program->user->name,
