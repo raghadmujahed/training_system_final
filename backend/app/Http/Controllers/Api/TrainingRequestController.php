@@ -26,6 +26,7 @@ use App\Support\TrainingRequestNotifications;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TrainingRequestController extends Controller
 {
@@ -279,25 +280,37 @@ class TrainingRequestController extends Controller
         $this->authorize('approveByDirectorate', $trainingRequest);
         if ($request->status === 'rejected') {
             $reason = $request->rejection_reason ?? '';
-            if ($trainingRequest->governing_body === 'ministry_of_health') {
-                $this->trainingRequestService->healthMinistryReject($trainingRequest, $reason, $request->user()->id);
-                return response()->json(['message' => 'تم رفض الكتاب من وزارة الصحة']);
+            try {
+                if ($trainingRequest->governing_body === 'ministry_of_health') {
+                    $this->trainingRequestService->healthMinistryReject($trainingRequest, $reason, $request->user()->id);
+                    return response()->json(['message' => 'تم رفض الكتاب من وزارة الصحة']);
+                }
+                $this->trainingRequestService->directorateReject($trainingRequest, $reason, $request->user()->id);
+                return response()->json(['message' => 'تم رفض الكتاب من المديرية']);
+            } catch (ValidationException $e) {
+                return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
             }
-            $this->trainingRequestService->directorateReject($trainingRequest, $reason, $request->user()->id);
-            return response()->json(['message' => 'تم رفض الكتاب من المديرية']);
         }
-        $this->trainingRequestService->directorateApprove($trainingRequest, $request->user()->id);
+        try {
+            $this->trainingRequestService->directorateApprove($trainingRequest, $request->user()->id);
 
-        // Auto-send to training site after approval
-        $trainingRequest->refresh();
-        $letterData = [
-            'letter_number' => $request->letter_number,
-            'letter_date' => $request->letter_date,
-            'content' => $request->content,
-        ];
-        $this->trainingRequestService->sendToSchool($trainingRequest, $request->user()->id, $letterData);
+            // Auto-send to training site after approval
+            $trainingRequest->refresh();
+            $letterData = [
+                'letter_number' => $request->letter_number,
+                'letter_date' => $request->letter_date,
+                'content' => $request->content,
+            ];
+            $this->trainingRequestService->sendToSchool($trainingRequest, $request->user()->id, $letterData);
 
-        return response()->json(['message' => 'تمت موافقة الجهة الرسمية وإرسال الكتاب إلى جهة التدريب بنجاح']);
+            return response()->json(['message' => 'تمت موافقة الجهة الرسمية وإرسال الكتاب إلى جهة التدريب بنجاح']);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'فشل اعتماد الطلب', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب: ' . $e->getMessage()], 500);
+        }
     }
 
     public function sendToSchool(SendTrainingRequestToSchoolRequest $request, TrainingRequest $trainingRequest)
@@ -317,19 +330,36 @@ class TrainingRequestController extends Controller
         $this->authorize('approveBySchool', $trainingRequest);
         if ($request->status === 'rejected') {
             $reason = $request->rejection_reason ?? '';
-            $this->trainingRequestService->schoolReject($trainingRequest, $reason, $request->user()->id);
-            return response()->json(['message' => 'تم رفض الطلب من جهة التدريب']);
+            try {
+                $this->trainingRequestService->schoolReject($trainingRequest, $reason, $request->user()->id);
+                return response()->json(['message' => 'تم رفض الطلب من جهة التدريب']);
+            } catch (ValidationException $e) {
+                return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+            }
         }
-
-        $this->trainingRequestService->schoolApprove($trainingRequest, $request->user()->id, $request->students);
-        return response()->json(['message' => 'تمت موافقة جهة التدريب وتعيين المشرفين الميدانيين بنجاح']);
+        try {
+            $this->trainingRequestService->schoolApprove($trainingRequest, $request->user()->id, $request->students);
+            return response()->json(['message' => 'تمت موافقة جهة التدريب وتعيين المشرفين الميدانيين بنجاح']);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'فشل اعتماد الطلب', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب: ' . $e->getMessage()], 500);
+        }
     }
 
     public function reject(RejectTrainingRequestRequest $request, TrainingRequest $trainingRequest)
     {
         $this->authorize('update', $trainingRequest);
-        $this->trainingRequestService->reject($trainingRequest, $request->rejection_reason ?? '', $request->user()->id);
-        return response()->json(['message' => 'تم رفض الكتاب']);
+        try {
+            $this->trainingRequestService->reject($trainingRequest, $request->rejection_reason ?? '', $request->user()->id);
+            return response()->json(['message' => 'تم رفض الكتاب']);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+        }
     }
 
     public function coordinatorReview(CoordinatorReviewTrainingRequest $request, TrainingRequest $trainingRequest)
@@ -790,11 +820,23 @@ class TrainingRequestController extends Controller
 
         if ($request->status === 'rejected') {
             $reason = $request->rejection_reason ?? '';
-            $this->trainingRequestService->schoolReject($trainingRequest, $reason, $request->user()->id);
-            return response()->json(['message' => 'تم رفض الطلب من جهة التدريب']);
+            try {
+                $this->trainingRequestService->schoolReject($trainingRequest, $reason, $request->user()->id);
+                return response()->json(['message' => 'تم رفض الطلب من جهة التدريب']);
+            } catch (ValidationException $e) {
+                return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+            }
         }
 
-        $this->trainingRequestService->schoolApprove($trainingRequest, $request->user()->id, $request->students);
-        return response()->json(['message' => 'تمت موافقة جهة التدريب وتعيين المشرفين الميدانيين بنجاح']);
+        try {
+            $this->trainingRequestService->schoolApprove($trainingRequest, $request->user()->id, $request->students);
+            return response()->json(['message' => 'تمت موافقة جهة التدريب وتعيين المشرفين الميدانيين بنجاح']);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'فشل اعتماد الطلب', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب: ' . $e->getMessage()], 500);
+        }
     }
 }

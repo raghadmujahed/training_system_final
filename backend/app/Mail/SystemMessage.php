@@ -12,11 +12,18 @@ class SystemMessage extends Mailable
 {
     use Queueable, SerializesModels;
 
+    private readonly string $_body;
+    private readonly string $_recipientName;
+
     public function __construct(
-        public readonly string $subject,
-        public readonly string $body,
-        public readonly string $recipientName = '',
-    ) {}
+        string $subject,
+        string $body,
+        string $recipientName = '',
+    ) {
+        $this->subject = $subject;
+        $this->_body = $body;
+        $this->_recipientName = $recipientName;
+    }
 
     public function envelope(): Envelope
     {
@@ -25,6 +32,13 @@ class SystemMessage extends Mailable
 
     public function content(): Content
     {
-        return new Content(view: 'emails.system-message');
+        return new Content(
+            view: 'emails.system-message',
+            with: [
+                'subject' => $this->subject,
+                'body' => $this->_body,
+                'recipientName' => $this->_recipientName,
+            ],
+        );
     }
 }

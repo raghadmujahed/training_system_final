@@ -234,15 +234,16 @@ class TrainingRequestService
      */
     public function schoolApprove(TrainingRequest $trainingRequest, int $schoolManagerId, array $studentsData): void
     {
-        DB::transaction(function () use ($trainingRequest, $schoolManagerId, $studentsData) {
-            $activeTrainingPeriodId = $this->requireActiveTrainingPeriodId();
-            $manager = User::with('role')->findOrFail($schoolManagerId);
-            $isPsychCenterManager = $manager->role?->name === 'psychology_center_manager';
-            $allowedRoles = $isPsychCenterManager
-                ? ['psychologist']
-                : ['teacher', 'adviser', 'field_supervisor'];
+        try {
+            DB::transaction(function () use ($trainingRequest, $schoolManagerId, $studentsData) {
+                $activeTrainingPeriodId = $this->requireActiveTrainingPeriodId();
+                $manager = User::with('role')->findOrFail($schoolManagerId);
+                $isPsychCenterManager = $manager->role?->name === 'psychology_center_manager';
+                $allowedRoles = $isPsychCenterManager
+                    ? ['psychologist']
+                    : ['teacher', 'adviser', 'field_supervisor'];
 
-            $this->assertTrainingSiteAcceptsNewStudents($trainingRequest, count($studentsData));
+                $this->assertTrainingSiteAcceptsNewStudents($trainingRequest, count($studentsData));
 
             foreach ($studentsData as $studentData) {
                 $studentRequest = TrainingRequestStudent::findOrFail($studentData['id']);
@@ -387,6 +388,22 @@ class TrainingRequestService
                 $workflowInstance->update(['status' => 'approved']);
             }
         });
+        } catch (ValidationException $e) {
+            // Re-throw validation exceptions as-is
+            throw $e;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw ValidationException::withMessages([
+                'general' => ['السجل المطلوب غير موجود: ' . $e->getMessage()],
+            ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            // Re-throw HTTP exceptions (abort_unless, abort_if) as-is
+            throw $e;
+        } catch (\Throwable $e) {
+            // Catch any other exceptions and convert to ValidationException
+            throw ValidationException::withMessages([
+                'general' => ['حدث خطأ أثناء معالجة الطلب: ' . $e->getMessage()],
+            ]);
+        }
     }
 
     /**

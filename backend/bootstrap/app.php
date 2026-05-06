@@ -27,6 +27,40 @@ return Application::configure(basePath: dirname(__DIR__))
     ]);
 })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Ensure CORS headers are present on all error responses (prevents CORS errors masking real errors)
+        $exceptions->respond(function ($response) {
+            if (method_exists($response, 'headers')) {
+                $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:5173');
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+                $response->headers->set('Access-Control-Allow-Headers', '*');
+            }
+            return $response;
+        });
+
+        // Handle specific exceptions with proper CORS headers
+        $exceptions->renderable(function (\Throwable $e, $request) {
+            // Match any API request (paths starting with api/ or containing api/)
+            if ($request->is('api/*') || str_starts_with($request->path(), 'api/')) {
+                $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+                // For ValidationException, return the validation errors
+                if ($e instanceof \Illuminate\Validation\ValidationException) {
+                    $response = response()->json([
+                        'message' => $e->getMessage(),
+                        'errors' => $e->errors(),
+                    ], 422);
+                } else {
+                    $response = response()->json([
+                        'message' => $e->getMessage(),
+                        'exception' => get_class($e),
+                    ], $status);
+                }
+                $response->headers->set('Access-Control-Allow-Origin', 'http://localhost:5173');
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+                $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+                $response->headers->set('Access-Control-Allow-Headers', '*');
+                return $response;
+            }
+        });
     })
     ->create();

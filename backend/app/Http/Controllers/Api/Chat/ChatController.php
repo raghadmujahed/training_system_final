@@ -19,9 +19,13 @@ class ChatController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $user  = $request->user();
-        $chats = $this->chatService->getUserChats($user);
-        return response()->json(['success' => true, 'data' => $chats]);
+        try {
+            $user  = $request->user();
+            $chats = $this->chatService->getUserChats($user);
+            return response()->json(['success' => true, 'data' => $chats]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function createOrGet(Request $request): JsonResponse
@@ -40,24 +44,32 @@ class ChatController extends Controller
 
     public function unreadCount(Request $request): JsonResponse
     {
-        $user  = $request->user();
-        $count = Chat::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
-            ->get()
-            ->filter(fn($chat) => $chat->unreadCountFor($user->id) > 0)
-            ->count();
-        return response()->json(['success' => true, 'unread_count' => $count]);
+        try {
+            $user  = $request->user();
+            $count = Chat::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+                ->get()
+                ->filter(fn($chat) => $chat->unreadCountFor($user->id) > 0)
+                ->count();
+            return response()->json(['success' => true, 'unread_count' => $count]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function allowedUsers(Request $request): JsonResponse
     {
-        $user    = $request->user();
-        $allowed = $this->permissions->getAllowedChatUsers($user);
-        $result  = $allowed->map(fn(User $u) => [
-            'id'            => $u->id,
-            'name'          => $u->name,
-            'role'          => $u->role?->name,
-            'department_id' => $u->department_id,
-        ])->values();
-        return response()->json(['success' => true, 'data' => $result]);
+        try {
+            $user    = $request->user();
+            $allowed = $this->permissions->getAllowedChatUsers($user);
+            $result  = $allowed->map(fn(User $u) => [
+                'id'            => $u->id,
+                'name'          => $u->name,
+                'role'          => $u->role?->name,
+                'department_id' => $u->department_id,
+            ])->values();
+            return response()->json(['success' => true, 'data' => $result]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }
