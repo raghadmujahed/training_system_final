@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React from "react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   useFieldSupervisorDashboard,
@@ -7,8 +7,8 @@ import {
 } from "../../hooks/useFieldSupervisorApi";
 import FieldSupervisorStudentsPanel from "./FieldSupervisorStudentsPanel";
 import PageHeader from "../../components/common/PageHeader";
-import { getAnnouncements, itemsFromPagedResponse } from "../../services/api";
 import { LayoutDashboard, Megaphone } from "lucide-react";
+import { useAnnouncements } from "../../hooks/useSharedData";
 import { normalizeFieldSupervisorType } from "../../utils/fieldSupervisorType";
 
 const COLOR_HEX = {
@@ -29,33 +29,10 @@ export default function FieldSupervisorWorkspace() {
   const { students, loading: studentsLoading, error: studentsError, refresh: refreshStudents } =
     useFieldSupervisorStudents();
 
-  const [announcements, setAnnouncements] = useState([]);
-  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
-  const [announcementsError, setAnnouncementsError] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setAnnouncementsLoading(true);
-      setAnnouncementsError("");
-      try {
-        const res = await getAnnouncements({ per_page: 10, status: "active" });
-        if (!cancelled) setAnnouncements(itemsFromPagedResponse(res));
-      } catch (e) {
-        if (!cancelled) {
-          setAnnouncements([]);
-          setAnnouncementsError(
-            e?.response?.data?.message || e?.response?.data?.error || "تعذر تحميل الإعلانات"
-          );
-        }
-      } finally {
-        if (!cancelled) setAnnouncementsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const { data: announcements, loading: announcementsLoading, error: announcementsErrorObj } = useAnnouncements({ per_page: 10, status: "active" });
+  const announcementsError = announcementsErrorObj ? (
+    announcementsErrorObj?.response?.data?.message || announcementsErrorObj?.response?.data?.error || "تعذر تحميل الإعلانات"
+  ) : "";
 
   const supervisorTypeRaw = dashboardData?.supervisor_type || "mentor_teacher";
   const supervisorType = normalizeFieldSupervisorType(supervisorTypeRaw);

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 import { apiClient, unwrapSupervisorList } from "../../services/api";
 
 const initialForm = {
@@ -18,6 +19,7 @@ const initialReportForm = {
 };
 
 export default function FieldVisits() {
+  const toast = useAppToast();
   const [sections, setSections] = useState([]);
   const [students, setStudents] = useState([]);
   const [visits, setVisits] = useState([]);
@@ -103,7 +105,7 @@ export default function FieldVisits() {
 
   const openAddForm = () => {
     if (!selectedSectionId || !selectedStudentId) {
-      alert("اختر الشعبة ثم الطالب أولاً");
+      toast.warning("اختر الشعبة ثم الطالب أولاً");
       return;
     }
 
@@ -148,12 +150,12 @@ export default function FieldVisits() {
     e.preventDefault();
 
     if (!selectedStudent) {
-      alert("اختر الطالب أولاً");
+      toast.warning("اختر الطالب أولاً");
       return;
     }
 
     if (!form.scheduled_date) {
-      alert("يرجى اختيار تاريخ الزيارة");
+      toast.warning("يرجى اختيار تاريخ الزيارة");
       return;
     }
 
@@ -168,10 +170,10 @@ export default function FieldVisits() {
       });
 
       await loadVisits(selectedStudent.student_id);
-      alert("تمت جدولة الزيارة بنجاح");
+      toast.success("تمت جدولة الزيارة بنجاح");
       closeForm();
     } catch (err) {
-      alert(err?.response?.data?.message || "فشل جدولة الزيارة");
+      toast.apiError(err, "فشل جدولة الزيارة");
     } finally {
       setSaving(false);
     }
@@ -190,9 +192,9 @@ export default function FieldVisits() {
       setReportVisitId(null);
       setReportForm(initialReportForm);
       await loadVisits(selectedStudentId);
-      alert("تم حفظ تقرير الزيارة");
+      toast.success("تم حفظ تقرير الزيارة");
     } catch (err) {
-      alert(err?.response?.data?.message || "فشل حفظ تقرير الزيارة");
+      toast.apiError(err, "فشل حفظ تقرير الزيارة");
     } finally {
       setSaving(false);
     }

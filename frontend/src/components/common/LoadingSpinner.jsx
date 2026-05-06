@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Loader2 } from "lucide-react";
 
 /**
@@ -11,7 +12,7 @@ import { Loader2 } from "lucide-react";
  * @param {string} text - نص اختياري يظهر تحت المؤشر
  * @param {string} className - CSS classes إضافية
  */
-export default function LoadingSpinner({ size = "section", text, className = "" }) {
+const LoadingSpinner = memo(function LoadingSpinner({ size = "section", text, className = "" }) {
   const sizeMap = {
     page: { icon: 40, gap: 12, padding: "80px 20px", textFontSize: "0.95rem" },
     section: { icon: 28, gap: 8, padding: "40px 20px", textFontSize: "0.88rem" },
@@ -48,4 +49,6 @@ export default function LoadingSpinner({ size = "section", text, className = "" 
       )}
     </div>
   );
-}
+});
+
+export default LoadingSpinner;

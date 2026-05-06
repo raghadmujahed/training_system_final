@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { getFeatureFlags, updateFeatureFlag } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function FeatureFlagsList() {
+  const toast = useAppToast();
   const [flags, setFlags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -28,7 +30,7 @@ export default function FeatureFlagsList() {
       setFlags(flags.map(f => f.id === id ? {...f, is_open: !current} : f));
     } catch (err) {
       console.error(err);
-      alert("فشل تحديث الميزة");
+      toast.error("فشل تحديث الميزة");
     }
   };
 

@@ -1,20 +1,9 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getRoles } from "../../../services/api";
+import { useRoles } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function RolesList() {
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => { fetchRoles(); }, []);
-
-  const fetchRoles = async () => {
-    try {
-      const data = await getRoles();
-      setRoles(data.data || []);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  };
+  const { data: roles, loading } = useRoles();
 
   if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 

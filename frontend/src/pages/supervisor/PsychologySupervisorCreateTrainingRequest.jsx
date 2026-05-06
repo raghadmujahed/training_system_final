@@ -5,17 +5,11 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   apiClient,
   createTrainingRequest,
-  getTrainingPeriods,
-  getTrainingSites,
   unwrapSupervisorList,
-  itemsFromPagedResponse,
 } from "../../services/api";
+import { useTrainingSites, useTrainingPeriods } from "../../hooks/useSharedData";
 import EmptyState from "../../components/common/EmptyState";
 
-function unwrapPagedTrainingSites(res) {
-  const raw = itemsFromPagedResponse(res?.data ?? res);
-  return Array.isArray(raw) ? raw : [];
-}
 
 export default function PsychologySupervisorCreateTrainingRequest() {
   const [loading, setLoading] = useState(true);
@@ -23,8 +17,8 @@ export default function PsychologySupervisorCreateTrainingRequest() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [students, setStudents] = useState([]);
-  const [sites, setSites] = useState([]);
-  const [periods, setPeriods] = useState([]);
+  const { data: sites } = useTrainingSites({ per_page: 300 });
+  const { data: periods } = useTrainingPeriods({ per_page: 50 });
 
   const [studentId, setStudentId] = useState("");
   const [courseId, setCourseId] = useState("");
@@ -36,32 +30,27 @@ export default function PsychologySupervisorCreateTrainingRequest() {
   const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
+    if (periods.length > 0 && !periodId) {
+      setPeriodId(String(periods[0].id));
+    }
+  }, [periods, periodId]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       setError("");
       try {
-        const [stRes, sitesRes, perRes] = await Promise.all([
-          apiClient.get("/supervisor/students", { params: { per_page: 200 } }),
-          getTrainingSites({ per_page: 300 }),
-          getTrainingPeriods({ per_page: 50 }),
-        ]);
+        const stRes = await apiClient.get("/supervisor/students", { params: { per_page: 200 } });
         if (cancelled) return;
         setStudents(unwrapSupervisorList(stRes.data));
-        setSites(unwrapPagedTrainingSites(sitesRes));
-        const periodRows = itemsFromPagedResponse(perRes) || [];
-        setPeriods(periodRows);
-        const per0 = periodRows[0];
-        if (per0?.id) setPeriodId(String(per0.id));
       } catch (e) {
-        if (!cancelled) setError(e?.response?.data?.message || "فشل تحميل البيانات");
+        if (!cancelled) setError(e?.response?.data?.message || "فشل تحميل بيانات الطلاب");
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const selectedStudent = useMemo(

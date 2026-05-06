@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getCurrentUser,
-  getNotifications,
   getOfficialLetters,
   getTrainingRequests,
   itemsFromPagedResponse,
 } from "../../services/api";
+import { useNotifications } from "../../hooks/useNotifications";
 import { siteLabels } from "../../utils/roles";
 import { isStudentApproved } from "../../utils/status";
 import {
@@ -44,6 +44,12 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
   const [latestLetters, setLatestLetters] = useState([]);
   const [latestActivities, setLatestActivities] = useState([]);
 
+  const { notifications: notificationsList } = useNotifications({ pollUnread: false, perPage: 5 });
+
+  useEffect(() => {
+    setLatestActivities(notificationsList.map((item) => item.message).filter(Boolean));
+  }, [notificationsList]);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -51,19 +57,17 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const [userRes, requestsRes, lettersRes, notificationsRes] =
+      const [userRes, requestsRes, lettersRes] =
         await Promise.all([
           getCurrentUser().catch(() => null),
           getTrainingRequests({ per_page: 100 }).catch(() => ({ data: [] })),
           getOfficialLetters({ type: "to_school", per_page: 5 }).catch(() => ({
             data: [],
           })),
-          getNotifications({ per_page: 5 }).catch(() => ({ data: [] })),
         ]);
 
       const requestsList = itemsFromPagedResponse(requestsRes);
       const lettersList = itemsFromPagedResponse(lettersRes);
-      const notificationsList = itemsFromPagedResponse(notificationsRes);
 
       const u = userRes?.data || userRes || {};
       const site = u.training_site?.data || u.training_site || {};
@@ -91,9 +95,6 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
           sender: letter.sent_by?.data?.name || letter.sent_by?.name || "—",
           date: letter.letter_date || letter.created_at || "—",
         }))
-      );
-      setLatestActivities(
-        notificationsList.map((item) => item.message).filter(Boolean)
       );
     } catch (error) {
       console.error("Failed to load principal dashboard:", error);

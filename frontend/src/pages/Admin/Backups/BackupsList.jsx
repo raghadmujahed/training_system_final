@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getBackups, createBackup, restoreBackup, deleteBackup, downloadBackup } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function BackupsList() {
+  const toast = useAppToast();
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -31,7 +33,7 @@ export default function BackupsList() {
     setCreating(true);
     try {
       const response = await createBackup({ type: "full" });
-      alert("تم إنشاء النسخة الاحتياطية بنجاح");
+      toast.success("تم إنشاء النسخة الاحتياطية بنجاح");
       
       // تحميل الملف تلقائياً بعد الإنشاء
       const backupId = response.backup?.id || response?.id;
@@ -39,7 +41,7 @@ export default function BackupsList() {
       if (backupId) {
         try {
           await downloadBackup(backupId, filename);
-          alert("تم تحميل النسخة الاحتياطية بنجاح");
+          toast.success("تم تحميل النسخة الاحتياطية بنجاح");
         } catch (downloadErr) {
           console.error("فشل التحميل التلقائي:", downloadErr);
         }
@@ -57,7 +59,7 @@ export default function BackupsList() {
     if (!window.confirm("تحذير: استعادة النسخة ستؤدي إلى فقدان البيانات الحالية. هل أنت متأكد؟")) return;
     try {
       await restoreBackup(id);
-      alert("تمت استعادة النسخة بنجاح");
+      toast.success("تمت استعادة النسخة بنجاح");
       fetchBackups();
     } catch (err) {
       setError("فشل استعادة النسخة");
@@ -68,7 +70,7 @@ export default function BackupsList() {
     if (!window.confirm("هل أنت متأكد من حذف هذه النسخة؟")) return;
     try {
       await deleteBackup(id);
-      alert("تم حذف النسخة");
+      toast.success("تم حذف النسخة");
       fetchBackups();
     } catch (err) {
       setError("فشل حذف النسخة");
@@ -78,10 +80,10 @@ export default function BackupsList() {
   const handleDownload = async (id, filename) => {
     try {
       await downloadBackup(id, filename);
-      alert("تم تحميل النسخة الاحتياطية بنجاح");
+      toast.success("تم تحميل النسخة الاحتياطية بنجاح");
     } catch (err) {
       console.error(err);
-      setError("فشل تحميل النسخة");
+      toast.error("فشل تحميل النسخة");
     }
   };
 

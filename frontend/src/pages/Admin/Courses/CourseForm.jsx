@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getCourse, createCourse, updateCourse, getDepartments } from "../../../services/api";
+import { getCourse, createCourse, updateCourse } from "../../../services/api";
+import { useDepartments } from "../../../hooks/useSharedData";
 
 export default function CourseForm() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [departments, setDepartments] = useState([]);
+  const { data: departments } = useDepartments();
   const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 0, type: "practical", department_id: "" });
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    getDepartments().then(res => {
-      const depts = res.data || res || [];
-      setDepartments(depts);
-    }).catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (id) {

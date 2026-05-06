@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NotificationBell from "../../components/common/NotificationBell";
 import { getRoleLabel } from "../../utils/roles";
@@ -35,9 +35,13 @@ export default function Navbar({ onMenuClick }) {
     return () => clearInterval(interval);
   }, [fetchUnread]);
 
-  // Re-fetch on every route change (e.g. leaving /chat after reading messages)
+  // Re-fetch only when leaving /chat (to catch messages read while on the chat page)
+  const prevPathRef = useRef("/");
   useEffect(() => {
-    fetchUnread();
+    if (prevPathRef.current === "/chat" && location.pathname !== "/chat") {
+      fetchUnread();
+    }
+    prevPathRef.current = location.pathname;
   }, [location.pathname, fetchUnread]);
 
   // Instant update when useChat dispatches unread changes (while on /chat)

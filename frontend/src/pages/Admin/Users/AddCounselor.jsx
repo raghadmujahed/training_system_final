@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUser, createUser, updateUser, getTrainingSites, getRoles } from "../../../services/api";
+import { getUser, createUser, updateUser } from "../../../services/api";
+import { useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddCounselor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("single");
+  const toast = useAppToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
-  const [trainingSites, setTrainingSites] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const { data: trainingSites } = useTrainingSites({ per_page: 200 });
+  const { data: roles } = useRoles({ per_page: 200 });
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -27,21 +29,6 @@ export default function AddCounselor() {
   const [bulkResults, setBulkResults] = useState({ success: [], errors: [] });
   const isEditMode = !!id;
   const adviserRoleId = roles.find((role) => role.name === "adviser")?.id;
-
-  // جلب أماكن التدريب
-  useEffect(() => {
-    const fetchSites = async () => {
-      try {
-        const [sitesRes, rolesRes] = await Promise.all([getTrainingSites({ per_page: 200 }), getRoles({ per_page: 200 })]);
-        const sitesData = Array.isArray(sitesRes?.data) ? sitesRes.data : sitesRes?.data?.data || sitesRes;
-        setTrainingSites(Array.isArray(sitesData) ? sitesData : []);
-        setRoles(Array.isArray(rolesRes?.data) ? rolesRes.data : rolesRes?.data?.data || []);
-      } catch (err) {
-        console.error("فشل جلب أماكن التدريب", err);
-      }
-    };
-    fetchSites();
-  }, []);
 
   useEffect(() => {
     if (id) {
@@ -67,27 +54,18 @@ export default function AddCounselor() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
-    if (statusMessage.text) setStatusMessage({ type: "", text: "" });
   };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
   };
 
   const processExcel = async () => {
-    if (!file) {
-      alert("الرجاء اختيار ملف Excel أولاً");
-      return;
-    }
-    if (!adviserRoleId) {
-      alert("تعذر تحديد دور المرشد التربوي من قاعدة البيانات");
-      return;
-    }
+    if (!file) { toast.warning("الرجاء اختيار ملف Excel أولاً"); return; }
+    if (!adviserRoleId) { toast.error("تعذر تحديد دور المرشد التربوي من قاعدة البيانات"); return; }
     setBulkLoading(true);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -98,11 +76,7 @@ export default function AddCounselor() {
         const worksheet = workbook.Sheets[sheetName];
         let rows = XLSX.utils.sheet_to_json(worksheet);
 
-        if (rows.length === 0) {
-          alert("الملف فارغ أو لا يحتوي على بيانات");
-          setBulkLoading(false);
-          return;
-        }
+        if (rows.length === 0) { toast.warning("الملف فارغ أو لا يحتوي على بيانات"); setBulkLoading(false); return; }
 
         const cleanRows = rows.map(row => {
           const clean = {};
@@ -158,10 +132,7 @@ export default function AddCounselor() {
         });
 
         if (invalidCounselors.length > 0) {
-          const errorDetails = invalidCounselors.map(c =>
-            `الصف ${c.row}: ${c.email} - ناقص: ${c.missing.join(", ")}`
-          ).join("\n");
-          alert(`البيانات غير كاملة في بعض الصفوف:\n${errorDetails}`);
+          toast.warning(`${invalidCounselors.length} صف يحتوي بيانات ناقصة وتم تجاهله`);
         }
 
         if (validCounselors.length === 0) {
@@ -186,7 +157,7 @@ export default function AddCounselor() {
         if (successList.length) setFile(null);
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ أثناء معالجة الملف: " + err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
       }
@@ -198,22 +169,22 @@ export default function AddCounselor() {
     e.preventDefault();
     setLoading(true);
     setErrors({});
-    setStatusMessage({ type: "", text: "" });
 
     try {
       if (!adviserRoleId) {
-        setStatusMessage({ type: "error", text: "تعذر تحديد دور المرشد التربوي من قاعدة البيانات" });
+        toast.error("تعذر تحديد دور المرشد التربوي من قاعدة البيانات");
+        setLoading(false);
         return;
       }
       const payload = { ...form, role_id: adviserRoleId };
 
       if (id) {
         await updateUser(id, payload);
-        setStatusMessage({ type: "success", text: "تم تحديث المرشد بنجاح" });
+        toast.success("تم تحديث المرشد بنجاح");
         setTimeout(() => navigate("/admin/users"), 1500);
       } else {
         await createUser(payload);
-        setStatusMessage({ type: "success", text: "تمت إضافة المرشد بنجاح" });
+        toast.success("تمت إضافة المرشد بنجاح");
         setForm({
           name: "", email: "", phone: "", password: "", password_confirmation: "",
           training_site_id: "", role_id: "", status: "active",
@@ -223,10 +194,9 @@ export default function AddCounselor() {
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors).flat().join(", ");
-        setStatusMessage({ type: "error", text: `فشل الحفظ: ${errorMessages}` });
+        toast.error("فشل الحفظ: " + Object.values(err.response.data.errors).flat().join(", "));
       } else {
-        setStatusMessage({ type: "error", text: "حدث خطأ غير متوقع" });
+        toast.apiError(err, "حدث خطأ غير متوقع");
       }
     } finally {
       setLoading(false);
@@ -240,9 +210,6 @@ export default function AddCounselor() {
           <h1>تعديل مرشد</h1>
           <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
         </div>
-        {statusMessage.text && (
-          <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>
-        )}
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label>الاسم الكامل *</label>
@@ -293,10 +260,6 @@ export default function AddCounselor() {
         <h1>إضافة مرشد جديد</h1>
         <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
       </div>
-
-      {statusMessage.text && (
-        <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>
-      )}
 
       <div className="tabs">
         <button

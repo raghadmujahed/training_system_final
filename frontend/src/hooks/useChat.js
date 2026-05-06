@@ -32,14 +32,16 @@ export default function useChat() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
-  const pollRef = useRef(null);
-  const sendQueueRef = useRef(Promise.resolve()); // sequential send queue
+
+  const pollRef        = useRef(null);
+  const sendQueueRef   = useRef(Promise.resolve());
+  const activeChatRef  = useRef(null);  // always holds latest activeChat
+  const pendingByChatRef = useRef({});  // only pending (unsent) messages per chat
 
   const fetchChats = useCallback(async (silent = false) => {
     if (!silent) setLoadingChats(true);
     try {
       const data = await getChats();
-      // Preserve unread_count=0 for currently open chat
       setChats((prev) =>
         sortChats(
           data.map((c) => {
@@ -57,7 +59,6 @@ export default function useChat() {
 
   const openChat = useCallback(async (chatOrUserId, isUserId = false) => {
     setLoadingMessages(true);
-    setMessages([]);
     setError(null);
 
     try {
@@ -66,18 +67,22 @@ export default function useChat() {
         chat = await createOrGetChat(chatOrUserId);
       }
 
-      // Zero unread count immediately in the sidebar (optimistic)
+      activeChatRef.current = chat;
+      setMessages([]);
+      setActiveChat(chat);
+
       setChats((prev) =>
         prev.map((c) =>
-          c.id === chat.id
-            ? { ...c, unread_count: 0, _locallyRead: true }
-            : c
+          c.id === chat.id ? { ...c, unread_count: 0, _locallyRead: true } : c
         )
       );
 
-      setActiveChat(chat);
       const msgs = await getChatMessages(chat.id);
-      setMessages(sortMessages(msgs));
+      if (activeChatRef.current?.id === chat.id) {
+        const pending = pendingByChatRef.current[chat.id] ?? [];
+        const merged  = sortMessages([...msgs, ...pending]);
+        setMessages(merged);
+      }
     } catch (err) {
       setError(err?.response?.data?.message || "فشل فتح المحادثة");
     } finally {
@@ -85,51 +90,67 @@ export default function useChat() {
     }
   }, []);
 
-  const sendMessage = useCallback(
-    (text) => {
-      if (!activeChat || !text.trim()) return;
+  const sendMessage = useCallback((text) => {
+    const chat = activeChatRef.current;
+    if (!chat || !text.trim()) return;
 
-      // Optimistic: show message immediately with a temporary id
-      const tempId = `temp_${Date.now()}_${Math.random()}`;
-      const optimisticMsg = {
-        id: tempId,
-        message: text.trim(),
-        type: "text",
-        is_read: false,
-        is_mine: true,
-        created_at: new Date().toISOString(),
-        sender: null,
-        _pending: true,
-      };
+    const tempId = `temp_${Date.now()}_${Math.random()}`;
+    const optimisticMsg = {
+      id: tempId,
+      message: text.trim(),
+      type: "text",
+      is_read: false,
+      is_mine: true,
+      created_at: new Date().toISOString(),
+      sender: null,
+      _pending: true,
+    };
+
+    // Track pending per chat
+    pendingByChatRef.current[chat.id] = [
+      ...(pendingByChatRef.current[chat.id] ?? []),
+      optimisticMsg,
+    ];
+    if (activeChatRef.current?.id === chat.id) {
       setMessages((prev) => sortMessages([...prev, optimisticMsg]));
+    }
 
-      // Queue the actual API call sequentially
-      sendQueueRef.current = sendQueueRef.current.then(async () => {
-        setSending(true);
-        try {
-          const msg = await sendChatMessage(activeChat.id, text.trim());
-          setMessages((prev) =>
-            sortMessages(prev.map((m) => (m.id === tempId ? msg : m)))
-          );
-          setChats((prev) =>
-            sortChats(
-              prev.map((c) =>
-                c.id === activeChat.id
-                  ? { ...c, last_message: { message: text, created_at: msg.created_at } }
-                  : c,
-              )
-            )
-          );
-        } catch (err) {
-          setMessages((prev) => prev.filter((m) => m.id !== tempId));
-          setError(err?.response?.data?.message || "فشل إرسال الرسالة");
-        } finally {
-          setSending(false);
+    sendQueueRef.current = sendQueueRef.current.then(async () => {
+      setSending(true);
+      try {
+        const msg = await sendChatMessage(chat.id, text.trim());
+
+        // Remove from pending cache (confirmed by server)
+        pendingByChatRef.current[chat.id] = (pendingByChatRef.current[chat.id] ?? []).filter(
+          (m) => m.id !== tempId
+        );
+        if (activeChatRef.current?.id === chat.id) {
+          setMessages((prev) => sortMessages(prev.map((m) => (m.id === tempId ? msg : m))));
         }
-      });
-    },
-    [activeChat],
-  );
+
+        setChats((prev) =>
+          sortChats(
+            prev.map((c) =>
+              c.id === chat.id
+                ? { ...c, last_message: { message: text, created_at: msg.created_at } }
+                : c
+            )
+          )
+        );
+      } catch (err) {
+        // Remove failed from pending
+        pendingByChatRef.current[chat.id] = (pendingByChatRef.current[chat.id] ?? []).filter(
+          (m) => m.id !== tempId
+        );
+        if (activeChatRef.current?.id === chat.id) {
+          setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        }
+        setError(err?.response?.data?.message || "فشل إرسال الرسالة");
+      } finally {
+        setSending(false);
+      }
+    });
+  }, []);
 
   const startChatWithUser = useCallback(
     async (userId) => {
@@ -139,46 +160,47 @@ export default function useChat() {
     [openChat, fetchChats],
   );
 
-  // Poll for new messages when a chat is active
+  // Poll messages for active chat
   useEffect(() => {
     if (!activeChat) return;
 
     pollRef.current = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      const chat = activeChatRef.current;
+      if (!chat) return;
       try {
-        const msgs = await getChatMessages(activeChat.id);
-        setMessages((prev) => {
-          const pending = prev.filter((m) => m._pending);
-          const merged = sortMessages([...msgs, ...pending]);
-          return merged;
-        });
+        const msgs = await getChatMessages(chat.id);
+        if (activeChatRef.current?.id !== chat.id) return;
+        const pending = pendingByChatRef.current[chat.id] ?? [];
+        const merged  = sortMessages([...msgs, ...pending]);
+        setMessages(merged);
       } catch {
-        // silently ignore poll errors
+        // silently ignore
       }
     }, POLL_INTERVAL_MS);
 
     return () => clearInterval(pollRef.current);
   }, [activeChat]);
 
-  // Poll chats list silently to refresh unread counts from other conversations
+  // Poll chats list — skip the first tick since initial load handles it
   useEffect(() => {
     const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        fetchChats(true);
-      }
+      if (document.visibilityState === "visible") fetchChats(true);
     }, CHATS_POLL_MS);
     return () => clearInterval(interval);
   }, [fetchChats]);
 
-  // Notify Navbar badge whenever chats unread counts change
+  // Navbar badge
   useEffect(() => {
     const unreadCount = chats.filter((c) => c.unread_count > 0).length;
     window.dispatchEvent(new CustomEvent("chat:unread-changed", { detail: { count: unreadCount } }));
   }, [chats]);
 
-  // Initial chats load
+  // Initial load (runs once; polling above starts after CHATS_POLL_MS)
   useEffect(() => {
     fetchChats();
-  }, [fetchChats]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     chats,

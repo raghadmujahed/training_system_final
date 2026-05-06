@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUser, createUser, updateUser, getDepartments, getRoles } from "../../../services/api";
+import { getUser, createUser, updateUser } from "../../../services/api";
+import { useDepartments, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddAcademicSupervisor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("single");
+  const toast = useAppToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
-  const [departments, setDepartments] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const { data: departments } = useDepartments();
+  const { data: roles } = useRoles({ per_page: 200 });
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -28,22 +30,6 @@ export default function AddAcademicSupervisor() {
   const isEditMode = !!id;
   const academicSupervisorRoleId = roles.find((role) => role.name === "academic_supervisor")?.id;
 
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const [departmentsRes, rolesRes] = await Promise.all([
-          getDepartments({ per_page: 200 }),
-          getRoles({ per_page: 200 }),
-        ]);
-        const departmentsData = Array.isArray(departmentsRes?.data) ? departmentsRes.data : departmentsRes?.data?.data || departmentsRes;
-        setDepartments(Array.isArray(departmentsData) ? departmentsData : []);
-        setRoles(Array.isArray(rolesRes?.data) ? rolesRes.data : rolesRes?.data?.data || []);
-      } catch (err) {
-        console.error("فشل جلب الأقسام", err);
-      }
-    };
-    fetchDepartments();
-  }, []);
 
   useEffect(() => {
     if (id) {
@@ -71,27 +57,18 @@ export default function AddAcademicSupervisor() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
-    if (statusMessage.text) setStatusMessage({ type: "", text: "" });
   };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
   };
 
   const processExcel = async () => {
-    if (!file) {
-      alert("الرجاء اختيار ملف Excel أولاً");
-      return;
-    }
-    if (!academicSupervisorRoleId) {
-      alert("تعذر تحديد دور المشرف الأكاديمي من قاعدة البيانات");
-      return;
-    }
+    if (!file) { toast.warning("الرجاء اختيار ملف Excel أولاً"); return; }
+    if (!academicSupervisorRoleId) { toast.error("تعذر تحديد دور المشرف الأكاديمي من قاعدة البيانات"); return; }
     setBulkLoading(true);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -102,11 +79,7 @@ export default function AddAcademicSupervisor() {
         const worksheet = workbook.Sheets[sheetName];
         let rows = XLSX.utils.sheet_to_json(worksheet);
 
-        if (rows.length === 0) {
-          alert("الملف فارغ أو لا يحتوي على بيانات");
-          setBulkLoading(false);
-          return;
-        }
+        if (rows.length === 0) { toast.warning("الملف فارغ أو لا يحتوي على بيانات"); setBulkLoading(false); return; }
 
         const cleanRows = rows.map(row => {
           const clean = {};
@@ -180,10 +153,7 @@ export default function AddAcademicSupervisor() {
         });
 
         if (invalidSupervisors.length > 0) {
-          const errorDetails = invalidSupervisors.map(s =>
-            `الصف ${s.row}: ${s.email} - ناقص: ${s.missing.join(", ")}`
-          ).join("\n");
-          alert(`البيانات غير كاملة في بعض الصفوف:\n${errorDetails}`);
+          toast.warning(`${invalidSupervisors.length} صف يحتوي بيانات ناقصة وتم تجاهله`);
         }
 
         if (validSupervisors.length === 0) {
@@ -218,18 +188,14 @@ export default function AddAcademicSupervisor() {
           });
           
           // Update progress
-          const processedCount = Math.min(i + BATCH_SIZE, validSupervisors.length);
-          setStatusMessage({ 
-            type: "info", 
-            text: `تم معالجة ${processedCount} من ${validSupervisors.length} مشرف أكاديمي...` 
-          });
+          toast.info(`تم معالجة ${Math.min(i + BATCH_SIZE, validSupervisors.length)} من ${validSupervisors.length} مشرف أكاديمي...`);
         }
 
         setBulkResults({ success: successList, errors: errorList });
         if (successList.length) setFile(null);
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ أثناء معالجة الملف: " + err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
       }
@@ -241,22 +207,22 @@ export default function AddAcademicSupervisor() {
     e.preventDefault();
     setLoading(true);
     setErrors({});
-    setStatusMessage({ type: "", text: "" });
 
     try {
       if (!academicSupervisorRoleId) {
-        setStatusMessage({ type: "error", text: "تعذر تحديد دور المشرف الأكاديمي من قاعدة البيانات" });
+        toast.error("تعذر تحديد دور المشرف الأكاديمي من قاعدة البيانات");
+        setLoading(false);
         return;
       }
       const payload = { ...form, role_id: academicSupervisorRoleId };
 
       if (id) {
         await updateUser(id, payload);
-        setStatusMessage({ type: "success", text: "تم تحديث المشرف الأكاديمي بنجاح" });
+        toast.success("تم تحديث المشرف الأكاديمي بنجاح");
         setTimeout(() => navigate("/admin/users"), 1500);
       } else {
         await createUser(payload);
-        setStatusMessage({ type: "success", text: "تمت إضافة المشرف الأكاديمي بنجاح" });
+        toast.success("تمت إضافة المشرف الأكاديمي بنجاح");
         setForm({
           name: "", email: "", phone: "", password: "", password_confirmation: "",
           department_id: "", role_id: "", status: "active",
@@ -266,10 +232,9 @@ export default function AddAcademicSupervisor() {
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors).flat().join(", ");
-        setStatusMessage({ type: "error", text: `فشل الحفظ: ${errorMessages}` });
+        toast.error("فشل الحفظ: " + Object.values(err.response.data.errors).flat().join(", "));
       } else {
-        setStatusMessage({ type: "error", text: "حدث خطأ غير متوقع" });
+        toast.apiError(err, "حدث خطأ غير متوقع");
       }
     } finally {
       setLoading(false);
@@ -283,9 +248,6 @@ export default function AddAcademicSupervisor() {
           <h1>تعديل مشرف أكاديمي</h1>
           <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
         </div>
-        {statusMessage.text && (
-          <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>
-        )}
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label>الاسم الكامل *</label>
@@ -336,10 +298,6 @@ export default function AddAcademicSupervisor() {
         <h1>إضافة مشرف أكاديمي جديد</h1>
         <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
       </div>
-
-      {statusMessage.text && (
-        <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>
-      )}
 
       <div className="tabs">
         <button

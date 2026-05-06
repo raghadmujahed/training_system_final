@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getBackupDetails, downloadBackup } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function BackupDetails() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -31,7 +33,7 @@ export default function BackupDetails() {
   const handleDownload = async () => {
     try {
       await downloadBackup(id, data?.name);
-      alert("تم تحميل النسخة الاحتياطية بنجاح");
+      toast.success("تم تحميل النسخة الاحتياطية بنجاح");
     } catch (err) {
       console.error(err);
       setError("فشل تحميل النسخة");

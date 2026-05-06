@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getDashboardStats, getTrainingRequests, getUsers } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import Papa from "papaparse";
@@ -9,6 +10,7 @@ import Papa from "papaparse";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 export default function ReportsDashboard() {
+  const toast = useAppToast();
   const [stats, setStats] = useState({
     total_students: 0,
     total_sites: 0,
@@ -82,7 +84,7 @@ export default function ReportsDashboard() {
       }));
       exportToCSV(exportData, "users_report");
     } catch (err) {
-      alert("فشل تصدير المستخدمين");
+      toast.error("فشل تصدير المستخدمين");
     }
   };
 
@@ -99,7 +101,7 @@ export default function ReportsDashboard() {
       }));
       exportToCSV(exportData, "training_requests_report");
     } catch {
-      alert("فشل تصدير طلبات التدريب");
+      toast.error("فشل تصدير طلبات التدريب");
     }
   };
 

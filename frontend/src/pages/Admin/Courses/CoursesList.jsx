@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCourses, deleteCourse, getDepartments } from "../../../services/api";
+import { getCourses, deleteCourse } from "../../../services/api";
+import { useDepartments } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function CoursesList() {
+  const toast = useAppToast();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [departments, setDepartments] = useState([]);
+  const { data: departments } = useDepartments();
   const [filterDept, setFilterDept] = useState("");
   const [pagination, setPagination] = useState({
     current_page: 1,
@@ -16,12 +19,6 @@ export default function CoursesList() {
     total: 0,
   });
   const [perPage, setPerPage] = useState(10);
-
-  useEffect(() => {
-    getDepartments().then(res => {
-      setDepartments(res.data || []);
-    });
-  }, []);
 
   const fetchCourses = async (page = 1) => {
     setLoading(true);
@@ -63,7 +60,7 @@ export default function CoursesList() {
         await deleteCourse(id);
         fetchCourses(pagination.current_page);
       } catch (err) {
-        alert("حدث خطأ أثناء الحذف");
+        toast.error("حدث خطأ أثناء الحذف");
       }
     }
   };

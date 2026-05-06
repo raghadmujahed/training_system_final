@@ -59,12 +59,7 @@ class TrainingRequestController extends Controller
     {
         $enrollment = $user?->currentEnrollment();
         $courseId = data_get($enrollment, 'section.course.id');
-        if ($courseId) {
-            return (int) $courseId;
-        }
-
-        $fallbackCourseId = Course::query()->orderBy('id')->value('id');
-        return $fallbackCourseId ? (int) $fallbackCourseId : null;
+        return $courseId ? (int) $courseId : null;
     }
 
     private function normalizeStudentDates(array $data): array
@@ -455,6 +450,22 @@ class TrainingRequestController extends Controller
                 'training_request_id' => $existingRequest->id,
                 'book_status' => $existingRequest->book_status,
             ], 409);
+        }
+
+        // تحقق من أن الطالب مسجّل في شعبة مرتبطة بمساق
+        $enrollment    = $user->currentEnrollment();
+        $enrolledSection = $enrollment?->section;
+
+        if (! $enrolledSection) {
+            return response()->json([
+                'message' => 'لا يمكن إرسال طلب التدريب. يجب أن تكون مسجلاً في شعبة دراسية أولاً. تواصل مع رئيس القسم لتسجيلك في الشعبة المناسبة.',
+            ], 422);
+        }
+
+        if (! $enrolledSection->course_id) {
+            return response()->json([
+                'message' => 'الشعبة المسجّل فيها غير مرتبطة بمساق. تواصل مع رئيس القسم لإصلاح هذا.',
+            ], 422);
         }
 
         $data = $request->validate([

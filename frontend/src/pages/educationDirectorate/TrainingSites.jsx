@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
+import useAppToast from "../../hooks/useAppToast";
 
 const getSchoolTypeFromItem = (item) => {
   if (item.school_type === "private") return "خاصة";
@@ -63,9 +64,8 @@ const extractValidationMessage = (error, fallback) => {
 
 export default function TrainingPlaces() {
   const [places, setPlaces] = useState([]);
+  const toast = useAppToast();
   const [loading, setLoading] = useState(true);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -102,8 +102,6 @@ export default function TrainingPlaces() {
   const fetchPlaces = async () => {
     try {
       setLoading(true);
-      setErrorMessage("");
-
       const data = await getTrainingSites();
 
       const list = Array.isArray(data?.data)
@@ -115,7 +113,7 @@ export default function TrainingPlaces() {
       setPlaces(list.map(normalizePlace));
     } catch (error) {
       console.error("Failed to load training sites:", error);
-      setErrorMessage("تعذر تحميل أماكن التدريب.");
+      toast.error("تعذر تحميل أماكن التدريب.");
     } finally {
       setLoading(false);
     }
@@ -127,8 +125,6 @@ export default function TrainingPlaces() {
       ...prev,
       [name]: value,
     }));
-    setSavedMessage("");
-    setErrorMessage("");
   };
 
   const handleEditChange = (e) => {
@@ -149,14 +145,11 @@ export default function TrainingPlaces() {
       !formData.capacity ||
       !formData.directorate
     ) {
-      setErrorMessage("يرجى تعبئة جميع الحقول المطلوبة.");
+      toast.warning("يرجى تعبئة جميع الحقول المطلوبة.");
       return;
     }
 
     try {
-      setSavedMessage("");
-      setErrorMessage("");
-
       await createTrainingSite({
         name: formData.name,
         location: formData.city,
@@ -186,13 +179,11 @@ export default function TrainingPlaces() {
         school_level: "",
       });
 
-      setSavedMessage("تم حفظ مكان التدريب بنجاح.");
+      toast.success("تم حفظ مكان التدريب بنجاح.");
       fetchPlaces();
     } catch (error) {
       console.error("Failed to create training site:", error);
-      setErrorMessage(
-        extractValidationMessage(error, "تعذر حفظ مكان التدريب.")
-      );
+      toast.error(extractValidationMessage(error, "تعذر حفظ مكان التدريب."));
     }
   };
 
@@ -211,8 +202,6 @@ export default function TrainingPlaces() {
       gender_classification: place.gender_classification || "",
       school_level: place.school_level || "",
     });
-    setSavedMessage("");
-    setErrorMessage("");
   };
 
   const cancelEdit = () => {
@@ -240,14 +229,11 @@ export default function TrainingPlaces() {
       !editFormData.capacity ||
       !editFormData.directorate
     ) {
-      setErrorMessage("يرجى تعبئة جميع حقول التعديل المطلوبة.");
+      toast.warning("يرجى تعبئة جميع حقول التعديل المطلوبة.");
       return;
     }
 
     try {
-      setSavedMessage("");
-      setErrorMessage("");
-
       await updateTrainingSite(id, {
         name: editFormData.name,
         location: editFormData.city,
@@ -264,14 +250,12 @@ export default function TrainingPlaces() {
         governing_body: "directorate_of_education",
       });
 
-      setSavedMessage("تم تعديل مكان التدريب بنجاح.");
+      toast.success("تم تعديل مكان التدريب بنجاح.");
       setEditingId(null);
       fetchPlaces();
     } catch (error) {
       console.error("Failed to update training site:", error);
-      setErrorMessage(
-        extractValidationMessage(error, "تعذر تعديل مكان التدريب.")
-      );
+      toast.error(extractValidationMessage(error, "تعذر تعديل مكان التدريب."));
     }
   };
 
@@ -280,15 +264,12 @@ export default function TrainingPlaces() {
     if (!confirmed) return;
 
     try {
-      setSavedMessage("");
-      setErrorMessage("");
-
       await deleteTrainingSite(id);
-      setSavedMessage("تم حذف مكان التدريب بنجاح.");
+      toast.success("تم حذف مكان التدريب بنجاح.");
       fetchPlaces();
     } catch (error) {
       console.error("Failed to delete training site:", error);
-      setErrorMessage("تعذر حذف مكان التدريب.");
+      toast.error("تعذر حذف مكان التدريب.");
     }
   };
 
@@ -482,17 +463,6 @@ export default function TrainingPlaces() {
               <Save size={16} /> {"حفظ مكان التدريب"}
             </button>
 
-            {savedMessage && (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 0.875rem", background: "#d1fae5", color: "#059669", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600 }}>
-                <CheckCircle2 size={14} /> {savedMessage}
-              </div>
-            )}
-
-            {errorMessage && (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 0.875rem", background: "#fee2e2", color: "#dc2626", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600 }}>
-                <AlertCircle size={14} /> {errorMessage}
-              </div>
-            )}
           </div>
         </form>
       </div>

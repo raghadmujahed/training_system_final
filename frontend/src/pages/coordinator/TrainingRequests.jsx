@@ -10,6 +10,7 @@ import {
   Printer,
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 import useCoordinatorDistribution from "../../hooks/useCoordinatorDistribution";
 import {
   RequestsTable,
@@ -26,6 +27,7 @@ import { printBatchTrainingRequests } from "../../utils/trainingRequestPrint";
 import { getTrainingRequestBatch } from "../../services/api";
 
 export default function CoordinatorTrainingRequests({ variant = "coordinator" }) {
+  const toast = useAppToast();
   const isPsychSupervisor = variant === "psychologySupervisor";
   const lettersLink = isPsychSupervisor ? "/supervisor/psychology/official-letters" : "/coordinator/official-letters";
 
@@ -175,10 +177,10 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
           : "منسّق التدريب الميداني — كلية التربية — جامعة الخليل",
       });
       if (!ok) {
-        window.alert("لا توجد طلبات في هذه الدفعة للطباعة.");
+        toast.warning("لا توجد طلبات في هذه الدفعة للطباعة.");
       }
     } catch {
-      window.alert("تعذّر تحميل تفاصيل الدفعة للطباعة.");
+      toast.error("تعذّر تحميل تفاصيل الدفعة للطباعة.");
     } finally {
       setPrintingBatchId(null);
     }

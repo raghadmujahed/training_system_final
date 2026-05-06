@@ -7,6 +7,7 @@ import {
 } from "../../services/api";
 import { siteLabels } from "../../utils/roles";
 import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
+import useAppToast from "../../hooks/useAppToast";
 
 const normalizePlace = (item) => ({
   id: item.id,
@@ -35,9 +36,8 @@ const extractValidationMessage = (error, fallback) => {
 export default function HealthTrainingSites() {
   const labels = siteLabels("health_center");
   const [places, setPlaces] = useState([]);
+  const toast = useAppToast();
   const [loading, setLoading] = useState(true);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -68,8 +68,6 @@ export default function HealthTrainingSites() {
   const fetchPlaces = async () => {
     try {
       setLoading(true);
-      setErrorMessage("");
-
       const data = await getTrainingSites({
         site_type: "health_center",
         per_page: 200,
@@ -84,7 +82,7 @@ export default function HealthTrainingSites() {
       setPlaces(list.map(normalizePlace));
     } catch (error) {
       console.error("Failed to load training sites:", error);
-      setErrorMessage("تعذر تحميل أماكن التدريب الصحية.");
+      toast.error("تعذر تحميل أماكن التدريب الصحية.");
     } finally {
       setLoading(false);
     }
@@ -99,8 +97,6 @@ export default function HealthTrainingSites() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setSavedMessage("");
-    setErrorMessage("");
   };
 
   const handleEditChange = (e) => {
@@ -115,14 +111,11 @@ export default function HealthTrainingSites() {
     e.preventDefault();
 
     if (!formData.name || !formData.location || !formData.capacity) {
-      setErrorMessage("يرجى تعبئة جميع الحقول المطلوبة.");
+      toast.warning("يرجى تعبئة جميع الحقول المطلوبة.");
       return;
     }
 
     try {
-      setSavedMessage("");
-      setErrorMessage("");
-
       await createTrainingSite({
         name: formData.name,
         location: formData.location,
@@ -146,11 +139,11 @@ export default function HealthTrainingSites() {
         directorate: "وسط",
       });
 
-      setSavedMessage("تم حفظ مكان التدريب الصحي بنجاح.");
+      toast.success("تم حفظ مكان التدريب الصحي بنجاح.");
       fetchPlaces();
     } catch (error) {
       console.error("Failed to create training site:", error);
-      setErrorMessage(extractValidationMessage(error, "تعذر حفظ مكان التدريب."));
+      toast.error(extractValidationMessage(error, "تعذر حفظ مكان التدريب."));
     }
   };
 
@@ -166,8 +159,6 @@ export default function HealthTrainingSites() {
       directorate: place.directorate,
       is_active: place.is_active,
     });
-    setSavedMessage("");
-    setErrorMessage("");
   };
 
   const cancelEdit = () => {
@@ -186,14 +177,11 @@ export default function HealthTrainingSites() {
 
   const handleUpdatePlace = async (id) => {
     if (!editFormData.name || !editFormData.location || !editFormData.capacity) {
-      setErrorMessage("يرجى تعبئة جميع حقول التعديل المطلوبة.");
+      toast.warning("يرجى تعبئة جميع حقول التعديل المطلوبة.");
       return;
     }
 
     try {
-      setSavedMessage("");
-      setErrorMessage("");
-
       await updateTrainingSite(id, {
         name: editFormData.name,
         location: editFormData.location,
@@ -207,12 +195,12 @@ export default function HealthTrainingSites() {
         governing_body: "ministry_of_health",
       });
 
-      setSavedMessage("تم تعديل مكان التدريب بنجاح.");
+      toast.success("تم تعديل مكان التدريب بنجاح.");
       setEditingId(null);
       fetchPlaces();
     } catch (error) {
       console.error("Failed to update training site:", error);
-      setErrorMessage(extractValidationMessage(error, "تعذر تعديل مكان التدريب."));
+      toast.error(extractValidationMessage(error, "تعذر تعديل مكان التدريب."));
     }
   };
 
@@ -221,15 +209,12 @@ export default function HealthTrainingSites() {
     if (!confirmed) return;
 
     try {
-      setSavedMessage("");
-      setErrorMessage("");
-
       await deleteTrainingSite(id);
-      setSavedMessage("تم حذف مكان التدريب بنجاح.");
+      toast.success("تم حذف مكان التدريب بنجاح.");
       fetchPlaces();
     } catch (error) {
       console.error("Failed to delete training site:", error);
-      setErrorMessage("تعذر حذف مكان التدريب.");
+      toast.error("تعذر حذف مكان التدريب.");
     }
   };
 
@@ -344,13 +329,6 @@ export default function HealthTrainingSites() {
             </button>
           </div>
 
-          {savedMessage && (
-            <div className="alert-custom alert-success mt-3">{savedMessage}</div>
-          )}
-
-          {errorMessage && (
-            <div className="alert-custom alert-danger mt-3">{errorMessage}</div>
-          )}
         </form>
       </div>
 

@@ -1,31 +1,11 @@
-import { useEffect, useState } from "react";
-import { getPermissions } from "../../../services/api";
+import { usePermissions } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function PermissionsList() {
-  const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      try {
-        const data = await getPermissions();
-        // Handle both paginated and direct array responses
-        const permissionsArray = data.data || data || [];
-        setPermissions(Array.isArray(permissionsArray) ? permissionsArray : []);
-      } catch (err) {
-        console.error(err);
-        setError("فشل تحميل الصلاحيات");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPermissions();
-  }, []);
+  const { data: permissions, loading, error } = usePermissions();
 
   if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
-  if (error) return <div className="text-danger">{error}</div>;
+  if (error) return <div className="text-danger">فشل تحميل الصلاحيات</div>;
 
   return (
     <div>

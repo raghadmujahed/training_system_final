@@ -5,6 +5,7 @@ import {
   itemsFromPagedResponse,
 } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 import { siteLabels } from "../../utils/roles";
 import {
   FileCheck,
@@ -57,8 +58,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
     ? "متابعة طلبات التدريب، اعتمادها، وإرسالها تلقائيًا إلى المراكز الصحية عند الموافقة."
     : "متابعة طلبات التدريب، اعتمادها، وإرسالها تلقائيًا إلى المدارس عند الموافقة.";
 
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const toast = useAppToast();
   const [loading, setLoading] = useState(true);
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
@@ -120,7 +120,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
       setSentRequests(sentFiltered);
       setRejectedRequests(rejectedFiltered);
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error, "تعذر تحميل طلبات التدريب."));
+      toast.apiError(error, "تعذر تحميل طلبات التدريب.");
     } finally {
       setLoading(false);
     }
@@ -129,13 +129,13 @@ const OfficialLetters = ({ siteType = "school" }) => {
   const handleRequestDecision = async (requestId) => {
     const decision = requestDecision[requestId];
     if (!decision) {
-      setErrorMessage("اختر القرار للطلب قبل الحفظ.");
+      toast.warning("اختر القرار للطلب قبل الحفظ.");
       return;
     }
     if (decision === "rejected") {
       const reason = requestReason[requestId]?.trim();
       if (!reason) {
-        setErrorMessage("سبب الرفض مطلوب عند رفض طلب التدريب.");
+        toast.warning("سبب الرفض مطلوب عند رفض طلب التدريب.");
         return;
       }
     }
@@ -145,15 +145,13 @@ const OfficialLetters = ({ siteType = "school" }) => {
       if (!form.letter_date) errors.push("تاريخ الكتاب");
       if (!form.content?.trim()) errors.push("محتوى الكتاب");
       if (errors.length > 0) {
-        setErrorMessage(`عند الموافقة يرجى تعبئة: ${errors.join("، ")}`);
+        toast.warning(`عند الموافقة يرجى تعبئة: ${errors.join("، ")}`);
         return;
       }
     }
 
     try {
       setRequestSavingId(requestId);
-      setSavedMessage("");
-      setErrorMessage("");
 
       const payload = {
         status: decision,
@@ -167,13 +165,13 @@ const OfficialLetters = ({ siteType = "school" }) => {
       }
       await directorateApprove(requestId, payload);
 
-      setSavedMessage(decision === "approved"
+      toast.success(decision === "approved"
         ? `تمت موافقة ${directorateName} وإرسال الكتاب إلى ${labels.siteName} بنجاح.`
         : `تم رفض الطلب من ${directorateName}.`
       );
       await fetchTrainingRequests();
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error, "تعذر حفظ القرار."));
+      toast.apiError(error, "تعذر حفظ القرار.");
     } finally {
       setRequestSavingId(null);
     }
@@ -200,7 +198,7 @@ const OfficialLetters = ({ siteType = "school" }) => {
     const sections = rows.length > 0 ? [{ title: sectionTitle, rows }] : [];
 
     if (sections.length === 0) {
-      window.alert("لا توجد طلبات معتمدة ومُرسلة لجهة التدريب لعرضها في المطبوعة.");
+      toast.warning("لا توجد طلبات معتمدة ومُرسلة لجهة التدريب لعرضها في المطبوعة.");
       return;
     }
 
@@ -388,17 +386,6 @@ const OfficialLetters = ({ siteType = "school" }) => {
         </div>
       </div>
 
-      {/* Messages */}
-      {savedMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#d1fae5", color: "#059669", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <CheckCircle2 size={18} /> {savedMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#fee2e2", color: "#dc2626", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <AlertCircle size={18} /> {errorMessage}
-        </div>
-      )}
 
       {/* Incoming Requests - Need Decision */}
       <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>

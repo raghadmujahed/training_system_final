@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Download, FileText, BarChart3 } from 'lucide-react';
-import { getHeadDepartmentReports, getCourses } from '../../services/api';
+import { getHeadDepartmentReports } from '../../services/api';
+import { useCourses } from '../../hooks/useSharedData';
 import EmptyState from '../../components/common/EmptyState';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 export default function HeadOfDepartmentReports() {
   const [reports, setReports] = useState(null);
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState('overview');
@@ -36,19 +37,6 @@ export default function HeadOfDepartmentReports() {
       setLoading(false);
     }
   };
-
-  const fetchCourses = async () => {
-    try {
-      const response = await getCourses();
-      setCourses(response.data?.data || response.data || []);
-    } catch (err) {
-      console.error('Courses fetch error:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
 
   useEffect(() => {
     fetchReports();

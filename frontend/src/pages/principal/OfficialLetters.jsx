@@ -4,6 +4,7 @@ import {
   Mail, Send, CheckCircle2, Clock, AlertCircle, Loader2, ChevronDown, ChevronUp, FileText, Inbox
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 
 const fadeIn = `@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`;
 const spin = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`;
@@ -26,9 +27,8 @@ const statusConfig = {
 
 const OfficialLetters = () => {
   const [letters, setLetters] = useState([]);
+  const toast = useAppToast();
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [savedMessage, setSavedMessage] = useState("");
   const [savingId, setSavingId] = useState(null);
   const [expandedLetterId, setExpandedLetterId] = useState(null);
 
@@ -40,9 +40,8 @@ const OfficialLetters = () => {
       const data = await getOfficialLetters({ type: "to_school", per_page: 100 });
       const list = Array.isArray(data?.data) ? data.data : [];
       setLetters(list.map(normalizeLetter));
-      setErrorMessage("");
     } catch (error) {
-      setErrorMessage("تعذر تحميل طلبات التدريب.");
+      toast.error("تعذر تحميل طلبات التدريب.");
     } finally {
       setLoading(false);
     }
@@ -50,12 +49,12 @@ const OfficialLetters = () => {
 
   const handleReceive = async (letter) => {
     try {
-      setSavingId(letter.id); setSavedMessage(""); setErrorMessage("");
+      setSavingId(letter.id);
       await receiveOfficialLetter(letter.id, { received_at: new Date().toISOString(), status: "school_received" });
-      setSavedMessage("تم استلام الكتاب وتحديث حالته بنجاح.");
+      toast.success("تم استلام الكتاب وتحديث حالته بنجاح.");
       await fetchLetters();
     } catch (error) {
-      setErrorMessage(error?.response?.data?.message || "تعذر استلام الكتاب.");
+      toast.apiError(error, "تعذر استلام الكتاب.");
     } finally {
       setSavingId(null);
     }
@@ -89,17 +88,6 @@ const OfficialLetters = () => {
           </div>
         </div>
 
-        {/* Messages */}
-        {savedMessage && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#d1fae5", color: "#059669", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-            <CheckCircle2 size={20} /> {savedMessage}
-          </div>
-        )}
-        {errorMessage && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#fee2e2", color: "#dc2626", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-            <AlertCircle size={20} /> {errorMessage}
-          </div>
-        )}
 
         {loading ? (
           <LoadingSpinner size="section" text="جاري تحميل طلبات التدريب..." />

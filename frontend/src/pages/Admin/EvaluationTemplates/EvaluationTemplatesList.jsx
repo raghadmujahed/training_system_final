@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getEvaluationTemplates, deleteEvaluationTemplate } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function EvaluationTemplatesList() {
+  const toast = useAppToast();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -33,7 +35,7 @@ export default function EvaluationTemplatesList() {
         await deleteEvaluationTemplate(id);
         fetchTemplates();
       } catch (err) {
-        alert("حدث خطأ أثناء حذف القالب");
+        toast.error("حدث خطأ أثناء حذف القالب");
       }
     }
   };

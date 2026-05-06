@@ -7,6 +7,10 @@ import {
   coordinatorReviewTrainingRequest,
   itemsFromPagedResponse,
 } from "../services/api";
+import { apiCache } from "../services/apiCache";
+
+const TTL_DYNAMIC = 2 * 60_000;
+const TTL_STATIC  = 5 * 60_000;
 
 export default function useCoordinatorRequests() {
   const [loading, setLoading] = useState(true);
@@ -30,9 +34,9 @@ export default function useCoordinatorRequests() {
     try {
       const [reqRes, coursesRes, periodsRes, sitesRes] = await Promise.all([
         getTrainingRequests({ per_page: 200 }),
-        getCourses({ per_page: 200 }),
-        getTrainingPeriods({ per_page: 200 }),
-        getTrainingSites({ per_page: 200 }),
+        apiCache.get("courses:list:{\"per_page\":200}", () => getCourses({ per_page: 200 }), TTL_STATIC),
+        apiCache.get("training-periods:{\"per_page\":200}", () => getTrainingPeriods({ per_page: 200 }), TTL_DYNAMIC),
+        apiCache.get("training-sites:{\"per_page\":200}", () => getTrainingSites({ per_page: 200 }), TTL_DYNAMIC),
       ]);
       setRequests(itemsFromPagedResponse(reqRes));
       setCourses(itemsFromPagedResponse(coursesRes));

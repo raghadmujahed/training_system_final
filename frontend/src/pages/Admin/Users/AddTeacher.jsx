@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUser, createUser, updateUser, getTrainingSites, getRoles } from "../../../services/api";
+import { getUser, createUser, updateUser } from "../../../services/api";
+import { useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddTeacher() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("single");
+  const toast = useAppToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
-  const [trainingSites, setTrainingSites] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const { data: trainingSites } = useTrainingSites({ per_page: 200 });
+  const { data: roles } = useRoles({ per_page: 200 });
   const [form, setForm] = useState({
     name: "", email: "", password: "", password_confirmation: "",
     major: "", phone: "", training_site_id: "", role_id: "", status: "active",
@@ -21,18 +23,6 @@ export default function AddTeacher() {
   const [bulkResults, setBulkResults] = useState({ success: [], errors: [] });
   const isEditMode = !!id;
   const teacherRoleId = roles.find((role) => role.name === "teacher")?.id;
-
-  useEffect(() => {
-    const fetchSites = async () => {
-      try {
-        const [sitesRes, rolesRes] = await Promise.all([getTrainingSites({ per_page: 200 }), getRoles({ per_page: 200 })]);
-        const sitesData = Array.isArray(sitesRes?.data) ? sitesRes.data : sitesRes?.data?.data || sitesRes;
-        setTrainingSites(Array.isArray(sitesData) ? sitesData : []);
-        setRoles(Array.isArray(rolesRes?.data) ? rolesRes.data : rolesRes?.data?.data || []);
-      } catch (err) { console.error("فشل جلب أماكن التدريب", err); }
-    };
-    fetchSites();
-  }, []);
 
   useEffect(() => {
     if (id) {
@@ -53,40 +43,39 @@ export default function AddTeacher() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
-    if (statusMessage.text) setStatusMessage({ type: "", text: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); setErrors({}); setStatusMessage({ type: "", text: "" });
+    setLoading(true); setErrors({});
     if (!teacherRoleId) {
-      setStatusMessage({ type: "error", text: "تعذر تحديد دور المعلم المرشد من قاعدة البيانات" });
+      toast.error("تعذر تحديد دور المعلم المرشد من قاعدة البيانات");
       setLoading(false);
       return;
     }
     const formToSend = { ...form, role_id: teacherRoleId, training_site_id: form.training_site_id ? Number(form.training_site_id) : null };
     try {
-      if (id) { await updateUser(id, formToSend); setStatusMessage({ type: "success", text: "تم تحديث المعلم بنجاح" }); }
-      else { await createUser(formToSend); setStatusMessage({ type: "success", text: "تمت إضافة المعلم بنجاح" }); setForm({ name: "", email: "", password: "", password_confirmation: "", major: "", phone: "", training_site_id: "", role_id: "", status: "active" }); }
+      if (id) { await updateUser(id, formToSend); toast.success("تم تحديث المعلم بنجاح"); }
+      else { await createUser(formToSend); toast.success("تمت إضافة المعلم بنجاح"); setForm({ name: "", email: "", password: "", password_confirmation: "", major: "", phone: "", training_site_id: "", role_id: "", status: "active" }); }
       setTimeout(() => navigate("/admin/users"), 1500);
     } catch (err) {
-      if (err.response?.data?.errors) { setErrors(err.response.data.errors); setStatusMessage({ type: "error", text: `فشل الحفظ: ${Object.values(err.response.data.errors).flat().join(", ")}` }); }
-      else setStatusMessage({ type: "error", text: "حدث خطأ غير متوقع" });
+      if (err.response?.data?.errors) { setErrors(err.response.data.errors); toast.error("فشل الحفظ: " + Object.values(err.response.data.errors).flat().join(", ")); }
+      else toast.apiError(err, "حدث خطأ غير متوقع");
     } finally { setLoading(false); }
   };
 
-  const handleFileChange = (e) => { setFile(e.target.files[0]); setBulkResults({ success: [], errors: [] }); setStatusMessage({ type: "", text: "" }); };
+  const handleFileChange = (e) => { setFile(e.target.files[0]); setBulkResults({ success: [], errors: [] }); };
 
   const processExcel = async () => {
-    if (!file) { alert("الرجاء اختيار ملف Excel أولاً"); return; }
-    if (!teacherRoleId) { alert("تعذر تحديد دور المعلم المرشد من قاعدة البيانات"); return; }
-    setBulkLoading(true); setBulkResults({ success: [], errors: [] }); setStatusMessage({ type: "", text: "" });
+    if (!file) { toast.warning("الرجاء اختيار ملف Excel أولاً"); return; }
+    if (!teacherRoleId) { toast.error("تعذر تحديد دور المعلم المرشد من قاعدة البيانات"); return; }
+    setBulkLoading(true); setBulkResults({ success: [], errors: [] });
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
         const workbook = XLSX.read(evt.target.result, { type: "array" });
         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-        if (!rows.length) { alert("الملف فارغ"); setBulkLoading(false); return; }
+        if (!rows.length) { toast.warning("الملف فارغ"); setBulkLoading(false); return; }
         const siteMap = {};
         trainingSites.forEach(s => { siteMap[s.name.trim()] = s.id; siteMap[s.name.trim().toLowerCase()] = s.id; });
         
@@ -114,7 +103,7 @@ export default function AddTeacher() {
         });
         const valid = [], invalid = [];
         teachers.forEach((t, i) => { const m = []; if (!t.name) m.push("الاسم"); if (!t.email) m.push("البريد"); m.length === 0 ? valid.push(t) : invalid.push({ row: i + 2, email: t.email, missing: m }); });
-        if (invalid.length) alert("بيانات ناقصة:\n" + invalid.map(s => `الصف ${s.row}: ${s.email} - ناقص: ${s.missing.join(", ")}`).join("\n"));
+        if (invalid.length) toast.warning(`${invalid.length} صف يحتوي بيانات ناقصة وتم تجاهله`);
         if (!valid.length) { setBulkLoading(false); return; }
         const ok = [], fail = [];
         const BATCH_SIZE = 50; // Process 50 teachers at a time
@@ -142,14 +131,11 @@ export default function AddTeacher() {
           
           // Update progress
           const processedCount = Math.min(i + BATCH_SIZE, valid.length);
-          setStatusMessage({ 
-            type: "info", 
-            text: `تم معالجة ${processedCount} من ${valid.length} معلم...` 
-          });
+          toast.info(`تم معالجة ${processedCount} من ${valid.length} معلم...`);
         }
         
         setBulkResults({ success: ok, errors: fail }); if (ok.length) setFile(null);
-      } catch (err) { alert("خطأ: " + err.message); } finally { setBulkLoading(false); }
+      } catch (err) { toast.apiError(err, "خطأ في معالجة الملف"); } finally { setBulkLoading(false); }
     };
     reader.readAsArrayBuffer(file);
   };
@@ -170,7 +156,6 @@ export default function AddTeacher() {
     return (
       <div className="user-form">
         <div className="page-header"><h1>تعديل معلم مرشد</h1><button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button></div>
-        {statusMessage.text && <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>}
         <form onSubmit={handleSubmit} className="form">{formFields()}<div className="form-actions"><button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "تحديث"}</button><button type="button" onClick={() => navigate("/admin/users")}>إلغاء</button></div></form>
       </div>
     );
@@ -179,7 +164,6 @@ export default function AddTeacher() {
   return (
     <div className="user-form">
       <div className="page-header"><h1>إضافة معلم مرشد جديد</h1><button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button></div>
-      {statusMessage.text && <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>}
       <div className="tabs">
         <button className={activeTab === "single" ? "tab-active" : "tab"} onClick={() => setActiveTab("single")}>إضافة معلم واحد</button>
         <button className={activeTab === "bulk" ? "tab-active" : "tab"} onClick={() => setActiveTab("bulk")}>رفع مجموعة من ملف Excel</button>

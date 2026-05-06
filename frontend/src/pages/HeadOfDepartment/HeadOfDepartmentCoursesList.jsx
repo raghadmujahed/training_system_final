@@ -1,39 +1,30 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCourses, deleteCourse, archiveCourse } from "../../services/api";
+import { deleteCourse, archiveCourse } from "../../services/api";
+import { apiCache } from "../../services/apiCache";
+import { useCourses } from "../../hooks/useSharedData";
 import { Plus, Edit, Trash2, BookOpen, Archive } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 
 export default function HeadOfDepartmentCoursesList() {
+  const toast = useAppToast();
   const navigate = useNavigate();
-  const [courses, setCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { data: cachedCourses, loading, error } = useCourses();
+  const [removedIds, setRemovedIds] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [archiveLoading, setArchiveLoading] = useState(null);
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+  const courses = cachedCourses.filter((c) => !removedIds.includes(c.id));
 
-  const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      const response = await getCourses();
-      // The API returns courses for the authenticated user's department
-      setCourses(response.data?.data || response.data || []);
-      setError(null);
-    } catch (err) {
-      console.error("Error fetching courses:", err);
-      setError("فشل في جلب بيانات المساقات");
-    } finally {
-      setLoading(false);
-    }
+  const fetchCourses = () => {
+    apiCache.invalidatePrefix("courses:");
+    window.location.reload();
   };
 
   const handleDelete = async (id, hasSections) => {
     if (hasSections) {
-      alert("لا يمكن حذف هذا المساق لأنه مرتبط بشعب. استخدم خيار الأرشفة بدلاً من الحذف.");
+      toast.warning("لا يمكن حذف هذا المساق لأنه مرتبط بشعب. استخدم خيار الأرشفة بدلاً من الحذف.");
       return;
     }
     
@@ -44,18 +35,19 @@ export default function HeadOfDepartmentCoursesList() {
     try {
       setDeleteLoading(id);
       await deleteCourse(id);
-      setCourses(courses.filter((course) => course.id !== id));
+      setRemovedIds((prev) => [...prev, id]);
+      apiCache.invalidatePrefix("courses:");
     } catch (err) {
       console.error("Error deleting course:", err);
       // If 403 error, suggest archiving
       if (err.response?.status === 403) {
         const course = courses.find(c => c.id === id);
         if (course && (course.sections_count > 0 || course.sections?.length > 0)) {
-          alert("لا يمكن حذف هذا المساق لأنه مرتبط بشعب. استخدم خيار الأرشفة بدلاً من الحذف.");
+          toast.warning("لا يمكن حذف هذا المساق لأنه مرتبط بشعب. استخدم خيار الأرشفة بدلاً من الحذف.");
           return;
         }
       }
-      alert(err.response?.data?.message || "فشل في حذف المساق");
+      toast.apiError(err, "فشل في حذف المساق");
     } finally {
       setDeleteLoading(null);
     }
@@ -69,10 +61,11 @@ export default function HeadOfDepartmentCoursesList() {
     try {
       setArchiveLoading(id);
       await archiveCourse(id);
-      setCourses(courses.filter((course) => course.id !== id));
+      setRemovedIds((prev) => [...prev, id]);
+      apiCache.invalidatePrefix("courses:");
     } catch (err) {
       console.error("Error archiving course:", err);
-      alert(err.response?.data?.message || "فشل في أرشفة المساق");
+      toast.apiError(err, "فشل في أرشفة المساق");
     } finally {
       setArchiveLoading(null);
     }

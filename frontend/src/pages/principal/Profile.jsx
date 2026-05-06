@@ -5,6 +5,7 @@ import {
   updateTrainingSite,
 } from "../../services/api";
 import { siteLabels } from "../../utils/roles";
+import useAppToast from "../../hooks/useAppToast";
 import {
   User,
   School,
@@ -52,9 +53,8 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
   });
 
   const [loading, setLoading] = useState(true);
+  const toast = useAppToast();
   const [saving, setSaving] = useState(false);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     fetchProfile();
@@ -86,10 +86,9 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
         email: empty(user.email) || "",
         address: empty(trainingSite.location) || "",
       });
-      setErrorMessage("");
     } catch (error) {
       console.error("Failed to load principal profile:", error);
-      setErrorMessage("تعذر تحميل البيانات الشخصية.");
+      toast.error("تعذر تحميل البيانات الشخصية.");
     } finally {
       setLoading(false);
     }
@@ -101,20 +100,16 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
       ...prev,
       [name]: value,
     }));
-    setSavedMessage("");
-    setErrorMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userId) {
-      setErrorMessage("تعذر تحديد المستخدم الحالي.");
+      toast.error("تعذر تحديد المستخدم الحالي.");
       return;
     }
 
     setSaving(true);
-    setSavedMessage("");
-    setErrorMessage("");
 
     try {
       await updateUser(userId, {
@@ -138,15 +133,10 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
         localStorage.setItem("user", JSON.stringify(payload));
       }
 
-      setSavedMessage("تم حفظ التعديلات بنجاح.");
+      toast.success("تم حفظ التعديلات بنجاح.");
       await fetchProfile();
     } catch (error) {
-      const msg =
-        error?.response?.data?.message ||
-        (error?.response?.data?.errors &&
-          Object.values(error.response.data.errors).flat().join(" ")) ||
-        "تعذر حفظ التعديلات.";
-      setErrorMessage(msg);
+      toast.apiError(error, "تعذر حفظ التعديلات.");
     } finally {
       setSaving(false);
     }
@@ -177,17 +167,6 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
         </div>
       </div>
 
-      {/* Messages */}
-      {savedMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#d1fae5", color: "#059669", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <CheckCircle2 size={18} /> {savedMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#fee2e2", color: "#dc2626", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <AlertCircle size={18} /> {errorMessage}
-        </div>
-      )}
       {noTrainingSite && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#fef3c7", color: "#d97706", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
           <AlertTriangle size={18} /> {"لم يُربط حسابك بموقع تدريب بعد؛ يمكنك تعديل بياناتك الشخصية فقط حتى يقوم المسؤول بالربط."}

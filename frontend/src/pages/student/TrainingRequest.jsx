@@ -6,9 +6,11 @@ import {
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   createStudentTrainingRequest, deleteStudentTrainingRequest,
-  getStudentTrainingRequests, getTrainingPeriods, getTrainingSites,
+  getStudentTrainingRequests, getTrainingSites,
   itemsFromPagedResponse, updateStudentTrainingRequest,
 } from "../../services/api";
+import { apiCache } from "../../services/apiCache";
+import { useTrainingPeriods } from "../../hooks/useSharedData";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 import { useToast } from "../../components/Toast";
 import {
@@ -63,7 +65,6 @@ export default function TrainingRequest() {
   const [success, setSuccess] = useState("");
   const [editingId, setEditingId] = useState(null);
 
-  const [periods, setPeriods] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
   const [directorates, setDirectorates] = useState([]);
   const [schools, setSchools] = useState([]);
@@ -86,14 +87,13 @@ export default function TrainingRequest() {
     setMyRequests(itemsFromPagedResponse(myReqRes));
   };
 
+  const { data: periods } = useTrainingPeriods({ per_page: 200 });
+
   useEffect(() => {
     (async () => {
       setLoading(true); setError("");
-      try {
-        const [periodsRes] = await Promise.all([getTrainingPeriods({ per_page: 200 })]);
-        setPeriods(itemsFromPagedResponse(periodsRes));
-        await loadMyRequests();
-      } catch (e) { setError(e?.response?.data?.message || "فشل تحميل البيانات"); }
+      try { await loadMyRequests(); }
+      catch (e) { setError(e?.response?.data?.message || "فشل تحميل البيانات"); }
       finally { setLoading(false); }
     })();
   }, []);
@@ -108,7 +108,8 @@ export default function TrainingRequest() {
       if (isEducationFlow || isPsychologyFlow) { setDirectorates(educationDirectorates); return; }
       if (filters.governing_body !== "directorate_of_education" || filters.site_type !== "school") { setDirectorates([]); return; }
       try {
-        const res = await getTrainingSites({ governing_body: "directorate_of_education", site_type: "school", is_active: true, has_manager_account: true, per_page: 400, include_occupancy: true });
+        const cacheKey = `training-sites:${JSON.stringify({ governing_body: "directorate_of_education", site_type: "school", is_active: true, has_manager_account: true, per_page: 400, include_occupancy: true })}`;
+        const res = await apiCache.get(cacheKey, () => getTrainingSites({ governing_body: "directorate_of_education", site_type: "school", is_active: true, has_manager_account: true, per_page: 400, include_occupancy: true }), 2 * 60_000);
         setDirectorates(Array.from(new Set(itemsFromPagedResponse(res).map(s => String(s?.directorate || "").trim()).filter(Boolean))));
       } catch { setDirectorates([]); }
     })();
@@ -122,7 +123,8 @@ export default function TrainingRequest() {
         const params = { governing_body: filters.governing_body, site_type: filters.site_type, directorate: filters.directorate, is_active: true, has_manager_account: true, per_page: 200, include_occupancy: true };
         if (filters.gender_classification) params.gender_classification = filters.gender_classification;
         if (filters.school_level) params.school_level = filters.school_level;
-        const res = await getTrainingSites(params);
+        const cacheKey2 = `training-sites:${JSON.stringify(params)}`;
+        const res = await apiCache.get(cacheKey2, () => getTrainingSites(params), 2 * 60_000);
         setSchools(itemsFromPagedResponse(res));
       } catch (e) { setError(e?.response?.data?.message || "فشل تحميل المدارس"); }
     })();

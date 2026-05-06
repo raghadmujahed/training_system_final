@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSection, createSection, updateSection, getCourses, getUsers, getRoles } from "../../../services/api";
+import { getSection, createSection, updateSection, getUsers } from "../../../services/api";
+import { useCourses, useRoles } from "../../../hooks/useSharedData";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function SectionForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses();
+  const { data: allRoles } = useRoles();
+  const supervisorRoleId = allRoles.find((r) => r.name === "academic_supervisor")?.id;
   const [supervisors, setSupervisors] = useState([]);
-  const [supervisorRoleId, setSupervisorRoleId] = useState(null);
   const [form, setForm] = useState({
     name: "",
     academic_year: new Date().getFullYear(),
@@ -17,16 +21,6 @@ export default function SectionForm() {
     course_id: "",
   });
   const [errors, setErrors] = useState({});
-
-  // جلب المساقات ومعرف دور المشرف الأكاديمي
-  useEffect(() => {
-    getCourses().then(coursesData => setCourses(coursesData.data || [])).catch(() => {});
-    getRoles().then(rolesData => {
-      const roles = rolesData.data || rolesData || [];
-      const supRole = roles.find(r => r.name === 'academic_supervisor');
-      if (supRole) setSupervisorRoleId(supRole.id);
-    }).catch(() => {});
-  }, []);
 
   // جلب بيانات الشعبة عند التعديل
   useEffect(() => {
@@ -85,7 +79,7 @@ export default function SectionForm() {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert("حدث خطأ أثناء حفظ الشعبة");
+        toast.apiError(err, "حدث خطأ أثناء حفظ الشعبة");
       }
     } finally {
       setLoading(false);

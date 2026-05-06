@@ -19,6 +19,7 @@ import {
   Loader2,
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 
 const SCHOOL_EVAL_FIELDS = [
   { key: "attendance", label: "الالتزام بالدوام" },
@@ -53,9 +54,8 @@ export default function StudentEvaluation() {
     if (selectedStudent?.track === 'psychology') return PSYCH_CENTER_EVAL_FIELDS;
     return SCHOOL_EVAL_FIELDS;
   }, [isPsychCenter, selectedStudent]);
+  const toast = useAppToast();
   const [loading, setLoading] = useState(true);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
 
   const getFieldsForStudent = (student) => {
     if (isPsychCenter) return PSYCH_CENTER_EVAL_FIELDS;
@@ -89,10 +89,9 @@ export default function StudentEvaluation() {
         track: student.track || null,
       }));
       setStudents(allStudents);
-      setErrorMessage("");
     } catch (error) {
       console.error("Failed to load students:", error);
-      setErrorMessage("تعذر تحميل بيانات الطلبة.");
+      toast.error("تعذر تحميل بيانات الطلبة.");
     } finally {
       setLoading(false);
     }
@@ -101,21 +100,17 @@ export default function StudentEvaluation() {
   const handleStudentSelect = (studentId) => {
     const student = students.find((s) => s.studentRowId === parseInt(studentId));
     setSelectedStudent(student);
-    setSavedMessage("");
-    setErrorMessage("");
     setEvaluation(buildEmptyEval(student));
   };
 
   const handleEvaluationChange = (field, value) => {
     setEvaluation((prev) => ({ ...prev, [field]: value }));
-    setSavedMessage("");
-    setErrorMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedStudent) {
-      setErrorMessage("يرجى اختيار طالب أولاً.");
+      toast.warning("يرجى اختيار طالب أولاً.");
       return;
     }
 
@@ -130,17 +125,11 @@ export default function StudentEvaluation() {
       };
 
       await createStudentEvaluation(evaluationData);
-      setSavedMessage("تم حفظ التقييم بنجاح.");
-      setErrorMessage("");
+      toast.success("تم حفظ التقييم بنجاح.");
       setEvaluation(buildEmptyEval(selectedStudent));
     } catch (error) {
       console.error("Failed to save evaluation:", error);
-      if (error.response?.status === 422) {
-        setErrorMessage(error.response.data.message || "تعذر حفظ التقييم.");
-      } else {
-        setErrorMessage("حدث خطأ أثناء حفظ التقييم.");
-      }
-      setSavedMessage("");
+      toast.apiError(error, "حدث خطأ أثناء حفظ التقييم.");
     }
   };
 
@@ -166,18 +155,6 @@ export default function StudentEvaluation() {
           </div>
         </div>
       </div>
-
-      {/* Messages */}
-      {savedMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#d1fae5", color: "#059669", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <CheckCircle size={18} /> {savedMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#fee2e2", color: "#dc2626", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <AlertCircle size={18} /> {errorMessage}
-        </div>
-      )}
 
       {/* Student Selection */}
       <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>

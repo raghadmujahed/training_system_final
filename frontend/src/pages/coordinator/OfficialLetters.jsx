@@ -9,6 +9,7 @@ import {
   Printer,
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 import { sendTrainingRequestBatch, getTrainingRequestBatch } from "../../services/api";
 import useCoordinatorBatches from "../../hooks/useCoordinatorBatches";
 import {
@@ -22,6 +23,7 @@ import CoordinatorPsychologyReadOnlyNotice from "../../components/coordinator/Co
 import { printBatchTrainingRequests } from "../../utils/trainingRequestPrint";
 
 export default function CoordinatorOfficialLetters({ audience = "coordinator" }) {
+  const toast = useAppToast();
   const isPsych = audience === "psychologySupervisor";
   const {
     loading,
@@ -239,9 +241,9 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
                                   ? "مشرف التدريب الأكاديمي — قسم علم النفس — جامعة الخليل"
                                   : "منسّق التدريب الميداني — كلية التربية — جامعة الخليل",
                               });
-                              if (!ok) window.alert("لا توجد طلبات في هذه الدفعة للطباعة.");
+                              if (!ok) toast.warning("لا توجد طلبات في هذه الدفعة للطباعة.");
                             } catch {
-                              window.alert("تعذّر تحميل تفاصيل الدفعة للطباعة.");
+                              toast.error("تعذّر تحميل تفاصيل الدفعة للطباعة.");
                             } finally {
                               setPrintingBatchId(null);
                             }

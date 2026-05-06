@@ -1,38 +1,32 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { getTrainingPeriods, deleteTrainingPeriod, setActivePeriod } from "../../../services/api";
+import { deleteTrainingPeriod, setActivePeriod } from "../../../services/api";
+import { apiCache } from "../../../services/apiCache";
+import { useTrainingPeriods } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function TrainingPeriodsList() {
-  const [periods, setPeriods] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { data: cachedPeriods, loading } = useTrainingPeriods();
+  const [removedIds, setRemovedIds] = useState([]);
+  const [localPeriods, setLocalPeriods] = useState(null);
+  const periods = (localPeriods ?? cachedPeriods).filter((p) => !removedIds.includes(p.id));
 
-  useEffect(() => {
-    fetchPeriods();
-  }, []);
-
-  const fetchPeriods = async () => {
-    setLoading(true);
-    try {
-      const data = await getTrainingPeriods();
-      setPeriods(data.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const invalidate = () => { apiCache.invalidatePrefix("training-periods:"); setLocalPeriods(null); };
 
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من حذف هذه الفترة؟")) {
       await deleteTrainingPeriod(id);
-      fetchPeriods();
+      setRemovedIds((prev) => [...prev, id]);
+      invalidate();
     }
   };
 
   const handleSetActive = async (id) => {
     await setActivePeriod(id);
-    fetchPeriods();
+    setLocalPeriods((prev) =>
+      (prev ?? cachedPeriods).map((p) => ({ ...p, is_active: p.id === id }))
+    );
+    invalidate();
   };
 
   if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;

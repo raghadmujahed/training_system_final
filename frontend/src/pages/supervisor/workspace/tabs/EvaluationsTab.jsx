@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
-import { useToast } from "../../../../components/Toast";
+import useAppToast from "../../../../hooks/useAppToast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 const academicEvalInitial = {
@@ -15,7 +15,7 @@ const academicEvalInitial = {
 };
 
 export default function EvaluationsTab({ studentId }) {
-  const { addToast } = useToast();
+  const toast = useAppToast();
   const [fieldEvals, setFieldEvals] = useState([]);
   const [academicEval, setAcademicEval] = useState(null);
   const [rubricTemplate, setRubricTemplate] = useState(null);
@@ -85,15 +85,15 @@ export default function EvaluationsTab({ studentId }) {
       .filter((item) => item.field_type === "score" && item.is_required)
       .filter((item) => !criteriaValues[`template:${item.id}`]);
     if (missing.length > 0) {
-      alert(`يرجى تعبئة الحقول الأساسية: ${missing.join("، ")}`);
+      toast.warning(`يرجى تعبئة الحقول الأساسية: ${missing.join("، ")}`);
       return;
     }
     if (requiredDynamicMissing.length > 0) {
-      alert("يرجى تعبئة جميع بنود التقييم الإلزامية الخاصة بالقسم.");
+      toast.warning("يرجى تعبئة جميع بنود التقييم الإلزامية الخاصة بالقسم.");
       return;
     }
     if (form.is_final && !String(form.general_notes || "").trim()) {
-      alert("يرجى إدخال الملاحظات العامة قبل اعتماد التقييم النهائي.");
+      toast.warning("يرجى إدخال الملاحظات العامة قبل اعتماد التقييم النهائي.");
       return;
     }
     setSaving(true);
@@ -112,10 +112,10 @@ export default function EvaluationsTab({ studentId }) {
         await apiClient.post(`/supervisor/students/${studentId}/academic-evaluation-draft`, payload);
       }
       setShowAcademicForm(false);
-      addToast(form.is_final ? "تم اعتماد التقييم النهائي بنجاح" : "تم حفظ التقييم كمسودة بنجاح", "success");
+      toast.success(form.is_final ? "تم اعتماد التقييم النهائي بنجاح" : "تم حفظ التقييم كمسودة بنجاح");
       loadEvals();
     } catch {
-      addToast("فشل حفظ التقييم", "error");
+      toast.error("فشل حفظ التقييم");
     } finally {
       setSaving(false);
     }

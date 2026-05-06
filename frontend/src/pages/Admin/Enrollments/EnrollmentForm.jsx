@@ -1,8 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getEnrollment, createEnrollment, updateEnrollment, getSections, getUsers } from "../../../services/api";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function EnrollmentForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -110,7 +112,7 @@ export default function EnrollmentForm() {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert("حدث خطأ أثناء حفظ التسجيل");
+        toast.apiError(err, "حدث خطأ أثناء حفظ التسجيل");
       }
     } finally {
       setLoading(false);

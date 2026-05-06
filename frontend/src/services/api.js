@@ -1,5 +1,7 @@
 // src/services/api.js
 import axios from "axios";
+import { apiCache } from "./apiCache";
+import { resetNotificationsState } from "../hooks/useNotifications";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api").replace(/\/+$/, "");
 
@@ -35,13 +37,7 @@ apiClient.interceptors.request.use(
 );
 
 apiClient.interceptors.response.use(
-  (response) => {
-    // Development-only delay to make loading spinners visible
-    if (import.meta.env.DEV) {
-      return new Promise((resolve) => setTimeout(() => resolve(response), 600));
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
     const requestUrl = String(error?.config?.url || "");
     const isOptionalNotificationsRequest = requestUrl.includes("/notifications");
@@ -74,6 +70,8 @@ export const logout = async () => {
   const response = await apiClient.post("/logout");
   localStorage.removeItem("access_token");
   localStorage.removeItem("user");
+  apiCache.clear(); // also clears current-user:me
+  resetNotificationsState();
   return response.data;
 };
 
@@ -118,10 +116,12 @@ export const unwrapSupervisorStats = (body) => {
   };
 };
 
-// CURRENT USER
-export const getCurrentUser = async (config = {}) => {
-  const response = await apiClient.get("/user", config);
-  return response.data;
+// CURRENT USER — cached 2 min (shared across dashboard pages)
+export const getCurrentUser = (config = {}) => {
+  if (config && Object.keys(config).length > 0) {
+    return apiClient.get("/user", config).then((r) => r.data);
+  }
+  return apiCache.get("current-user:me", () => apiClient.get("/user").then((r) => r.data), 2 * 60_000);
 };
 
 // -------------------- TRAINING --------------------

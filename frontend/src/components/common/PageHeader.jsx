@@ -1,4 +1,6 @@
-export default function PageHeader({ title, subtitle, icon: Icon, background }) {
+import { memo } from "react";
+
+const PageHeader = memo(function PageHeader({ title, subtitle, icon: Icon, background }) {
   return (
     <div style={{
       background: background || "var(--primary)",
@@ -35,4 +37,6 @@ export default function PageHeader({ title, subtitle, icon: Icon, background }) 
       </div>
     </div>
   );
-}
+});
+
+export default PageHeader;

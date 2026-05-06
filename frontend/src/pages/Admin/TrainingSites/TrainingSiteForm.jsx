@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingSite, createTrainingSite, updateTrainingSite } from "../../../services/api";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function TrainingSiteForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -63,7 +65,7 @@ export default function TrainingSiteForm() {
       navigate("/admin/training-sites");
     } catch (err) {
       console.error(err);
-      alert("حدث خطأ أثناء الحفظ");
+      toast.apiError(err, "حدث خطأ أثناء الحفظ");
     } finally {
       setLoading(false);
     }
@@ -97,7 +99,7 @@ export default function TrainingSiteForm() {
   };
 
   const processBulkUpload = async () => {
-    if (!bulkFile) return alert("اختر ملف Excel أولاً");
+    if (!bulkFile) { toast.warning("اختر ملف Excel أولاً"); return; }
     setBulkLoading(true);
     setBulkResults(null);
     const reader = new FileReader();
@@ -145,10 +147,10 @@ export default function TrainingSiteForm() {
           }
         }
         setBulkResults({ success: successList, errors: errorList });
-        if (successList.length) alert(`تمت إضافة ${successList.length} موقع بنجاح`);
+        if (successList.length) toast.success(`تمت إضافة ${successList.length} موقع بنجاح`);
         if (errorList.length) console.error("أخطاء الرفع:", errorList);
       } catch (err) {
-        alert(err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
         setBulkFile(null);

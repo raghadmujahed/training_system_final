@@ -8,6 +8,9 @@ import {
   coordinatorReviewTrainingRequest,
   itemsFromPagedResponse,
 } from "../services/api";
+import { apiCache } from "../services/apiCache";
+
+const TTL_DYNAMIC = 2 * 60_000;
 
 const getApiErrorMessage = (error, fallbackMessage) => {
   const responseData = error?.response?.data;
@@ -37,7 +40,7 @@ export default function useCoordinatorDistribution() {
     try {
       const [reqRes, sitesRes, batchesRes] = await Promise.allSettled([
         getTrainingRequests({ per_page: 200 }),
-        getTrainingSites({ per_page: 200 }),
+        apiCache.get("training-sites:{\"per_page\":200}", () => getTrainingSites({ per_page: 200 }), TTL_DYNAMIC),
         getTrainingRequestBatches({ per_page: 50 }),
       ]);
       setRequests(

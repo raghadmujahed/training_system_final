@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { apiClient } from "../../services/api";
+import useAppToast from "../../hooks/useAppToast";
 import PageHeader from "../../components/common/PageHeader";
 import { FileText, CheckCircle, RotateCcw } from "lucide-react";
 
@@ -25,6 +26,7 @@ function renderPayload(payload) {
 }
 
 export default function FieldSupervisorFormInstanceReview() {
+  const toast = useAppToast();
   const { instanceId } = useParams();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -140,7 +142,7 @@ export default function FieldSupervisorFormInstanceReview() {
                   disabled={busy}
                   onClick={() => {
                     if (!comment.trim()) {
-                      alert("يرجى كتابة سبب الإعادة في الملاحظات.");
+                      toast.warning("يرجى كتابة سبب الإعادة في الملاحظات.");
                       return;
                     }
                     submitReview("returned");

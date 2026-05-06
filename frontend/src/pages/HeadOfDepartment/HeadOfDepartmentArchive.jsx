@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Archive, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Database, Eye } from "lucide-react";
 import { getArchivePreview, archiveCurrentPeriod, getArchivedPeriods } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 
 const SEMESTER_LABELS = {
   first: "الفصل الأول",
@@ -35,6 +36,7 @@ const TABLE_LABELS = {
 };
 
 export default function HeadOfDepartmentArchive() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [preview, setPreview] = useState(null);
   const [periods, setPeriods] = useState([]);
@@ -66,7 +68,7 @@ export default function HeadOfDepartmentArchive() {
 
   const handleArchive = async () => {
     if (!preview?.period) {
-      alert("لا توجد فترة تدريبية حالية للأرشفة");
+      toast.warning("لا توجد فترة تدريبية حالية للأرشفة");
       return;
     }
     const confirmMsg = `سيتم أرشفة بيانات الفترة (${preview.period.academic_year} - ${SEMESTER_LABELS[preview.period.semester] || preview.period.semester}) لقسمك فقط.\n\nهل تريد المتابعة؟`;
@@ -74,11 +76,11 @@ export default function HeadOfDepartmentArchive() {
     try {
       setArchiving(true);
       const result = await archiveCurrentPeriod();
-      alert(result?.message || "تمت الأرشفة بنجاح");
+      toast.success(result?.message || "تمت الأرشفة بنجاح");
       await loadData();
     } catch (err) {
       console.error("Archive error:", err);
-      alert(err?.response?.data?.message || "فشل في الأرشفة");
+      toast.apiError(err, "فشل في الأرشفة");
     } finally {
       setArchiving(false);
     }

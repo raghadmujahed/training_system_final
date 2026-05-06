@@ -1,11 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  getNotifications,
-  getUnreadNotificationsCount,
-  markAllSystemNotificationsAsRead,
-  markSystemNotificationAsRead,
-} from "../../services/api";
+import { useNotifications } from "../../hooks/useNotifications";
 import { normalizeRole, ROLES } from "../../utils/roles";
 import { readStoredToken, readStoredUser } from "../../utils/session";
 
@@ -54,79 +49,27 @@ const notificationTitles = {
 };
 
 export default function NotificationBell() {
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState([]);
+  const {
+    unreadCount,
+    notifications,
+    notificationsLoading: loading,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    decrementUnread,
+  } = useNotifications({ pollUnread: true, perPage: 5 });
+
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  const hasSession = useCallback(() => {
+  const hasSession = () => {
     const token = readStoredToken();
     return Boolean(token && token !== "undefined" && token !== "null");
-  }, []);
-
-  const fetchUnreadCount = useCallback(async () => {
-    if (!hasSession()) {
-      setUnreadCount(0);
-      return;
-    }
-
-    try {
-      const data = await getUnreadNotificationsCount();
-      setUnreadCount(data?.unread_count || 0);
-    } catch (error) {
-      if (error?.response?.status === 401) {
-        setUnreadCount(0);
-        return;
-      }
-      console.error("Failed to fetch unread count:", error);
-    }
-  }, [hasSession]);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!hasSession()) {
-      setNotifications([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const data = await getNotifications({ per_page: 5 });
-      const list = Array.isArray(data?.data) ? data.data : [];
-      setNotifications(list);
-    } catch (error) {
-      if (error?.response?.status === 401) {
-        setNotifications([]);
-        return;
-      }
-      console.error("Failed to fetch notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [hasSession]);
+  };
 
   useEffect(() => {
-    if (!hasSession()) {
-      return undefined;
-    }
-
-    fetchUnreadCount();
-
-    const interval = setInterval(() => {
-      if (document.visibilityState === "visible") {
-        fetchUnreadCount();
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [fetchUnreadCount, hasSession]);
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
+    if (isOpen) fetchNotifications(5);
   }, [isOpen, fetchNotifications]);
 
   useEffect(() => {
@@ -135,58 +78,20 @@ export default function NotificationBell() {
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleMarkAsRead = async (event, id) => {
+  const handleMarkAsRead = (event, id) => {
     event.stopPropagation();
-
-    try {
-      await markSystemNotificationAsRead(id);
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === id
-            ? { ...notification, read_at: new Date().toISOString() }
-            : notification
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    } catch (error) {
-      if (error?.response?.status === 401) {
-        return;
-      }
-      console.error("Failed to mark as read:", error);
-    }
+    markAsRead(id);
   };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await markAllSystemNotificationsAsRead();
-      setNotifications((prev) =>
-        prev.map((notification) => ({
-          ...notification,
-          read_at: new Date().toISOString(),
-        }))
-      );
-      setUnreadCount(0);
-    } catch (error) {
-      if (error?.response?.status === 401) {
-        return;
-      }
-      console.error("Failed to mark all as read:", error);
-    }
-  };
+  const handleMarkAllAsRead = () => markAllAsRead();
 
-  // Mark notification as read silently (no UI updates needed since we're navigating away)
-  const markReadSilently = async (notification) => {
+  const markReadSilently = (notification) => {
     if (notification?.id && !notification?.read_at) {
-      try {
-        await markSystemNotificationAsRead(notification.id);
-      } catch {
-        // ignore
-      }
+      markAsRead(notification.id);
     }
   };
 
@@ -301,11 +206,8 @@ export default function NotificationBell() {
     const user = readStoredUser();
     const role = normalizeRole(user?.role?.name || user?.role);
 
-    // Mark as read in background; update local state optimistically
     markReadSilently(notification);
-    if (!notification.read_at) {
-      setUnreadCount((prev) => Math.max(0, prev - 1));
-    }
+    if (!notification.read_at) decrementUnread();
 
     const route = resolveRoute(notification, role);
     navigate(route);

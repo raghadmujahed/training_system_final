@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { getEnrollments, deleteEnrollment, getUsers, getSections, createEnrollment } from "../../../services/api";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function EnrollmentsList() {
+  const toast = useAppToast();
   const [enrollments, setEnrollments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -16,25 +18,27 @@ export default function EnrollmentsList() {
   const [singleLoading, setSingleLoading] = useState(false);
 
   useEffect(() => {
-    fetchEnrollments();
-    fetchSections();
+    let cancelled = false;
+    (async () => {
+      try {
+        const [enrollData, sectionsRes] = await Promise.all([getEnrollments(), getSections()]);
+        if (!cancelled) {
+          setEnrollments(enrollData.data || enrollData || []);
+          setSections(sectionsRes.data || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const fetchEnrollments = async () => {
     try {
       const data = await getEnrollments();
       setEnrollments(data.data || data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSections = async () => {
-    try {
-      const sectionsRes = await getSections();
-      setSections(sectionsRes.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -51,7 +55,7 @@ export default function EnrollmentsList() {
   const handleSingleEnroll = async (e) => {
     e.preventDefault();
     if (!singleEnroll.studentEmail || !singleEnroll.sectionId) {
-      alert("يرجى اختيار طالب وشعبة");
+      toast.warning("يرجى اختيار طالب وشعبة");
       return;
     }
     setSingleLoading(true);
@@ -62,7 +66,7 @@ export default function EnrollmentsList() {
       if (userRes.data && userRes.data.length > 0) {
         userId = userRes.data[0].id;
       } else {
-        alert("الطالب غير موجود، يرجى إضافته أولاً");
+        toast.error("الطالب غير موجود، يرجى إضافته أولاً");
         setSingleLoading(false);
         return;
       }
@@ -77,12 +81,12 @@ export default function EnrollmentsList() {
         status: "active"
       });
       
-      alert("تم التسجيل بنجاح");
+      toast.success("تم التسجيل بنجاح");
       setSingleEnroll({ studentEmail: "", sectionId: "" });
       setShowModal(false);
       fetchEnrollments();
     } catch (err) {
-      alert("فشل التسجيل: " + (err.response?.data?.message || err.message));
+      toast.apiError(err, "فشل التسجيل");
     } finally {
       setSingleLoading(false);
     }
@@ -90,7 +94,7 @@ export default function EnrollmentsList() {
 
   // رفع ملف Excel
   const handleBulkUpload = async () => {
-    if (!bulkFile) return alert("اختر ملف Excel أولاً");
+    if (!bulkFile) { toast.warning("اختر ملف Excel أولاً"); return; }
     setBulkLoading(true);
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -151,7 +155,7 @@ export default function EnrollmentsList() {
         setBulkResults({ success: successList, errors: errorList });
         if (successList.length) fetchEnrollments();
       } catch (err) {
-        alert("خطأ في معالجة الملف: " + err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
       }

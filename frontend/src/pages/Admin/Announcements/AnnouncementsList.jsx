@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAnnouncements, deleteAnnouncement } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AnnouncementsList() {
+  const toast = useAppToast();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,7 +33,7 @@ export default function AnnouncementsList() {
         await deleteAnnouncement(id);
         fetchAnnouncements();
       } catch (err) {
-        alert("حدث خطأ أثناء الحذف");
+        toast.error("حدث خطأ أثناء الحذف");
       }
     }
   };

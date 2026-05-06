@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUser, createUser, updateUser, getDepartments } from "../../../services/api";
+import { getUser, createUser, updateUser } from "../../../services/api";
+import { useDepartments } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddStudent() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("single");
+  const toast = useAppToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
-  const [departments, setDepartments] = useState([]);
+  const { data: departments } = useDepartments();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -26,19 +28,6 @@ export default function AddStudent() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkResults, setBulkResults] = useState({ success: [], errors: [] });
   const isEditMode = !!id;
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const res = await getDepartments();
-        const departmentsData = res?.data || res;
-        setDepartments(Array.isArray(departmentsData) ? departmentsData : []);
-      } catch (err) {
-        console.error("فشل جلب الأقسام", err);
-      }
-    };
-    fetchDepartments();
-  }, []);
 
   useEffect(() => {
     if (id) {
@@ -67,14 +56,12 @@ export default function AddStudent() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
-    if (statusMessage.text) setStatusMessage({ type: "", text: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrors({});
-    setStatusMessage({ type: "", text: "" });
 
     const formToSend = { ...form, university_id: String(form.university_id || "") };
 
@@ -84,26 +71,23 @@ export default function AddStudent() {
     // Remove empty password so backend doesn't try to hash it
     if (!formToSend.password) delete formToSend.password;
 
-    // Remove 'major' — column doesn't exist in users table yet
-    delete formToSend.major;
 
     try {
       if (id) {
         await updateUser(id, formToSend);
-        setStatusMessage({ type: "success", text: "تم تحديث الطالب بنجاح" });
+        toast.success("تم تحديث الطالب بنجاح");
       } else {
         await createUser(formToSend);
-        setStatusMessage({ type: "success", text: "تمت إضافة الطالب بنجاح" });
+        toast.success("تمت إضافة الطالب بنجاح");
         setForm({ name: "", email: "", password: "", password_confirmation: "", university_id: "", major: "", department_id: "", role_id: 2, status: "active" });
       }
       setTimeout(() => navigate("/admin/users"), 1500);
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors).flat().join(", ");
-        setStatusMessage({ type: "error", text: `فشل الحفظ: ${errorMessages}` });
+        toast.error("فشل الحفظ: " + Object.values(err.response.data.errors).flat().join(", "));
       } else {
-        setStatusMessage({ type: "error", text: "حدث خطأ غير متوقع أثناء حفظ المستخدم" });
+        toast.apiError(err, "حدث خطأ غير متوقع أثناء حفظ المستخدم");
       }
     } finally {
       setLoading(false);
@@ -113,21 +97,19 @@ export default function AddStudent() {
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
   };
 
   const processExcel = async () => {
-    if (!file) { alert("الرجاء اختيار ملف Excel أولاً"); return; }
+    if (!file) { toast.warning("الرجاء اختيار ملف Excel أولاً"); return; }
     setBulkLoading(true);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
         const workbook = XLSX.read(evt.target.result, { type: "array" });
         const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-        if (rows.length === 0) { alert("الملف فارغ"); setBulkLoading(false); return; }
+        if (rows.length === 0) { toast.warning("الملف فارغ"); setBulkLoading(false); return; }
 
         const departmentMap = {};
         departments.forEach(dept => { 
@@ -184,7 +166,7 @@ export default function AddStudent() {
         });
 
         if (invalidStudents.length > 0) {
-          alert("بيانات ناقصة:\n" + invalidStudents.map(s => `الصف ${s.row}: ${s.email} - ناقص: ${s.missing.join(", ")}`).join("\n"));
+          toast.warning(`${invalidStudents.length} صف يحتوي بيانات ناقصة وتم تجاهله`);
         }
         if (validStudents.length === 0) { setBulkLoading(false); return; }
 
@@ -214,15 +196,12 @@ export default function AddStudent() {
           
           // Update progress
           const processedCount = Math.min(i + BATCH_SIZE, validStudents.length);
-          setStatusMessage({ 
-            type: "info", 
-            text: `تم معالجة ${processedCount} من ${validStudents.length} طالب...` 
-          });
+          toast.info(`تم معالجة ${processedCount} من ${validStudents.length} طالب...`);
         }
         
         setBulkResults({ success: successList, errors: errorList });
         if (successList.length) setFile(null);
-      } catch (err) { alert("خطأ في معالجة الملف: " + err.message); }
+      } catch (err) { toast.apiError(err, "خطأ في معالجة الملف"); }
       finally { setBulkLoading(false); }
     };
     reader.readAsArrayBuffer(file);
@@ -235,7 +214,6 @@ export default function AddStudent() {
           <h1>تعديل طالب</h1>
           <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
         </div>
-        {statusMessage.text && <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>}
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0]}</span>}</div>
           <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />{errors.email && <span className="error">{errors.email[0]}</span>}</div>
@@ -256,7 +234,6 @@ export default function AddStudent() {
         <h1>إضافة طالب جديد</h1>
         <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
       </div>
-      {statusMessage.text && <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>}
       <div className="tabs">
         <button className={activeTab === "single" ? "tab-active" : "tab"} onClick={() => setActiveTab("single")}>إضافة طالب واحد</button>
         <button className={activeTab === "bulk" ? "tab-active" : "tab"} onClick={() => setActiveTab("bulk")}>رفع مجموعة من ملف Excel</button>

@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getSection, createSection, updateSection, getCourses, searchSupervisors } from "../../services/api";
+import { getSection, createSection, updateSection, searchSupervisors } from "../../services/api";
+import { useCourses } from "../../hooks/useSharedData";
 
 export default function HeadOfDepartmentSectionForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses();
   const [supervisors, setSupervisors] = useState([]);
   const [supervisorSearch, setSupervisorSearch] = useState("");
   const [selectedSupervisorDisplay, setSelectedSupervisorDisplay] = useState("");
@@ -25,9 +26,6 @@ export default function HeadOfDepartmentSectionForm() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const coursesData = await getCourses();
-        setCourses(coursesData.data?.data || coursesData.data || []);
-
         if (id) {
           const sectionData = await getSection(id);
           setForm({

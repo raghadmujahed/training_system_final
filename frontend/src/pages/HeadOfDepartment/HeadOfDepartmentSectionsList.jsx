@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { getSections, deleteSection } from "../../services/api";
 import { Edit, Trash2, Plus, Users, Calendar, BookOpen, GraduationCap, Eye } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 
 export default function HeadOfDepartmentSectionsList() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ export default function HeadOfDepartmentSectionsList() {
       await deleteSection(id);
       await fetchSections();
     } catch {
-      alert("فشل في حذف الشعبة");
+      toast.error("فشل في حذف الشعبة");
     } finally {
       setDeleteLoading(null);
     }

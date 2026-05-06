@@ -2,10 +2,9 @@ import { useEffect, useState } from "react";
 import {
   getCurrentUser,
   getOfficialLetters,
-  getTrainingSites,
-  getAnnouncements,
   getTrainingRequests,
 } from "../../services/api";
+import { useAnnouncements, useTrainingSites } from "../../hooks/useSharedData";
 import { siteLabels } from "../../utils/roles";
 import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
 
@@ -25,6 +24,36 @@ const HealthDirectorateDashboard = () => {
   const [latestActivities, setLatestActivities] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
 
+  const { data: announcementsData } = useAnnouncements({});
+  const { data: sitesData } = useTrainingSites({});
+
+  useEffect(() => {
+    setTrainingPlaces(
+      sitesData
+        .filter((item) => item.site_type === "health_center")
+        .slice(0, 5)
+        .map((item) => ({
+          id: item.id,
+          name: item.name || "بدون اسم",
+          type: item.site_type === "health_center" ? "مركز صحي" : item.site_type || "غير محدد",
+          capacity: item.capacity ?? 0,
+          contact: item.phone || item.contact || item.location || "—",
+          status: item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
+          badgeClass: item.is_active === true || item.is_active === 1
+            ? "badge-custom badge-success"
+            : "badge-custom badge-danger",
+        }))
+    );
+  }, [sitesData]);
+
+  useEffect(() => {
+    setLatestActivities(
+      announcementsData.length > 0
+        ? announcementsData.slice(0, 4).map((item) => item.title || item.message || item.description)
+        : ["لا توجد أنشطة حديثة حاليًا."]
+    );
+  }, [announcementsData]);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -33,12 +62,10 @@ const HealthDirectorateDashboard = () => {
     try {
       setLoading(true);
 
-      const [userRes, lettersRes, sitesRes, announcementsRes, requestsRes] =
+      const [userRes, lettersRes, requestsRes] =
         await Promise.all([
           getCurrentUser().catch(() => null),
           getOfficialLetters().catch(() => []),
-          getTrainingSites().catch(() => []),
-          getAnnouncements().catch(() => []),
           getTrainingRequests({
             book_status: "sent_to_health_ministry",
             governing_body: "ministry_of_health",
@@ -50,18 +77,6 @@ const HealthDirectorateDashboard = () => {
         ? lettersRes.data
         : Array.isArray(lettersRes)
         ? lettersRes
-        : [];
-
-      const sitesData = Array.isArray(sitesRes?.data)
-        ? sitesRes.data
-        : Array.isArray(sitesRes)
-        ? sitesRes
-        : [];
-
-      const announcementsData = Array.isArray(announcementsRes?.data)
-        ? announcementsRes.data
-        : Array.isArray(announcementsRes)
-        ? announcementsRes
         : [];
 
       const requestsData = Array.isArray(requestsRes?.data)
@@ -99,31 +114,6 @@ const HealthDirectorateDashboard = () => {
               ? "badge-custom badge-danger"
               : "badge-custom badge-warning",
         }))
-      );
-
-      setTrainingPlaces(
-        sitesData
-          .filter((item) => item.site_type === "health_center")
-          .slice(0, 5)
-          .map((item) => ({
-            id: item.id,
-            name: item.name || "بدون اسم",
-            type: item.site_type === "health_center" ? "مركز صحي" : item.site_type || "غير محدد",
-            capacity: item.capacity ?? 0,
-            contact: item.phone || item.contact || item.location || "—",
-            status:
-              item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
-            badgeClass:
-              item.is_active === true || item.is_active === 1
-                ? "badge-custom badge-success"
-                : "badge-custom badge-danger",
-          }))
-      );
-
-      setLatestActivities(
-        announcementsData.length > 0
-          ? announcementsData.slice(0, 4).map((item) => item.title || item.message || item.description)
-          : ["لا توجد أنشطة حديثة حاليًا."]
       );
 
       setIncomingRequests(requestsData.slice(0, 5));

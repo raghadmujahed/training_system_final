@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createSection } from "../../../services/api";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function BulkUploadSections() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -12,7 +14,7 @@ export default function BulkUploadSections() {
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const processFile = async () => {
-    if (!file) return alert("اختر ملف أولاً");
+    if (!file) { toast.warning("اختر ملف أولاً"); return; }
     setLoading(true);
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -51,7 +53,7 @@ export default function BulkUploadSections() {
           }, 2000);
         }
       } catch (err) {
-        alert(err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setLoading(false);
       }

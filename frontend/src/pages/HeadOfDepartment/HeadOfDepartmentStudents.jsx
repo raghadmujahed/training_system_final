@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { getHeadDepartmentStudents, getHeadDepartmentStudentDetails, getCourses, getSections } from "../../services/api";
+import { getHeadDepartmentStudents, getHeadDepartmentStudentDetails, getSections } from "../../services/api";
+import { useCourses } from "../../hooks/useSharedData";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 export default function HeadOfDepartmentStudents() {
@@ -13,21 +14,8 @@ export default function HeadOfDepartmentStudents() {
     section_id: '',
     status: ''
   });
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses({ per_page: 100 });
   const [sections, setSections] = useState([]);
-
-  // Fetch courses on mount (backend filters by department for head_of_department)
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const res = await getCourses({ per_page: 100 });
-        setCourses(res.data || []);
-      } catch (err) {
-        console.error("Courses fetch error:", err);
-      }
-    };
-    fetchCourses();
-  }, []);
 
   // Fetch sections when course_id filter changes
   useEffect(() => {

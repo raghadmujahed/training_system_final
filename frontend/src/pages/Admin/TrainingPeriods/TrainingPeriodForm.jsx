@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingPeriod, createTrainingPeriod, updateTrainingPeriod } from "../../../services/api";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function TrainingPeriodForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -49,7 +51,7 @@ export default function TrainingPeriodForm() {
       navigate("/admin/training-periods");
     } catch (err) {
       if (err.response?.data?.errors) setErrors(err.response.data.errors);
-      else alert("حدث خطأ أثناء حفظ الفترة");
+      else toast.apiError(err, "حدث خطأ أثناء حفظ الفترة");
     } finally {
       setLoading(false);
     }

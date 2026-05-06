@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createSection, getCourses, getUsers } from "../../../services/api";
+import { createSection, getUsers } from "../../../services/api";
+import { useCourses } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddSections() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses();
   const [supervisors, setSupervisors] = useState([]);
   const [results, setResults] = useState(null);
   const [file, setFile] = useState(null);
@@ -22,19 +25,11 @@ export default function AddSections() {
   });
   const [errors, setErrors] = useState({});
 
-  // تحميل قوائم المساقات والمشرفين
+  // تحميل قائمة المشرفين (المساقات محملة مسبقاً عبر useCourses)
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const coursesRes = await getCourses();
-        setCourses(coursesRes.data || []);
-        const supervisorsRes = await getUsers({ role_id: 7 });
-        setSupervisors(supervisorsRes.data || []);
-      } catch (err) {
-        console.error("خطأ في تحميل البيانات:", err);
-      }
-    };
-    fetchData();
+    getUsers({ role_id: 7 })
+      .then((res) => setSupervisors(res.data || []))
+      .catch((err) => console.error("خطأ تحميل المشرفين:", err));
   }, []);
 
   // دالة لإيجاد course_id من الاسم
@@ -78,7 +73,7 @@ export default function AddSections() {
         course_id: courseId,
         academic_supervisor_id: supervisorId,
       });
-      alert("تمت إضافة الشعبة بنجاح");
+      toast.success("تمت إضافة الشعبة بنجاح");
       setManualSection({
         name: "",
         academic_year: new Date().getFullYear(),
@@ -89,7 +84,7 @@ export default function AddSections() {
     } catch (err) {
       const serverErrors = err.response?.data?.errors;
       if (serverErrors) setErrors(serverErrors);
-      else alert("فشل إضافة الشعبة: " + err.message);
+      else toast.apiError(err, "فشل إضافة الشعبة");
     } finally {
       setLoading(false);
     }
@@ -104,7 +99,7 @@ export default function AddSections() {
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const processExcel = async () => {
-    if (!file) return alert("اختر ملف Excel أولاً");
+    if (!file) { toast.warning("اختر ملف Excel أولاً"); return; }
     setBulkLoading(true);
     setResults(null);
     const reader = new FileReader();
@@ -149,9 +144,9 @@ export default function AddSections() {
           }
         }
         setResults({ success: successList, errors: errorList });
-        if (successList.length) alert(`تمت إضافة ${successList.length} شعبة بنجاح`);
+        if (successList.length) toast.success(`تمت إضافة ${successList.length} شعبة بنجاح`);
       } catch (err) {
-        alert(err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
       }

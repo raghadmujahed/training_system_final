@@ -3,9 +3,9 @@ import { Navigate, Link } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getStudentDashboardSummary,
-  getAnnouncements,
   itemsFromPagedResponse,
 } from "../../services/api";
+import { useAnnouncements } from "../../hooks/useSharedData";
 import { getStudentDashboardPath, getStudentTrack } from "../../utils/studentSection";
 import { readStoredUser } from "../../utils/session";
 import { getTrainingRequestStatusMeta, isTaskPending } from "../../utils/status";
@@ -115,9 +115,9 @@ export default function StudentDashboard({ forcedTrack = null }) {
   ]);
   const [latestItems, setLatestItems] = useState([]);
   const [latestTasks, setLatestTasks] = useState([]);
-  const [publicAnnouncements, setPublicAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const abortControllerRef = useRef(null);
+  const { data: publicAnnouncements } = useAnnouncements({ per_page: 6 });
   const currentUser = useMemo(() => readStoredUser(), []);
   const detectedTrack = getStudentTrack(currentUser);
   const effectiveTrack = forcedTrack || detectedTrack || "education";
@@ -147,13 +147,6 @@ export default function StudentDashboard({ forcedTrack = null }) {
     setLoading(true);
     try {
       const summary = await getStudentDashboardSummary({ signal });
-      let announcementsList = [];
-      try {
-        const annRes = await getAnnouncements({ per_page: 6 });
-        announcementsList = itemsFromPagedResponse(annRes);
-      } catch {
-        announcementsList = [];
-      }
       const user = summary?.user || {};
 
       // 1. بيانات المستخدم + الشعبة + المشرفين
@@ -246,7 +239,6 @@ export default function StudentDashboard({ forcedTrack = null }) {
       });
       setLatestItems(formattedNotif);
       setLatestTasks(tasks.slice(0, 4));
-      setPublicAnnouncements(announcementsList);
     } catch (error) {
       if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
         return;

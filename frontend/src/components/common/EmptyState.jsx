@@ -1,4 +1,6 @@
-export default function EmptyState({
+import { memo } from "react";
+
+const EmptyState = memo(function EmptyState({
   title = "لا توجد بيانات",
   description = "لا يوجد شيء لعرضه حاليًا.",
 }) {
@@ -8,4 +10,6 @@ export default function EmptyState({
       <p>{description}</p>
     </div>
   );
-}
+});
+
+export default EmptyState;

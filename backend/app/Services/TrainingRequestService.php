@@ -24,6 +24,10 @@ use Illuminate\Validation\ValidationException;
 
 class TrainingRequestService
 {
+    public function __construct(
+        private NotificationService $notificationService = new NotificationService(),
+    ) {}
+
     /**
      * إنشاء كتاب تدريبي جديد (من المنسق أو من مشرف علم النفس حسب السياسات).
      */
@@ -327,7 +331,7 @@ class TrainingRequestService
                 ['training_request_id' => $trainingRequest->id]
             );
 
-            $trainingRequest->load('trainingRequestStudents.course');
+            $trainingRequest->load(['trainingRequestStudents.user', 'requestedBy', 'trainingSite']);
             TrainingRequestNotifications::forStudents(
                 $trainingRequest,
                 'training_request_final_placement_student',
@@ -337,6 +341,21 @@ class TrainingRequestService
                     'book_status' => BookStatus::SCHOOL_APPROVED->value,
                 ]
             );
+
+            // إرسال بريد إلكتروني للطلاب عند قبول جهة التدريب
+            $siteName = $trainingRequest->trainingSite?->name ?? 'جهة التدريب';
+            $studentUsers = $trainingRequest->trainingRequestStudents
+                ->pluck('user')
+                ->merge([optional($trainingRequest->requestedBy)])
+                ->filter()
+                ->unique('id');
+            foreach ($studentUsers as $studentUser) {
+                $this->notificationService->sendEmail(
+                    $studentUser,
+                    'تم قبول طلب تدريبك',
+                    "مرحباً {$studentUser->name}،\n\nيسعدنا إبلاغك بأنه تم قبول طلب تدريبك في {$siteName}.\n\nيمكنك الدخول إلى المنصة للاطلاع على تفاصيل التدريب."
+                );
+            }
 
             $deptId = $trainingRequest->trainingRequestStudents
                 ->map(fn ($trs) => $trs->course?->department_id)

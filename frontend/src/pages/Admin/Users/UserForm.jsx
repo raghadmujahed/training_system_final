@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUser, createUser, updateUser, getRoles, getDepartments } from "../../../services/api";
+import { getUser, createUser, updateUser } from "../../../services/api";
+import { useRoles, useDepartments } from "../../../hooks/useSharedData";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function UserForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [roles, setRoles] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const { data: roles } = useRoles();
+  const { data: departments } = useDepartments();
   const [form, setForm] = useState({
     university_id: "",
     name: "",
@@ -21,20 +24,8 @@ export default function UserForm() {
   });
   const [errors, setErrors] = useState({});
 
-  // تحميل الأدوار والأقسام عند تحميل الصفحة
+  // إذا كان id موجودًا، نحضر بيانات المستخدم للتعديل
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [rolesData, deptsData] = await Promise.all([getRoles(), getDepartments()]);
-        setRoles(rolesData.data || []);
-        setDepartments(deptsData.data || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchData();
-
-    // إذا كان id موجودًا، نحضر بيانات المستخدم للتعديل
     if (id) {
       const fetchUser = async () => {
         try {
@@ -82,7 +73,7 @@ export default function UserForm() {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert("حدث خطأ أثناء حفظ المستخدم");
+        toast.apiError(err, "حدث خطأ أثناء حفظ المستخدم");
       }
     } finally {
       setLoading(false);

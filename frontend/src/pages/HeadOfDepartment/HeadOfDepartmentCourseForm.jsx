@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCourse, createCourse, updateCourse } from "../../services/api";
+import useAppToast from "../../hooks/useAppToast";
 
 export default function HeadOfDepartmentCourseForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -41,19 +43,14 @@ export default function HeadOfDepartmentCourseForm() {
       } else {
         await createCourse(form);
       }
-      alert(id ? "تم تحديث المساق بنجاح" : "تم إضافة المساق بنجاح");
+      toast.success(id ? "تم تحديث المساق بنجاح" : "تم إضافة المساق بنجاح");
       navigate("/head-department/courses");
     } catch (err) {
       console.error("Course save error:", err);
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-        const firstError = Object.values(err.response.data.errors)[0]?.[0];
-        if (firstError) alert(firstError);
-      } else if (err.response?.data?.message) {
-        alert(err.response.data.message);
-      } else {
-        alert("حدث خطأ أثناء حفظ المساق");
       }
+      toast.apiError(err, "حدث خطأ أثناء حفظ المساق");
     } finally {
       setLoading(false);
     }

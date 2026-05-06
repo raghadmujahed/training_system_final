@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
-import { createSection, getCourses, getUsers } from "../../../services/api";
+import { createSection, getUsers } from "../../../services/api";
+import { useCourses } from "../../../hooks/useSharedData";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function ImportSections() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sectionsData, setSectionsData] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses();
   const [supervisors, setSupervisors] = useState([]);
   const [step, setStep] = useState(1); // 1: رفع ملف, 2: معاينة وتأكيد
   const [results, setResults] = useState(null);
@@ -16,15 +19,13 @@ export default function ImportSections() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // تحميل قوائم المساقات والمشرفين مسبقاً للمطابقة
+    // جلب المشرفين عند الحاجة فقط (المساقات محملة مسبقاً عبر useCourses)
     try {
-      const coursesRes = await getCourses();
       const supervisorsRes = await getUsers({ role_id: 7 });
-      setCourses(coursesRes.data || []);
       setSupervisors(supervisorsRes.data || []);
     } catch (err) {
-      console.error("خطأ في تحميل البيانات الأساسية", err);
-      alert("حدث خطأ أثناء تحميل البيانات الأساسية");
+      console.error("خطأ في تحميل المشرفين", err);
+      toast.error("حدث خطأ أثناء تحميل البيانات الأساسية");
       return;
     }
 

@@ -1,18 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getUser, createUser, updateUser, getDepartments, getTrainingSites, getRoles } from "../../../services/api";
+import { getUser, createUser, updateUser } from "../../../services/api";
+import { useDepartments, useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddPsychologist() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("single");
+  const toast = useAppToast();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [statusMessage, setStatusMessage] = useState({ type: "", text: "" });
-  const [departments, setDepartments] = useState([]);
-  const [trainingSites, setTrainingSites] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const { data: departments } = useDepartments();
+  const { data: allSites } = useTrainingSites({ per_page: 200 });
+  const trainingSites = allSites.filter((s) => s.site_type === "health_center" || s.site_type === "clinic");
+  const { data: roles } = useRoles({ per_page: 200 });
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -29,29 +32,6 @@ export default function AddPsychologist() {
   const [bulkResults, setBulkResults] = useState({ success: [], errors: [] });
   const isEditMode = !!id;
   const psychologistRoleId = roles.find((role) => role.name === "psychologist")?.id;
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [departmentsRes, sitesRes, rolesRes] = await Promise.all([
-          getDepartments({ per_page: 200 }),
-          getTrainingSites({ per_page: 200 }),
-          getRoles({ per_page: 200 }),
-        ]);
-        const deptData = Array.isArray(departmentsRes?.data) ? departmentsRes.data : departmentsRes?.data?.data || departmentsRes;
-        const sitesData = Array.isArray(sitesRes?.data) ? sitesRes.data : sitesRes?.data?.data || sitesRes;
-        setDepartments(Array.isArray(deptData) ? deptData : []);
-        const allSites = Array.isArray(sitesData) ? sitesData : [];
-        setTrainingSites(
-          allSites.filter((s) => s.site_type === "health_center" || s.site_type === "clinic")
-        );
-        setRoles(Array.isArray(rolesRes?.data) ? rolesRes.data : rolesRes?.data?.data || []);
-      } catch (err) {
-        console.error("فشل جلب البيانات", err);
-      }
-    };
-    loadData();
-  }, []);
 
   useEffect(() => {
     if (id) {
@@ -80,27 +60,18 @@ export default function AddPsychologist() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
-    if (statusMessage.text) setStatusMessage({ type: "", text: "" });
   };
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
   };
 
   const processExcel = async () => {
-    if (!file) {
-      alert("الرجاء اختيار ملف Excel أولاً");
-      return;
-    }
-    if (!psychologistRoleId) {
-      alert("تعذر تحديد دور الأخصائي النفسي من قاعدة البيانات");
-      return;
-    }
+    if (!file) { toast.warning("الرجاء اختيار ملف Excel أولاً"); return; }
+    if (!psychologistRoleId) { toast.error("تعذر تحديد دور الأخصائي النفسي من قاعدة البيانات"); return; }
     setBulkLoading(true);
     setBulkResults({ success: [], errors: [] });
-    setStatusMessage({ type: "", text: "" });
 
     const reader = new FileReader();
     reader.onload = async (evt) => {
@@ -111,11 +82,7 @@ export default function AddPsychologist() {
         const worksheet = workbook.Sheets[sheetName];
         let rows = XLSX.utils.sheet_to_json(worksheet);
 
-        if (rows.length === 0) {
-          alert("الملف فارغ أو لا يحتوي على بيانات");
-          setBulkLoading(false);
-          return;
-        }
+        if (rows.length === 0) { toast.warning("الملف فارغ أو لا يحتوي على بيانات"); setBulkLoading(false); return; }
 
         const cleanRows = rows.map((row) => {
           const clean = {};
@@ -197,10 +164,7 @@ export default function AddPsychologist() {
         });
 
         if (invalidPsychologists.length > 0) {
-          const errorDetails = invalidPsychologists
-            .map((p) => `الصف ${p.row}: ${p.email} - ناقص: ${p.missing.join(", ")}`)
-            .join("\n");
-          alert(`البيانات غير كاملة في بعض الصفوف:\n${errorDetails}`);
+          toast.warning(`${invalidPsychologists.length} صف يحتوي بيانات ناقصة وتم تجاهله`);
         }
 
         if (validPsychologists.length === 0) {
@@ -229,7 +193,7 @@ export default function AddPsychologist() {
         if (successList.length) setFile(null);
       } catch (err) {
         console.error(err);
-        alert("حدث خطأ أثناء معالجة الملف: " + err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
       }
@@ -241,11 +205,11 @@ export default function AddPsychologist() {
     e.preventDefault();
     setLoading(true);
     setErrors({});
-    setStatusMessage({ type: "", text: "" });
 
     try {
       if (!psychologistRoleId) {
-        setStatusMessage({ type: "error", text: "تعذر تحديد دور الأخصائي النفسي من قاعدة البيانات" });
+        toast.error("تعذر تحديد دور الأخصائي النفسي من قاعدة البيانات");
+        setLoading(false);
         return;
       }
       const payload = {
@@ -256,11 +220,11 @@ export default function AddPsychologist() {
 
       if (id) {
         await updateUser(id, payload);
-        setStatusMessage({ type: "success", text: "تم تحديث الأخصائي النفسي بنجاح" });
+        toast.success("تم تحديث الأخصائي النفسي بنجاح");
         setTimeout(() => navigate("/admin/users"), 1500);
       } else {
         await createUser(payload);
-        setStatusMessage({ type: "success", text: "تمت إضافة الأخصائي النفسي بنجاح" });
+        toast.success("تمت إضافة الأخصائي النفسي بنجاح");
         setForm({
           name: "",
           email: "",
@@ -277,10 +241,9 @@ export default function AddPsychologist() {
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors).flat().join(", ");
-        setStatusMessage({ type: "error", text: `فشل الحفظ: ${errorMessages}` });
+        toast.error("فشل الحفظ: " + Object.values(err.response.data.errors).flat().join(", "));
       } else {
-        setStatusMessage({ type: "error", text: "حدث خطأ غير متوقع" });
+        toast.apiError(err, "حدث خطأ غير متوقع");
       }
     } finally {
       setLoading(false);
@@ -316,7 +279,6 @@ export default function AddPsychologist() {
             رجوع
           </button>
         </div>
-        {statusMessage.text && <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>}
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label>الاسم الكامل *</label>
@@ -381,8 +343,6 @@ export default function AddPsychologist() {
           رجوع
         </button>
       </div>
-
-      {statusMessage.text && <div className={`status-message ${statusMessage.type}`}>{statusMessage.text}</div>}
 
       <div className="tabs">
         <button className={activeTab === "single" ? "tab-active" : "tab"} onClick={() => setActiveTab("single")}>

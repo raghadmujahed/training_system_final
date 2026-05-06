@@ -10,6 +10,7 @@ import {
   ClipboardCheck, User, School, MapPin, GraduationCap, Calendar, BookOpen, Save, Loader2, CheckCircle2, AlertCircle, Filter
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 
 const fadeIn = `@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`;
 const spin = `@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`;
@@ -45,10 +46,9 @@ const TraineeStudents = ({ siteType = "school" }) => {
   const [scoresByStudent, setScoresByStudent] = useState({});
   const [schoolInfo, setSchoolInfo] = useState({ name: "—", directorate: "—", location: "—" });
   const [loading, setLoading] = useState(true);
+  const toast = useAppToast();
   const [saving, setSaving] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState(null);
-  const [savedMessage, setSavedMessage] = useState("");
 
   useEffect(() => { fetchStudents(); }, []);
 
@@ -91,10 +91,9 @@ const TraineeStudents = ({ siteType = "school" }) => {
       setDeptFilter("education");
       setSelectedStudentId(null);
       setSchoolInfo({ name: trainingSite.name || "—", directorate: trainingSite.directorate || "—", location: trainingSite.location || "—" });
-      if (!students.length) setErrorMessage(`لا يوجد طلبة متدربون معتمدون في ${labels.siteName} حاليًا.`);
-      else setErrorMessage("");
+      if (!students.length) toast.info(`لا يوجد طلبة متدربون معتمدون في ${labels.siteName} حاليًا.`);
     } catch (error) {
-      setErrorMessage("تعذر تحميل بيانات الطلبة المتدربين.");
+      toast.error("تعذر تحميل بيانات الطلبة المتدربين.");
     } finally {
       setLoading(false);
     }
@@ -116,24 +115,22 @@ const TraineeStudents = ({ siteType = "school" }) => {
 
   const selectedScores = useMemo(() => scoresByStudent[selectedStudentId] || {}, [scoresByStudent, selectedStudentId]);
 
-  const handleDeptFilterChange = (val) => { setDeptFilter(val); setSavedMessage(""); setSelectedStudentId(null); };
-  const handleStudentChange = (e) => { const v = e.target.value; setSelectedStudentId(v ? Number(v) : null); setSavedMessage(""); };
+  const handleDeptFilterChange = (val) => { setDeptFilter(val); setSelectedStudentId(null); };
+  const handleStudentChange = (e) => { const v = e.target.value; setSelectedStudentId(v ? Number(v) : null); };
 
   const handleNotesChange = (itemId, value) => {
     setScoresByStudent((prev) => ({ ...prev, [selectedStudentId]: { ...(prev[selectedStudentId] || {}), [itemId]: value } }));
-    setSavedMessage("");
   };
 
   const handleGeneralNotesChange = (value) => {
     setScoresByStudent((prev) => ({ ...prev, [selectedStudentId]: { ...(prev[selectedStudentId] || {}), __generalNotes: value } }));
-    setSavedMessage("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedStudent) { setErrorMessage("يرجى اختيار طالب أولاً."); return; }
+    if (!selectedStudent) { toast.warning("يرجى اختيار طالب أولاً."); return; }
     try {
-      setSaving(true); setSavedMessage(""); setErrorMessage("");
+      setSaving(true);
       if (usePsychForm) {
         const scoresPayload = PSYCH_EVAL_FIELDS.map((f) => ({ item_id: f.key, response_text: String(selectedScores[f.key] || ""), score: Number(selectedScores[f.key] || 0) }));
         await createEvaluation({ training_assignment_id: selectedStudent.assignmentId, template_id: null, scores: scoresPayload, notes: selectedScores.__generalNotes || null, evaluation_type: "psychology_school" });
@@ -144,9 +141,9 @@ const TraineeStudents = ({ siteType = "school" }) => {
         ]);
         await createEvaluation({ training_assignment_id: selectedStudent.assignmentId, template_id: null, scores: scoresPayload, notes: selectedScores.__generalNotes || null, evaluation_type: "education_school" });
       }
-      setSavedMessage("تم حفظ تقييم الطالب بنجاح وإضافته لملف الإنجاز.");
+      toast.success("تم حفظ تقييم الطالب بنجاح وإضافته لملف الإنجاز.");
     } catch (error) {
-      setErrorMessage(error?.response?.data?.message || "تعذر حفظ التقييم.");
+      toast.apiError(error, "تعذر حفظ التقييم.");
     } finally {
       setSaving(false);
     }
@@ -182,16 +179,6 @@ const TraineeStudents = ({ siteType = "school" }) => {
         </div>
 
         {/* Messages */}
-        {savedMessage && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#d1fae5", color: "#059669", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-            <CheckCircle2 size={20} /> {savedMessage}
-          </div>
-        )}
-        {errorMessage && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#fee2e2", color: "#dc2626", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-            <AlertCircle size={20} /> {errorMessage}
-          </div>
-        )}
 
         {loading ? (
           <LoadingSpinner size="section" text="جاري تحميل الطلبة..." />

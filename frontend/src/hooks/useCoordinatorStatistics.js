@@ -8,6 +8,9 @@ import {
   getCourses,
   itemsFromPagedResponse,
 } from "../services/api";
+import { apiCache } from "../services/apiCache";
+
+const TTL = 2 * 60_000;
 
 export default function useCoordinatorStatistics() {
   const [loading, setLoading] = useState(true);
@@ -35,9 +38,9 @@ export default function useCoordinatorStatistics() {
         await Promise.all([
           getTrainingRequests({ per_page: 200 }),
           getTrainingRequestBatches({ per_page: 100 }),
-          getTrainingSites({ per_page: 200 }),
-          getDepartments(),
-          getCourses({ per_page: 200 }),
+          apiCache.get("training-sites:{\"per_page\":200}", () => getTrainingSites({ per_page: 200 }), TTL),
+          apiCache.get("departments:list", () => getDepartments(), 5 * 60_000),
+          apiCache.get("courses:list:{\"per_page\":200}", () => getCourses({ per_page: 200 }), 5 * 60_000),
           getDashboardStats(),
         ]);
       setRequests(itemsFromPagedResponse(reqRes));

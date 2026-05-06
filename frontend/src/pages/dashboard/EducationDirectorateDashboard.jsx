@@ -3,9 +3,8 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   getCurrentUser,
   getOfficialLetters,
-  getTrainingSites,
-  getAnnouncements,
 } from "../../services/api";
+import { useAnnouncements, useTrainingSites } from "../../hooks/useSharedData";
 import {
   Building2,
   User,
@@ -41,6 +40,36 @@ const EducationDirectorateDashboard = () => {
   const [trainingPlaces, setTrainingPlaces] = useState([]);
   const [latestActivities, setLatestActivities] = useState([]);
 
+  const { data: announcementsData } = useAnnouncements({});
+  const { data: sitesData } = useTrainingSites({});
+
+  useEffect(() => {
+    setTrainingPlaces(
+      sitesData.slice(0, 5).map((item) => ({
+        id: item.id,
+        name: item.name || "بدون اسم",
+        type:
+          item.site_type === "school" ? "مدرسة"
+          : item.site_type === "health_center" ? "مركز صحي"
+          : item.site_type || "غير محدد",
+        capacity: item.capacity ?? 0,
+        contact: item.phone || item.contact || item.location || "—",
+        status: item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
+        badgeClass: item.is_active === true || item.is_active === 1
+          ? "badge-custom badge-success"
+          : "badge-custom badge-danger",
+      }))
+    );
+  }, [sitesData]);
+
+  useEffect(() => {
+    setLatestActivities(
+      announcementsData.length > 0
+        ? announcementsData.slice(0, 4).map((item) => item.title || item.message || item.description)
+        : ["لا توجد أنشطة حديثة حاليًا."]
+    );
+  }, [announcementsData]);
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -49,30 +78,16 @@ const EducationDirectorateDashboard = () => {
     try {
       setLoading(true);
 
-      const [userRes, lettersRes, sitesRes, announcementsRes] =
+      const [userRes, lettersRes] =
         await Promise.all([
           getCurrentUser().catch(() => null),
           getOfficialLetters().catch(() => []),
-          getTrainingSites().catch(() => []),
-          getAnnouncements().catch(() => []),
         ]);
 
       const lettersData = Array.isArray(lettersRes?.data)
         ? lettersRes.data
         : Array.isArray(lettersRes)
         ? lettersRes
-        : [];
-
-      const sitesData = Array.isArray(sitesRes?.data)
-        ? sitesRes.data
-        : Array.isArray(sitesRes)
-        ? sitesRes
-        : [];
-
-      const announcementsData = Array.isArray(announcementsRes?.data)
-        ? announcementsRes.data
-        : Array.isArray(announcementsRes)
-        ? announcementsRes
         : [];
 
       setDirectorateInfo({
@@ -109,34 +124,6 @@ const EducationDirectorateDashboard = () => {
         }))
       );
 
-      setTrainingPlaces(
-        sitesData.slice(0, 5).map((item) => ({
-          id: item.id,
-          name: item.name || "بدون اسم",
-          type:
-            item.site_type === "school"
-              ? "مدرسة"
-              : item.site_type === "health_center"
-              ? "مركز صحي"
-              : item.site_type || "غير محدد",
-          capacity: item.capacity ?? 0,
-          contact: item.phone || item.contact || item.location || "—",
-          status:
-            item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
-          badgeClass:
-            item.is_active === true || item.is_active === 1
-              ? "badge-custom badge-success"
-              : "badge-custom badge-danger",
-        }))
-      );
-
-      setLatestActivities(
-        announcementsData.length > 0
-          ? announcementsData.slice(0, 4).map((item) => item.title || item.message || item.description)
-          : [
-              "لا توجد أنشطة حديثة حاليًا.",
-            ]
-      );
     } catch (error) {
       console.error("Failed to load education dashboard:", error);
     } finally {

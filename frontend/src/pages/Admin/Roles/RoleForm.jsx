@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRole, createRole, updateRole, getPermissions } from "../../../services/api";
+import { getRole, createRole, updateRole } from "../../../services/api";
+import { usePermissions } from "../../../hooks/useSharedData";
+import useAppToast from "../../../hooks/useAppToast";
 
 // ترجمة أسماء الصلاحيات
 const permissionTranslations = {
@@ -36,6 +38,7 @@ const groupByModule = (permissions) => {
 };
 
 export default function RoleForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -43,48 +46,36 @@ export default function RoleForm() {
   const [roleName, setRoleName] = useState("");
   const [grantedPermissions, setGrantedPermissions] = useState([]);
   const [availablePermissions, setAvailablePermissions] = useState([]);
+  const { data: allPerms, loading: permsLoading } = usePermissions();
 
   useEffect(() => {
+    if (permsLoading) return;
     const fetchData = async () => {
       try {
-        // جلب جميع الصلاحيات أولاً
-        const permsRes = await getPermissions();
-        // Handle paginated response - extract data from data.data if it exists
-        const allPerms = permsRes.data?.data || permsRes.data || permsRes || [];
-
         if (id) {
-          // جلب بيانات الدور مع صلاحياته
           const roleData = await getRole(id);
           setRoleName(roleData.name || "");
-
-          // استخراج الصلاحيات الممنوحة (قد تأتي بصيغ مختلفة حسب API)
           let permsArray = [];
           if (roleData.permissions) {
-            permsArray = Array.isArray(roleData.permissions) 
-              ? roleData.permissions 
+            permsArray = Array.isArray(roleData.permissions)
+              ? roleData.permissions
               : (roleData.permissions.data || []);
           } else if (roleData.role_permissions) {
             permsArray = roleData.role_permissions;
           }
-
-          // فصل الصلاحيات إلى ممنوحة وغير ممنوحة
           const grantedIds = permsArray.map(p => p.id);
-          const granted = allPerms.filter(p => grantedIds.includes(p.id));
-          const available = allPerms.filter(p => !grantedIds.includes(p.id));
-          
-          setGrantedPermissions(granted);
-          setAvailablePermissions(available);
+          setGrantedPermissions(allPerms.filter(p => grantedIds.includes(p.id)));
+          setAvailablePermissions(allPerms.filter(p => !grantedIds.includes(p.id)));
         } else {
-          // في حالة الإضافة، كل الصلاحيات متاحة
           setAvailablePermissions(allPerms);
           setGrantedPermissions([]);
         }
       } catch (err) {
-        console.error("خطأ في جلب البيانات:", err);
+        console.error("خطأ في جلب بيانات الدور:", err);
       }
     };
     fetchData();
-  }, [id]);
+  }, [id, allPerms, permsLoading]);
 
   const addPermission = (perm) => {
     setGrantedPermissions([...grantedPermissions, perm]);
@@ -119,7 +110,7 @@ export default function RoleForm() {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert("حدث خطأ أثناء حفظ الدور");
+        toast.apiError(err, "حدث خطأ أثناء حفظ الدور");
       }
     } finally {
       setLoading(false);

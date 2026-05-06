@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { RefreshCw, Filter } from 'lucide-react';
-import { getDistributionStatus, getCourses } from '../../services/api';
+import { getDistributionStatus } from '../../services/api';
+import { useCourses } from '../../hooks/useSharedData';
 import EmptyState from '../../components/common/EmptyState';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 export default function HeadOfDepartmentDistributionStatus() {
   const [distribution, setDistribution] = useState([]);
-  const [courses, setCourses] = useState([]);
+  const { data: courses } = useCourses();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
@@ -33,18 +34,8 @@ export default function HeadOfDepartmentDistributionStatus() {
     }
   };
 
-  const fetchCourses = async () => {
-    try {
-      const response = await getCourses();
-      setCourses(response.data?.data || response.data || []);
-    } catch (err) {
-      console.error('Courses fetch error:', err);
-    }
-  };
-
   useEffect(() => {
     fetchDistribution();
-    fetchCourses();
   }, []);
 
   useEffect(() => {

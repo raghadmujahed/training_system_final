@@ -1,31 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { getTrainingSites, deleteTrainingSite } from "../../../services/api";
+import { deleteTrainingSite } from "../../../services/api";
+import { apiCache } from "../../../services/apiCache";
+import { useTrainingSites } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function TrainingSitesList() {
-  const [sites, setSites] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSites();
-  }, []);
-
-  const fetchSites = async () => {
-    try {
-      const data = await getTrainingSites();
-      setSites(data.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: cachedSites, loading } = useTrainingSites();
+  const [removedIds, setRemovedIds] = useState([]);
+  const sites = cachedSites.filter((s) => !removedIds.includes(s.id));
 
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من حذف موقع التدريب؟")) {
       await deleteTrainingSite(id);
-      fetchSites();
+      setRemovedIds((prev) => [...prev, id]);
+      apiCache.invalidatePrefix("training-sites:");
     }
   };
 

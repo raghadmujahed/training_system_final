@@ -2,8 +2,10 @@ import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createEnrollment, getUsers, createUser } from "../../../services/api";
 import * as XLSX from "xlsx";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function AddStudentsToSection() {
+  const toast = useAppToast();
   const { id: sectionId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -50,12 +52,12 @@ export default function AddStudentsToSection() {
         semester: "first",
         status: "active"
       });
-      alert("تم تسجيل الطالب في الشعبة بنجاح");
+      toast.success("تم تسجيل الطالب في الشعبة بنجاح");
       setSelectedStudent(null);
       setSearchQuery("");
       setSearchResults([]);
     } catch (err) {
-      alert(err.response?.data?.message || "فشل تسجيل الطالب");
+      toast.apiError(err, "فشل تسجيل الطالب");
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ export default function AddStudentsToSection() {
   // رفع ملف Excel
   const handleFileChange = (e) => setFile(e.target.files[0]);
   const processExcel = async () => {
-    if (!file) return alert("اختر ملف Excel أولاً");
+    if (!file) { toast.warning("اختر ملف Excel أولاً"); return; }
     setBulkLoading(true);
     setResults(null);
     const reader = new FileReader();
@@ -116,9 +118,9 @@ export default function AddStudentsToSection() {
           }
         }
         setResults({ success: successList, errors: errorList });
-        if (successList.length) alert(`تمت إضافة ${successList.length} طالب بنجاح`);
+        if (successList.length) toast.success(`تمت إضافة ${successList.length} طالب بنجاح`);
       } catch (err) {
-        alert(err.message);
+        toast.apiError(err, "خطأ في معالجة الملف");
       } finally {
         setBulkLoading(false);
       }

@@ -2,8 +2,10 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getSections, getUsers, createUser, createEnrollment } from "../../../services/api";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function BulkAddStudents() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preselectedSectionId = searchParams.get("sectionId");
@@ -58,13 +60,13 @@ export default function BulkAddStudents() {
   // إضافة الطالب المختار إلى القائمة
   const handleAddSelectedStudent = () => {
     if (!selectedSectionId) {
-      alert("يرجى اختيار الشعبة أولاً");
+      toast.warning("يرجى اختيار الشعبة أولاً");
       return;
     }
     if (!selectedStudent) return;
     // التأكد من عدم إضافة نفس الطالب مرتين
     if (studentsList.some(s => s.user_id === selectedStudent.id)) {
-      alert("الطالب مضاف بالفعل إلى القائمة");
+      toast.warning("الطالب مضاف بالفعل إلى القائمة");
       return;
     }
     setStudentsList([...studentsList, { user_id: selectedStudent.id, name: selectedStudent.name, university_id: selectedStudent.university_id, section_id: selectedSectionId }]);
@@ -93,7 +95,7 @@ export default function BulkAddStudents() {
       // تصفية الصفوف المكتملة
       const valid = mapped.filter(s => s.name && s.email && s.university_id && s.section_identifier);
       if (valid.length === 0) {
-        alert("الملف لا يحتوي على بيانات صحيحة. تأكد من وجود الأعمدة: الاسم، البريد، الرقم الجامعي، ورقم/اسم الشعبة");
+        toast.warning("الملف لا يحتوي على بيانات صحيحة. تأكد من وجود الأعمدة: الاسم، البريد، الرقم الجامعي، ورقم/اسم الشعبة");
         return;
       }
       setStudentsList(valid);

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getEnrollment, createEnrollment, updateEnrollment, getSections, getStudents, bulkEnrollStudents, searchStudentsHeadDepartment } from "../../services/api";
 import { Upload, FileSpreadsheet, Search, X } from "lucide-react";
+import useAppToast from "../../hooks/useAppToast";
 
 export default function HeadOfDepartmentEnrollmentForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -167,7 +169,7 @@ export default function HeadOfDepartmentEnrollmentForm() {
       } else {
         await createEnrollment(form);
       }
-      alert(id ? "تم تحديث التسجيل بنجاح" : "تم تسجيل الطالب بنجاح");
+      toast.success(id ? "تم تحديث التسجيل بنجاح" : "تم تسجيل الطالب بنجاح");
       if (id) {
         navigate("/head-department/reports");
       } else {
@@ -183,15 +185,7 @@ export default function HeadOfDepartmentEnrollmentForm() {
         setStudentSearch("");
       }
     } catch (err) {
-      if (err.response?.data?.errors) {
-        setErrors(err.response.data.errors);
-        const errorMessages = Object.values(err.response.data.errors).flat().join("\n");
-        alert("أخطاء:\n" + errorMessages);
-      } else if (err.response?.data?.message) {
-        alert("خطأ: " + err.response.data.message);
-      } else {
-        alert("حدث خطأ أثناء حفظ التسجيل");
-      }
+      toast.apiError(err, "حدث خطأ أثناء حفظ التسجيل");
     } finally {
       setLoading(false);
     }

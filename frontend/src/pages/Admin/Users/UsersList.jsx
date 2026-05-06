@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { getUsers, deleteUser, changeUserStatus, getRoles } from "../../../services/api";
+import { getUsers, deleteUser, changeUserStatus } from "../../../services/api";
+import { useRoles } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function UsersList() {
+  const toast = useAppToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
+  const { data: roles } = useRoles({ per_page: 200 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({ role_id: "", status: "", search: "" });
@@ -52,16 +55,6 @@ export default function UsersList() {
     return { data, meta };
   };
 
-  const fetchRoles = async () => {
-    try {
-      const response = await getRoles({ per_page: 200 });
-      const { data } = normalizeListResponse(response);
-      setRoles(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const fetchUsers = async (page = 1) => {
     setLoading(true);
     try {
@@ -97,10 +90,6 @@ export default function UsersList() {
     fetchUsers(1);
   }, [filters, sort, location.key]);
 
-  useEffect(() => {
-    fetchRoles();
-  }, []);
-
   const handleSort = (sortBy) => {
     setSort((current) => ({
       sort_by: sortBy,
@@ -125,7 +114,7 @@ export default function UsersList() {
         await deleteUser(id);
         fetchUsers(pagination.current_page);
       } catch (err) {
-        alert("حدث خطأ أثناء الحذف");
+        toast.error("حدث خطأ أثناء الحذف");
       }
     }
   };
@@ -136,7 +125,7 @@ export default function UsersList() {
       await changeUserStatus(id, newStatus);
       fetchUsers(pagination.current_page);
     } catch (err) {
-      alert("حدث خطأ أثناء تغيير الحالة");
+      toast.error("حدث خطأ أثناء تغيير الحالة");
     }
   };
 

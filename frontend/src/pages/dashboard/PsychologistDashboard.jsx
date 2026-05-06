@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAnnouncements, getUsers, itemsFromPagedResponse } from "../../services/api";
+import { getUsers, itemsFromPagedResponse } from "../../services/api";
+import { useAnnouncements } from "../../hooks/useSharedData";
 
 export default function PsychologistDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [studentsCount, setStudentsCount] = useState(0);
-  const [announcements, setAnnouncements] = useState([]);
+  const { data: announcements } = useAnnouncements({ per_page: 5 });
 
   useEffect(() => {
     let m = true;
@@ -14,16 +15,12 @@ export default function PsychologistDashboard() {
       setLoading(true);
       setError("");
       try {
-        const [usersRes, annRes] = await Promise.all([
-          getUsers({ per_page: 200, status: "active" }),
-          getAnnouncements({ per_page: 5 }),
-        ]);
+        const usersRes = await getUsers({ per_page: 200, status: "active" });
         if (!m) return;
         const users = itemsFromPagedResponse(usersRes);
         setStudentsCount(
           typeof usersRes?.meta?.total === "number" ? usersRes.meta.total : users.length
         );
-        setAnnouncements(itemsFromPagedResponse(annRes));
       } catch (e) {
         if (m) setError(e?.response?.data?.message || "فشل تحميل البيانات");
       } finally {
@@ -31,9 +28,7 @@ export default function PsychologistDashboard() {
       }
     }
     load();
-    return () => {
-      m = false;
-    };
+    return () => { m = false; };
   }, []);
 
   return (

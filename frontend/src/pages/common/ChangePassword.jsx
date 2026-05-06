@@ -1,7 +1,9 @@
 import { useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
+import useAppToast from "../../hooks/useAppToast";
 
 export default function ChangePassword() {
+  const toast = useAppToast();
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -19,16 +21,16 @@ export default function ChangePassword() {
     e.preventDefault();
 
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      alert("يرجى تعبئة جميع الحقول");
+      toast.warning("يرجى تعبئة جميع الحقول");
       return;
     }
 
     if (form.newPassword !== form.confirmPassword) {
-      alert("كلمة المرور الجديدة وتأكيدها غير متطابقين");
+      toast.warning("كلمة المرور الجديدة وتأكيدها غير متطابقين");
       return;
     }
 
-    alert("تم تغيير كلمة المرور بنجاح");
+    toast.success("تم تغيير كلمة المرور بنجاح");
 
     setForm({
       currentPassword: "",

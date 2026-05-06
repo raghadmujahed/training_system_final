@@ -1,22 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import useAppToast from "../../../hooks/useAppToast";
+import { useRoles, useDepartments } from "../../../hooks/useSharedData";
 import {
   getAnnouncement,
   createAnnouncement,
   updateAnnouncement,
-  getRoles,
   getUsers,
-  getDepartments,
 } from "../../../services/api";
 
 export default function AnnouncementForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [roles, setRoles] = useState([]);
+  const { data: roles } = useRoles();
+  const { data: departments } = useDepartments();
   const [users, setUsers] = useState([]);
-  const [departments, setDepartments] = useState([]);
 
   const [form, setForm] = useState({
     title: "",
@@ -28,21 +29,7 @@ export default function AnnouncementForm() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        const [rolesRes, usersRes, deptsRes] = await Promise.all([
-          getRoles(),
-          getUsers({ per_page: 200 }),
-          getDepartments(),
-        ]);
-        setRoles(rolesRes.data || []);
-        setUsers(usersRes.data || []);
-        setDepartments(deptsRes.data || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchOptions();
+    getUsers({ per_page: 200 }).then((res) => setUsers(res.data || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -122,7 +109,7 @@ export default function AnnouncementForm() {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert("حدث خطأ أثناء حفظ الإعلان");
+        toast.apiError(err, "حدث خطأ أثناء حفظ الإعلان");
       }
     } finally {
       setLoading(false);

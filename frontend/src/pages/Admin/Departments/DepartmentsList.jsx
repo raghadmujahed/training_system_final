@@ -1,65 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { getDepartments, deleteDepartment } from "../../../services/api";
+import { deleteDepartment } from "../../../services/api";
+import { apiCache } from "../../../services/apiCache";
+import { useDepartments } from "../../../hooks/useSharedData";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function DepartmentsList() {
-  const [items, setItems] = useState([]);
+  const toast = useAppToast();
+  const { data: items, loading } = useDepartments();
+  const [localItems, setLocalItems] = useState(null);
 
-  const fetchDepartments = async () => {
-    try {
-      const response = await getDepartments();
-
-      let departmentsArray = [];
-      if (Array.isArray(response)) {
-        departmentsArray = response;
-      } else if (response?.data && Array.isArray(response.data)) {
-        departmentsArray = response.data;
-      } else if (response?.data?.data && Array.isArray(response.data.data)) {
-        departmentsArray = response.data.data;
-      } else {
-        departmentsArray = [];
-      }
-
-      setItems(departmentsArray);
-    } catch (err) {
-      console.error(err);
-      setItems([]);
-    }
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const response = await getDepartments();
-        let departmentsArray = [];
-        if (Array.isArray(response)) {
-          departmentsArray = response;
-        } else if (response?.data && Array.isArray(response.data)) {
-          departmentsArray = response.data;
-        } else if (response?.data?.data && Array.isArray(response.data.data)) {
-          departmentsArray = response.data.data;
-        }
-        if (!cancelled) {
-          setItems(departmentsArray);
-        }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) setItems([]);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const displayItems = localItems ?? items;
 
   const handleDelete = async (id) => {
     if (confirm("حذف القسم؟")) {
       try {
         await deleteDepartment(id);
-        fetchDepartments();
+        apiCache.invalidate("departments:list");
+        setLocalItems((prev) => (prev ?? items).filter((d) => d.id !== id));
       } catch {
-        alert("حدث خطأ أثناء الحذف");
+        toast.error("حدث خطأ أثناء الحذف");
       }
     }
   };
@@ -82,7 +42,7 @@ export default function DepartmentsList() {
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
+          {displayItems.map((item) => (
             <tr key={item.id}>
               <td>{item.id}</td>
               <td>{item.name}</td>
@@ -96,7 +56,7 @@ export default function DepartmentsList() {
               </td>
             </tr>
           ))}
-          {items.length === 0 && (
+          {displayItems.length === 0 && (
             <tr>
               <td colSpan="3" className="text-center">لا يوجد أقسام</td>
             </tr>

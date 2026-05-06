@@ -8,6 +8,7 @@ import {
 } from "../../services/api";
 import { siteLabels } from "../../utils/roles";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import useAppToast from "../../hooks/useAppToast";
 import {
   ClipboardList,
   CheckCircle2,
@@ -67,9 +68,8 @@ export default function MentorAssignment({ siteType = "school" }) {
   const [requests, setRequests] = useState([]);
   const [rows, setRows] = useState([]);
   const [teachers, setTeachers] = useState([]);
+  const toast = useAppToast();
   const [loading, setLoading] = useState(true);
-  const [savedMessage, setSavedMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [savingRequestId, setSavingRequestId] = useState(null);
 
   // Highlight + scroll to a specific request when navigated from a notification
@@ -121,12 +121,10 @@ export default function MentorAssignment({ siteType = "school" }) {
       setTeachers(teacherList);
 
       setRows(list.flatMap(normalizeRowsFromRequest));
-      setErrorMessage("");
     } catch (error) {
       console.error("Failed to load mentor assignment data:", error);
       const errMsg = getApiErrorMessage(error, error?.message || "خطأ غير معروف");
-      const errStatus = error?.response?.status;
-      setErrorMessage(`تعذر تحميل بيانات التعيين. ${errStatus ? `(HTTP ${errStatus}) ` : ""}${errMsg}`);
+      toast.error("تعذر تحميل بيانات التعيين: " + errMsg);
     } finally {
       setLoading(false);
     }
@@ -140,7 +138,6 @@ export default function MentorAssignment({ siteType = "school" }) {
           : row
       )
     );
-    setSavedMessage("");
   };
 
   const handleFieldSupervisorChange = (studentRowId, fsIdVal) => {
@@ -149,7 +146,6 @@ export default function MentorAssignment({ siteType = "school" }) {
         row.studentRowId === studentRowId ? { ...row, fieldSupervisorId: fsIdVal } : row
       )
     );
-    setSavedMessage("");
   };
 
   const handleNotesChange = (studentRowId, value) => {
@@ -158,7 +154,6 @@ export default function MentorAssignment({ siteType = "school" }) {
         row.studentRowId === studentRowId ? { ...row, notes: value } : row
       )
     );
-    setSavedMessage("");
   };
 
   const handleRequestApprove = async (requestId) => {
@@ -167,14 +162,12 @@ export default function MentorAssignment({ siteType = "school" }) {
 
     const hasUnassigned = requestRows.some((row) => !row.mentorId);
     if (hasUnassigned) {
-      setErrorMessage(`يجب تعيين ${labels.mentorLabel} لكل طالب قبل اعتماد الطلب.`);
+      toast.warning(`يجب تعيين ${labels.mentorLabel} لكل طالب قبل اعتماد الطلب.`);
       return;
     }
 
     try {
       setSavingRequestId(requestId);
-      setSavedMessage("");
-      setErrorMessage("");
       await schoolManagerApproveRequest(requestId, {
         status: "approved",
         students: requestRows.map((row) => {
@@ -188,11 +181,11 @@ export default function MentorAssignment({ siteType = "school" }) {
           return payload;
         }),
       });
-      setSavedMessage("تم اعتماد الطلب وتعيين المشرف الميداني بنجاح.");
+      toast.success("تم اعتماد الطلب وتعيين المشرف الميداني بنجاح.");
       await fetchData();
     } catch (error) {
       console.error("Failed to approve request:", error);
-      setErrorMessage(getApiErrorMessage(error, "تعذر اعتماد الطلب."));
+      toast.apiError(error, "تعذر اعتماد الطلب.");
     } finally {
       setSavingRequestId(null);
     }
@@ -204,17 +197,15 @@ export default function MentorAssignment({ siteType = "school" }) {
 
     try {
       setSavingRequestId(requestId);
-      setSavedMessage("");
-      setErrorMessage("");
       await schoolManagerApproveRequest(requestId, {
         status: "rejected",
         rejection_reason: reason.trim(),
       });
-      setSavedMessage("تم رفض الطلب وتسجيل السبب.");
+      toast.success("تم رفض الطلب وتسجيل السبب.");
       await fetchData();
     } catch (error) {
       console.error("Failed to reject request:", error);
-      setErrorMessage(getApiErrorMessage(error, "تعذر رفض الطلب."));
+      toast.apiError(error, "تعذر رفض الطلب.");
     } finally {
       setSavingRequestId(null);
     }
@@ -275,17 +266,6 @@ export default function MentorAssignment({ siteType = "school" }) {
         })}
       </div>
 
-      {/* Messages */}
-      {savedMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#d1fae5", color: "#059669", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <CheckCircle2 size={18} /> {savedMessage}
-        </div>
-      )}
-      {errorMessage && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#fee2e2", color: "#dc2626", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
-          <AlertCircle size={18} /> {errorMessage}
-        </div>
-      )}
 
       {/* Empty State */}
       {requests.length === 0 ? (

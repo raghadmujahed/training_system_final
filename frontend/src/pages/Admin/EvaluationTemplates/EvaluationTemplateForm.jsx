@@ -8,8 +8,10 @@ import {
   updateTemplateItem,
   deleteTemplateItem,
 } from "../../../services/api";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function EvaluationTemplateForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ export default function EvaluationTemplateForm() {
           setItems(data.items || []);
         } catch (err) {
           console.error(err);
-          alert("حدث خطأ أثناء تحميل القالب");
+          toast.error("حدث خطأ أثناء تحميل القالب");
         }
       };
       fetchTemplate();
@@ -85,7 +87,7 @@ export default function EvaluationTemplateForm() {
           await deleteTemplateItem(item.id);
           setItems(items.filter((_, i) => i !== index));
         } catch (err) {
-          alert("فشل حذف البند");
+          toast.error("فشل حذف البند");
         }
       }
     } else {
