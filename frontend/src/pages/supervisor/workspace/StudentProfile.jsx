@@ -11,12 +11,14 @@ import FieldVisitsTab from "./tabs/FieldVisitsTab";
 import EvaluationsTab from "./tabs/EvaluationsTab";
 import CommunicationTab from "./tabs/CommunicationTab";
 import ActivityTimelineTab from "./tabs/ActivityTimelineTab";
+import ScheduleTab from "./tabs/ScheduleTab";
 
 const TABS = [
   { key: "overview", label: "نظرة عامة", icon: "📋" },
   { key: "attendance", label: "الحضور", icon: "📊" },
   { key: "daily-logs", label: "السجلات اليومية", icon: "📝" },
   { key: "portfolio", label: "ملف الإنجاز", icon: "📁" },
+  { key: "schedule", label: "جدول الحصص", icon: "📅" },
   { key: "tasks", label: "المهام", icon: "✅" },
   { key: "submissions", label: "حلول الطلبة", icon: "📩" },
   { key: "field-visits", label: "الزيارات الميدانية", icon: "🏫" },
@@ -87,6 +89,7 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
       case "attendance": return <AttendanceTab {...props} />;
       case "daily-logs": return <DailyLogsTab {...props} />;
       case "portfolio": return <PortfolioTab {...props} />;
+      case "schedule": return <ScheduleTab {...props} />;
       case "tasks": return <TasksTab {...props} />;
       case "submissions": return <TaskSubmissionsTab {...props} />;
       case "field-visits": return <FieldVisitsTab {...props} />;

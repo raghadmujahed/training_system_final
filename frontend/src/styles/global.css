@@ -1287,3 +1287,42 @@ p {
   border-color: #dc3545;
   box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
+
+/* Content Header - Consistent across all pages */
+.content-header {
+  background: linear-gradient(135deg, #142a42 0%, #3b82b6 100%);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.content-header::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -8%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.content-header .page-title {
+  color: #fff;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.content-header .page-subtitle {
+  color: rgba(255,255,255,0.8);
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  position: relative;
+  z-index: 1;
+}

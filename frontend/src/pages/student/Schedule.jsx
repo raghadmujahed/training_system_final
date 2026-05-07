@@ -2,30 +2,53 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { getStudentTrainingProgram, saveStudentTrainingProgram, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
-import { Calendar, Clock, Lock, Edit3, Save, RotateCcw, Loader2, AlertCircle, CheckCircle, Printer } from "lucide-react";
+import { Calendar, Clock, Lock, Edit3, Save, RotateCcw, Loader2, AlertCircle, CheckCircle, Printer, User, Building2, GraduationCap, Phone, MapPin, BookOpen } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { useToast } from "../../components/Toast";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 
-// Print-specific CSS
+// Professional Print-specific CSS
 const printStyles = `
 @media print {
-  @page { size: landscape; margin: 8mm; }
+  @page { size: landscape; margin: 5mm; }
   body * { visibility: hidden; }
   #printable-area, #printable-area * { visibility: visible; }
   #printable-area { 
     position: absolute; 
     left: 0; top: 0; 
     width: 100%;
-    padding: 6mm;
+    padding: 3mm;
   }
   .no-print { display: none !important; }
   .print-header { display: block !important; visibility: visible !important; }
+  .print-title { font-size: 16px !important; font-weight: 800 !important; color: #142a42 !important; margin-bottom: 8px !important; }
+  
+  /* Student info table print styles */
+  .print-header table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 10px !important;
+  }
+  .print-header td { 
+    border: 1px solid #142a42 !important; 
+    padding: 8px 10px !important; 
+    text-align: right;
+  }
+  .print-header td:first-child { 
+    background-color: #142a42 !important; 
+    color: white !important;
+    font-weight: 700 !important;
+    width: 16% !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* Schedule table print styles */
   table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #bbb; padding: 6px 4px; text-align: center; font-size: 10px; }
-  th { background-color: var(--primary, #142a42) !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .day-cell { background-color: #f0f0f0 !important; font-weight: bold; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .filled-cell { background-color: #e8f0fe !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  th, td { border: 1px solid #666; padding: 6px 4px; text-align: center; font-size: 9px; }
+  th { background-color: #142a42 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .day-cell { background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important; font-weight: 700 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .filled-cell { background-color: #e3f2fd !important; color: #1565c0 !important; font-weight: 600 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }`;
 
 const days = [
@@ -258,235 +281,123 @@ export default function Schedule() {
   return (
     <>
       <style>{printStyles}</style>
+      
+      {/* Header */}
       <div className="content-header no-print">
         <h1 className="page-title">{config.scheduleTitle}</h1>
-        <p className="page-subtitle">
-          الجدول الأسبوعي للحصص التدريبية — {studentInfo.name} — {studentInfo.university_id}
-        </p>
+        <p className="page-subtitle">{studentInfo.name} — {studentInfo.university_id}</p>
       </div>
 
-      {/* Status Alerts */}
-      {!isEditable && (
-        <div className="alert-custom alert-warning mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <Lock size={18} />
-          تعبئة جدول الحصص الأسبوعية مغلقة حالياً من قبل المنسق. يمكنك مشاهدة الجدول فقط.
-        </div>
-      )}
-
-      {isEditable && (
-        <div className="alert-custom alert-info mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <Edit3 size={18} />
-          تعبئة جدول الحصص الأسبوعية مفتوحة — يمكنك تعديل الجدول وحفظه.
-        </div>
-      )}
-
-      {programStatus === "submitted" && hasSavedProgram && (
-        <div className="alert-custom alert-info mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <Clock size={18} />
-          {"تم إرسال جدول الحصص الأسبوعية للمنسق — بانتظار المراجعة."}
-        </div>
-      )}
-
-      {programStatus === "approved" && hasSavedProgram && (
-        <div className="alert-custom alert-success mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <CheckCircle size={18} />
-          {"تمت الموافقة على جدول الحصص الأسبوعية من المنسق."}
-        </div>
-      )}
-
-      {programStatus === "rejected" && hasSavedProgram && (
-        <div className="alert-custom alert-danger mb-3 no-print" style={{ display: "flex", flexDirection: "column", gap: "0.35rem", fontSize: "0.95rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            <AlertCircle size={18} />
-            {"تم رفض جدول الحصص الأسبوعية من المنسق."}
-          </div>
-          {coordinatorNote && (
-            <div style={{ marginRight: "1.8rem", fontSize: "0.88rem", opacity: 0.9, fontWeight: 500 }}>
-              <strong>{"ملاحظة المنسق:"}</strong> {coordinatorNote}
-            </div>
-          )}
-        </div>
-      )}
-
-      {editingEntry && (
-        <div className="alert-custom alert-warning mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <Edit3 size={18} />
-          وضع التعديل — يتم تحديث المدخل الموجود في ملف الإنجاز
-        </div>
-      )}
-
+      {/* Error/Success Messages */}
       {error && (
-        <div className="alert-custom alert-danger mb-3" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <AlertCircle size={18} /> {error}
+        <div className="mb-3" style={{
+          padding: "0.75rem 1rem",
+          background: "#fee2e2",
+          border: "1px solid #fecaca",
+          borderRadius: "8px",
+          color: "#991b1b",
+          fontSize: "0.9rem",
+        }}>
+          {error}
         </div>
       )}
-
       {success && (
-        <div className="alert-custom alert-success mb-3 no-print" style={{ display: "flex", alignItems: "center", gap: "0.6rem", fontSize: "0.95rem" }}>
-          <CheckCircle size={18} /> {success}
+        <div className="no-print mb-3" style={{
+          padding: "0.75rem 1rem",
+          background: "#dcfce7",
+          border: "1px solid #bbf7d0",
+          borderRadius: "8px",
+          color: "#166534",
+          fontSize: "0.9rem",
+        }}>
+          {success}
         </div>
       )}
-
-      {/* Info Strip */}
-      <div className="section-card mb-3" style={{ padding: "1rem 1.5rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem", borderLeft: "1px solid var(--border)" }}>
-            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>الطالب</div>
-            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>{studentInfo.name}</div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-faint)", marginTop: "0.15rem" }}>{studentInfo.university_id}</div>
-          </div>
-          <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem", borderLeft: "1px solid var(--border)" }}>
-            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>جهة التدريب</div>
-            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>{studentInfo.school || "—"}</div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-faint)", marginTop: "0.15rem" }}>المدرسة / المركز</div>
-          </div>
-          <div style={{ flex: 1, minWidth: 160, padding: "0.6rem 1.25rem" }}>
-            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-faint)", marginBottom: "0.3rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>الفترة التدريبية</div>
-            <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--primary-dark)" }}>{studentInfo.semester || "—"}</div>
-            <div style={{ fontSize: "0.82rem", color: "var(--text-faint)", marginTop: "0.15rem" }}>الفترة الحالية</div>
-          </div>
-        </div>
-      </div>
 
       {/* نموذج جدول الحصص الأسبوعية */}
-      <div id="printable-area" className="section-card">
-        {/* Personal info table — visible on screen and in print */}
-        <div className="print-header" style={{ marginBottom: '16px' }}>
-          <h2 className="no-print" style={{ display: 'none' }}></h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '14px', fontSize: '13px', direction: 'rtl', border: '1px solid #dee2e6' }}>
+      <div id="printable-area" className="section-card" style={{ padding: "1.5rem" }}>
+        
+        {/* Print Header - Simple */}
+        <div className="print-header" style={{ marginBottom: '20px' }}>
+          <h2 style={{ margin: 0, fontSize: '16px', fontWeight: 700, textAlign: 'center', color: '#142a42' }}>
+            نموذج جدول الحصص الأسبوعية
+          </h2>
+          <p style={{ margin: '4px 0 0', fontSize: '12px', textAlign: 'center', color: '#64748b' }}>
+            برنامج التدريب العملي - جامعة الخليل
+          </p>
+        </div>
+
+        {/* Student Info Table - Clean */}
+        <div className="print-header" style={{ marginBottom: '20px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', direction: 'rtl', border: '1px solid #142a42' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}><strong>اسم الطالب :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}>{studentInfo.name}</td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}><strong>المدرسة :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999', width: '25%' }}>{studentInfo.school}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', width: '15%', background: '#142a42', color: 'white', fontWeight: 700 }}>اسم الطالب:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', width: '35%' }}>{studentInfo.name}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', width: '15%', background: '#142a42', color: 'white', fontWeight: 700 }}>المدرسة:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', width: '35%' }}>{studentInfo.school}</td>
+              </tr>
+              <tr style={{ background: '#f8fafc' }}>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>الرقم الجامعي:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.university_id}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>رقم المدرسة:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.school_phone}</td>
               </tr>
               <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>مكان السكن :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.school_location}</td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>البلدة :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>التخصص:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.major}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>المعلم المتعاون:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.teacher_name}</td>
+              </tr>
+              <tr style={{ background: '#f8fafc' }}>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>رقم الهاتف:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.phone}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>تاريخ البدء:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.start_date}</td>
               </tr>
               <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>الرقم الجامعي :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.university_id}</td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>رقم المدرسة :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.school_phone}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>التخصص :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.major}</td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>اسم مدير المدرسة :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
-              </tr>
-              <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>رقم الهاتف :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.phone}</td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>اسم المعلم المتعاون :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.teacher_name}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>تاريخ بداية التدريب :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}>{studentInfo.start_date}</td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>الصفوف التي سيطبق فيها الطالب :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
-              </tr>
-              <tr>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>أيام التطبيق :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}><strong>المباحث التي سيتم التطبيق فيها :</strong></td>
-                <td style={{ padding: '5px 8px', border: '1px solid #999' }}></td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>مكان السكن:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.school_location}</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42', background: '#142a42', color: 'white', fontWeight: 700 }}>الفترة:</td>
+                <td style={{ padding: '8px 12px', border: '1px solid #142a42' }}>{studentInfo.semester}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        {/* Panel Header */}
-        <div className="no-print" style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "1rem",
-          paddingBottom: "1.25rem",
-          marginBottom: "1.5rem",
-          borderBottom: "1.5px solid var(--border)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
+
+        {/* Print Button */}
+        {hasSavedProgram && (
+          <div className="no-print" style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            marginBottom: "1rem",
+          }}>
+            <button onClick={handlePrint} style={{ 
+              padding: "0.4rem 0.75rem",
+              fontSize: "0.8rem",
+              border: "1px solid #e2e8f0",
+              borderRadius: "6px",
+              background: "white",
+              cursor: "pointer",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              flexShrink: 0,
-              boxShadow: "0 4px 14px rgba(20,42,66,0.2)",
+              gap: "0.4rem",
             }}>
-              <Calendar size={24} />
-            </div>
-            <div>
-              <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 800, color: "var(--primary-dark)" }}>
-                {config.scheduleTitle}
-              </h3>
-              <p style={{ margin: "0.2rem 0 0", color: "var(--text-faint)", fontSize: "0.88rem" }}>
-                5 أيام × 7 حصص تدريبية
-              </p>
-            </div>
+              <Printer size={14} /> طباعة
+            </button>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            {hasSavedProgram && (
-              <button onClick={handlePrint} className="btn-outline-custom btn-sm-custom">
-                <Printer size={14} /> طباعة
-              </button>
-            )}
-            <span className={isEditable ? "badge-custom badge-success" : "badge-custom badge-warning"}>
-              {isEditable ? <><Edit3 size={13} /> قابل للتعديل</> : <><Lock size={13} /> للعرض فقط</>}
-            </span>
-          </div>
-        </div>
+        )}
 
-        <div className="table-wrapper" style={{ borderRadius: "var(--radius-md, 16px)", overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "separate",
-              borderSpacing: 0,
-              textAlign: "center",
-              fontSize: "0.95rem",
-            }}
-          >
+        {/* Schedule Table - Clean */}
+        <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", overflow: "hidden" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "center", fontSize: "0.9rem" }}>
             <thead>
               <tr>
-                <th
-                  style={{
-                    padding: "14px 14px",
-                    background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
-                    color: "white",
-                    fontWeight: 800,
-                    fontSize: "0.95rem",
-                    border: "none",
-                    width: "110px",
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  اليوم / الحصة
+                <th style={{ padding: "12px", background: "#142a42", color: "white", fontWeight: 700, fontSize: "0.85rem", width: "90px" }}>
+                  اليوم
                 </th>
-                {periods.map((period, idx) => (
-                  <th
-                    key={period.id}
-                    style={{
-                      padding: "12px 8px",
-                      background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
-                      color: "white",
-                      fontWeight: 700,
-                      fontSize: "0.88rem",
-                      border: "none",
-                      borderRight: idx < periods.length - 1 ? "1px solid rgba(255,255,255,0.12)" : "none",
-                    }}
-                  >
-                    <div style={{ fontSize: "0.75rem", opacity: 0.7, marginBottom: 2 }}>{period.id}</div>
+                {periods.map((period) => (
+                  <th key={period.id} style={{ padding: "10px 4px", background: "#142a42", color: "white", fontWeight: 600, fontSize: "0.8rem" }}>
                     {period.label}
                   </th>
                 ))}
@@ -494,39 +405,14 @@ export default function Schedule() {
             </thead>
             <tbody>
               {days.map((day, dayIdx) => (
-                <tr
-                  key={day.id}
-                  style={{
-                    backgroundColor: dayIdx % 2 === 0 ? "#ffffff" : "var(--bg-soft, #faf8f5)",
-                    transition: "var(--transition)",
-                  }}
-                >
-                  <td
-                    style={{
-                      padding: "16px 14px",
-                      fontWeight: 800,
-                      fontSize: "0.95rem",
-                      background: "linear-gradient(135deg, #f7f9fc 0%, #edf1f7 100%)",
-                      color: "var(--primary)",
-                      border: "1px solid var(--border)",
-                      borderRight: "4px solid var(--primary)",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
+                <tr key={day.id} style={{ backgroundColor: dayIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
+                  <td style={{ padding: "12px", fontWeight: 700, fontSize: "0.85rem", color: "#142a42", border: "1px solid #e2e8f0", background: "#f1f5f9" }}>
                     {day.label}
                   </td>
                   {periods.map((period) => {
                     const isFilled = !!schedule[day.id]?.[period.id];
                     return (
-                      <td
-                        key={`${day.id}-${period.id}`}
-                        style={{
-                          padding: "8px 6px",
-                          border: "1px solid var(--border)",
-                          backgroundColor: isFilled ? "rgba(59,130,182,0.06)" : "transparent",
-                          transition: "var(--transition)",
-                        }}
-                      >
+                      <td key={`${day.id}-${period.id}`} style={{ padding: "6px 4px", border: "1px solid #e2e8f0", minWidth: "60px" }}>
                         {isEditable ? (
                           <input
                             type="text"
@@ -535,36 +421,16 @@ export default function Schedule() {
                             placeholder="..."
                             style={{
                               width: "100%",
-                              minHeight: "42px",
-                              padding: "8px 6px",
-                              border: "2px solid transparent",
-                              borderRadius: "var(--radius-sm, 10px)",
-                              fontSize: "0.85rem",
+                              padding: "6px 4px",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "4px",
+                              fontSize: "0.8rem",
                               textAlign: "center",
-                              backgroundColor: isFilled ? "rgba(59,130,182,0.04)" : "rgba(255,255,255,0.6)",
-                              transition: "var(--transition)",
-                              outline: "none",
-                              color: "var(--text)",
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = "var(--primary)";
-                              e.target.style.backgroundColor = "white";
-                              e.target.style.boxShadow = "0 0 0 4px rgba(20,42,66,0.08)";
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = "transparent";
-                              e.target.style.backgroundColor = isFilled ? "rgba(59,130,182,0.04)" : "rgba(255,255,255,0.6)";
-                              e.target.style.boxShadow = "none";
+                              backgroundColor: isFilled ? "#f0f9ff" : "white",
                             }}
                           />
                         ) : (
-                          <span
-                            style={{
-                              fontSize: "0.9rem",
-                              color: isFilled ? "var(--info)" : "var(--border-strong)",
-                              fontWeight: isFilled ? 600 : 400,
-                            }}
-                          >
+                          <span style={{ fontSize: "0.85rem", color: isFilled ? "#0369a1" : "#94a3b8" }}>
                             {schedule[day.id]?.[period.id] || "—"}
                           </span>
                         )}
@@ -577,54 +443,59 @@ export default function Schedule() {
           </table>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Simple */}
         {isEditable && (
           <div className="no-print" style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             marginTop: "1.5rem",
-            padding: "1rem 1.25rem",
-            background: "var(--bg-soft)",
-            borderRadius: "var(--radius-sm)",
-            border: "1px solid var(--border)",
           }}>
             <button
               onClick={handleReset}
               disabled={saving}
-              className="btn-light-custom btn-sm-custom"
-              style={{ opacity: saving ? 0.55 : 1, cursor: saving ? "not-allowed" : "pointer" }}
+              style={{ 
+                padding: "0.5rem 1rem",
+                fontSize: "0.85rem",
+                border: "1px solid #e2e8f0",
+                borderRadius: "6px",
+                background: "white",
+                cursor: saving ? "not-allowed" : "pointer",
+                opacity: saving ? 0.5 : 1,
+              }}
             >
-              <RotateCcw size={15} /> إعادة تعيين
+              إعادة تعيين
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="btn-primary-custom"
-              style={{ opacity: saving ? 0.7 : 1, cursor: saving ? "not-allowed" : "pointer", minWidth: 130 }}
+              style={{ 
+                padding: "0.5rem 1.25rem",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                border: "none",
+                borderRadius: "6px",
+                background: "#142a42",
+                color: "white",
+                cursor: saving ? "not-allowed" : "pointer",
+                opacity: saving ? 0.7 : 1,
+              }}
             >
-              {saving ? <LoadingSpinner size="button" /> : <Save size={15} />}
               {saving ? "جاري الحفظ..." : "حفظ الجدول"}
             </button>
           </div>
         )}
 
-        {/* Note */}
+        {/* Simple Note */}
         <div className="no-print" style={{
           marginTop: "1rem",
-          padding: "0.85rem 1.1rem",
-          background: "rgba(158,115,70,0.05)",
-          borderRadius: "var(--radius-sm)",
-          border: "1px solid rgba(158,115,70,0.15)",
-          display: "flex",
-          alignItems: "flex-start",
-          gap: "0.6rem",
+          padding: "0.75rem",
+          background: "#fefce8",
+          borderRadius: "6px",
+          fontSize: "0.8rem",
+          color: "#854d0e",
         }}>
-          <Clock size={15} style={{ color: "var(--accent)", marginTop: 2, flexShrink: 0 }} />
-          <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.88rem", lineHeight: 1.6 }}>
-            <strong style={{ color: "var(--secondary)" }}>ملاحظة:</strong> عند الحفظ يتم إضافة الجدول تلقائياً لملف الإنجاز وإرساله للمنسق للمراجعة.
-            المنسق يتحكم بفتح وإغلاق التعبئة.
-          </p>
+          <strong>ملاحظة:</strong> عند الحفظ يتم إضافة الجدول تلقائياً لملف الإنجاز.
         </div>
 
       </div>
