@@ -3,7 +3,7 @@ import axios from "axios";
 import { apiCache } from "./apiCache";
 import { resetNotificationsState } from "../hooks/useNotifications";
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api").replace(/\/+$/, "");
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace(/\/+$/, "");
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -15,7 +15,7 @@ export const apiClient = axios.create({
 });
 
 /** أصل الخادم بدون ‎/api (لروابط التخزين /storage/...) */
-export const apiOrigin = String(apiClient.defaults.baseURL || "").replace(/\/api\/?$/, "") || "http://localhost:8000";
+export const apiOrigin = String(apiClient.defaults.baseURL || "").replace(/\/api\/?$/, "") || (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/api\/?$/, "");
 
 // Laravel API Resources often return payload as { data: ... }.
 // Normalize responses to keep frontend forms and lists stable.
