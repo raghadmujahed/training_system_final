@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { getStudentEForms, saveStudentTrainingProgram, saveStudentEForm, updateStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
+import { getStudentEForms, saveStudentEForm, updateStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Loader2, Save, Plus, Trash2, RotateCcw, BookOpen, FileText, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, ArrowRight, CheckCircle2, Clock, Edit3 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -375,7 +375,11 @@ export default function EForms() {
       let formData = null;
 
       if (selectedForm === "classes_count") {
-        await saveStudentTrainingProgram({ schedule: {}, teachingSessions });
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: teachingSessions });
+        } else {
+          await saveStudentEForm({ form_key: "classes_count", title: formTitle, payload: teachingSessions });
+        }
         formData = teachingSessions;
       } else if (selectedForm === "learning_experience_review") {
         if (editingEntry?.eformId) {
@@ -466,6 +470,7 @@ export default function EForms() {
       else if (selectedForm === "learning_experience_review") resetLearningExperience();
       else if (selectedForm === "weekly_reflection") resetWeeklyReflection();
       else if (selectedForm === "field_visit_summary") resetFieldVisitSummary();
+      else if (selectedForm === "classes_count") resetTeachingSessions();
       else if (selectedForm === "daily_tasks_report") resetDailyTaskRows();
       setTimeout(() => {
         setSuccess("");
