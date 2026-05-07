@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { getStudentEForms, saveStudentTrainingProgram, saveStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
+import { getStudentEForms, saveStudentTrainingProgram, saveStudentEForm, updateStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Loader2, Save, Plus, Trash2, RotateCcw, BookOpen, FileText, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, ArrowRight, CheckCircle2, Clock, Edit3 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -114,6 +114,21 @@ export default function EForms() {
     supervisorSupportNeeds: ""
   });
 
+  // Weekly reflection state (التأمل الأسبوعي)
+  const [weeklyReflection, setWeeklyReflection] = useState({
+    reflection: "",
+    notes: "",
+    summary: "",
+  });
+
+  // Field visit summary state (ملخص الزيارة الميدانية)
+  const [fieldVisitSummary, setFieldVisitSummary] = useState({
+    visitDate: "",
+    visitPurpose: "",
+    observations: "",
+    recommendations: "",
+  });
+
   // Daily tasks report state (تقرير المهام والأعمال اليومية)
   const emptyDailyTaskRow = () => ({ id: Date.now() + Math.random(), tasksCompleted: "", goals: "", skills: "", challenges: "", effortOnChallenges: "", supervisorNotes: "" });
   const [dailyTaskRows, setDailyTaskRows] = useState(() => Array.from({ length: 5 }, emptyDailyTaskRow));
@@ -147,7 +162,10 @@ export default function EForms() {
     if (!editData) return;
 
     const { formKey, content } = editData;
-    setEditingEntry(editData);
+    // Find the eform ID from the saved forms list
+    const matchingForm = forms.find(f => f.form_key === formKey);
+    const eformId = matchingForm?.id || editData.eformId || null;
+    setEditingEntry({ ...editData, eformId });
     setSelectedForm(formKey);
 
     // Parse saved form data and load it
@@ -159,6 +177,10 @@ export default function EForms() {
         setWeeklyReport(prev => ({ ...prev, ...parsed }));
       } else if (formKey === "weekly_brief_report" && parsed) {
         setWeeklyBriefReport(prev => ({ ...prev, ...parsed }));
+      } else if (formKey === "weekly_reflection" && parsed) {
+        setWeeklyReflection(prev => ({ ...prev, ...parsed }));
+      } else if (formKey === "field_visit_summary" && parsed) {
+        setFieldVisitSummary(prev => ({ ...prev, ...parsed }));
       } else if (formKey === "classes_count" && Array.isArray(parsed)) {
         setTeachingSessions(parsed);
       } else if (formKey === "daily_tasks_report" && Array.isArray(parsed)) {
@@ -182,10 +204,13 @@ export default function EForms() {
 
   const handleFormSelect = (formKey) => {
     if (!formKey) return;
-    // Reset form state to allow a fresh entry every time
+    // Reset form state only when not editing (fresh entry)
+    if (editingEntry) return;
     if (formKey === "learning_experience_review") resetLearningExperience();
     else if (formKey === "weekly_full_report") resetWeeklyReport();
     else if (formKey === "weekly_brief_report") resetWeeklyBriefReport();
+    else if (formKey === "weekly_reflection") resetWeeklyReflection();
+    else if (formKey === "field_visit_summary") resetFieldVisitSummary();
     else if (formKey === "classes_count") resetTeachingSessions();
     else if (formKey === "daily_tasks_report") resetDailyTaskRows();
   };
@@ -251,6 +276,22 @@ export default function EForms() {
       evaluationAndTesting: "",
       teacherRoles: ""
     });
+  };
+
+  // Weekly reflection handlers
+  const updateWeeklyReflection = (field, value) => {
+    setWeeklyReflection(prev => ({ ...prev, [field]: value }));
+  };
+  const resetWeeklyReflection = () => {
+    setWeeklyReflection({ reflection: "", notes: "", summary: "" });
+  };
+
+  // Field visit summary handlers
+  const updateFieldVisitSummary = (field, value) => {
+    setFieldVisitSummary(prev => ({ ...prev, [field]: value }));
+  };
+  const resetFieldVisitSummary = () => {
+    setFieldVisitSummary({ visitDate: "", visitPurpose: "", observations: "", recommendations: "" });
   };
 
   // Teaching sessions handlers
@@ -324,46 +365,85 @@ export default function EForms() {
     setSuccess("");
     try {
       const formTitle = availableForms.find(f => f.key === selectedForm)?.title || 'نموذج';
-      const dateStr = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-      const entryTitle = `${formTitle} — ${dateStr}`;
-      let entryId = editingEntry?.id || null;
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      const timeStr = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+      const entryTitle = `${formTitle} — ${dateStr} ${timeStr}`;
+      // Only reuse the portfolio entry ID if the student explicitly opened an existing entry for editing
+      const isExplicitEdit = !!(editingEntry?.eformId && editingEntry?.id);
+      let entryId = isExplicitEdit ? editingEntry.id : null;
       let formData = null;
 
       if (selectedForm === "classes_count") {
         await saveStudentTrainingProgram({ schedule: {}, teachingSessions });
         formData = teachingSessions;
       } else if (selectedForm === "learning_experience_review") {
-        await saveStudentEForm({ form_key: "learning_experience_review", title: formTitle, payload: learningExperience });
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: learningExperience });
+        } else {
+          await saveStudentEForm({ form_key: "learning_experience_review", title: formTitle, payload: learningExperience });
+        }
         formData = learningExperience;
       } else if (selectedForm === "weekly_full_report") {
-        await saveStudentEForm({ form_key: "weekly_full_report", title: formTitle, payload: weeklyReport });
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: weeklyReport });
+        } else {
+          await saveStudentEForm({ form_key: "weekly_full_report", title: formTitle, payload: weeklyReport });
+        }
         formData = weeklyReport;
       } else if (selectedForm === "weekly_brief_report") {
-        await saveStudentEForm({ form_key: "weekly_brief_report", title: formTitle, payload: weeklyBriefReport });
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: weeklyBriefReport });
+        } else {
+          await saveStudentEForm({ form_key: "weekly_brief_report", title: formTitle, payload: weeklyBriefReport });
+        }
         formData = weeklyBriefReport;
+      } else if (selectedForm === "weekly_reflection") {
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: weeklyReflection });
+        } else {
+          await saveStudentEForm({ form_key: "weekly_reflection", title: formTitle, payload: weeklyReflection });
+        }
+        formData = weeklyReflection;
+      } else if (selectedForm === "field_visit_summary") {
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: fieldVisitSummary });
+        } else {
+          await saveStudentEForm({ form_key: "field_visit_summary", title: formTitle, payload: fieldVisitSummary });
+        }
+        formData = fieldVisitSummary;
       } else if (selectedForm === "daily_tasks_report") {
-        await saveStudentEForm({ form_key: "daily_tasks_report", title: formTitle, payload: dailyTaskRows });
+        if (editingEntry?.eformId) {
+          await updateStudentEForm(editingEntry.eformId, { title: formTitle, payload: dailyTaskRows });
+        } else {
+          await saveStudentEForm({ form_key: "daily_tasks_report", title: formTitle, payload: dailyTaskRows });
+        }
         formData = dailyTaskRows;
       }
 
-      // Update existing entry or add new one to portfolio
-      try {
-        if (editingEntry && entryId) {
-          // Update existing portfolio entry
+      // Update existing entry or always create new one to portfolio
+      if (isExplicitEdit && entryId && formData) {
+        // Update existing portfolio entry (only when editing from portfolio)
+        try {
           await updatePortfolioEntry(entryId, {
             title: entryTitle,
             content: JSON.stringify(formData, null, 2),
           });
-        } else if (formData) {
-          // Create new portfolio entry
+        } catch {
+          // Portfolio update failure is non-critical
+        }
+      } else if (formData) {
+        // Always create a new portfolio entry for each save
+        try {
           const fd = new FormData();
           fd.append("title", entryTitle);
           fd.append("content", JSON.stringify(formData, null, 2));
           const res = await addPortfolioEntry(fd);
           entryId = res?.data?.id || res?.id || null;
+        } catch (portfolioErr) {
+          console.warn("Portfolio entry creation failed:", portfolioErr?.response?.data || portfolioErr?.message);
+          // Portfolio failure is non-critical — e-form was saved successfully
         }
-      } catch {
-        // Portfolio operation failure is non-critical
       }
 
       // Generate PDF and upload to the portfolio entry
@@ -380,6 +460,13 @@ export default function EForms() {
       setSuccess(`تم ${actionText} "${formTitle}" وإضافته لملف الإنجاز بنجاح!`);
       addToast(`تم ${actionText} "${formTitle}" بنجاح`, "success");
       setEditingEntry(null);
+      // Reset form so student can fill again fresh
+      if (selectedForm === "weekly_full_report") resetWeeklyReport();
+      else if (selectedForm === "weekly_brief_report") resetWeeklyBriefReport();
+      else if (selectedForm === "learning_experience_review") resetLearningExperience();
+      else if (selectedForm === "weekly_reflection") resetWeeklyReflection();
+      else if (selectedForm === "field_visit_summary") resetFieldVisitSummary();
+      else if (selectedForm === "daily_tasks_report") resetDailyTaskRows();
       setTimeout(() => {
         setSuccess("");
         setSelectedForm("");
@@ -1654,6 +1741,124 @@ export default function EForms() {
                   <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
                     {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                     {saving ? "جاري الحفظ..." : "حفظ التقرير"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedForm === "weekly_reflection" && (
+              <div style={{ marginTop: "2rem", animation: "fadeIn 0.4s ease-out" }}>
+                <div style={{
+                  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  borderRadius: "16px 16px 0 0",
+                  padding: "1.5rem 2rem",
+                  color: "white"
+                }}>
+                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>نموذج التأمل الأسبوعي</h4>
+                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
+                    تأمل ذاتي أسبوعي في التجربة التدريبية
+                  </p>
+                </div>
+                <div style={{
+                  backgroundColor: "white",
+                  borderRadius: "0 0 16px 16px",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                  padding: "1.5rem",
+                  border: "1px solid #e8e8e8",
+                  borderTop: "none"
+                }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+                    {[
+                      { key: "reflection", label: "التأمل في التجربة التدريبية هذا الأسبوع" },
+                      { key: "notes", label: "ملاحظات ونقاط للتحسين" },
+                      { key: "summary", label: "ملخص الأسبوع" },
+                    ].map((field) => (
+                      <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
+                        <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#495057", marginBottom: "0.5rem" }}>
+                          {field.label}
+                        </label>
+                        <textarea
+                          value={weeklyReflection[field.key]}
+                          onChange={(e) => updateWeeklyReflection(field.key, e.target.value)}
+                          rows={4}
+                          style={{ width: "100%", padding: "10px", border: "1.5px solid #e0e0e0", borderRadius: "8px", fontSize: "0.85rem", resize: "vertical", backgroundColor: "white", fontFamily: "inherit" }}
+                          placeholder="..."
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.5rem" }}>
+                  <button onClick={resetWeeklyReflection} style={{ padding: "0.875rem 1.5rem", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 500 }}>
+                    <RotateCcw size={18} /> إعادة تعيين
+                  </button>
+                  <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
+                    {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
+                    {saving ? "جاري الحفظ..." : "حفظ النموذج"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {selectedForm === "field_visit_summary" && (
+              <div style={{ marginTop: "2rem", animation: "fadeIn 0.4s ease-out" }}>
+                <div style={{
+                  background: "linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)",
+                  borderRadius: "16px 16px 0 0",
+                  padding: "1.5rem 2rem",
+                  color: "white"
+                }}>
+                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>ملخص الزيارة الميدانية</h4>
+                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
+                    توثيق الزيارات الميدانية والملاحظات
+                  </p>
+                </div>
+                <div style={{
+                  backgroundColor: "white",
+                  borderRadius: "0 0 16px 16px",
+                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+                  padding: "1.5rem",
+                  border: "1px solid #e8e8e8",
+                  borderTop: "none"
+                }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+                    {[
+                      { key: "visitDate", label: "تاريخ الزيارة", type: "date" },
+                      { key: "visitPurpose", label: "هدف الزيارة" },
+                      { key: "observations", label: "الملاحظات" },
+                      { key: "recommendations", label: "التوصيات" },
+                    ].map((field) => (
+                      <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
+                        <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#495057", marginBottom: "0.5rem" }}>
+                          {field.label}
+                        </label>
+                        {field.type === "date" ? (
+                          <input
+                            type="date"
+                            value={fieldVisitSummary[field.key]}
+                            onChange={(e) => updateFieldVisitSummary(field.key, e.target.value)}
+                            style={{ width: "100%", padding: "10px", border: "1.5px solid #e0e0e0", borderRadius: "8px", fontSize: "0.85rem", backgroundColor: "white" }}
+                          />
+                        ) : (
+                          <textarea
+                            value={fieldVisitSummary[field.key]}
+                            onChange={(e) => updateFieldVisitSummary(field.key, e.target.value)}
+                            rows={4}
+                            style={{ width: "100%", padding: "10px", border: "1.5px solid #e0e0e0", borderRadius: "8px", fontSize: "0.85rem", resize: "vertical", backgroundColor: "white", fontFamily: "inherit" }}
+                            placeholder="..."
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.5rem" }}>
+                  <button onClick={resetFieldVisitSummary} style={{ padding: "0.875rem 1.5rem", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 500 }}>
+                    <RotateCcw size={18} /> إعادة تعيين
+                  </button>
+                  <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
+                    {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
+                    {saving ? "جاري الحفظ..." : "حفظ النموذج"}
                   </button>
                 </div>
               </div>

@@ -324,6 +324,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // E-Forms étudiant
         Route::get('/e-forms', [StudentEFormController::class, 'index']);
         Route::post('/e-forms', [StudentEFormController::class, 'store']);
+        Route::put('/e-forms/{eform}', [StudentEFormController::class, 'update']);
         Route::post('/e-forms/{eform}/submit', [StudentEFormController::class, 'submit']);
 
         // Training Program (برنامج التدريب)

@@ -373,8 +373,11 @@ export default function Portfolio() {
 
   const fileHref = (path) => {
     if (!path) return null;
-    if (String(path).startsWith("http")) return path;
-    return `${apiOrigin}/storage/${String(path).replace(/^\//, "")}`;
+    const s = String(path);
+    if (s.startsWith("http")) return s;
+    // Reject timestamps or non-file values (e.g. "2026-05-07 20:24:59")
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+    return `${apiOrigin}/storage/${s.replace(/^\//, "")}`;
   };
 
   const handleAdd = async (e) => {

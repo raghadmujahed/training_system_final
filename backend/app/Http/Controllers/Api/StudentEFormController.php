@@ -4,11 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\StudentEForm;
+use App\Models\TrainingAssignment;
+use App\Models\TrainingLog;
+use App\Services\TrainingTrackResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
 class StudentEFormController extends Controller
 {
+    private const WEEKLY_REPORT_FORM_KEYS = [
+        'weekly_full_report',
+        'weekly_brief_report',
+        'weekly_reflection',
+        'weekly_brief_report',
+        'learning_experience_review',
+        'field_visit_summary',
+        'classes_count',
+    ];
     public function index(Request $request)
     {
         $user = $request->user();
@@ -50,20 +62,71 @@ class StudentEFormController extends Controller
             'payload' => ['nullable', 'array'],
         ]);
 
-        $item = StudentEForm::query()->updateOrCreate(
-            [
+        try {
+            // Always create a new record — student can fill the same form multiple times
+            $item = StudentEForm::create([
                 'user_id' => $user->id,
                 'form_key' => $data['form_key'],
-            ],
-            [
                 'title' => $data['title'],
                 'payload' => $data['payload'] ?? [],
                 'status' => 'draft',
                 'submitted_at' => null,
-            ]
-        );
+            ]);
 
-        return response()->json($item);
+            // أنشئ TrainingLog تلقائياً لطلاب أصول التربية عند حفظ أي تقرير أسبوعي
+            if (in_array($data['form_key'], self::WEEKLY_REPORT_FORM_KEYS, true)) {
+                $user->loadMissing('department');
+                $deptName = $user->department?->name ?? '';
+                $isUsoolTarbiah = $deptName === TrainingTrackResolver::USOOL_TARBIAH
+                    || $user->department_id === TrainingTrackResolver::usoolTarbiahDeptId();
+
+                if ($isUsoolTarbiah) {
+                    $assignment = TrainingAssignment::whereHas(
+                        'enrollment',
+                        fn ($q) => $q->where('user_id', $user->id)
+                    )->latest('id')->first();
+
+                    if ($assignment) {
+                        $payload = $data['payload'] ?? [];
+                        $reflectionJson = is_array($payload) && count($payload) > 0
+                            ? json_encode($payload, JSON_UNESCAPED_UNICODE)
+                            : '';
+
+                        $log = TrainingLog::withArchived()
+                            ->where('training_assignment_id', $assignment->id)
+                            ->whereDate('log_date', now()->toDateString())
+                            ->first();
+
+                        if ($log) {
+                            $log->update([
+                                'activities_performed' => $data['title'],
+                                'status'               => 'submitted',
+                                'student_reflection'   => $reflectionJson,
+                            ]);
+                        } else {
+                            TrainingLog::create([
+                                'training_assignment_id' => $assignment->id,
+                                'log_date'               => now()->toDateString(),
+                                'activities_performed'   => $data['title'],
+                                'status'                 => 'submitted',
+                                'student_reflection'     => $reflectionJson,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            return response()->json($item);
+        } catch (\Exception $e) {
+            \Log::error('StudentEForm store error: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'form_key' => $data['form_key'],
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'فشل حفظ النموذج: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function submit(Request $request, StudentEForm $eform)
@@ -88,6 +151,63 @@ class StudentEFormController extends Controller
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
+
+        return response()->json($eform->fresh());
+    }
+
+    public function update(Request $request, StudentEForm $eform)
+    {
+        $user = $request->user();
+        if ($user->role?->name !== 'student' || $eform->user_id !== $user->id) {
+            return response()->json(['message' => 'غير مصرح.'], 403);
+        }
+
+        $data = $request->validate([
+            'title' => ['sometimes', 'string', 'max:255'],
+            'payload' => ['nullable', 'array'],
+        ]);
+
+        $eform->update([
+            'title' => $data['title'] ?? $eform->title,
+            'payload' => $data['payload'] ?? $eform->payload,
+            'status' => 'draft',
+            'submitted_at' => null,
+        ]);
+
+        // حدّث TrainingLog لطلاب أصول التربية عند تعديل تقرير أسبوعي
+        if (in_array($eform->form_key, self::WEEKLY_REPORT_FORM_KEYS, true)) {
+            $user->loadMissing('department');
+            $deptName = $user->department?->name ?? '';
+            $isUsoolTarbiah = $deptName === TrainingTrackResolver::USOOL_TARBIAH
+                || $user->department_id === TrainingTrackResolver::usoolTarbiahDeptId();
+
+            if ($isUsoolTarbiah) {
+                $assignment = TrainingAssignment::whereHas(
+                    'enrollment',
+                    fn ($q) => $q->where('user_id', $user->id)
+                )->latest('id')->first();
+
+                if ($assignment) {
+                    $payload = $data['payload'] ?? $eform->payload;
+                    $reflectionJson = is_array($payload) && count($payload) > 0
+                        ? json_encode($payload, JSON_UNESCAPED_UNICODE)
+                        : '';
+
+                    $log = TrainingLog::withArchived()
+                        ->where('training_assignment_id', $assignment->id)
+                        ->whereDate('log_date', $eform->created_at->toDateString())
+                        ->first();
+
+                    if ($log) {
+                        $log->update([
+                            'activities_performed' => $eform->title,
+                            'status'               => 'submitted',
+                            'student_reflection'   => $reflectionJson,
+                        ]);
+                    }
+                }
+            }
+        }
 
         return response()->json($eform->fresh());
     }

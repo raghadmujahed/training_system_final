@@ -682,6 +682,11 @@ export const saveStudentEForm = async (data) => {
   return response.data;
 };
 
+export const updateStudentEForm = async (id, data) => {
+  const response = await apiClient.put(`/student/e-forms/${id}`, data);
+  return response.data;
+};
+
 export const submitStudentEForm = async (id, data = {}) => {
   const response = await apiClient.post(`/student/e-forms/${id}/submit`, data);
   return response.data;

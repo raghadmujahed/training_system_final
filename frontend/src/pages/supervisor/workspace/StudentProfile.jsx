@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { apiClient } from "../../../services/api";
+import { isPsychologyAcademicSupervisor } from "../../../utils/psychologyWorkflow";
+import { readStoredUser } from "../../../utils/session";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import OverviewTab from "./tabs/OverviewTab";
 import AttendanceTab from "./tabs/AttendanceTab";
@@ -37,6 +39,17 @@ const ACADEMIC_STATUS_OPTIONS = [
 ];
 
 export default function StudentProfile({ studentId, onBack, onRefresh }) {
+  const currentUser = readStoredUser();
+  const isPsychSupervisor = isPsychologyAcademicSupervisor(currentUser);
+  const visibleTabs = useMemo(() => {
+    const tabs = isPsychSupervisor ? TABS.filter((t) => t.key !== "schedule") : TABS;
+    if (!isPsychSupervisor) {
+      return tabs.map((t) =>
+        t.key === "daily-logs" ? { ...t, label: "التقرير الأسبوعي" } : t
+      );
+    }
+    return tabs;
+  }, [isPsychSupervisor]);
   const [activeTab, setActiveTab] = useState("overview");
   const [student, setStudent] = useState(null);
   const [academicSupervision, setAcademicSupervision] = useState(null);
@@ -234,7 +247,7 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
           borderBottom: "1px solid #e9ecef",
         }}
       >
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}

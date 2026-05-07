@@ -40,6 +40,7 @@ use App\Models\Task;
 use App\Models\TaskSubmission;
 use App\Models\Evaluation;
 use App\Models\Enrollment;
+use App\Models\StudentEForm;
 use App\Models\StudentPortfolio;
 use App\Models\Note;
 use App\Models\TrainingAssignment;
@@ -885,8 +886,34 @@ class SupervisorWorkspaceController extends Controller
             'academic_note' => $log->academic_note,
             'academic_review_status' => $log->academic_review_status,
         ]);
+
+        // نماذج إلكترونية للطالب (أصول التربية)
+        $eFormRows = collect();
+        $enrollment = $assignment->enrollment;
+        if ($enrollment) {
+            $eFormRows = StudentEForm::where('user_id', $enrollment->user_id)
+                ->whereIn('form_key', ['weekly_full_report', 'weekly_brief_report', 'weekly_reflection', 'learning_experience_review', 'field_visit_summary', 'classes_count'])
+                ->orderByDesc('updated_at')
+                ->get()
+                ->map(fn (StudentEForm $eform) => [
+                    'id' => 'eform-' . $eform->id,
+                    'source' => 'eform',
+                    'source_id' => $eform->id,
+                    'title' => $eform->title,
+                    'form_key' => $eform->form_key,
+                    'date' => optional($eform->updated_at)->toDateString(),
+                    'log_date' => optional($eform->updated_at)->toDateString(),
+                    'status' => $eform->status,
+                    'description' => $eform->title,
+                    'student_reflection' => is_array($eform->payload) ? json_encode($eform->payload, JSON_UNESCAPED_UNICODE) : $eform->payload,
+                    'payload' => $eform->payload,
+                    'submitted_at' => optional($eform->submitted_at)?->toDateTimeString(),
+                ]);
+        }
+
         $visibleLogs = $trainingLogRows
             ->merge($dailyReports)
+            ->merge($eFormRows)
             ->sortByDesc(fn ($row) => $row['date'] ?? '')
             ->values();
 
