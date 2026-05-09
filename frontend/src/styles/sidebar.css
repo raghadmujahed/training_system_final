@@ -14,8 +14,9 @@
   padding: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: -4px 0 36px rgba(8, 20, 32, 0.22);
-  position: sticky;
+  position: fixed;
   top: 0;
+  right: 0;
   overflow: hidden;
   z-index: 20;
   direction: rtl;
