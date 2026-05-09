@@ -1,7 +1,7 @@
 .sidebar {
-  width: max-content;
-  min-width: 260px;
-  max-width: 340px;
+  width: var(--sidebar-width, 280px);
+  min-width: var(--sidebar-width, 280px);
+  max-width: var(--sidebar-width, 280px);
   height: 100vh;
   min-height: 100vh;
   max-height: 100vh;
@@ -14,11 +14,13 @@
   padding: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: -4px 0 36px rgba(8, 20, 32, 0.22);
-  position: fixed;
-  top: 0;
-  right: 0;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: auto !important;
+  bottom: 0 !important;
   overflow: hidden;
-  z-index: 20;
+  z-index: 50 !important;
   direction: rtl;
   text-align: right;
 }
@@ -330,16 +332,18 @@
 
 @media (max-width: 768px) {
   .sidebar {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 280px;
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: auto !important;
+    width: var(--sidebar-width, 280px);
+    min-width: var(--sidebar-width, 280px);
     max-width: 85vw;
     height: 100dvh;
     min-height: 100dvh;
     max-height: 100dvh;
-    z-index: 99;
+    z-index: 99 !important;
     transform: translateX(100%);
     transition: transform 0.28s ease;
     overflow-y: auto;
@@ -439,6 +443,7 @@
 @media (max-width: 480px) {
   .sidebar {
     width: 260px;
+    min-width: 260px;
     max-width: 82vw;
   }
 
@@ -485,6 +490,7 @@
 @media (max-width: 360px) {
   .sidebar {
     width: 240px;
+    min-width: 240px;
     max-width: 80vw;
   }
 

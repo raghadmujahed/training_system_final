@@ -70,7 +70,7 @@
 
   --transition: all 0.25s ease;
 
-  --sidebar-width: 300px;
+  --sidebar-width: 280px;
   --navbar-height: 78px;
   --content-max: 100%;
 
@@ -671,7 +671,7 @@ p {
 
 @media (max-width: 992px) {
   :root {
-    --sidebar-width: 100%;
+    --sidebar-width: 280px;
   }
 
   .card-surface,
