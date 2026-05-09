@@ -4,6 +4,7 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import { isValidPhone, getPhoneErrorMessage, isValidEmail, getEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
 
 export default function AddTeacher() {
   const { id } = useParams();
@@ -43,16 +44,109 @@ export default function AddTeacher() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    validateField(e.target.name, e.target.value);
+  };
+
+  const validateField = (fieldName, value) => {
+    let error = null;
+
+    switch (fieldName) {
+      case "email":
+        if (value && !isValidEmail(value)) {
+          error = getEmailErrorMessage();
+        }
+        break;
+      case "phone":
+        if (value && !isValidPhone(value)) {
+          error = getPhoneErrorMessage();
+        }
+        break;
+      case "password":
+        if (value && !isEditMode && !isValidPassword(value)) {
+          error = getPasswordErrorMessage();
+        }
+        break;
+      case "password_confirmation":
+        if (value && form.password && value !== form.password) {
+          error = "تأكيد كلمة المرور غير مطابق";
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (error) {
+      setErrors((prev) => ({ ...prev, [fieldName]: error }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = "الاسم مطلوب";
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = "البريد الإلكتروني مطلوب";
+    } else if (!isValidEmail(form.email)) {
+      newErrors.email = getEmailErrorMessage();
+    }
+
+    if (form.phone && !isValidPhone(form.phone)) {
+      newErrors.phone = getPhoneErrorMessage();
+    }
+
+    if (!form.major.trim()) {
+      newErrors.major = "التخصص مطلوب";
+    }
+
+    if (!form.training_site_id) {
+      newErrors.training_site_id = "مكان التدريب مطلوب";
+    }
+
+    if (!isEditMode) {
+      if (!form.password) {
+        newErrors.password = "كلمة المرور مطلوبة";
+      } else if (!isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+
+      if (!form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور مطلوب";
+      } else if (form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور غير مطابق";
+      }
+    } else {
+      if (form.password && !isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+      if (form.password && form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور غير مطابق";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); setErrors({});
+    if (loading) return;
+    setLoading(true);
+    setErrors({});
     if (!teacherRoleId) {
       toast.error("تعذر تحديد دور المعلم المرشد من قاعدة البيانات");
       setLoading(false);
       return;
     }
+
+    if (!validateForm()) {
+      setLoading(false);
+      toast.error("يرجى تصحيح الأخطاء قبل المتابعة");
+      return;
+    }
+
     const formToSend = { ...form, role_id: teacherRoleId, training_site_id: form.training_site_id ? Number(form.training_site_id) : null };
     try {
       if (id) { await updateUser(id, formToSend); toast.success("تم تحديث المعلم بنجاح"); }
@@ -142,13 +236,13 @@ export default function AddTeacher() {
 
   const formFields = () => (
     <>
-      <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0]}</span>}</div>
-      <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />{errors.email && <span className="error">{errors.email[0]}</span>}</div>
-      <div className="form-group"><label>التخصص *</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} required />{errors.major && <span className="error">{errors.major[0]}</span>}</div>
-      <div className="form-group"><label>مكان التدريب *</label><select id="training_site_id" name="training_site_id" value={form.training_site_id} onChange={handleChange} required><option value="">اختر مكان التدريب</option>{trainingSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>{errors.training_site_id && <span className="error">{errors.training_site_id[0]}</span>}</div>
-      <div className="form-group"><label>الهاتف</label><input type="text" id="phone" name="phone" value={form.phone} onChange={handleChange} />{errors.phone && <span className="error">{errors.phone[0]}</span>}</div>
-      <div className="form-group"><label>كلمة المرور {!isEditMode && "*"}</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} {...(!isEditMode && { required: true })} />{errors.password && <span className="error">{errors.password[0]}</span>}</div>
-      <div className="form-group"><label>تأكيد كلمة المرور {!isEditMode && "*"}</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} {...(!isEditMode && { required: true })} /></div>
+      <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />{errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}</div>
+      <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required />{errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}</div>
+      <div className="form-group"><label>التخصص *</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} onBlur={handleChange} className={errors.major ? 'border-red-500' : ''} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
+      <div className="form-group"><label>مكان التدريب *</label><select id="training_site_id" name="training_site_id" value={form.training_site_id} onChange={handleChange} onBlur={handleChange} className={errors.training_site_id ? 'border-red-500' : ''} required><option value="">اختر مكان التدريب</option>{trainingSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>{errors.training_site_id && <span className="error">{Array.isArray(errors.training_site_id) ? errors.training_site_id[0] : errors.training_site_id}</span>}</div>
+      <div className="form-group"><label>الهاتف</label><input type="text" id="phone" name="phone" value={form.phone} onChange={handleChange} onBlur={handleChange} className={errors.phone ? 'border-red-500' : ''} />{errors.phone && <span className="error">{Array.isArray(errors.phone) ? errors.phone[0] : errors.phone}</span>}</div>
+      <div className="form-group"><label>كلمة المرور {!isEditMode && "*"}</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} {...(!isEditMode && { required: true })} />{errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}</div>
+      <div className="form-group"><label>تأكيد كلمة المرور {!isEditMode && "*"}</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} onBlur={handleChange} className={errors.password_confirmation ? 'border-red-500' : ''} {...(!isEditMode && { required: true })} />{errors.password_confirmation && <span className="error">{Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}</span>}</div>
     </>
   );
 

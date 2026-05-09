@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getSection, createSection, updateSection, getUsers } from "../../../services/api";
 import { useCourses, useRoles } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
+import { apiCache } from "../../../services/apiCache";
 
 export default function SectionForm() {
   const toast = useAppToast();
@@ -93,23 +94,30 @@ export default function SectionForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     setErrors({});
     setLoading(true);
     try {
       if (id) {
         await updateSection(id, form);
+        toast.success("تم تحديث الشعبة بنجاح");
       } else {
         await createSection(form);
+        toast.success("تم إضافة الشعبة بنجاح");
       }
+      // Invalidate sections cache to refresh the list
+      apiCache.invalidate("sections:list");
       navigate("/admin/sections");
     } catch (err) {
-      if (err.response?.data?.errors) {
+      if (err.response?.status === 422 && err.response?.data?.errors) {
         setErrors(err.response.data.errors);
+        toast.error("يرجى التحقق من البيانات المدخلة");
+      } else if (err.response?.status === 500) {
+        toast.error("حدث خطأ في الخادم، يرجى المحاولة لاحقًا");
       } else {
         toast.apiError(err, "حدث خطأ أثناء حفظ الشعبة");
       }

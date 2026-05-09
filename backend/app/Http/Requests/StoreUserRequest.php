@@ -28,7 +28,12 @@ class StoreUserRequest extends FormRequest
             'status' => 'required|in:active,inactive,suspended',
             'department_id' => 'required_if:role_id,' . $studentRoleId . '|nullable|exists:departments,id',
             'role_id' => 'required|exists:roles,id',
-            'phone' => 'nullable|string|max:20',
+            'phone' => [
+                'nullable',
+                'string',
+                'max:20',
+                'regex:/^(\+970|970)?(05[0-9]|02)\d{7}$/'
+            ],
             'major' => 'required_if:role_id,' . $studentRoleId . '|nullable|string|max:255',
             'training_site_id' => 'nullable|exists:training_sites,id',
             'directorate' => 'nullable|in:وسط,شمال,جنوب,يطا',
@@ -45,6 +50,7 @@ class StoreUserRequest extends FormRequest
             'major.required_if' => 'التخصص مطلوب للطلاب.',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً.',
             'department_id.required_if' => 'القسم مطلوب للطلاب.',
+            'phone.regex' => 'رقم الهاتف غير صحيح، يرجى إدخال رقم هاتف فلسطيني صالح.',
         ];
     }
 

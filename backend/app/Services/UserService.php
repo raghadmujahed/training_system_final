@@ -6,17 +6,20 @@ use App\Models\User;
 use App\Models\FieldSupervisorProfile;
 use App\Enums\UserStatus;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class UserService
 {
     public function createUser(array $data): User
     {
-        $data['password'] = Hash::make($data['password']);
-        $data['status'] = $data['status'] ?? UserStatus::ACTIVE->value;
-        $user = User::create($data);
-        $this->syncFieldSupervisorProfile($user);
+        return DB::transaction(function () use ($data) {
+            $data['password'] = Hash::make($data['password']);
+            $data['status'] = $data['status'] ?? UserStatus::ACTIVE->value;
+            $user = User::create($data);
+            $this->syncFieldSupervisorProfile($user);
 
-        return $user;
+            return $user;
+        });
     }
 
     public function updateUser(User $user, array $data): User

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getDepartment, createDepartment, updateDepartment } from "../../../services/api";
 import useAppToast from "../../../hooks/useAppToast";
 import { isRequired, getNameErrorMessage } from "../../../utils/validation";
+import { apiCache } from "../../../services/apiCache";
 
 export default function DepartmentForm() {
   const toast = useAppToast();
@@ -39,14 +40,16 @@ export default function DepartmentForm() {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       if (id) await updateDepartment(id, { name });
       else await createDepartment({ name });
+      // Invalidate departments cache to refresh the list
+      apiCache.invalidate("departments:list");
       navigate("/admin/departments");
     } catch (err) {
       toast.apiError(err, "حدث خطأ أثناء حفظ القسم");

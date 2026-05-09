@@ -3,14 +3,18 @@
  * Matches backend Laravel validation rules
  */
 
-// Phone number validation - Palestinian format (056/059 + 7 digits)
+// Phone number validation - Palestinian format
+// Supports: 05xxxxxxxx, 059xxxxxxx, 056xxxxxxx, 02xxxxxxx, +9705xxxxxxxx, +9725xxxxxxxx
 export const isValidPhone = (phone) => {
   if (!phone || phone === "") return true; // Phone is optional
-  return /^(056|059)\d{7}$/.test(phone);
+  // Remove spaces and dashes
+  const cleaned = phone.replace(/[\s\-]/g, '');
+  // Validate formats
+  return /^(\+970|970)?(05[0-9]|02)\d{7}$/.test(cleaned);
 };
 
 export const getPhoneErrorMessage = () => {
-  return "رقم الهاتف يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059";
+  return "رقم الهاتف غير صحيح، يرجى إدخال رقم هاتف صالح";
 };
 
 // Email validation

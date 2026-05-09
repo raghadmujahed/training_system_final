@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamps();
             $table->index('user_id');
             $table->index('training_assignment_id');
+            $table->index(['user_id', 'training_assignment_id']);
         });
     }
 

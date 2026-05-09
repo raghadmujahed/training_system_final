@@ -101,12 +101,7 @@ export default function EnrollmentForm() {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    
+
     if (!form.user_id) {
       newErrors.user_id = "الطالب مطلوب";
     }

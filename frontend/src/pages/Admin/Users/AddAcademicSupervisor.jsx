@@ -4,6 +4,7 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useDepartments, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import { isValidPhone, getPhoneErrorMessage, isValidEmail, getEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
 
 export default function AddAcademicSupervisor() {
   const { id } = useParams();
@@ -57,6 +58,86 @@ export default function AddAcademicSupervisor() {
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    validateField(e.target.name, e.target.value);
+  };
+
+  const validateField = (fieldName, value) => {
+    let error = null;
+
+    switch (fieldName) {
+      case "email":
+        if (value && !isValidEmail(value)) {
+          error = getEmailErrorMessage();
+        }
+        break;
+      case "phone":
+        if (value && !isValidPhone(value)) {
+          error = getPhoneErrorMessage();
+        }
+        break;
+      case "password":
+        if (value && !isEditMode && !isValidPassword(value)) {
+          error = getPasswordErrorMessage();
+        }
+        break;
+      case "password_confirmation":
+        if (value && form.password && value !== form.password) {
+          error = "تأكيد كلمة المرور غير مطابق";
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (error) {
+      setErrors((prev) => ({ ...prev, [fieldName]: error }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!form.name.trim()) {
+      newErrors.name = "الاسم مطلوب";
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = "البريد الإلكتروني مطلوب";
+    } else if (!isValidEmail(form.email)) {
+      newErrors.email = getEmailErrorMessage();
+    }
+
+    if (form.phone && !isValidPhone(form.phone)) {
+      newErrors.phone = getPhoneErrorMessage();
+    }
+
+    if (!form.department_id) {
+      newErrors.department_id = "القسم مطلوب";
+    }
+
+    if (!isEditMode) {
+      if (!form.password) {
+        newErrors.password = "كلمة المرور مطلوبة";
+      } else if (!isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+
+      if (!form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور مطلوب";
+      } else if (form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور غير مطابق";
+      }
+    } else {
+      if (form.password && !isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+      if (form.password && form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور غير مطابق";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleFileChange = (e) => {
@@ -205,6 +286,7 @@ export default function AddAcademicSupervisor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
     setErrors({});
 
@@ -214,6 +296,13 @@ export default function AddAcademicSupervisor() {
         setLoading(false);
         return;
       }
+
+      if (!validateForm()) {
+        setLoading(false);
+        toast.error("يرجى تصحيح الأخطاء قبل المتابعة");
+        return;
+      }
+
       const payload = { ...form, role_id: academicSupervisorRoleId };
 
       if (id) {
@@ -251,37 +340,38 @@ export default function AddAcademicSupervisor() {
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label>الاسم الكامل *</label>
-            <input type="text" name="name" value={form.name} onChange={handleChange} required />
-            {errors.name && <span className="error">{errors.name[0]}</span>}
+            <input type="text" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />
+            {errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}
           </div>
           <div className="form-group">
             <label>البريد الإلكتروني *</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} required />
-            {errors.email && <span className="error">{errors.email[0]}</span>}
+            <input type="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required />
+            {errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}
           </div>
           <div className="form-group">
             <label>رقم الهاتف (اختياري)</label>
-            <input type="tel" name="phone" value={form.phone} onChange={handleChange} />
-            {errors.phone && <span className="error">{errors.phone[0]}</span>}
+            <input type="tel" name="phone" value={form.phone} onChange={handleChange} onBlur={handleChange} className={errors.phone ? 'border-red-500' : ''} />
+            {errors.phone && <span className="error">{Array.isArray(errors.phone) ? errors.phone[0] : errors.phone}</span>}
           </div>
           <div className="form-group">
             <label>القسم *</label>
-            <select name="department_id" value={form.department_id} onChange={handleChange} required>
+            <select name="department_id" value={form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.department_id ? 'border-red-500' : ''} required>
               <option value="">اختر القسم</option>
               {departments.map(dept => (
                 <option key={dept.id} value={dept.id}>{dept.name}</option>
               ))}
             </select>
-            {errors.department_id && <span className="error">{errors.department_id[0]}</span>}
+            {errors.department_id && <span className="error">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</span>}
           </div>
           <div className="form-group">
             <label>كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label>
-            <input type="password" name="password" value={form.password} onChange={handleChange} />
-            {errors.password && <span className="error">{errors.password[0]}</span>}
+            <input type="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} />
+            {errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}
           </div>
           <div className="form-group">
             <label>تأكيد كلمة المرور</label>
-            <input type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} />
+            <input type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} onBlur={handleChange} className={errors.password_confirmation ? 'border-red-500' : ''} />
+            {errors.password_confirmation && <span className="error">{Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}</span>}
           </div>
           <div className="form-actions">
             <button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "تحديث"}</button>
@@ -318,37 +408,38 @@ export default function AddAcademicSupervisor() {
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group">
             <label>الاسم الكامل *</label>
-            <input type="text" name="name" value={form.name} onChange={handleChange} required />
-            {errors.name && <span className="error">{errors.name[0]}</span>}
+            <input type="text" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />
+            {errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}
           </div>
           <div className="form-group">
             <label>البريد الإلكتروني *</label>
-            <input type="email" name="email" value={form.email} onChange={handleChange} required />
-            {errors.email && <span className="error">{errors.email[0]}</span>}
+            <input type="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required />
+            {errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}
           </div>
           <div className="form-group">
             <label>رقم الهاتف (اختياري)</label>
-            <input type="tel" name="phone" value={form.phone} onChange={handleChange} />
-            {errors.phone && <span className="error">{errors.phone[0]}</span>}
+            <input type="tel" name="phone" value={form.phone} onChange={handleChange} onBlur={handleChange} className={errors.phone ? 'border-red-500' : ''} />
+            {errors.phone && <span className="error">{Array.isArray(errors.phone) ? errors.phone[0] : errors.phone}</span>}
           </div>
           <div className="form-group">
             <label>القسم *</label>
-            <select name="department_id" value={form.department_id} onChange={handleChange} required>
+            <select name="department_id" value={form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.department_id ? 'border-red-500' : ''} required>
               <option value="">اختر القسم</option>
               {departments.map(dept => (
                 <option key={dept.id} value={dept.id}>{dept.name}</option>
               ))}
             </select>
-            {errors.department_id && <span className="error">{errors.department_id[0]}</span>}
+            {errors.department_id && <span className="error">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</span>}
           </div>
           <div className="form-group">
             <label>كلمة المرور *</label>
-            <input type="password" name="password" value={form.password} onChange={handleChange} required />
-            {errors.password && <span className="error">{errors.password[0]}</span>}
+            <input type="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} required />
+            {errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}
           </div>
           <div className="form-group">
             <label>تأكيد كلمة المرور *</label>
-            <input type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} required />
+            <input type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} onBlur={handleChange} className={errors.password_confirmation ? 'border-red-500' : ''} required />
+            {errors.password_confirmation && <span className="error">{Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}</span>}
           </div>
           <div className="form-actions">
             <button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "إضافة"}</button>

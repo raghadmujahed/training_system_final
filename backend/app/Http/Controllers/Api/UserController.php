@@ -116,18 +116,31 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $user = $this->userService->createUser($request->validated());
+        try {
+            $user = $this->userService->createUser($request->validated());
 
-        ActivityLogger::log(
-            'user',
-            'created',
-            'تم إضافة مستخدم جديد',
-            $user,
-            ['email' => $user->email, 'role_id' => $user->role_id],
-            $request->user()
-        );
+            ActivityLogger::log(
+                'user',
+                'created',
+                'تم إضافة مستخدم جديد',
+                $user,
+                ['email' => $user->email, 'role_id' => $user->role_id],
+                $request->user()
+            );
 
-        return new UserResource($user->load(['role', 'department', 'trainingSite']));
+            return new UserResource($user->load(['role', 'department', 'trainingSite']));
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            \Log::error('User creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Return clean error message to frontend
+            return response()->json([
+                'message' => 'حدث خطأ أثناء تنفيذ العملية. الرجاء المحاولة لاحقًا.',
+            ], 500);
+        }
     }
 
     public function show(User $user)

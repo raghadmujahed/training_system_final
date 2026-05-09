@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getRole, createRole, updateRole } from "../../../services/api";
 import { usePermissions } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
+import { apiCache } from "../../../services/apiCache";
 
 // ترجمة أسماء الصلاحيات
 const permissionTranslations = {
@@ -95,7 +96,7 @@ export default function RoleForm() {
     try {
       if (id) {
         // تحديث الدور مع الصلاحيات
-        await updateRole(id, { 
+        await updateRole(id, {
           name: roleName,
           permissions: grantedPermissions.map(p => p.id)
         });
@@ -105,6 +106,8 @@ export default function RoleForm() {
           permissions: grantedPermissions.map(p => p.id),
         });
       }
+      // Invalidate roles cache to refresh permissions count
+      apiCache.invalidate("roles:list");
       navigate("/admin/roles");
     } catch (err) {
       if (err.response?.data?.errors) {
