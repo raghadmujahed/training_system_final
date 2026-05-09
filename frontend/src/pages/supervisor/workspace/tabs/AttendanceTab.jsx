@@ -52,7 +52,7 @@ export default function AttendanceTab({ studentId, student }) {
   }, [studentId]);
 
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
-  if (error) return <div style={{ padding: 20, color: "#c0392b" }}>{error}</div>;
+  if (error) return <div className="p-5 text-[#c0392b]">{error}</div>;
 
   const first = records[0];
   const ta = first?.training_assignment || first?.trainingAssignment;
@@ -65,11 +65,11 @@ export default function AttendanceTab({ studentId, student }) {
   const statusLabel = ta?.status_label || ta?.status || "—";
 
   return (
-    <div className="sat-form-view">
+    <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4">
       {/* رأسية */}
       <div className="sat-letterhead">
         <div className="sat-lh-logo">
-          <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" style={{ objectFit: "contain" }} />
+          <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" className="object-contain" />
           <div>
             <div className="sat-lh-title">جامعة الخليل</div>
             <div className="sat-lh-sub">كلية العلوم التربوية — قسم التدريب الميداني</div>
@@ -136,7 +136,7 @@ export default function AttendanceTab({ studentId, student }) {
 
       {/* الجدول */}
       {!records.length ? (
-        <div style={{ padding: "32px", textAlign: "center", color: "#aaa", fontSize: 14 }}>لا توجد سجلات حضور بعد</div>
+        <div className="p-8 text-center text-[#aaa] text-[14px]">لا توجد سجلات حضور بعد</div>
       ) : (
         <div className="sat-table-wrap">
           <table className="sat-table">

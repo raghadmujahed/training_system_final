@@ -1,4 +1,5 @@
 import React, { useState, createContext, useContext } from 'react';
+import { X } from 'lucide-react';
 
 const DialogContext = createContext(null);
 
@@ -39,15 +40,15 @@ export function DialogContent({ children, className = '', ...props }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div
-        className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-lg ${className}`}
+        className={`relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-gradient-to-b from-bg-paper to-white rounded-[24px] border border-border shadow-lg p-6 ${className}`}
         {...props}
       >
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+          className="absolute left-4 top-4 rounded-full w-8 h-8 flex items-center justify-center text-text-soft hover:text-text hover:bg-bg transition-colors"
         >
-          ✕
+          <X size={16} />
         </button>
         {children}
       </div>
@@ -58,7 +59,7 @@ export function DialogContent({ children, className = '', ...props }) {
 export function DialogHeader({ children, className = '', ...props }) {
   return (
     <div
-      className={`flex flex-col space-y-1.5 text-center sm:text-left ${className}`}
+      className={`flex flex-col gap-1.5 mb-4 ${className}`}
       {...props}
     >
       {children}
@@ -69,7 +70,7 @@ export function DialogHeader({ children, className = '', ...props }) {
 export function DialogTitle({ children, className = '', ...props }) {
   return (
     <h2
-      className={`text-lg font-semibold leading-none tracking-tight ${className}`}
+      className={`text-[1.3rem] font-extrabold text-secondary leading-tight ${className}`}
       {...props}
     >
       {children}

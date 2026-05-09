@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { getCourses, deleteCourse } from "../../../services/api";
 import { useDepartments } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import PageHeader from "../../../components/common/PageHeader";
 import useAppToast from "../../../hooks/useAppToast";
 
 export default function CoursesList() {
@@ -70,27 +71,25 @@ export default function CoursesList() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>المساقات</h1>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link to="/admin/courses/create" className="btn-primary">
-            + إضافة مساق
-          </Link>
-          <select
-            value={perPage}
-            onChange={(e) => setPerPage(Number(e.target.value))}
-            style={{ width: "auto" }}
-          >
-            <option value="10">10 مساقات</option>
-            <option value="20">20 مساق</option>
-            <option value="50">50 مساق</option>
-            <option value="100">100 مساق</option>
-          </select>
-        </div>
+      <PageHeader title="المساقات" />
+      <div className="flex gap-2.5 mb-4 flex-wrap">
+        <Link to="/admin/courses/create" className="btn-primary">
+          + إضافة مساق
+        </Link>
+        <select
+          value={perPage}
+          onChange={(e) => setPerPage(Number(e.target.value))}
+          className="w-auto"
+        >
+          <option value="10">10 مساقات</option>
+          <option value="20">20 مساق</option>
+          <option value="50">50 مساق</option>
+          <option value="100">100 مساق</option>
+        </select>
       </div>
 
-      <div style={{ marginBottom: "1rem" }}>
-        <label>فلترة حسب القسم: </label>
+      <div className="mb-4">
+        <label className="text-text-soft">فلترة حسب القسم: </label>
         <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
           <option value="">الكل</option>
           {departments.map(dept => (
@@ -99,44 +98,46 @@ export default function CoursesList() {
         </select>
       </div>
 
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>الكود</th>
-            <th>الاسم</th>
-            <th>الساعات</th>
-            <th>النوع</th>
-            <th>القسم</th>
-            <th>إجراءات</th>
-          </tr>
-        </thead>
-        <tbody>
-          {courses.map((c) => (
-            <tr key={c.id}>
-              <td>{c.code}</td>
-              <td>{c.name}</td>
-              <td>{c.credit_hours}</td>
-              <td>{c.type_label}</td>
-              <td>{c.department?.name || "—"}</td>
-              <td>
-                <Link to={`/admin/courses/edit/${c.id}`} className="btn-sm">
-                  تعديل
-                </Link>
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  className="btn-sm danger"
-                >
-                  حذف
-                </button>
-              </td>
+      <div className="rounded-xl overflow-hidden border border-[#e2e8f0] mb-4">
+        <table className="w-full border-collapse text-[0.9rem]">
+          <thead>
+            <tr className="bg-[#f8fafc]">
+              <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الكود</th>
+              <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الاسم</th>
+              <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الساعات</th>
+              <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">النوع</th>
+              <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">القسم</th>
+              <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">إجراءات</th>
             </tr>
-          ))}
-          {courses.length === 0 && (
-            <tr><td colSpan="6" className="text-center">لا يوجد مساقات</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {courses.map((c) => (
+              <tr key={c.id} className="border-b border-[#e2e8f0] hover:bg-[#f1f5f9]">
+                <td className="py-3 px-4">{c.code}</td>
+                <td className="py-3 px-4">{c.name}</td>
+                <td className="py-3 px-4">{c.credit_hours}</td>
+                <td className="py-3 px-4">{c.type_label}</td>
+                <td className="py-3 px-4">{c.department?.name || "—"}</td>
+                <td className="py-3 px-4">
+                  <Link to={`/admin/courses/edit/${c.id}`} className="btn-sm">
+                    تعديل
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    className="btn-sm danger"
+                  >
+                    حذف
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {courses.length === 0 && (
+              <tr><td colSpan="6" className="py-6 text-center text-text-faint">لا يوجد مساقات</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {pagination.last_page > 1 && (
         <div className="pagination">

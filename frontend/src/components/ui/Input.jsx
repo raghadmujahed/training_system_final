@@ -4,7 +4,7 @@ export const Input = React.forwardRef(({ className = '', type = 'text', ...props
   return (
     <input
       type={type}
-      className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`w-full min-h-[48px] border border-border rounded-[14px] bg-white px-3.5 py-3 text-[0.98rem] text-text outline-none transition-all duration-200 placeholder:text-text-faint focus:border-accent-soft/60 focus:shadow-[0_0_0_4px_rgba(176,141,87,0.12)] disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       ref={ref}
       {...props}
     />

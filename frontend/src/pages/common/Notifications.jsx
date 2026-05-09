@@ -70,7 +70,7 @@ export default function Notifications() {
                 />
               </div>
 
-              <div className="page-actions" style={{ marginTop: "12px" }}>
+              <div className="page-actions mt-3">
                 <button
                   className="btn-light-custom btn-sm-custom"
                   onClick={() => markAsRead(item.id)}

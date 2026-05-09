@@ -70,70 +70,53 @@ function CounselorPortfolioReadOnly({ data }) {
   const school = data.school_name || "—";
 
   return (
-    <div
-      style={{
-        marginTop: "1rem",
-        padding: "1rem",
-        background: "linear-gradient(180deg, #f8fafc 0%, #fff 100%)",
-        borderRadius: "12px",
-        border: "1px solid #e2e8f0",
-      }}
-    >
-      <div style={{ display: "grid", gap: "0.75rem", marginBottom: "1rem", fontSize: "0.9rem" }}>
+    <div className="mt-4 p-4 bg-gradient-to-b from-[#f8fafc] to-white rounded-xl border border-[#e2e8f0]">
+      <div className="grid gap-3 mb-4 text-[0.9rem]">
         <div>
-          <span style={{ color: "#64748b" }}>المدرسة: </span>
-          <strong style={{ color: "#1e293b" }}>{school}</strong>
+          <span className="text-[#64748b]">المدرسة: </span>
+          <strong className="text-[#1e293b]">{school}</strong>
         </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "1.25rem", alignItems: "baseline" }}>
+        <div className="flex flex-wrap gap-5 items-baseline">
           <div>
-            <span style={{ color: "#64748b" }}>الدرجة المرجّحة: </span>
-            <strong style={{ fontSize: "1.25rem", color: "#0f172a" }}>{total}</strong>
-            <span style={{ color: "#94a3b8" }}> / 100</span>
+            <span className="text-[#64748b]">الدرجة المرجّحة: </span>
+            <strong className="text-[1.25rem] text-[#0f172a]">{total}</strong>
+            <span className="text-[#94a3b8]"> / 100</span>
           </div>
           {data.grade_label ? (
-            <div>
-              <span style={{ color: "#64748b" }}>التقدير: </span>
-              <strong>{data.grade_label}</strong>
-            </div>
+            <div><span className="text-[#64748b]">التقدير: </span><strong>{data.grade_label}</strong></div>
           ) : null}
           {data.supervisor_name ? (
-            <div>
-              <span style={{ color: "#64748b" }}>المرشد/المدرب: </span>
-              <strong>{data.supervisor_name}</strong>
-            </div>
+            <div><span className="text-[#64748b]">المرشد/المدرب: </span><strong>{data.supervisor_name}</strong></div>
           ) : null}
           {data.evaluation_date ? (
-            <div>
-              <span style={{ color: "#64748b" }}>التاريخ: </span>
-              <strong>{data.evaluation_date}</strong>
-            </div>
+            <div><span className="text-[#64748b]">التاريخ: </span><strong>{data.evaluation_date}</strong></div>
           ) : null}
         </div>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[0.82rem]">
           <thead>
-            <tr style={{ background: "#f1f5f9" }}>
-              <th style={{ padding: "8px", textAlign: "center", width: 44 }}>#</th>
-              <th style={{ padding: "8px", textAlign: "right" }}>المؤشر</th>
-              <th style={{ padding: "8px", textAlign: "center", width: 72 }}>1–5</th>
+            <tr className="bg-[#f1f5f9]">
+              <th className="p-2 text-center w-[44px]">#</th>
+              <th className="p-2 text-right">المؤشر</th>
+              <th className="p-2 text-center w-[72px]">1–5</th>
             </tr>
           </thead>
           <tbody>
             {criteria.map((c, idx) => (
-              <tr key={c.id || idx} style={{ borderTop: "1px solid #e2e8f0" }}>
-                <td style={{ padding: "8px", textAlign: "center", color: "#64748b" }}>{idx + 1}</td>
-                <td style={{ padding: "8px", textAlign: "right", color: "#334155" }}>{c.label}</td>
-                <td style={{ padding: "8px", textAlign: "center", fontWeight: 700 }}>{scores[c.id] ?? "—"}</td>
+              <tr key={c.id || idx} className="border-t border-[#e2e8f0]">
+                <td className="p-2 text-center text-[#64748b]">{idx + 1}</td>
+                <td className="p-2 text-right text-[#334155]">{c.label}</td>
+                <td className="p-2 text-center font-bold">{scores[c.id] ?? "—"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       {data.general_notes ? (
-        <div style={{ marginTop: "1rem", padding: "0.75rem", background: "#fff", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#334155" }}>ملاحظات ومقترحات</div>
-          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.general_notes}</div>
+        <div className="mt-4 p-3 bg-white rounded-lg border border-[#e2e8f0]">
+          <div className="font-bold mb-[0.35rem] text-[#334155]">ملاحظات ومقترحات</div>
+          <div className="text-[#475569] leading-[1.6] whitespace-pre-wrap">{data.general_notes}</div>
         </div>
       ) : null}
     </div>
@@ -147,83 +130,36 @@ function MentorClassroomVisitPortfolioReadOnly({ data }) {
   const school = data.school_name || "—";
 
   return (
-    <div
-      style={{
-        marginTop: "1rem",
-        padding: "1rem",
-        background: "linear-gradient(180deg, #f0f9ff 0%, #fff 100%)",
-        borderRadius: "12px",
-        border: "1px solid #bae6fd",
-      }}
-    >
-      <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "#0369a1", marginBottom: "0.35rem" }}>
-        نموذج رقم (6) — تقرير زيارة صفية
-      </div>
-      <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.88rem" }}>
-        <div>
-          <span style={{ color: "#64748b" }}>المدرسة: </span>
-          <strong style={{ color: "#0c4a6e" }}>{school}</strong>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
-          {data.student_name ? (
-            <div>
-              <span style={{ color: "#64748b" }}>الطالب: </span>
-              <strong>{data.student_name}</strong>
-            </div>
-          ) : null}
-          {fc.university_name ? (
-            <div>
-              <span style={{ color: "#64748b" }}>الجامعة: </span>
-              <strong>{fc.university_name}</strong>
-            </div>
-          ) : null}
-          {fc.academic_year ? (
-            <div>
-              <span style={{ color: "#64748b" }}>العام الدراسي: </span>
-              <strong>{fc.academic_year}</strong>
-            </div>
-          ) : null}
-          {fc.semester ? (
-            <div>
-              <span style={{ color: "#64748b" }}>الفصل: </span>
-              <strong>{fc.semester}</strong>
-            </div>
-          ) : null}
-          {data.supervisor_name ? (
-            <div>
-              <span style={{ color: "#64748b" }}>المعلم المقيم: </span>
-              <strong>{data.supervisor_name}</strong>
-            </div>
-          ) : null}
-          {data.evaluation_date ? (
-            <div>
-              <span style={{ color: "#64748b" }}>التاريخ: </span>
-              <strong>{data.evaluation_date}</strong>
-            </div>
-          ) : null}
+    <div className="mt-4 p-4 bg-gradient-to-b from-[#f0f9ff] to-white rounded-xl border border-[#bae6fd]">
+      <div className="text-[0.78rem] font-extrabold text-[#0369a1] mb-[0.35rem]">نموذج رقم (6) — تقرير زيارة صفية</div>
+      <div className="grid gap-2 mb-4 text-[0.88rem]">
+        <div><span className="text-[#64748b]">المدرسة: </span><strong className="text-[#0c4a6e]">{school}</strong></div>
+        <div className="flex flex-wrap gap-4">
+          {data.student_name ? <div><span className="text-[#64748b]">الطالب: </span><strong>{data.student_name}</strong></div> : null}
+          {fc.university_name ? <div><span className="text-[#64748b]">الجامعة: </span><strong>{fc.university_name}</strong></div> : null}
+          {fc.academic_year ? <div><span className="text-[#64748b]">العام الدراسي: </span><strong>{fc.academic_year}</strong></div> : null}
+          {fc.semester ? <div><span className="text-[#64748b]">الفصل: </span><strong>{fc.semester}</strong></div> : null}
+          {data.supervisor_name ? <div><span className="text-[#64748b]">المعلم المقيم: </span><strong>{data.supervisor_name}</strong></div> : null}
+          {data.evaluation_date ? <div><span className="text-[#64748b]">التاريخ: </span><strong>{data.evaluation_date}</strong></div> : null}
         </div>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[0.8rem]">
           <thead>
-            <tr style={{ background: "#e0f2fe" }}>
-              <th style={{ padding: "8px", textAlign: "right", width: "24%" }}>المحور</th>
-              <th style={{ padding: "8px", textAlign: "right" }}>الأمور الإيجابية</th>
-              <th style={{ padding: "8px", textAlign: "right" }}>الأمور التي بحاجة إلى تطوير</th>
+            <tr className="bg-[#e0f2fe]">
+              <th className="p-2 text-right w-[24%]">المحور</th>
+              <th className="p-2 text-right">الأمور الإيجابية</th>
+              <th className="p-2 text-right">الأمور التي بحاجة إلى تطوير</th>
             </tr>
           </thead>
           <tbody>
             {criteria.map((c, idx) => {
               const row = scores[c.id] || {};
               return (
-                <tr key={c.id || idx} style={{ borderTop: "1px solid #e2e8f0" }}>
-                  <td style={{ padding: "8px", fontWeight: 700, color: "#0f172a", background: "#f8fafc" }}>{c.label}</td>
-                  <td style={{ padding: "8px", color: "#334155", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>
-                    {row.positive || "—"}
-                  </td>
-                  <td style={{ padding: "8px", color: "#334155", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>
-                    {row.development || "—"}
-                  </td>
+                <tr key={c.id || idx} className="border-t border-[#e2e8f0]">
+                  <td className="p-2 font-bold text-[#0f172a] bg-[#f8fafc]">{c.label}</td>
+                  <td className="p-2 text-[#334155] whitespace-pre-wrap leading-[1.55]">{row.positive || "—"}</td>
+                  <td className="p-2 text-[#334155] whitespace-pre-wrap leading-[1.55]">{row.development || "—"}</td>
                 </tr>
               );
             })}
@@ -231,17 +167,9 @@ function MentorClassroomVisitPortfolioReadOnly({ data }) {
         </table>
       </div>
       {data.general_notes ? (
-        <div
-          style={{
-            marginTop: "1rem",
-            padding: "0.75rem",
-            background: "#fff",
-            borderRadius: "8px",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#334155" }}>ملاحظات عامة</div>
-          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.general_notes}</div>
+        <div className="mt-4 p-3 bg-white rounded-lg border border-[#e2e8f0]">
+          <div className="font-bold mb-[0.35rem] text-[#334155]">ملاحظات عامة</div>
+          <div className="text-[#475569] leading-[1.6] whitespace-pre-wrap">{data.general_notes}</div>
         </div>
       ) : null}
     </div>
@@ -255,79 +183,53 @@ function PsychologistInstitutionPortfolioReadOnly({ data }) {
   const institution = data.institution_name || "—";
 
   return (
-    <div
-      style={{
-        marginTop: "1rem",
-        padding: "1rem",
-        background: "linear-gradient(180deg, #faf5ff 0%, #fff 100%)",
-        borderRadius: "12px",
-        border: "1px solid #e9d5ff",
-      }}
-    >
-      <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "#6b21a8", marginBottom: "0.35rem" }}>
+    <div className="mt-4 p-4 bg-gradient-to-b from-[#faf5ff] to-white rounded-xl border border-[#e9d5ff]">
+      <div className="text-[0.78rem] font-extrabold text-[#6b21a8] mb-[0.35rem]">
         تقييم مشرف المؤسسة — تدريب نفسي/مؤسسي
       </div>
-      <div style={{ display: "grid", gap: "0.5rem", marginBottom: "1rem", fontSize: "0.88rem" }}>
-        <div>
-          <span style={{ color: "#64748b" }}>المؤسسة: </span>
-          <strong style={{ color: "#4c1d95" }}>{institution}</strong>
-        </div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+      <div className="grid gap-2 mb-4 text-[0.88rem]">
+        <div><span className="text-[#64748b]">المؤسسة: </span><strong className="text-[#4c1d95]">{institution}</strong></div>
+        <div className="flex flex-wrap gap-4">
           <div>
-            <span style={{ color: "#64748b" }}>الدرجة المرجّحة: </span>
-            <strong style={{ fontSize: "1.15rem" }}>{total}</strong>
-            <span style={{ color: "#94a3b8" }}> / 100</span>
+            <span className="text-[#64748b]">الدرجة المرجّحة: </span>
+            <strong className="text-[1.15rem]">{total}</strong>
+            <span className="text-[#94a3b8]"> / 100</span>
           </div>
-          {data.grade_label ? (
-            <div>
-              <span style={{ color: "#64748b" }}>التقدير: </span>
-              <strong>{data.grade_label}</strong>
-            </div>
-          ) : null}
-          {data.supervisor_name ? (
-            <div>
-              <span style={{ color: "#64748b" }}>مشرف التدريب: </span>
-              <strong>{data.supervisor_name}</strong>
-            </div>
-          ) : null}
-          {data.evaluation_date ? (
-            <div>
-              <span style={{ color: "#64748b" }}>التاريخ: </span>
-              <strong>{data.evaluation_date}</strong>
-            </div>
-          ) : null}
+          {data.grade_label ? <div><span className="text-[#64748b]">التقدير: </span><strong>{data.grade_label}</strong></div> : null}
+          {data.supervisor_name ? <div><span className="text-[#64748b]">مشرف التدريب: </span><strong>{data.supervisor_name}</strong></div> : null}
+          {data.evaluation_date ? <div><span className="text-[#64748b]">التاريخ: </span><strong>{data.evaluation_date}</strong></div> : null}
         </div>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[0.8rem]">
           <thead>
-            <tr style={{ background: "#f3e8ff" }}>
-              <th style={{ padding: "8px", textAlign: "center", width: 40 }}>#</th>
-              <th style={{ padding: "8px", textAlign: "right" }}>معيار التقويم</th>
-              <th style={{ padding: "8px", textAlign: "center", width: 56 }}>1–5</th>
+            <tr className="bg-[#f3e8ff]">
+              <th className="p-2 text-center w-[40px]">#</th>
+              <th className="p-2 text-right">معيار التقويم</th>
+              <th className="p-2 text-center w-[56px]">1–5</th>
             </tr>
           </thead>
           <tbody>
             {criteria.map((c, idx) => (
-              <tr key={c.id || idx} style={{ borderTop: "1px solid #e9d5ff" }}>
-                <td style={{ padding: "8px", textAlign: "center", color: "#64748b" }}>{idx + 1}</td>
-                <td style={{ padding: "8px", textAlign: "right", color: "#334155" }}>{c.label}</td>
-                <td style={{ padding: "8px", textAlign: "center", fontWeight: 700 }}>{scores[c.id] ?? "—"}</td>
+              <tr key={c.id || idx} className="border-t border-[#e9d5ff]">
+                <td className="p-2 text-center text-[#64748b]">{idx + 1}</td>
+                <td className="p-2 text-right text-[#334155]">{c.label}</td>
+                <td className="p-2 text-center font-bold">{scores[c.id] ?? "—"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
       {data.areas_for_improvement ? (
-        <div style={{ marginTop: "1rem", padding: "0.75rem", background: "#fff", borderRadius: "8px", border: "1px solid #fde68a" }}>
-          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#92400e" }}>جوانب الضعف وتحسينها (أمثلة)</div>
-          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.areas_for_improvement}</div>
+        <div className="mt-4 p-3 bg-white rounded-lg border border-[#fde68a]">
+          <div className="font-bold mb-[0.35rem] text-[#92400e]">جوانب الضعف وتحسينها (أمثلة)</div>
+          <div className="text-[#475569] leading-[1.6] whitespace-pre-wrap">{data.areas_for_improvement}</div>
         </div>
       ) : null}
       {data.strengths ? (
-        <div style={{ marginTop: "0.75rem", padding: "0.75rem", background: "#fff", borderRadius: "8px", border: "1px solid #c4b5fd" }}>
-          <div style={{ fontWeight: 700, marginBottom: "0.35rem", color: "#5b21b6" }}>الإجراءات المقترحة للتطوير</div>
-          <div style={{ color: "#475569", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{data.strengths}</div>
+        <div className="mt-3 p-3 bg-white rounded-lg border border-[#c4b5fd]">
+          <div className="font-bold mb-[0.35rem] text-[#5b21b6]">الإجراءات المقترحة للتطوير</div>
+          <div className="text-[#475569] leading-[1.6] whitespace-pre-wrap">{data.strengths}</div>
         </div>
       ) : null}
     </div>
@@ -584,111 +486,36 @@ export default function Portfolio() {
       </div>
 
       {success ? (
-        <div className="alert-custom alert-success mb-3" style={{ animation: "fadeIn 0.3s ease" }}>{success}</div>
+        <div className="alert-custom alert-success mb-3 animate-[fadeIn_0.3s_ease]">{success}</div>
       ) : null}
       {error ? (
-        <div className="alert-custom alert-danger mb-3" style={{ animation: "fadeIn 0.3s ease" }}>{error}</div>
+        <div className="alert-custom alert-danger mb-3 animate-[fadeIn_0.3s_ease]">{error}</div>
       ) : null}
 
-      <div style={{
-        backgroundColor: "white",
-        borderRadius: "0 0 16px 16px",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-        padding: "2rem",
-        border: "1px solid #e8e8e8",
-        marginBottom: "2rem",
-        animation: "fadeIn 0.4s ease-out"
-      }}>
+      <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-8 border border-[#e8e8e8] mb-8 animate-[fadeIn_0.4s_ease-out]">
         <form onSubmit={handleAdd}>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: "1.5rem",
-            marginBottom: "1.5rem"
-          }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6 mb-6">
             {/* Title Field */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label style={{
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                color: "#495057",
-                marginBottom: "0.5rem"
-              }}>
-                عنوان المدخل *
-              </label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                required
-                placeholder="مثال: تقرير تدريس الصف الرابع..."
-                style={{
-                  width: "100%",
-                  padding: "12px 16px",
-                  border: "2px solid #e0e0e0",
-                  borderRadius: "10px",
-                  fontSize: "1rem",
-                  transition: "all 0.2s",
-                  backgroundColor: "white",
-                  fontFamily: "inherit"
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = "var(--primary, #007bff)";
-                  e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = "#e0e0e0";
-                  e.target.style.boxShadow = "none";
-                }}
+            <div className="flex flex-col">
+              <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">عنوان المدخل *</label>
+              <input type="text" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} required placeholder="مثال: تقرير تدريس الصف الرابع..."
+                className="w-full py-3 px-4 border-2 border-[#e0e0e0] rounded-[10px] text-[1rem] transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
               />
             </div>
 
             {/* File Upload */}
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <label style={{
-                fontSize: "0.9rem",
-                fontWeight: 600,
-                color: "#495057",
-                marginBottom: "0.5rem"
-              }}>
-                مرفق (PDF / صور / Word)
-              </label>
-              <div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                style={{
-                  border: dragActive ? "2px dashed var(--primary, #007bff)" : "2px dashed #ccc",
-                  borderRadius: "10px",
-                  padding: "12px 16px",
-                  backgroundColor: dragActive ? "rgba(0,123,255,0.05)" : "white",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem"
-                }}
+            <div className="flex flex-col">
+              <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">مرفق (PDF / صور / Word)</label>
+              <div onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-[10px] py-3 px-4 cursor-pointer transition-all flex items-center gap-3 ${dragActive ? 'border-[var(--primary,#007bff)] bg-[rgba(0,123,255,0.05)]' : 'border-[#ccc] bg-white'}`}
               >
                 <Upload size={20} color={dragActive ? "var(--primary, #007bff)" : "#666"} />
-                <input
-                  type="file"
-                  onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  style={{ flex: 1, border: "none", background: "transparent", fontSize: "0.9rem" }}
+                <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  className="flex-1 border-none bg-transparent text-[0.9rem]"
                 />
               </div>
               {file && (
-                <div style={{
-                  marginTop: "0.5rem",
-                  padding: "0.5rem 0.75rem",
-                  backgroundColor: "#e8f5e9",
-                  borderRadius: "6px",
-                  fontSize: "0.85rem",
-                  color: "#2e7d32",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem"
-                }}>
+                <div className="mt-2 py-2 px-3 bg-[#e8f5e9] rounded-md text-[0.85rem] text-[#2e7d32] flex items-center gap-2">
                   <FileText size={16} />
                   تم اختيار: {file.name}
                 </div>
@@ -697,76 +524,17 @@ export default function Portfolio() {
           </div>
 
           {/* Description Field */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{
-              fontSize: "0.9rem",
-              fontWeight: 600,
-              color: "#495057",
-              marginBottom: "0.5rem",
-              display: "block"
-            }}>
-              وصف أو ملاحظات
-            </label>
-            <textarea
-              rows={4}
-              value={form.content}
-              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-              placeholder="اكتب وصفًا تفصيليًا للعمل أو المرفق..."
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                border: "2px solid #e0e0e0",
-                borderRadius: "10px",
-                fontSize: "1rem",
-                resize: "vertical",
-                transition: "all 0.2s",
-                backgroundColor: "white",
-                fontFamily: "inherit"
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = "var(--primary, #007bff)";
-                e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = "#e0e0e0";
-                e.target.style.boxShadow = "none";
-              }}
+          <div className="mb-6">
+            <label className="text-[0.9rem] font-semibold text-[#495057] mb-2 block">وصف أو ملاحظات</label>
+            <textarea rows={4} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} placeholder="اكتب وصفًا تفصيليًا للعمل أو المرفق..."
+              className="w-full py-3 px-4 border-2 border-[#e0e0e0] rounded-[10px] text-[1rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
             />
           </div>
 
           {/* Submit Button */}
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button
-              type="submit"
-              disabled={saving}
-              style={{
-                padding: "0.875rem 2rem",
-                backgroundColor: "var(--primary, #007bff)",
-                color: "white",
-                border: "none",
-                borderRadius: "10px",
-                cursor: saving ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                fontSize: "1rem",
-                fontWeight: 600,
-                opacity: saving ? 0.6 : 1,
-                transition: "all 0.2s",
-                boxShadow: "0 2px 8px rgba(0,123,255,0.3)"
-              }}
-              onMouseEnter={(e) => {
-                if (!saving) {
-                  e.currentTarget.style.backgroundColor = "#0056b3";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,123,255,0.4)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--primary, #007bff)";
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
-              }}
+          <div className="flex justify-end">
+            <button type="submit" disabled={saving}
+              className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[1rem] font-semibold transition-all shadow-[0_2px_8px_rgba(0,123,255,0.3)] hover:shadow-[0_4px_12px_rgba(0,123,255,0.4)] hover:-translate-y-px" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
             >
               {saving ? <LoadingSpinner size="button" /> : <Plus size={20} />}
               {saving ? "جاري الحفظ..." : "إضافة مدخل"}
@@ -776,24 +544,8 @@ export default function Portfolio() {
       </div>
 
       {/* Entries Section */}
-      <div style={{
-        backgroundColor: "white",
-        borderRadius: "16px",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-        padding: "1.5rem",
-        border: "1px solid #e8e8e8",
-        animation: "fadeIn 0.4s ease-out"
-      }}>
-        <h4 style={{
-          margin: 0,
-          fontSize: "1.2rem",
-          fontWeight: 700,
-          color: "#495057",
-          marginBottom: "1.5rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem"
-        }}>
+      <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] animate-[fadeIn_0.4s_ease-out]">
+        <h4 className="m-0 text-[1.2rem] font-bold text-[#495057] mb-6 flex items-center gap-2">
           <FolderOpen size={22} color="var(--primary, #007bff)" />
           مدخلاتك ({entries.length})
         </h4>
@@ -801,23 +553,13 @@ export default function Portfolio() {
         {loading ? (
           <LoadingSpinner size="section" text="جاري التحميل..." />
         ) : entries.length === 0 ? (
-          <div style={{
-            textAlign: "center",
-            padding: "3rem",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "12px",
-            border: "2px dashed #dee2e6"
-          }}>
-            <FolderOpen size={60} color="#adb5bd" style={{ marginBottom: "1rem" }} />
-            <h5 style={{ color: "#495057", margin: "0 0 0.5rem 0" }}>لا توجد مدخلات بعد</h5>
-            <p style={{ color: "#6c757d", margin: 0 }}>ابدأ بإضافة أول عمل أو شاهد لتوثيق تدريبك</p>
+          <div className="text-center py-12 bg-[#f8f9fa] rounded-xl border-2 border-dashed border-[#dee2e6]">
+            <FolderOpen size={60} color="#adb5bd" className="mb-4" />
+            <h5 className="text-[#495057] m-0 mb-2">لا توجد مدخلات بعد</h5>
+            <p className="text-[#6c757d] m-0">ابدأ بإضافة أول عمل أو شاهد لتوثيق تدريبك</p>
           </div>
         ) : (
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem"
-          }}>
+          <div className="flex flex-col gap-3">
             {entries.map((en) => {
               const counselorPayload = parseCounselorPortfolioPayload(en);
               const mentorVisitPayload = parseMentorClassroomVisitPayload(en);
@@ -825,84 +567,46 @@ export default function Portfolio() {
               const style = getEntryStyle(en);
               const EntryIcon = style.icon;
               return (
-                <div
-                  key={en.id}
-                  style={{
-                    backgroundColor: "white",
-                    borderRadius: "14px",
-                    border: "1px solid #e9ecef",
-                    transition: "all 0.3s ease",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                    overflow: "hidden",
-                  }}
+                <div key={en.id}
+                  className="bg-white rounded-[14px] border border-[#e9ecef] transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-[3px]"
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-3px)";
                     e.currentTarget.style.boxShadow = `0 10px 24px ${style.color}20`;
                     e.currentTarget.style.borderColor = `${style.color}55`;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
                     e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.04)";
                     e.currentTarget.style.borderColor = "#e9ecef";
                   }}
                 >
                   {/* شريط لوني علوي */}
-                  <div style={{ height: "4px", background: style.gradient }} />
+                  <div className="h-1" style={{ background: style.gradient }} />
 
-                  <div style={{ padding: "1.1rem 1.25rem" }}>
+                  <div className="py-[1.1rem] px-[1.25rem]">
                     {editingId === en.id ? (
                       /* وضع التعديل */
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <div style={{
-                            width: "36px", height: "36px", borderRadius: "9px",
-                            background: style.gradient, display: "flex", alignItems: "center",
-                            justifyContent: "center", flexShrink: 0,
-                          }}>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0" style={{ background: style.gradient }}>
                             <Edit3 size={16} color="white" />
                           </div>
-                          <span style={{ fontWeight: 700, color: "#1e293b", fontSize: "0.95rem" }}>تعديل المدخل</span>
+                          <span className="font-bold text-[#1e293b] text-[0.95rem]">تعديل المدخل</span>
                         </div>
-                        <input
-                          type="text"
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          style={{
-                            width: "100%", padding: "10px 14px", border: "1.5px solid #d1d5db",
-                            borderRadius: 8, fontSize: "0.9rem", fontWeight: 600,
-                          }}
+                        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
+                          className="w-full py-[10px] px-[14px] border-[1.5px] border-[#d1d5db] rounded-lg text-[0.9rem] font-semibold"
                           placeholder="عنوان المدخل"
                         />
-                        <textarea
-                          rows={4}
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          style={{
-                            width: "100%", padding: "10px 14px", border: "1.5px solid #d1d5db",
-                            borderRadius: 8, fontSize: "0.85rem", resize: "vertical",
-                          }}
+                        <textarea rows={4} value={editContent} onChange={(e) => setEditContent(e.target.value)}
+                          className="w-full py-[10px] px-[14px] border-[1.5px] border-[#d1d5db] rounded-lg text-[0.85rem] resize-y"
                           placeholder="المحتوى أو الوصف..."
                         />
-                        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-                          <button
-                            onClick={cancelEdit}
-                            style={{
-                              padding: "8px 18px", border: "1px solid #e2e8f0", borderRadius: 8,
-                              background: "white", color: "#64748b", fontSize: "0.85rem",
-                              fontWeight: 600, cursor: "pointer",
-                            }}
+                        <div className="flex gap-2 justify-end">
+                          <button onClick={cancelEdit}
+                            className="py-2 px-[18px] border border-[#e2e8f0] rounded-lg bg-white text-[#64748b] text-[0.85rem] font-semibold cursor-pointer"
                           >
                             إلغاء
                           </button>
-                          <button
-                            onClick={() => handleEditUpdate(en.id)}
-                            disabled={saving}
-                            style={{
-                              padding: "8px 18px", border: "none", borderRadius: 8,
-                              background: saving ? "#9ca3af" : style.color, color: "white",
-                              fontSize: "0.85rem", fontWeight: 600, cursor: saving ? "not-allowed" : "pointer",
-                              display: "flex", alignItems: "center", gap: 6,
-                            }}
+                          <button onClick={() => handleEditUpdate(en.id)} disabled={saving}
+                            className="py-2 px-[18px] border-none rounded-lg text-white text-[0.85rem] font-semibold flex items-center gap-[6px]" style={{ background: saving ? "#9ca3af" : style.color, cursor: saving ? "not-allowed" : "pointer" }}
                           >
                             {saving ? <LoadingSpinner size="button" /> : <SaveIcon size={14} />}
                             {saving ? "جاري الحفظ..." : "حفظ التعديل"}
@@ -911,121 +615,42 @@ export default function Portfolio() {
                       </div>
                     ) : (
                       /* وضع العرض */
-                      <div style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.75rem",
-                      }}>
+                      <div className="flex items-center gap-3">
                         {/* أيقونة النموذج */}
-                        <div style={{
-                          width: "42px",
-                          height: "42px",
-                          borderRadius: "11px",
-                          background: style.gradient,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          boxShadow: `0 3px 10px ${style.color}30`,
-                        }}>
+                        <div className="w-[42px] h-[42px] rounded-[11px] flex items-center justify-center shrink-0" style={{ background: style.gradient, boxShadow: `0 3px 10px ${style.color}30` }}>
                           <EntryIcon size={20} color="white" />
                         </div>
 
                         {/* اسم النموذج + التاريخ */}
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <h5 style={{
-                            margin: 0,
-                            fontSize: "1rem",
-                            fontWeight: 700,
-                            color: "#1e293b",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="m-0 text-[1rem] font-bold text-[#1e293b] overflow-hidden text-ellipsis whitespace-nowrap">
                             {en.title}
                           </h5>
-                          <span style={{
-                            fontSize: "0.72rem",
-                            color: "#94a3b8",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.25rem",
-                            marginTop: "0.15rem",
-                          }}>
+                          <span className="text-[0.72rem] text-[#94a3b8] flex items-center gap-1 mt-[0.15rem]">
                             <Calendar size={11} />
                             {en.created_at ? new Date(en.created_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
                           </span>
                         </div>
 
                         {/* أزرار المرفق والتعديل والحذف */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", flexShrink: 0 }}>
+                        <div className="flex items-center gap-[0.35rem] shrink-0">
                           {en.file_path ? (
-                            <a
-                              href={fileHref(en.file_path)}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "0.35rem",
-                                color: style.color,
-                                textDecoration: "none",
-                                fontSize: "0.82rem",
-                                fontWeight: 600,
-                                padding: "0.35rem 0.7rem",
-                                borderRadius: "8px",
-                                backgroundColor: style.bg,
-                                transition: "all 0.2s",
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = `${style.color}18`;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = style.bg;
-                              }}
+                            <a href={fileHref(en.file_path)} target="_blank" rel="noreferrer"
+                              className="inline-flex items-center gap-[0.35rem] no-underline text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all" style={{ color: style.color, backgroundColor: style.bg }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${style.color}18`; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = style.bg; }}
                             >
                               <FileText size={14} />
                               عرض الملف
                             </a>
                           ) : (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                              <span style={{
-                                color: "#cbd5e1",
-                                fontSize: "0.78rem",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "0.25rem",
-                                padding: "0.35rem 0.5rem",
-                              }}>
+                            <div className="flex items-center gap-[0.35rem]">
+                              <span className="text-[#cbd5e1] text-[0.78rem] flex items-center gap-1 py-[0.35rem] px-2">
                                 <FileText size={14} />
                                 بدون مرفق
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => setReplacingFileId(en.id)}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "0.35rem",
-                                  color: "#28a745",
-                                  backgroundColor: "#fff",
-                                  border: "1px solid #28a745",
-                                  textDecoration: "none",
-                                  fontSize: "0.78rem",
-                                  fontWeight: 600,
-                                  padding: "0.35rem 0.7rem",
-                                  borderRadius: "8px",
-                                  cursor: "pointer",
-                                  transition: "all 0.2s",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#28a745";
-                                  e.currentTarget.style.color = "#fff";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#fff";
-                                  e.currentTarget.style.color = "#28a745";
-                                }}
+                              <button type="button" onClick={() => setReplacingFileId(en.id)}
+                                className="inline-flex items-center gap-[0.35rem] text-[#28a745] bg-white border border-[#28a745] text-[0.78rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg cursor-pointer transition-all hover:bg-[#28a745] hover:text-white"
                                 title="رفع ملف جديد"
                               >
                                 <Upload size={12} />
@@ -1035,57 +660,21 @@ export default function Portfolio() {
                           )}
                           {!counselorPayload && !mentorVisitPayload && !psychInstitutionPayload ? (
                             <>
-                              <button
-                                type="button"
-                                onClick={() => startEdit(en)}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "#94a3b8",
-                                  padding: "4px",
-                                  borderRadius: "6px",
-                                  transition: "all 0.2s",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.color = "#3b82f6";
-                                  e.currentTarget.style.backgroundColor = "#eff6ff";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.color = "#94a3b8";
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                }}
+                              <button type="button" onClick={() => startEdit(en)}
+                                className="bg-transparent border-none cursor-pointer text-[#94a3b8] p-1 rounded-md transition-all hover:text-[#3b82f6] hover:bg-[#eff6ff]"
                                 title="تعديل"
                               >
                                 <Edit3 size={15} />
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(en.id)}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  color: "#cbd5e1",
-                                  padding: "4px",
-                                  borderRadius: "6px",
-                                  transition: "all 0.2s",
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.color = "#ef4444";
-                                  e.currentTarget.style.backgroundColor = "#fef2f2";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.color = "#cbd5e1";
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                }}
+                              <button type="button" onClick={() => handleDelete(en.id)}
+                                className="bg-transparent border-none cursor-pointer text-[#cbd5e1] p-1 rounded-md transition-all hover:text-[#ef4444] hover:bg-[#fef2f2]"
                                 title="حذف"
                               >
                                 <Trash2 size={15} />
                               </button>
                             </>
                           ) : (
-                            <span style={{ fontSize: "0.72rem", color: "#94a3b8", padding: "4px 8px" }}>وثيقة رسمية</span>
+                            <span className="text-[0.72rem] text-[#94a3b8] py-1 px-2">وثيقة رسمية</span>
                           )}
                         </div>
                       </div>
@@ -1101,106 +690,32 @@ export default function Portfolio() {
 
                     {/* نموذج استبدال الملف */}
                     {replacingFileId === en.id && (
-                      <div style={{
-                        marginTop: "0.75rem",
-                        padding: "0.75rem",
-                        backgroundColor: "#f0fdf4",
-                        borderRadius: "8px",
-                        border: "1px solid #bbf7d0"
-                      }}>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          marginBottom: "0.5rem",
-                          fontSize: "0.85rem",
-                          fontWeight: "600",
-                          color: "#166534"
-                        }}>
+                      <div className="mt-3 p-3 bg-[#f0fdf4] rounded-lg border border-[#bbf7d0]">
+                        <div className="flex items-center gap-2 mb-2 text-[0.85rem] font-semibold text-[#166534]">
                           <Upload size={14} />
                           استبدال الملف
                         </div>
-                        <div style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "0.5rem"
-                        }}>
-                          <input
-                            type="file"
-                            onChange={(e) => setReplacementFile(e.target.files[0])}
-                            style={{
-                              width: "100%",
-                              padding: "8px",
-                              border: "1px solid #d1d5db",
-                              borderRadius: "6px",
-                              fontSize: "0.85rem"
-                            }}
+                        <div className="flex flex-col gap-2">
+                          <input type="file" onChange={(e) => setReplacementFile(e.target.files[0])}
+                            className="w-full py-2 px-2 border border-[#d1d5db] rounded-md text-[0.85rem]"
                           />
                           {replacementFile && (
-                            <div style={{
-                              fontSize: "0.75rem",
-                              color: "#6b7280",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: "0.25rem",
-                              padding: "6px 8px",
-                              backgroundColor: "#f9fafb",
-                              borderRadius: "6px",
-                              border: "1px solid #e5e7eb"
-                            }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                            <div className="text-[0.75rem] text-[#6b7280] flex items-center justify-between gap-1 py-[6px] px-2 bg-[#f9fafb] rounded-md border border-[#e5e7eb]">
+                              <div className="flex items-center gap-1">
                                 <FileText size={12} />
                                 {replacementFile.name} ({(replacementFile.size / 1024).toFixed(1)} KB)
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => setReplacementFile(null)}
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  width: "20px",
-                                  height: "20px",
-                                  borderRadius: "50%",
-                                  backgroundColor: "#ef4444",
-                                  color: "white",
-                                  border: "none",
-                                  cursor: "pointer",
-                                  fontSize: "12px",
-                                  fontWeight: "bold",
-                                  transition: "all 0.2s"
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#dc2626";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#ef4444";
-                                }}
+                              <button type="button" onClick={() => setReplacementFile(null)}
+                                className="flex items-center justify-center w-5 h-5 rounded-full bg-[#ef4444] text-white border-none cursor-pointer text-xs font-bold transition-all hover:bg-[#dc2626]"
                                 title="إلغاء اختيار الملف"
                               >
                                 ×
                               </button>
                             </div>
                           )}
-                          <div style={{ display: "flex", gap: "0.5rem" }}>
-                            <button
-                              type="button"
-                              onClick={() => handleReplaceFile(en.id)}
-                              disabled={!replacementFile || replacingFileId === en.id}
-                              style={{
-                                padding: "6px 12px",
-                                border: "none",
-                                borderRadius: "6px",
-                                backgroundColor: !replacementFile || replacingFileId === en.id ? "#9ca3af" : "#28a745",
-                                color: "white",
-                                fontSize: "0.82rem",
-                                fontWeight: 600,
-                                cursor: !replacementFile || replacingFileId === en.id ? "not-allowed" : "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "6px"
-                              }}
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => handleReplaceFile(en.id)} disabled={!replacementFile || replacingFileId === en.id}
+                              className="py-[6px] px-3 border-none rounded-md text-white text-[0.82rem] font-semibold flex items-center gap-[6px]" style={{ backgroundColor: !replacementFile || replacingFileId === en.id ? "#9ca3af" : "#28a745", cursor: !replacementFile || replacingFileId === en.id ? "not-allowed" : "pointer" }}
                             >
                               {replacingFileId === en.id ? (
                                 <>
@@ -1214,22 +729,8 @@ export default function Portfolio() {
                                 </>
                               )}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setReplacingFileId(null);
-                                setReplacementFile(null);
-                              }}
-                              style={{
-                                padding: "6px 12px",
-                                border: "1px solid #d1d5db",
-                                borderRadius: "6px",
-                                backgroundColor: "white",
-                                color: "#6b7280",
-                                fontSize: "0.82rem",
-                                fontWeight: 600,
-                                cursor: "pointer"
-                              }}
+                            <button type="button" onClick={() => { setReplacingFileId(null); setReplacementFile(null); }}
+                              className="py-[6px] px-3 border border-[#d1d5db] rounded-md bg-white text-[#6b7280] text-[0.82rem] font-semibold cursor-pointer"
                             >
                               إلغاء
                             </button>
@@ -1241,54 +742,32 @@ export default function Portfolio() {
                     {/* عرض ملاحظات وتقييم المشرف الأكاديمي */}
                     {(en.reviewer_note || en.academic_rating) && (
                       <>
-                        <div style={{
-                        marginTop: "0.75rem",
-                        padding: "0.75rem",
-                        backgroundColor: "#f0fdf4",
-                        borderRadius: "8px",
-                        border: "1px solid #bbf7d0"
-                      }}>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          marginBottom: "0.5rem",
-                          fontSize: "0.85rem",
-                          fontWeight: "600",
-                          color: "#166534"
-                        }}>
-                          🎓 ملاحظة المشرف الأكاديمي
-                        </div>
-                        {en.academic_rating != null && en.academic_rating !== "" && (
-                          <div style={{ fontSize: "0.88rem", fontWeight: 600, color: "#166534", marginBottom: "0.5rem" }}>
-                            التقييم: {en.academic_rating} / 5
+                        <div className="mt-3 p-3 bg-[#f0fdf4] rounded-lg border border-[#bbf7d0]">
+                          <div className="flex items-center gap-2 mb-2 text-[0.85rem] font-semibold text-[#166534]">
+                            🎓 ملاحظة المشرف الأكاديمي
                           </div>
-                        )}
-                        {en.reviewer_note && (
-                        <div style={{
-                          fontSize: "0.9rem",
-                          color: "#374151",
-                          lineHeight: "1.5"
-                        }}>
-                          {en.reviewer_note}
+                          {en.academic_rating != null && en.academic_rating !== "" && (
+                            <div className="text-[0.88rem] font-semibold text-[#166534] mb-2">
+                              التقييم: {en.academic_rating} / 5
+                            </div>
+                          )}
+                          {en.reviewer_note && (
+                            <div className="text-[0.9rem] text-[#374151] leading-[1.5]">
+                              {en.reviewer_note}
+                            </div>
+                          )}
+                          {en.reviewed_at && (
+                            <div className="text-[0.75rem] text-[#6b7280] mt-2">
+                              {new Date(en.reviewed_at).toLocaleDateString('ar-SA', { 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          )}
                         </div>
-                        )}
-                        {en.reviewed_at && (
-                          <div style={{
-                            fontSize: "0.75rem",
-                            color: "#6b7280",
-                            marginTop: "0.5rem"
-                          }}>
-                            {new Date(en.reviewed_at).toLocaleDateString('ar-SA', { 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        )}
-                      </div>
                       </>
                     )}
                   </div>

@@ -336,17 +336,17 @@ export default function FieldStaffStudents() {
 
       {selectedFieldRow && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
+          <div className="modal-content max-w-[700px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>ملف الطالب</h3>
               <button type="button" className="modal-close-btn" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
-              {fieldModalLoading ? (
+            {fieldModalLoading ? (
                 <div className="section-card">جاري تحميل التفاصيل...</div>
               ) : (
                 <>
-                  <div style={{ marginBottom: 16 }}>
+                  <div className="mb-4">
                     <h5>{selectedFieldRow.name || "طالب"}</h5>
                     <p className="text-soft">
                       الرقم الجامعي: {selectedFieldRow.university_id || "—"} | جهة التدريب: {selectedFieldRow.training_site || "—"}
@@ -356,14 +356,13 @@ export default function FieldStaffStudents() {
                   {(() => {
                     const att = attendanceFromRecords(fieldModalAtt);
                     return (
-                      <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                      <div className="section-card p-3 mb-3">
                         <h6>الحضور: {att.present}/{att.total} ({att.percentage}%)</h6>
-                        <div style={{ marginTop: 4 }}>
-                          <div style={{ background: "#e9ecef", borderRadius: 8, height: 12, overflow: "hidden" }}>
-                            <div style={{
+                        <div className="mt-1">
+                          <div className="bg-[#e9ecef] rounded-lg h-3 overflow-hidden">
+                            <div className="h-full rounded-lg" style={{
                               width: `${att.percentage}%`,
                               background: att.percentage >= 80 ? "#198754" : att.percentage >= 60 ? "#ffc107" : "#dc3545",
-                              height: "100%", borderRadius: 8,
                             }} />
                           </div>
                         </div>
@@ -371,12 +370,12 @@ export default function FieldStaffStudents() {
                     );
                   })()}
 
-                  <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                  <div className="section-card p-3 mb-3">
                     <h6>التقييم الميداني</h6>
                     {!fieldModalEval ? (
                       <p className="text-soft">لا يوجد تقييم ميداني مسجّل بعد لهذا التعيين.</p>
                     ) : (
-                      <ul style={{ paddingRight: 18, listStyle: "disc", margin: 0 }}>
+                      <ul className="pr-[18px] list-disc m-0">
                         <li>
                           الحالة: {fieldModalEval.status_label || fieldModalEval.status || "—"}
                           {fieldModalEval.total_score != null && ` — المجموع: ${fieldModalEval.total_score}`}
@@ -386,15 +385,15 @@ export default function FieldStaffStudents() {
                     )}
                   </div>
 
-                  <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                  <div className="section-card p-3 mb-3">
                     <h6>الملاحظات ({fieldModalNotes.length})</h6>
                     {fieldModalNotes.length === 0 ? (
                       <p className="text-soft">لا توجد ملاحظات بعد.</p>
                     ) : (
                       <div className="list-clean">
                         {fieldModalNotes.map((n) => (
-                          <div key={n.id} style={{ padding: "6px 0", borderBottom: "1px solid #eee" }}>
-                            <p style={{ margin: 0 }}>{n.content}</p>
+                          <div key={n.id} className="py-[6px] border-b border-[#eee]">
+                            <p className="m-0">{n.content}</p>
                             <small className="text-soft">{n.created_at || ""}</small>
                           </div>
                         ))}
@@ -402,14 +401,13 @@ export default function FieldStaffStudents() {
                     )}
                   </div>
 
-                  <form onSubmit={handleAddNote} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <form onSubmit={handleAddNote} className="flex gap-2 items-start">
                     <textarea
-                      className="form-control-custom"
+                      className="form-control-custom flex-1"
                       rows={2}
                       value={quickNote}
                       onChange={(e) => setQuickNote(e.target.value)}
                       placeholder={notePlaceholder}
-                      style={{ flex: 1 }}
                     />
                     <button
                       type="submit"
@@ -431,7 +429,7 @@ export default function FieldStaffStudents() {
 
       {selectedLegacy && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
+          <div className="modal-content max-w-[700px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>ملف الطالب</h3>
               <button type="button" className="modal-close-btn" onClick={closeModal}>✕</button>
@@ -445,37 +443,36 @@ export default function FieldStaffStudents() {
                 const stuNotes = uid ? getStudentNotesForUser(uid) : [];
                 return (
                   <>
-                    <div style={{ marginBottom: 16 }}>
+                    <div className="mb-4">
                       <h5>{stu?.name || "طالب"}</h5>
                       <p className="text-soft">
                         الرقم الجامعي: {stu?.university_id || "—"} | جهة التدريب: {selectedLegacy.training_site?.name || "—"}
                       </p>
                     </div>
 
-                    <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                    <div className="section-card p-3 mb-3">
                       <h6>الحضور: {att.present}/{att.total} ({att.percentage}%)</h6>
-                      <div style={{ marginTop: 4 }}>
-                        <div style={{ background: "#e9ecef", borderRadius: 8, height: 12, overflow: "hidden" }}>
-                          <div style={{
+                      <div className="mt-1">
+                        <div className="bg-[#e9ecef] rounded-lg h-3 overflow-hidden">
+                          <div className="h-full rounded-lg" style={{
                             width: `${att.percentage}%`,
                             background: att.percentage >= 80 ? "#198754" : att.percentage >= 60 ? "#ffc107" : "#dc3545",
-                            height: "100%", borderRadius: 8,
                           }} />
                         </div>
                       </div>
                     </div>
 
-                    <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                    <div className="section-card p-3 mb-3">
                       <h6>التقييمات الأكاديمية ({evals.length})</h6>
                       {evals.length === 0 ? (
                         <p className="text-soft">لا توجد تقييمات.</p>
                       ) : (
-                        <ul style={{ paddingRight: 18, listStyle: "disc" }}>
+                        <ul className="pr-[18px] list-disc">
                           {evals.map((ev) => (
                             <li key={ev.id}>
                               {ev.template?.name || "قالب"} — المجموع: {ev.total_score ?? "—"}
                               {ev.template?.target_role_label && (
-                                <span className="badge-custom badge-info" style={{ marginRight: 6 }}>
+                                <span className="badge-custom badge-info mr-[6px]">
                                   {ev.template.target_role_label}
                                 </span>
                               )}
@@ -486,15 +483,15 @@ export default function FieldStaffStudents() {
                       )}
                     </div>
 
-                    <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                    <div className="section-card p-3 mb-3">
                       <h6>الملاحظات ({stuNotes.length})</h6>
                       {stuNotes.length === 0 ? (
                         <p className="text-soft">لا توجد ملاحظات بعد.</p>
                       ) : (
                         <div className="list-clean">
                           {stuNotes.map((n) => (
-                            <div key={n.id} style={{ padding: "6px 0", borderBottom: "1px solid #eee" }}>
-                              <p style={{ margin: 0 }}>{n.content}</p>
+                            <div key={n.id} className="py-[6px] border-b border-[#eee]">
+                              <p className="m-0">{n.content}</p>
                               <small className="text-soft">{n.created_at || ""}</small>
                             </div>
                           ))}
@@ -502,14 +499,13 @@ export default function FieldStaffStudents() {
                       )}
                     </div>
 
-                    <form onSubmit={handleAddNote} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <form onSubmit={handleAddNote} className="flex gap-2 items-start">
                       <textarea
-                        className="form-control-custom"
+                        className="form-control-custom flex-1"
                         rows={2}
                         value={quickNote}
                         onChange={(e) => setQuickNote(e.target.value)}
                         placeholder={notePlaceholder}
-                        style={{ flex: 1 }}
                       />
                       <button
                         type="submit"

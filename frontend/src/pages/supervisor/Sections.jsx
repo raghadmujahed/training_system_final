@@ -78,15 +78,15 @@ export default function Sections() {
         subtitle="الشعب الأكاديمية المسندة إليك — عرض الطلاب والانتقال إلى مساحة العمل"
       />
 
-      <div className="page-actions" style={{ marginBottom: "16px" }}>
+      <div className="page-actions mb-4">
         <Link to="/supervisor/workspace" className="btn-light-custom">
           ← مساحة العمل
         </Link>
       </div>
 
       {error && (
-        <div className="section-card" style={{ borderRight: "4px solid #dc3545", marginBottom: "16px" }}>
-          <p style={{ color: "#dc3545", margin: 0 }}>⚠️ {error}</p>
+        <div className="section-card border-r-[4px] border-[#dc3545] mb-4">
+          <p className="text-[#dc3545] m-0">⚠️ {error}</p>
         </div>
       )}
 
@@ -96,21 +96,15 @@ export default function Sections() {
           description="لم يُعيَّن لك مشرفة على شعب بعد، أو لا توجد بيانات للفترة الحالية."
         />
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
           {sections.map((s) => {
             const isExpanded = expandedSection === s.id;
             const trackLabel = trainingTrackLabel(s.training_track);
-            const trackColor = s.training_track?.includes("psych") ? "#6f42c1" : "#0d6efd";
+            const trackColor = s.training_track?.includes("psych") ? { bg: "#ede7f6", text: "#6f42c1" } : { bg: "#dbeafe", text: "#0d6efd" };
             return (
               <div
                 key={s.id}
-                style={{
-                  border: "1px solid #e9ecef",
-                  borderRadius: "12px",
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  transition: "box-shadow 0.2s",
-                }}
+                className="border border-[#e9ecef] rounded-xl p-4 bg-white transition-shadow duration-200"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
                 }}
@@ -118,83 +112,69 @@ export default function Sections() {
                   e.currentTarget.style.boxShadow = "none";
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h4 style={{ margin: 0, fontSize: "1.05rem" }}>{s.section_name || s.section_code || `شعبة #${s.id}`}</h4>
-                    <div style={{ fontSize: "0.82rem", color: "#666", marginTop: 2 }}>{s.course || "—"}</div>
+                    <h4 className="m-0 text-[1.05rem]">{s.section_name || s.section_code || `شعبة #${s.id}`}</h4>
+                    <div className="text-[0.82rem] text-[#666] mt-[2px]">{s.course || "—"}</div>
                     {s.section_code && (s.section_name || s.name) && (
-                      <div style={{ fontSize: "0.75rem", color: "#888", marginTop: 2 }}>رمز الشعبة: {s.section_code}</div>
+                      <div className="text-[0.75rem] text-[#888] mt-[2px]">رمز الشعبة: {s.section_code}</div>
                     )}
                   </div>
                   <span
+                    className="py-[3px] px-[10px] rounded-xl text-[0.72rem] font-semibold"
                     style={{
-                      padding: "3px 10px",
-                      borderRadius: "12px",
-                      fontSize: "0.72rem",
-                      fontWeight: 600,
-                      color: trackColor,
-                      backgroundColor: `${trackColor}15`,
-                      border: `1px solid ${trackColor}30`,
+                      background: trackColor.bg,
+                      color: trackColor.text,
                     }}
                   >
                     {trackLabel}
                   </span>
                 </div>
 
-                <div style={{ display: "flex", gap: 16, fontSize: "0.82rem", color: "#555", marginBottom: 12, flexWrap: "wrap" }}>
+                <div className="flex gap-4 text-[0.82rem] text-[#555] mb-3 flex-wrap">
                   <span>👥 {s.students_count ?? 0} طالب</span>
                   <span>🏛️ {s.department || "—"}</span>
                   <span>🏫 {s.training_sites_count ?? 0} جهة تدريب</span>
                 </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div className="flex flex-col gap-2">
                   <Link
                     to={`/supervisor/workspace?section=${s.id}`}
-                    className="btn-primary-custom"
-                    style={{ textAlign: "center", textDecoration: "none", display: "block" }}
+                    className="btn-primary-custom text-center no-underline block"
                   >
                     فتح في مساحة العمل (فلترة الطلاب)
                   </Link>
                   <button
                     type="button"
                     onClick={() => setExpandedSection(isExpanded ? null : s.id)}
-                    style={{
-                      background: "none",
-                      border: "1px solid #dee2e6",
-                      borderRadius: 6,
-                      padding: "8px 12px",
-                      cursor: "pointer",
-                      fontSize: "0.78rem",
-                      color: "#0d6efd",
-                      width: "100%",
-                    }}
+                    className="border border-[#dee2e6] rounded-md py-[6px] px-3 text-[0.82rem] cursor-pointer text-[#555] w-full"
                   >
                     {isExpanded ? "إخفاء الطلاب ▲" : `عرض الطلاب (${s.students?.length ?? s.students_count ?? 0}) ▼`}
                   </button>
                 </div>
 
                 {isExpanded && s.students && s.students.length > 0 && (
-                  <div style={{ marginTop: 12, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
-                    <table style={{ width: "100%", fontSize: "0.78rem", borderCollapse: "collapse" }}>
+                  <div className="mt-3 border-t border-[#f0f0f0] pt-3">
+                    <table className="w-full text-[0.78rem] border-collapse">
                       <thead>
-                        <tr style={{ borderBottom: "1px solid #eee" }}>
-                          <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>الاسم</th>
-                          <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>الرقم الجامعي</th>
-                          <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>القسم</th>
-                          <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>التخصص</th>
+                        <tr className="border-b border-[#eee]">
+                          <th className="text-right py-1 px-2 text-[#888]">الاسم</th>
+                          <th className="text-right py-1 px-2 text-[#888]">الرقم الجامعي</th>
+                          <th className="text-right py-1 px-2 text-[#888]">القسم</th>
+                          <th className="text-right py-1 px-2 text-[#888]">التخصص</th>
                         </tr>
                       </thead>
                       <tbody>
                         {s.students.map((st) => (
                           <tr
                             key={st.id}
-                            style={{ borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}
+                            className="border-b border-[#f5f5f5] cursor-pointer"
                             onClick={() => handleSelectStudent(st.id)}
                           >
-                            <td style={{ padding: "6px 8px", fontWeight: 500 }}>{st.name}</td>
-                            <td style={{ padding: "6px 8px" }}>{st.university_id}</td>
-                            <td style={{ padding: "6px 8px" }}>{st.department || "—"}</td>
-                            <td style={{ padding: "6px 8px" }}>{st.major || "—"}</td>
+                            <td className="py-[6px] px-2 font-medium">{st.name}</td>
+                            <td className="py-[6px] px-2">{st.university_id}</td>
+                            <td className="py-[6px] px-2">{st.department || "—"}</td>
+                            <td className="py-[6px] px-2">{st.major || "—"}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -202,7 +182,7 @@ export default function Sections() {
                   </div>
                 )}
                 {isExpanded && (!s.students || s.students.length === 0) && (
-                  <div style={{ marginTop: 12, textAlign: "center", color: "#999", fontSize: "0.82rem" }}>لا يوجد طلاب مسجلون</div>
+                  <div className="max-w-md mx-auto mt-3 text-center text-[#999] text-[0.82rem]" onClick={(e) => e.stopPropagation()}>لا يوجد طلاب مسجلون</div>
                 )}
               </div>
             );

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
+import PageHeader from "../../components/common/PageHeader";
 import { readStoredUser } from "../../utils/session";
 import {
   buildFormalTrainingLetterHtml,
@@ -244,142 +245,44 @@ const OfficialLetters = ({ siteType = "school" }) => {
   return (
     <div>
       {/* ترويسة بصيغة وثيقة رسمية */}
-      <div
-        className="mb-4"
-        style={{
-          position: "relative",
-          padding: "1.35rem 1.5rem 1.2rem",
-          background: "#fff",
-          border: "2px solid #1e3a5f",
-          borderRadius: 6,
-          overflow: "hidden",
-          boxShadow: "0 4px 24px rgba(15, 23, 42, 0.07)",
-        }}
-      >
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "42%",
-            height: 120,
-            background:
-              "radial-gradient(ellipse 90% 80% at 0% 0%, rgba(30, 90, 142, 0.14) 0%, transparent 72%)",
-          }}
-        />
-        <div
-          aria-hidden
-          style={{
-            position: "absolute",
-            bottom: 0,
-            right: 0,
-            width: "46%",
-            height: 130,
-            background:
-              "radial-gradient(ellipse 85% 75% at 100% 100%, rgba(56, 189, 248, 0.12) 0%, transparent 70%)",
-          }}
-        />
+      <div className="relative p-[1.35rem_1.5rem_1.2rem] bg-white border-2 border-[#1e3a5f] rounded-md overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.07)] mb-4">
+        <div aria-hidden className="absolute top-0 left-0 w-[42%] h-[120px] bg-[radial-gradient(ellipse_90%_80%_at_0%_0%,rgba(30,90,142,0.14)_0%,transparent_72%)]" />
+        <div aria-hidden className="absolute bottom-0 right-0 w-[46%] h-[130px] bg-[radial-gradient(ellipse_85%_75%_at_100%_100%,rgba(56,189,248,0.12)_0%,transparent_70%)]" />
 
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: 16,
-            paddingBottom: 14,
-            borderBottom: "2px solid #1e3a5f",
-            marginBottom: 12,
-          }}
-        >
+        <div className="relative flex justify-between items-start gap-4 pb-3.5 border-b-2 border-[#1e3a5f] mb-3">
           {isHealth ? <MinistryHealthSeal height={58} maxWidth={260} /> : <MinistryEducationSeal size={62} />}
-          <div style={{ flex: 1, textAlign: "right" }}>
-            <p style={{ margin: "0 0 4px", fontSize: "0.98rem", fontWeight: 800, color: "#0f172a" }}>
+          <div className="flex-1 text-right">
+            <p className="m-0 mb-1 text-[0.98rem] font-extrabold text-[#0f172a]">
               {isHealth ? "وزارة الصحة الفلسطينية" : "وزارة التربية والتعليم"}
             </p>
-            <p style={{ margin: "0 0 2px", fontSize: "0.88rem", fontWeight: 600, color: "#334155" }}>
+            <p className="m-0 mb-0.5 text-[0.88rem] font-semibold text-[#334155]">
               {directorateName}
               {user?.directorate ? ` — ${user.directorate}` : ""}
             </p>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>طلبات التدريب — معاملات رسمية</p>
+            <p className="m-0 text-[0.8rem] text-[#64748b]">طلبات التدريب — معاملات رسمية</p>
           </div>
         </div>
 
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: 24,
-            fontSize: "0.82rem",
-            color: "#334155",
-            marginBottom: 12,
-          }}
-        >
-          <span>
-            <strong>التاريخ:</strong> {new Date().toLocaleDateString("ar-SA")}
-          </span>
-          <span>
-            <strong>العدد:</strong> —
-          </span>
+        <div className="relative flex justify-end gap-6 text-[0.82rem] text-[#334155] mb-3">
+          <span><strong>التاريخ:</strong> {new Date().toLocaleDateString("ar-SA")}</span>
+          <span><strong>العدد:</strong> —</span>
         </div>
 
-        <div
-          style={{
-            position: "relative",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            marginBottom: 12,
-          }}
-        >
-          <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569", lineHeight: 1.75, flex: "1 1 260px" }}>
-            {pageSubtitle}
-          </p>
-          <button
-            type="button"
-            onClick={handlePrintTrainingRequests}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "0.55rem 1.1rem",
-              borderRadius: 8,
-              border: "none",
-              cursor: "pointer",
-              fontWeight: 700,
-              fontSize: "0.85rem",
-              color: "#fff",
-              background: isHealth
-                ? "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)"
-                : "linear-gradient(135deg, #1e5a8e 0%, #1e3a5f 100%)",
-              boxShadow: "0 2px 8px rgba(30, 58, 95, 0.2)",
-            }}
+        <div className="relative flex flex-wrap items-center justify-between gap-3 mb-3">
+          <p className="m-0 text-[0.85rem] text-[#475569] leading-[1.75] flex-[1_1_260px]">{pageSubtitle}</p>
+          <button type="button" onClick={handlePrintTrainingRequests}
+            className="inline-flex items-center gap-2 py-2.5 px-4 rounded-lg border-none cursor-pointer font-bold text-[0.85rem] text-white shadow-[0_2px_8px_rgba(30,58,95,0.2)]"
+            style={{ background: isHealth ? "linear-gradient(135deg, #0d9488 0%, #0f766e 100%)" : "linear-gradient(135deg, #1e5a8e 0%, #1e3a5f 100%)" }}
           >
             <Printer size={17} />
             طباعة كشف الطلبات
           </button>
         </div>
 
-        <div
-          style={{
-            position: "relative",
-            marginTop: 4,
-            padding: "12px 14px",
-            borderRadius: 8,
-            border: isHealth ? "1px solid rgba(15, 118, 110, 0.22)" : "1px solid rgba(30, 58, 95, 0.2)",
-            background: isHealth ? "#f0fdfa" : "#f8fafc",
-            fontSize: "0.82rem",
-            color: "#334155",
-            lineHeight: 1.65,
-          }}
+        <div className="relative mt-1 p-3 rounded-lg text-[0.82rem] text-[#334155] leading-[1.65]"
+          style={{ border: isHealth ? "1px solid rgba(15, 118, 110, 0.22)" : "1px solid rgba(30, 58, 95, 0.2)", background: isHealth ? "#f0fdfa" : "#f8fafc" }}
         >
-          <strong style={{ display: "block", marginBottom: 4, color: isHealth ? "#0f766e" : "#1e3a5f" }}>
-            بيانات المعاملة
-          </strong>
+          <strong className="block mb-1" style={{ color: isHealth ? "#0f766e" : "#1e3a5f" }}>بيانات المعاملة</strong>
           {isHealth
             ? `الجهة المرسلة: كلية التربية — جامعة الخليل · الجهة المستقبلة: وزارة الصحة — ${directorateName} · التسمية المعتمدة أمام المستخدم: طلبات التدريب`
             : `الجهة المرسلة: كلية التربية — جامعة الخليل · الجهة المستقبلة: ${directorateName} · التسمية المعتمدة أمام المستخدم: طلبات التدريب`}
@@ -388,29 +291,29 @@ const OfficialLetters = ({ siteType = "school" }) => {
 
 
       {/* Incoming Requests - Need Decision */}
-      <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0] mb-4">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#f59e0b] to-[#d97706] flex items-center justify-center text-white">
             <Clock size={20} />
           </div>
           <div>
-            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"طلبات التدريب الواردة (بانتظار القرار)"}</h4>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"اختر القرار وعبّئ بيانات الكتاب عند الموافقة"}</p>
+            <h4 className="m-0 mb-1 text-[1.1rem] font-bold">طلبات التدريب الواردة (بانتظار القرار)</h4>
+            <p className="m-0 text-[0.8rem] text-text-faint">اختر القرار وعبّئ بيانات الكتاب عند الموافقة</p>
           </div>
         </div>
 
         {incomingRequests.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "2rem", color: "#94a3b8" }}>
-            <FileCheck size={40} style={{ marginBottom: "0.5rem", opacity: 0.4 }} />
-            <p style={{ margin: 0 }}>{"لا توجد طلبات واردة بانتظار القرار حاليًا"}</p>
+          <div className="text-center py-8 text-[#94a3b8]">
+            <FileCheck size={40} className="mb-2 opacity-40" />
+            <p className="m-0">لا توجد طلبات واردة بانتظار القرار حاليًا</p>
           </div>
         ) : (
-          <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+          <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+            <table className="w-full border-collapse text-[0.85rem]">
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
+                <tr className="bg-[#f8fafc]">
                   {["رقم الطلب", "الموقع التدريبي", "الطالب", "المساق", "مرحلة الطلب", "قرار المديرية", "سبب الرفض", "بيانات كتاب الإرسال", "إجراء"].map((h) => (
-                    <th key={h} style={{ padding: "0.75rem 0.75rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} className="py-3 px-3 text-right font-semibold text-[#475569] border-b border-[#e2e8f0] whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -420,74 +323,64 @@ const OfficialLetters = ({ siteType = "school" }) => {
                   const showLetterFields = decision === "approved";
                   const showRejectField = decision === "rejected";
                   return (
-                    <tr key={request.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0", fontWeight: 600 }}>
-                        {request.letter_number || `#${request.id}`}
+                    <tr key={request.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0] font-semibold">{request.letter_number || `#${request.id}`}</td>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0] text-[#64748b]">
+                        <span className="flex items-center gap-1"><Building2 size={13} />{request.training_site?.data?.name || request.training_site?.name || "—"}</span>
                       </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                          <Building2 size={13} />
-                          {request.training_site?.data?.name || request.training_site?.name || "—"}
-                        </span>
-                      </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {request.students?.[0]?.user?.name || "—"}
-                      </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {request.students?.[0]?.course?.name || "—"}
-                      </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.625rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 600, background: "#fef3c7", color: "#d97706" }}>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0] text-[#64748b]">{request.students?.[0]?.user?.name || "—"}</td>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0] text-[#64748b]">{request.students?.[0]?.course?.name || "—"}</td>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0]">
+                        <span className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-full text-[0.75rem] font-semibold bg-[#fef3c7] text-[#d97706]">
                           <Clock size={12} /> {request.book_status_label || request.book_status}
                         </span>
                       </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <select value={decision}
-                          onChange={(e) => handleDecisionChange(request.id, e.target.value)}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: "0.8rem", background: "#f8fafc" }}
+                      <td className="py-3 px-3 border-b border-[#e2e8f0]">
+                        <select value={decision} onChange={(e) => handleDecisionChange(request.id, e.target.value)}
+                          className="w-full py-1.5 px-2 rounded-md border border-[#e2e8f0] text-[0.8rem] bg-[#f8fafc]"
                         >
-                          <option value="">{"اختر القرار"}</option>
-                          <option value="approved">{"قبول"}</option>
-                          <option value="rejected">{"رفض"}</option>
+                          <option value="">اختر القرار</option>
+                          <option value="approved">قبول</option>
+                          <option value="rejected">رفض</option>
                         </select>
                       </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <textarea placeholder={"سبب الرفض"} value={requestReason[request.id] || ""}
+                      <td className="py-3 px-3 border-b border-[#e2e8f0]">
+                        <textarea placeholder="سبب الرفض" value={requestReason[request.id] || ""}
                           onChange={(e) => setRequestReason((prev) => ({ ...prev, [request.id]: e.target.value }))}
                           disabled={!showRejectField} rows={2}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: showRejectField ? "1px solid #f59e0b" : "1px solid #e2e8f0", fontSize: "0.8rem", background: showRejectField ? "#fffbeb" : "#f8fafc", resize: "vertical" }}
+                          className={`w-full py-1.5 px-2 rounded-md text-[0.8rem] resize-y ${showRejectField ? 'border border-[#f59e0b] bg-[#fffbeb]' : 'border border-[#e2e8f0] bg-[#f8fafc]'}`}
                         />
                       </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0]">
                         {showLetterFields ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-                            <div style={{ position: "relative" }}>
-                              <input type="text"
-                                placeholder={autoLetterNumber(request.id)}
+                          <div className="flex flex-col gap-1.5">
+                            <div className="relative">
+                              <input type="text" placeholder={autoLetterNumber(request.id)}
                                 value={letterFormMap[request.id]?.letter_number || ""}
                                 onChange={(e) => handleLetterFieldChange(request.id, "letter_number", e.target.value)}
-                                style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1.5px solid #bae6fd", fontSize: "0.8rem", background: "#f0f9ff", fontWeight: 700, color: "#0c4a6e", width: "100%", boxSizing: "border-box" }}
+                                className="py-1.5 px-2 rounded-md border-[1.5px] border-[#bae6fd] text-[0.8rem] bg-[#f0f9ff] font-bold text-[#0c4a6e] w-full box-border"
                               />
                               {!letterFormMap[request.id]?.letter_number && (
-                                <span style={{ position: "absolute", top: "50%", right: 6, transform: "translateY(-50%)", fontSize: "0.65rem", background: "#e0f2fe", color: "#0369a1", padding: "1px 6px", borderRadius: 99, fontWeight: 700, pointerEvents: "none" }}>تلقائي</span>
+                                <span className="absolute top-1/2 right-1.5 -translate-y-1/2 text-[0.65rem] bg-[#e0f2fe] text-[#0369a1] px-1.5 py-px rounded-full font-bold pointer-events-none">تلقائي</span>
                               )}
                             </div>
                             <input type="date" value={letterFormMap[request.id]?.letter_date || new Date().toISOString().slice(0, 10)}
                               onChange={(e) => handleLetterFieldChange(request.id, "letter_date", e.target.value)}
-                              style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #10b981", fontSize: "0.8rem", background: "#f0fdf4" }}
+                              className="py-1.5 px-2 rounded-md border border-[#10b981] text-[0.8rem] bg-[#f0fdf4]"
                             />
-                            <textarea placeholder={"محتوى الكتاب"} value={letterFormMap[request.id]?.content || ""}
+                            <textarea placeholder="محتوى الكتاب" value={letterFormMap[request.id]?.content || ""}
                               onChange={(e) => handleLetterFieldChange(request.id, "content", e.target.value)} rows={2}
-                              style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #10b981", fontSize: "0.8rem", background: "#f0fdf4", resize: "vertical" }}
+                              className="py-1.5 px-2 rounded-md border border-[#10b981] text-[0.8rem] bg-[#f0fdf4] resize-y"
                             />
                           </div>
                         ) : (
-                          <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>{"اختر 'قبول' لعرض الحقول"}</span>
+                          <span className="text-[#94a3b8] text-[0.8rem]">اختر 'قبول' لعرض الحقول</span>
                         )}
                       </td>
-                      <td style={{ padding: "0.75rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-3 border-b border-[#e2e8f0]">
                         <button type="button" onClick={() => handleRequestDecision(request.id)} disabled={requestSavingId === request.id}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.5rem 1rem", background: decision === "approved" ? "linear-gradient(135deg, #10b981 0%, #059669 100%)" : decision === "rejected" ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "#64748b", color: "white", border: "none", borderRadius: 8, fontSize: "0.8rem", fontWeight: 600, cursor: requestSavingId === request.id ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}
+                          className="inline-flex items-center gap-1 py-2 px-4 text-white border-none rounded-lg text-[0.8rem] font-semibold whitespace-nowrap"
+                          style={{ background: decision === "approved" ? "linear-gradient(135deg, #10b981 0%, #059669 100%)" : decision === "rejected" ? "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)" : "#64748b", cursor: requestSavingId === request.id ? "not-allowed" : "pointer" }}
                         >
                           {requestSavingId === request.id ? <LoadingSpinner size="button" /> : decision === "approved" ? <Send size={14} /> : <Save size={14} />}
                           {requestSavingId === request.id ? "جاري الحفظ..." : decision === "approved" ? "موافقة وإرسال" : "حفظ القرار"}
@@ -503,53 +396,43 @@ const OfficialLetters = ({ siteType = "school" }) => {
       </div>
 
       {/* Sent Requests */}
-      <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0] mb-4">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center text-white">
             <Send size={20} />
           </div>
           <div>
-            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"الطلبات المُرسلة إلى "}{labels.siteName}</h4>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"طلبات تمت الموافقة عليها وإرسالها"}</p>
+            <h4 className="m-0 mb-1 text-[1.1rem] font-bold">الطلبات المُرسلة إلى {labels.siteName}</h4>
+            <p className="m-0 text-[0.8rem] text-text-faint">طلبات تمت الموافقة عليها وإرسالها</p>
           </div>
         </div>
 
         {sentRequests.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "2rem", color: "#94a3b8" }}>
-            <Send size={40} style={{ marginBottom: "0.5rem", opacity: 0.4 }} />
-            <p style={{ margin: 0 }}>{"لا توجد طلبات مُرسلة حاليًا"}</p>
+          <div className="text-center py-8 text-[#94a3b8]">
+            <Send size={40} className="mb-2 opacity-40" />
+            <p className="m-0">لا توجد طلبات مُرسلة حاليًا</p>
           </div>
         ) : (
-          <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+          <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+            <table className="w-full border-collapse text-[0.85rem]">
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
+                <tr className="bg-[#f8fafc]">
                   {["رقم الطلب", "الموقع التدريبي", "الطالب", "المساق", "تاريخ الإرسال", "الحالة"].map((h) => (
-                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                    <th key={h} className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {sentRequests.map((request, idx) => (
-                  <tr key={request.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", fontWeight: 600 }}>
-                      {request.letter_number || `#${request.id}`}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.training_site?.data?.name || request.training_site?.name || "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.students?.[0]?.user?.name || "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.students?.[0]?.course?.name || "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.sent_to_school_at ? new Date(request.sent_to_school_at).toLocaleDateString("ar-SA") : "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.625rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 600, background: "#dbeafe", color: "#2563eb" }}>
-                        <Send size={12} /> {"مُرسل للمدرسة"}
+                  <tr key={request.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] font-semibold">{request.letter_number || `#${request.id}`}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.training_site?.data?.name || request.training_site?.name || "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.students?.[0]?.user?.name || "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.students?.[0]?.course?.name || "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.sent_to_school_at ? new Date(request.sent_to_school_at).toLocaleDateString("ar-SA") : "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <span className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-full text-[0.75rem] font-semibold bg-[#dbeafe] text-[#2563eb]">
+                        <Send size={12} /> مُرسل للمدرسة
                       </span>
                     </td>
                   </tr>
@@ -561,55 +444,45 @@ const OfficialLetters = ({ siteType = "school" }) => {
       </div>
 
       {/* Rejected Requests */}
-      <div className="section-card" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0]">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#ef4444] to-[#dc2626] flex items-center justify-center text-white">
             <XCircle size={20} />
           </div>
           <div>
-            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"الطلبات المرفوضة"}</h4>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"طلبات تم رفضها من المديرية"}</p>
+            <h4 className="m-0 mb-1 text-[1.1rem] font-bold">الطلبات المرفوضة</h4>
+            <p className="m-0 text-[0.8rem] text-text-faint">طلبات تم رفضها من المديرية</p>
           </div>
         </div>
 
         {rejectedRequests.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "2rem", color: "#94a3b8" }}>
-            <FileText size={40} style={{ marginBottom: "0.5rem", opacity: 0.4 }} />
-            <p style={{ margin: 0 }}>{"لا توجد طلبات مرفوضة حاليًا"}</p>
+          <div className="text-center py-8 text-[#94a3b8]">
+            <FileText size={40} className="mb-2 opacity-40" />
+            <p className="m-0">لا توجد طلبات مرفوضة حاليًا</p>
           </div>
         ) : (
-          <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+          <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+            <table className="w-full border-collapse text-[0.85rem]">
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
+                <tr className="bg-[#f8fafc]">
                   {["رقم الطلب", "الموقع التدريبي", "الطالب", "المساق", "الحالة", "سبب الرفض"].map((h) => (
-                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                    <th key={h} className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {rejectedRequests.map((request, idx) => (
-                  <tr key={request.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", fontWeight: 600 }}>
-                      {request.letter_number || `#${request.id}`}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.training_site?.data?.name || request.training_site?.name || "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.students?.[0]?.user?.name || "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.students?.[0]?.course?.name || "—"}
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.625rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 600, background: "#fee2e2", color: "#dc2626" }}>
+                  <tr key={request.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] font-semibold">{request.letter_number || `#${request.id}`}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.training_site?.data?.name || request.training_site?.name || "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.students?.[0]?.user?.name || "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.students?.[0]?.course?.name || "—"}</td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <span className="inline-flex items-center gap-1.5 py-1.5 px-2.5 rounded-full text-[0.75rem] font-semibold bg-[#fee2e2] text-[#dc2626]">
                         <XCircle size={12} /> {request.book_status_label || request.book_status}
                       </span>
                     </td>
-                    <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                      {request.rejection_reason || "—"}
-                    </td>
+                    <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">{request.rejection_reason || "—"}</td>
                   </tr>
                 ))}
               </tbody>

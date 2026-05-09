@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import PageHeader from "../../components/common/PageHeader";
 import {
   getCurrentUser,
   getOfficialLetters,
@@ -181,32 +182,26 @@ const EducationDirectorateDashboard = () => {
   }
 
   return (
-    <div>
-      {/* Hero Section */}
-      <div className="hero-section mb-4">
-        <div className="hero-content" style={{ alignItems: "flex-start" }}>
-          <MinistryEducationSeal size={54} />
-          <div style={{ flex: 1 }}>
-            <h1 className="hero-title">{"لوحة مديرية التربية"}</h1>
-            <p className="hero-subtitle">
-              {"متابعة طلبات التدريب، أماكن التدريب، والطاقة الاستيعابية داخل المديرية"}
-            </p>
-          </div>
+    <>
+      <div className="flex items-start gap-3 flex-wrap mb-4">
+        <MinistryEducationSeal size={54} />
+        <div className="flex-1">
+          <PageHeader title="لوحة مديرية التربية" subtitle="متابعة طلبات التدريب، أماكن التدريب، والطاقة الاستيعابية داخل المديرية" icon={Building2} />
         </div>
       </div>
 
       {/* Directorate Info Card */}
-      <div className="section-card mb-4" style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ width: 56, height: 56, borderRadius: "16px", background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", boxShadow: "0 8px 20px rgba(30, 58, 95, 0.25)" }}>
+      <div className="bg-gradient-to-br from-white to-[#f8fafc] border border-[#e2e8f0] rounded-[18px] p-5 mb-4">
+        <div className="flex items-center gap-4 mb-5 pb-4 border-b border-[#e2e8f0]">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] flex items-center justify-center text-white shadow-lg shadow-[#1e3a5f]/25">
             <Building2 size={28} />
           </div>
           <div>
-            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.25rem", fontWeight: 700 }}>{directorateInfo.name}</h4>
-            <p style={{ margin: 0, color: "var(--text-soft)", fontSize: "0.9rem" }}>{"مديرية التربية والتعليم"}</p>
+            <h4 className="m-0 mb-1 text-[1.25rem] font-bold text-text">{directorateInfo.name}</h4>
+            <p className="m-0 text-text-soft text-[0.9rem]">{"مديرية التربية والتعليم"}</p>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <InfoItem icon={User} label={"المسؤول"} value={directorateInfo.officer} />
           <InfoItem icon={Mail} label={"البريد الإلكتروني"} value={directorateInfo.email} />
           <InfoItem icon={Phone} label={"رقم الهاتف"} value={directorateInfo.phone} />
@@ -214,21 +209,18 @@ const EducationDirectorateDashboard = () => {
       </div>
 
       {/* Statistics Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {summaryCards.map((card, index) => {
           const Icon = card.icon;
           return (
-            <div key={index} style={{ background: "#fff", borderRadius: "16px", padding: "1.25rem", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "1rem", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer" }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.08)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-            >
-              <div style={{ width: 52, height: 52, borderRadius: "14px", background: card.bg, color: card.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div key={index} className="bg-white border border-[#e2e8f0] rounded-2xl p-5 flex items-center gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg">
+              <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center shrink-0" style={{ background: card.bg, color: card.color }}>
                 <Icon size={26} />
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.85rem", color: "var(--text-soft)", marginBottom: "0.25rem" }}>{card.title}</div>
-                <div style={{ fontSize: "1.75rem", fontWeight: 800, color: "#1e293b" }}>{card.value}</div>
-                <div style={{ fontSize: "0.8rem", color: "var(--text-faint)", marginTop: "0.25rem" }}>{card.desc}</div>
+              <div className="flex-1">
+                <div className="text-[0.85rem] text-text-soft mb-1">{card.title}</div>
+                <div className="text-[1.75rem] font-extrabold text-text">{card.value}</div>
+                <div className="text-[0.8rem] text-text-faint mt-1">{card.desc}</div>
               </div>
             </div>
           );
@@ -236,48 +228,45 @@ const EducationDirectorateDashboard = () => {
       </div>
 
       {/* Official Letters Table */}
-      <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-4">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-info to-[#2563eb] flex items-center justify-center text-white">
             <FileCheck size={20} />
           </div>
-          <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>{"طلبات التدريب"}</h4>
+          <h4 className="m-0 text-secondary font-extrabold text-[1.1rem]">{"طلبات التدريب"}</h4>
         </div>
-        <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+        <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+          <table className="w-full border-collapse text-[0.9rem]">
             <thead>
-              <tr style={{ background: "#f8fafc" }}>
+              <tr className="bg-[#f8fafc]">
                 {["عنوان الكتاب", "الجهة المستلمة", "التاريخ", "الحالة"].map((h) => (
-                  <th key={h} style={{ padding: "0.875rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                  <th key={h} className="py-3.5 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {officialLetters.map((letter, idx) => (
-                <tr key={letter.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc", transition: "background 0.15s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? "#fff" : "#f8fafc")}
-                >
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <FileText size={16} color="#3b82f6" />
-                      <span style={{ fontWeight: 500 }}>{letter.title}</span>
+                <tr key={letter.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-[#f8fafc]"} transition-colors hover:bg-[#f1f5f9]`}>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                    <div className="flex items-center gap-2">
+                      <FileText size={16} className="text-info" />
+                      <span className="font-medium">{letter.title}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>{letter.receiver}</td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Clock size={12} />{letter.date}</span>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{letter.receiver}</td>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">
+                    <span className="flex items-center gap-1"><Clock size={12} />{letter.date}</span>
                   </td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
                     <StatusBadge status={letter.status} badgeClass={letter.badgeClass} />
                   </td>
                 </tr>
               ))}
               {officialLetters.length === 0 && (
-                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center" }}>
-                  <div style={{ color: "#94a3b8" }}>
-                    <Inbox size={40} style={{ marginBottom: "0.5rem", opacity: 0.5 }} />
-                    <p style={{ margin: 0 }}>{"لا توجد كتب رسمية مسجلة حاليًا"}</p>
+                <tr><td colSpan={4} className="py-8 px-4 text-center">
+                  <div className="text-text-faint">
+                    <Inbox size={40} className="mb-2 opacity-50 mx-auto" />
+                    <p className="m-0">{"لا توجد كتب رسمية مسجلة حاليًا"}</p>
                   </div>
                 </td></tr>
               )}
@@ -287,55 +276,52 @@ const EducationDirectorateDashboard = () => {
       </div>
 
       {/* Training Sites Table */}
-      <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-4">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed] flex items-center justify-center text-white">
             <School size={20} />
           </div>
-          <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>{"أماكن التدريب والطاقة الاستيعابية"}</h4>
+          <h4 className="m-0 text-secondary font-extrabold text-[1.1rem]">{"أماكن التدريب والطاقة الاستيعابية"}</h4>
         </div>
-        <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+        <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+          <table className="w-full border-collapse text-[0.9rem]">
             <thead>
-              <tr style={{ background: "#f8fafc" }}>
+              <tr className="bg-[#f8fafc]">
                 {["اسم الجهة", "النوع", "الطاقة الاستيعابية", "التواصل", "الحالة"].map((h) => (
-                  <th key={h} style={{ padding: "0.875rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0" }}>{h}</th>
+                  <th key={h} className="py-3.5 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {trainingPlaces.map((place, idx) => (
-                <tr key={place.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc", transition: "background 0.15s" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? "#fff" : "#f8fafc")}
-                >
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <div style={{ width: 32, height: 32, borderRadius: "8px", background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)", color: "#4f46e5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.85rem", fontWeight: 700 }}>
+                <tr key={place.id} className={`${idx % 2 === 0 ? "bg-white" : "bg-[#f8fafc]"} transition-colors hover:bg-[#f1f5f9]`}>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#e0e7ff] to-[#c7d2fe] text-[#4f46e5] flex items-center justify-center text-[0.85rem] font-bold">
                         {place.name?.charAt(0) || "?"}
                       </div>
-                      <span style={{ fontWeight: 500 }}>{place.name}</span>
+                      <span className="font-medium">{place.name}</span>
                     </div>
                   </td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>{place.type}</td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontWeight: 600, color: "#1e293b" }}>
-                      <Users size={14} color="#64748b" />{place.capacity}
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.type}</td>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                    <span className="inline-flex items-center gap-1 font-semibold text-text">
+                      <Users size={14} className="text-[#64748b]" />{place.capacity}
                     </span>
                   </td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><Phone size={12} />{place.contact}</span>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">
+                    <span className="flex items-center gap-1"><Phone size={12} />{place.contact}</span>
                   </td>
-                  <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                  <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
                     <StatusBadge status={place.status} badgeClass={place.badgeClass} />
                   </td>
                 </tr>
               ))}
               {trainingPlaces.length === 0 && (
-                <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center" }}>
-                  <div style={{ color: "#94a3b8" }}>
-                    <School size={40} style={{ marginBottom: "0.5rem", opacity: 0.5 }} />
-                    <p style={{ margin: 0 }}>{"لا توجد أماكن تدريب مسجلة حاليًا"}</p>
+                <tr><td colSpan={5} className="py-8 px-4 text-center">
+                  <div className="text-text-faint">
+                    <School size={40} className="mb-2 opacity-50 mx-auto" />
+                    <p className="m-0">{"لا توجد أماكن تدريب مسجلة حاليًا"}</p>
                   </div>
                 </td></tr>
               )}
@@ -345,46 +331,46 @@ const EducationDirectorateDashboard = () => {
       </div>
 
       {/* Activities Section */}
-      <div className="section-card" style={{ padding: "1.5rem", borderRadius: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-warning to-[#d97706] flex items-center justify-center text-white">
             <Bell size={20} />
           </div>
           <div>
-            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"آخر الأنشطة والتحديثات"}</h4>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"إعلانات وتحديثات المديرية"}</p>
+            <h4 className="m-0 mb-1 text-secondary font-extrabold text-[1.1rem]">{"آخر الأنشطة والتحديثات"}</h4>
+            <p className="m-0 text-[0.8rem] text-text-faint">{"إعلانات وتحديثات المديرية"}</p>
           </div>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div className="flex flex-col gap-3">
           {latestActivities.length === 0 || (latestActivities.length === 1 && latestActivities[0] === "لا توجد أنشطة حديثة حاليًا.") ? (
-            <div style={{ textAlign: "center", padding: "1.5rem", color: "#94a3b8" }}>
-              <Activity size={32} style={{ marginBottom: "0.5rem", opacity: 0.4 }} />
-              <p style={{ margin: 0, fontSize: "0.9rem" }}>{"لا توجد أنشطة حديثة حاليًا"}</p>
+            <div className="text-center py-6 text-text-faint">
+              <Activity size={32} className="mb-2 opacity-40 mx-auto" />
+              <p className="m-0 text-[0.9rem]">{"لا توجد أنشطة حديثة حاليًا"}</p>
             </div>
           ) : (
             latestActivities.map((activity, index) => (
-              <div key={index} style={{ padding: "0.875rem 1rem", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", flexShrink: 0 }} />
-                <p style={{ margin: 0, fontSize: "0.85rem", color: "#475569" }}>{activity}</p>
+              <div key={index} className="p-3.5 bg-[#f8fafc] rounded-[10px] border border-[#e2e8f0] flex items-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-warning shrink-0" />
+                <p className="m-0 text-[0.85rem] text-[#475569]">{activity}</p>
               </div>
             ))
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
 // Helper Components
 function InfoItem({ icon: Icon, label, value }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-      <div style={{ width: 36, height: 36, borderRadius: "10px", background: "#f1f5f9", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    <div className="flex items-center gap-3">
+      <div className="w-9 h-9 rounded-[10px] bg-[#f1f5f9] text-[#64748b] flex items-center justify-center shrink-0">
         <Icon size={18} />
       </div>
       <div>
-        <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginBottom: "0.125rem" }}>{label}</div>
-        <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#1e293b" }}>{value}</div>
+        <div className="text-[0.75rem] text-text-faint mb-0.5">{label}</div>
+        <div className="text-[0.9rem] font-semibold text-text">{value}</div>
       </div>
     </div>
   );
@@ -404,7 +390,7 @@ function StatusBadge({ status, badgeClass }) {
 
   const Icon = colors.icon;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", background: colors.bg, color: colors.text, borderRadius: "9999px", fontSize: "0.8rem", fontWeight: 600 }}>
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[0.8rem] font-semibold" style={{ background: colors.bg, color: colors.text }}>
       <Icon size={14} />{status}
     </span>
   );

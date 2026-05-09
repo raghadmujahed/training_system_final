@@ -57,14 +57,13 @@ export default function StudentFormsTab({ studentId, studentName }) {
         <FieldSupervisorReferenceCard supervisorType={board.supervisor_subtype} compact />
       ) : null}
 
-      <div className="fs-forms-action-stack" style={{ marginTop: "0.75rem" }}>
+      <div className="fs-forms-action-stack mt-3">
         <Link
           to="/field-supervisor/forms"
-          className="fs-forms-action-card fs-forms-action-card--evaluation"
-          style={{ textDecoration: "none", color: "inherit" }}
+          className="fs-forms-action-card fs-forms-action-card--evaluation no-underline text-inherit"
         >
           <div className="fs-forms-action-card__text">
-            <p className="fs-forms-action-card__title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <p className="fs-forms-action-card__title flex items-center gap-2">
               <FileStack size={18} aria-hidden />
               لوحة النماذج والتقارير
             </p>
@@ -122,7 +121,7 @@ export default function StudentFormsTab({ studentId, studentName }) {
         </ul>
       )}
 
-      <p className="text-soft fs-forms-meta" style={{ marginTop: "1rem" }}>
+      <p className="text-soft fs-forms-meta mt-4">
         يمكنك أيضًا استخدام تبويبات «السجلات اليومية» و«التقييم الميداني» في أعلى الصفحة للعمل المباشر على ملف
         الطالب.
       </p>

@@ -13,13 +13,13 @@ export default function BatchBuilder({
 
   return (
     <div className="section-card mb-4">
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+      <div className="flex items-center gap-[10px] mb-2">
         <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
           <Layers size={20} />
         </div>
-        <h4 style={{ margin: 0 }}>دفعات طلبات التدريب — تجميع حسب المديرية</h4>
+        <h4 className="m-0">دفعات طلبات التدريب — تجميع حسب المديرية</h4>
       </div>
-      <p style={{ color: "var(--text-faint)", marginBottom: 16, fontSize: "0.88rem", marginTop: 4 }}>
+      <p className="text-[var(--text-faint)] mb-4 text-[0.88rem] mt-1">
         الطلبات المعتمدة مبدئيًا مُجمّعة تلقائيًا حسب الجهة والمديرية.
         أنشئ دفعة معاملة رسمية لكل مجموعة ثم أرسلها للجهة المعنية.
       </p>
@@ -33,34 +33,20 @@ export default function BatchBuilder({
         return (
           <div
             key={`${group.governing_body}-${group.directorate}-${idx}`}
-            style={{
-              border: "1px solid var(--border)",
-              borderRadius: 14,
-              padding: 16,
-              marginBottom: idx < groups.length - 1 ? 12 : 0,
-              background: "#fbfcfe",
-              transition: "var(--transition)",
-            }}
+            className="border border-[var(--border)] rounded-[14px] p-4 mb-4 bg-[#fbfcfe]"
           >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: 12,
-              }}
-            >
+            <div className="flex justify-between items-center mb-3">
               <div>
-                <h5 style={{ margin: "0 0 4px", display: "flex", alignItems: "center", gap: 8, fontSize: "0.95rem" }}>
-                  <FileText size={16} style={{ color: "var(--accent)" }} />
+                <h5 className="m-0 mb-1 flex items-center gap-2 text-[0.95rem]">
+                  <FileText size={16} className="text-[var(--accent)]" />
                   {groupLabel}
                 </h5>
-                <span style={{ fontSize: "0.82rem", color: "var(--text-faint)" }}>
+                <span className="text-[0.82rem] text-[var(--text-faint)]">
                   {group.requests.length} طلب معتمد
                 </span>
               </div>
               <button
-                className="btn-primary-custom"
+                className="btn-primary-custom flex items-center gap-[6px] text-[0.85rem]"
                 disabled={saving}
                 onClick={() =>
                   onCreateBatchForGroup(
@@ -69,7 +55,6 @@ export default function BatchBuilder({
                     group.requests.map((r) => r.id)
                   )
                 }
-                style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.85rem" }}
               >
                 <Send size={14} />
                 {saving ? "جاري الإنشاء..." : `إنشاء دفعة (${group.requests.length})`}

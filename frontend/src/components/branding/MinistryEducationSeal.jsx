@@ -12,36 +12,21 @@ export default function MinistryEducationSeal({ size = 56 }) {
 
   return (
     <div
-      className="moe-seal"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        flexShrink: 0,
-        border: "1px solid rgba(30, 58, 95, 0.15)",
-        background: "linear-gradient(145deg, #fafafa 0%, #f1f5f9 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-      }}
+      className="moe-seal shrink-0 rounded-full border border-[rgba(30,58,95,0.15)] bg-gradient-to-br from-[#fafafa] to-[#f1f5f9] flex items-center justify-center overflow-hidden"
+      style={{ width: size, height: size }}
       title="وزارة التربية والتعليم — دولة فلسطين"
     >
       {src ? (
         <img
           src={src}
           alt="وزارة التربية والتعليم"
-          style={{ width: "92%", height: "92%", objectFit: "contain" }}
+          className="w-[92%] h-[92%] object-contain"
           onError={() => setStage((s) => s + 1)}
         />
       ) : (
         <span
-          style={{
-            fontWeight: 900,
-            fontSize: Math.max(14, size * 0.32),
-            color: "#1e3a5f",
-            fontFamily: "system-ui, sans-serif",
-          }}
+          className="font-black text-[#1e3a5f] font-[system-ui,sans-serif]"
+          style={{ fontSize: Math.max(14, size * 0.32) }}
         >
           م.ت
         </span>

@@ -134,7 +134,7 @@ export default function FinalEvaluation() {
       {/* Detail Modal */}
       {selectedStudent && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
+          <div className="modal-content max-w-[700px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>تفاصيل أداء الطالب</h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
@@ -146,7 +146,7 @@ export default function FinalEvaluation() {
                 const evals = getStudentEvals(selectedStudent.id);
                 return (
                   <>
-                    <div style={{ marginBottom: 16 }}>
+                    <div className="mb-4">
                       <h5>{stu?.name || "طالب"}</h5>
                       <p className="text-soft">
                         جهة التدريب: {selectedStudent.training_site?.name || "—"} | من {selectedStudent.start_date || "—"} إلى {selectedStudent.end_date || "—"}
@@ -154,9 +154,9 @@ export default function FinalEvaluation() {
                     </div>
 
                     {/* Attendance Summary */}
-                    <div className="section-card" style={{ padding: 16, marginBottom: 16 }}>
+                    <div className="section-card p-4 mb-4">
                       <h6>ملخص الحضور</h6>
-                      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 8 }}>
+                      <div className="flex gap-4 flex-wrap mt-2">
                         <div><strong>إجمالي الأيام:</strong> {att.total}</div>
                         <div><strong>حاضر:</strong> {att.present}</div>
                         <div><strong>غائب:</strong> {att.absent}</div>
@@ -166,12 +166,12 @@ export default function FinalEvaluation() {
                     </div>
 
                     {/* Evaluations */}
-                    <div className="section-card" style={{ padding: 16 }}>
+                    <div className="section-card p-4">
                       <h6>التقييمات ({evals.length})</h6>
                       {evals.length === 0 ? (
                         <p className="text-soft">لا توجد تقييمات بعد.</p>
                       ) : (
-                        <table className="data-table" style={{ marginTop: 8 }}>
+                        <table className="data-table mt-2">
                           <thead>
                             <tr>
                               <th>القالب</th>

@@ -12,19 +12,12 @@ export default function CoordinatorPsychologyReadOnlyNotice() {
 
   return (
     <div
-      className="alert-custom alert-info mb-3"
-      style={{
-        borderRadius: 12,
-        borderRight: "4px solid #0ea5e9",
-        background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-        padding: "14px 16px",
-        lineHeight: 1.65,
-      }}
+      className="bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] border border-info/20 rounded-xl p-3.5 mb-3 border-r-4 border-r-info leading-relaxed"
     >
-      <strong style={{ display: "block", marginBottom: 6, color: "#0369a1" }}>
+      <strong className="block mb-1.5 text-[#0369a1]">
         قسم علم النفس — وضع الاطلاع
       </strong>
-      <span style={{ fontSize: "0.92rem", color: "#0c4a6e" }}>
+      <span className="text-[0.92rem] text-[#0c4a6e]">
         طلبات التدريب والدفعات الرسمية لمسار علم النفس تُدار من قبل المشرف الأكاديمي للقسم. يمكنك متابعة القوائم
         هنا عند الحاجة؛ مسار أصول التربية يبقى تحت مسؤولية المنسق كما هو دون تغيير.
       </span>

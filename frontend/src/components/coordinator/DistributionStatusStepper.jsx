@@ -19,14 +19,7 @@ export default function DistributionStatusStepper({
 
   return (
     <div
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 0,
-        overflowX: "auto",
-        padding: "12px 0",
-        direction: "rtl",
-      }}
+      className="flex items-start gap-0 overflow-x-auto py-3 direction-rtl"
     >
       {steps.map((step, idx) => {
         const stepOrder = step.order;
@@ -55,49 +48,31 @@ export default function DistributionStatusStepper({
         return (
           <div
             key={step.key}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              minWidth: 80,
-              flex: "1 1 80px",
-            }}
+            className="flex flex-col items-center min-w-[80px] flex-[1_1_80px]"
           >
             <div
+              className="w-7 h-7 rounded-full flex items-center justify-center mb-1"
               style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
                 background: bgColor,
                 color: textColor,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 4,
                 border: isCurrent ? "2px solid " + textColor : "none",
               }}
             >
               {icon}
             </div>
             <span
+              className="text-[0.72rem] text-center leading-[1.3]"
               style={{
-                fontSize: "0.72rem",
-                textAlign: "center",
                 color: textColor,
                 fontWeight: isCurrent ? 800 : 400,
-                lineHeight: 1.3,
               }}
             >
               {step.label}
             </span>
             {idx < steps.length - 1 && (
               <div
-                style={{
-                  width: "100%",
-                  height: 2,
-                  background: isPast ? "#28a745" : "#dee2e6",
-                  marginTop: 4,
-                }}
+                className="w-full h-[2px] mt-1"
+                style={{ background: isPast ? "#28a745" : "#dee2e6" }}
               />
             )}
           </div>

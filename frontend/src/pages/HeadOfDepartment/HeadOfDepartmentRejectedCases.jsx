@@ -46,16 +46,15 @@ export default function HeadOfDepartmentRejectedCases() {
   return (
     <div className="enrollments-list">
       <div className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="flex justify-between items-start">
           <div>
             <h1>الحالات المرفوضة</h1>
             <p>عرض وإدارة الطلاب الذين تم رفض توزيعهم على الشعب</p>
           </div>
           <button
-            className="btn-secondary"
+            className="btn-secondary flex items-center gap-[6px]"
             onClick={fetchRejectedCases}
             disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
             {loading ? <LoadingSpinner size="button" /> : <RefreshCw size={16} />}
             تحديث
@@ -64,7 +63,7 @@ export default function HeadOfDepartmentRejectedCases() {
       </div>
 
       {error && (
-        <div className="section-card" style={{ marginBottom: 12 }}>
+        <div className="section-card mb-3">
           <p className="text-danger">{error}</p>
         </div>
       )}
@@ -77,13 +76,13 @@ export default function HeadOfDepartmentRejectedCases() {
           description="لا يوجد طلاب مرفوضين في القسم الحالي"
         />
       ) : (
-        <div className="activity-list" style={{ marginTop: 16 }}>
+        <div className="activity-list mt-4">
           {rejectedCases.map((item) => (
             <div className="activity-item" key={item.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h6 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <AlertCircle size={16} style={{ color: '#dc3545' }} />
+                  <h6 className="m-0 flex items-center gap-2">
+                    <AlertCircle size={16} className="text-[#dc3545]" />
                     {item.student?.name || 'غير محدد'}
                   </h6>
                   <div className="activity-meta">
@@ -96,32 +95,24 @@ export default function HeadOfDepartmentRejectedCases() {
                     )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <div className="flex flex-col items-end gap-1">
                   <span className="status-badge rejected">مرفوض</span>
-                  <span style={{ fontSize: 12, color: '#666' }}>
+                  <span className="text-xs text-[#666]">
                     مصدر الرفض: {getSourceLabel(item.source)}
                   </span>
                 </div>
               </div>
               
               {item.rejection_reason && (
-                <div style={{ 
-                  marginTop: 8, 
-                  padding: 8, 
-                  backgroundColor: '#fff3cd', 
-                  borderRadius: 4, 
-                  fontSize: 14,
-                  color: '#856404'
-                }}>
+                <div className="mt-2 p-2 bg-[#fff3cd] border border-[#ffc107] rounded-lg text-[#856404] text-[0.85rem]">
                   <strong>سبب الرفض:</strong> {item.rejection_reason}
                 </div>
               )}
 
-              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+              <div className="mt-3 flex gap-2">
                 <button
-                  className="btn-primary"
+                  className="btn-primary flex items-center gap-[6px] text-[14px]"
                   onClick={() => handleReassign(item.student?.id, item.section?.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}
                 >
                   <CheckCircle size={14} />
                   إعادة التوزيع

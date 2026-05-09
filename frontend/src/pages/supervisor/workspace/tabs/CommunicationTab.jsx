@@ -80,17 +80,17 @@ export default function CommunicationTab({ studentId }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <h4 style={{ margin: 0 }}>💬 مركز التواصل</h4>
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="m-0">💬 مركز التواصل</h4>
         <button className="btn-primary-custom" onClick={() => setShowForm(true)}>+ رسالة جديدة</button>
       </div>
 
       {/* New Message Form */}
       {showForm && (
-        <div className="section-card" style={{ marginBottom: "16px", border: "1px solid #4361ee" }}>
-          <h5 style={{ margin: "0 0 12px" }}>✉️ رسالة جديدة</h5>
+        <div className="section-card mb-4 border border-[#4361ee]">
+          <h5 className="m-0 mb-3">✉️ رسالة جديدة</h5>
           <form onSubmit={handleSend}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="form-label-custom">المستلم</label>
                 <select id="msg-target" name="target" className="form-select-custom" value={form.target} onChange={(e) => setForm((p) => ({ ...p, target: e.target.value }))}>
@@ -105,19 +105,19 @@ export default function CommunicationTab({ studentId }) {
               </div>
             </div>
             <textarea id="msg-content" name="content" className="form-textarea-custom" rows={3} value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} placeholder="اكتب رسالتك..." required />
-            <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+            <div className="flex gap-2 mt-[10px]">
               <button className="btn-primary-custom" type="submit" disabled={sending}>{sending ? "جاري الإرسال..." : "📤 إرسال"}</button>
-              <button type="button" style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #999", background: "#fff", cursor: "pointer" }} onClick={() => setShowForm(false)}>إلغاء</button>
+              <button type="button" className="py-2 px-4 rounded-md border border-[#999] bg-white cursor-pointer" onClick={() => setShowForm(false)}>إلغاء</button>
             </div>
           </form>
         </div>
       )}
 
       {/* Filter */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "16px", flexWrap: "wrap" }}>
-        <button onClick={() => setFilterTarget("")} style={{ padding: "4px 10px", borderRadius: "14px", fontSize: "0.75rem", border: `1px solid ${!filterTarget ? "#4361ee" : "#dee2e6"}`, background: !filterTarget ? "#eef0ff" : "#fff", color: !filterTarget ? "#4361ee" : "#666", cursor: "pointer" }}>الكل</button>
+      <div className="flex gap-[6px] mb-4 flex-wrap">
+        <button onClick={() => setFilterTarget("")} className="py-1 px-[10px] rounded-[14px] text-[0.75rem] cursor-pointer" style={{ border: `1px solid ${!filterTarget ? "#4361ee" : "#dee2e6"}`, background: !filterTarget ? "#eef0ff" : "#fff", color: !filterTarget ? "#4361ee" : "#666" }}>الكل</button>
         {TARGETS.map((t) => (
-          <button key={t.value} onClick={() => setFilterTarget(filterTarget === t.value ? "" : t.value)} style={{ padding: "4px 10px", borderRadius: "14px", fontSize: "0.75rem", border: `1px solid ${filterTarget === t.value ? "#4361ee" : "#dee2e6"}`, background: filterTarget === t.value ? "#eef0ff" : "#fff", color: filterTarget === t.value ? "#4361ee" : "#666", cursor: "pointer" }}>
+          <button key={t.value} onClick={() => setFilterTarget(filterTarget === t.value ? "" : t.value)} className="py-1 px-[10px] rounded-[14px] text-[0.75rem] cursor-pointer" style={{ border: `1px solid ${filterTarget === t.value ? "#4361ee" : "#dee2e6"}`, background: filterTarget === t.value ? "#eef0ff" : "#fff", color: filterTarget === t.value ? "#4361ee" : "#666" }}>
             {t.icon} {t.label}
           </button>
         ))}
@@ -125,34 +125,31 @@ export default function CommunicationTab({ studentId }) {
 
       {/* Messages Timeline */}
       {!filtered.length ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>📭</div>
+        <div className="text-center p-10 text-[#999]">
+          <div className="text-[2rem] mb-3">📭</div>
           لا توجد رسائل
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="flex flex-col gap-[10px]">
           {filtered.map((msg, i) => {
             const isSent = msg.direction === "sent" || msg.sender_role === "academic_supervisor";
             return (
-              <div key={msg.id || i} style={{
+              <div key={msg.id || i} className="border border-[#e9ecef] rounded-[10px] p-[14px]" style={{
                 background: isSent ? "#eef0ff" : "#f8f9fa",
-                border: "1px solid #e9ecef",
-                borderRadius: "10px",
-                padding: "14px",
                 borderRight: isSent ? "4px solid #4361ee" : "4px solid #999",
               }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", flexWrap: "wrap", gap: "4px" }}>
-                  <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.8rem", fontWeight: "600", color: isSent ? "#4361ee" : "#555" }}>
+                <div className="flex justify-between items-center mb-[6px] flex-wrap gap-1">
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[0.8rem] font-semibold" style={{ color: isSent ? "#4361ee" : "#555" }}>
                       {isSent ? "← أنت" : `→ ${getTargetLabel(msg.target || msg.sender_role)}`}
                     </span>
-                    <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: "10px", background: "#f0f0f0", color: "#666" }}>
+                    <span className="text-[0.72rem] py-[2px] px-2 rounded-[10px] bg-[#f0f0f0] text-[#666]">
                       {getReasonIcon(msg.reason)} {getReasonLabel(msg.reason)}
                     </span>
                   </div>
-                  <span style={{ fontSize: "0.72rem", color: "#999" }}>{msg.created_at || ""}</span>
+                  <span className="text-[0.72rem] text-[#999]">{msg.created_at || ""}</span>
                 </div>
-                <p style={{ margin: 0, fontSize: "0.88rem", color: "#333", lineHeight: "1.6" }}>{msg.content}</p>
+                <p className="m-0 text-[0.88rem] text-[#333] leading-[1.6]">{msg.content}</p>
               </div>
             );
           })}

@@ -2,17 +2,18 @@ import React from 'react';
 
 export function Badge({ children, variant = 'default', className = '', ...props }) {
   const variants = {
-    default: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
-    secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
-    outline: 'border border-gray-300 text-gray-700 bg-transparent',
-    destructive: 'bg-red-100 text-red-800 hover:bg-red-200',
-    success: 'bg-green-100 text-green-800 hover:bg-green-200',
-    warning: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
+    default: 'bg-primary/10 text-secondary',
+    secondary: 'bg-[#f3f6fa] text-text-soft border border-border',
+    outline: 'border border-border text-text-soft bg-transparent',
+    destructive: 'bg-danger/12 text-danger',
+    success: 'bg-success/12 text-success',
+    warning: 'bg-warning/12 text-warning',
+    info: 'bg-info/12 text-info',
   };
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 min-h-[30px] px-3 rounded-full text-[0.84rem] font-extrabold border border-transparent transition-colors ${variants[variant]} ${className}`}
       {...props}
     >
       {children}

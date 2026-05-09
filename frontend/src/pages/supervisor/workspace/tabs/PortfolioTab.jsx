@@ -90,31 +90,29 @@ export default function PortfolioTab({ studentId }) {
   };
 
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
-  if (error && !entries.length) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
+  if (error && !entries.length) return <div className="text-[#dc3545] p-5">⚠️ {error}</div>;
 
   return (
     <div>
       {/* Completion Progress */}
-      <div className="section-card" style={{ marginBottom: "16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <h4 style={{ margin: 0 }}>📁 نسبة اكتمال ملف الإنجاز</h4>
-          <span style={{ fontSize: "1.3rem", fontWeight: "700", color: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545" }}>
+      <div className="section-card mb-4">
+        <div className="flex justify-between items-center mb-3">
+          <h4 className="m-0">📁 نسبة اكتمال ملف الإنجاز</h4>
+          <span className="text-[1.3rem] font-bold" style={{ color: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545" }}>
             {completionRate}%
           </span>
         </div>
-        <div style={{ background: "#e9ecef", borderRadius: "10px", height: "12px", overflow: "hidden" }}>
+        <div className="bg-[#e9ecef] rounded-[10px] h-3 overflow-hidden">
           <div
+            className="h-full rounded-[10px] transition-[width] duration-500 ease"
             style={{
-              height: "100%",
               width: `${completionRate}%`,
               background: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545",
-              borderRadius: "10px",
-              transition: "width 0.5s ease",
             }}
           />
         </div>
         {completionRate < 100 && (
-          <div style={{ marginTop: "8px", fontSize: "0.82rem", color: "#dc3545" }}>
+          <div className="mt-2 text-[0.82rem] text-[#dc3545]">
             ⚠️ عناصر ناقصة: {entries.filter((e) => e.status === "missing").map((e) => e.type || e.title).join("، ")}
           </div>
         )}
@@ -122,59 +120,42 @@ export default function PortfolioTab({ studentId }) {
 
       {/* Entries List */}
       {!entries.length ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>📭</div>
+        <div className="text-center p-10 text-[#999]">
+          <div className="text-[2rem] mb-3">📭</div>
           لا توجد عناصر في ملف الإنجاز بعد
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="flex flex-col gap-3">
           {entries.map((entry) => {
             const sc = statusConfig[entry.status] || statusConfig.missing;
             return (
               <div
                 key={entry.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e9ecef",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  borderRight: `4px solid ${sc.color}`,
-                }}
+                className="bg-white border border-[#e9ecef] rounded-[10px] p-4"
+                style={{ borderRight: `4px solid ${sc.color}` }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+                <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
                   <div>
-                    <h5 style={{ margin: 0, fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <h5 className="m-0 text-[0.95rem] flex items-center gap-[6px]">
                       {sc.icon} {entry.title || entry.type || "عنصر"}
                     </h5>
-                    <div style={{ fontSize: "0.78rem", color: "#999", marginTop: "4px" }}>
+                    <div className="text-[0.78rem] text-[#999] mt-1">
                       {entry.file_type && <span>نوع: {entry.file_type} | </span>}
                       {entry.uploaded_at && <span>تاريخ الرفع: {entry.uploaded_at}</span>}
                     </div>
                   </div>
-                  <span style={{ padding: "4px 12px", borderRadius: "16px", fontSize: "0.78rem", fontWeight: "600", color: sc.color, backgroundColor: sc.bg }}>
+                  <span className="py-1 px-3 rounded-2xl text-[0.78rem] font-semibold" style={{ color: sc.color, backgroundColor: sc.bg }}>
                     {sc.label}
                   </span>
                 </div>
 
                 {entry.file_path && (
-                  <div style={{ marginBottom: "8px" }}>
+                  <div className="mb-2">
                     <a
                       href={`${apiOrigin}/storage/${entry.file_path.replace(/^\//, "")}`}
                       target="_blank"
                       rel="noreferrer"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        fontSize: "0.82rem",
-                        color: "#0d6efd",
-                        textDecoration: "none",
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        backgroundColor: "#f8f9fa",
-                        border: "1px solid #dee2e6",
-                        transition: "all 0.2s"
-                      }}
+                      className="inline-flex items-center gap-[6px] text-[0.82rem] text-[#0d6efd] no-underline py-1 px-2 rounded-md bg-[#f8f9fa] border border-[#dee2e6] transition-all duration-200"
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#e9ecef";
                         e.currentTarget.style.borderColor = "#0d6efd";
@@ -192,22 +173,22 @@ export default function PortfolioTab({ studentId }) {
                 )}
 
                 {entry.student_note && (
-                  <div style={{ background: "#f0f7ff", borderRadius: "6px", padding: "8px", marginBottom: "8px", fontSize: "0.85rem" }}>
-                    <span style={{ fontWeight: "600", color: "#0d6efd" }}>ملاحظة الطالب:</span> {entry.student_note}
+                  <div className="bg-[#f0f7ff] rounded-md p-2 mb-2 text-[0.85rem]">
+                    <span className="font-semibold text-[#0d6efd]">ملاحظة الطالب:</span> {entry.student_note}
                   </div>
                 )}
 
                 {entry.academic_rating != null && entry.academic_rating !== "" && (
-                  <div style={{ fontSize: "0.82rem", marginBottom: "8px", color: "#0f5132", fontWeight: 600 }}>
+                  <div className="text-[0.82rem] mb-2 text-[#0f5132] font-semibold">
                     ⭐ تقييمك: {entry.academic_rating} / 5
                   </div>
                 )}
 
                 {entry.supervisor_comment && (
-                  <div style={{ background: "#e8f5e9", borderRadius: "6px", padding: "8px", marginBottom: "8px", fontSize: "0.85rem" }}>
-                    <span style={{ fontWeight: "600", color: "#28a745" }}>🎓 ملاحظتك:</span> {entry.supervisor_comment}
+                  <div className="bg-[#e8f5e9] rounded-md p-2 mb-2 text-[0.85rem]">
+                    <span className="font-semibold text-[#28a745]">🎓 ملاحظتك:</span> {entry.supervisor_comment}
                     {entry.reviewed_at && (
-                      <div style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "4px" }}>
+                      <div className="text-[0.75rem] text-[#6b7280] mt-1">
                         {new Date(entry.reviewed_at).toLocaleDateString('ar-SA', { 
                           year: 'numeric', 
                           month: 'short', 
@@ -221,24 +202,19 @@ export default function PortfolioTab({ studentId }) {
                 )}
 
                 {commentingId === entry.id ? (
-                  <div style={{ marginTop: "8px" }}>
-                    <div style={{ marginBottom: "8px" }}>
-                      <span style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: "6px" }}>تقييم الملف (1–5)</span>
-                      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  <div className="mt-2">
+                    <div className="mb-2">
+                      <span className="text-[0.8rem] font-semibold block mb-[6px]">تقييم الملف (1–5)</span>
+                      <div className="flex gap-[6px] flex-wrap">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <button
                             key={n}
                             type="button"
                             onClick={() => setDraftRating(n)}
+                            className="w-9 h-9 rounded-lg cursor-pointer font-bold text-[0.9rem]"
                             style={{
-                              width: "36px",
-                              height: "36px",
-                              borderRadius: "8px",
                               border: draftRating === n ? "2px solid #4361ee" : "1px solid #dee2e6",
                               background: draftRating === n ? "#eef2ff" : "#fff",
-                              cursor: "pointer",
-                              fontWeight: 700,
-                              fontSize: "0.9rem",
                               color: draftRating === n ? "#4361ee" : "#495057",
                             }}
                           >
@@ -248,22 +224,22 @@ export default function PortfolioTab({ studentId }) {
                         <button
                           type="button"
                           onClick={() => setDraftRating(null)}
-                          style={{ fontSize: "0.75rem", padding: "0 10px", borderRadius: "8px", border: "1px solid #ccc", background: "#f8f9fa", cursor: "pointer" }}
+                          className="text-[0.75rem] py-0 px-[10px] rounded-lg border border-[#ccc] bg-[#f8f9fa] cursor-pointer"
                         >
                           إلغاء التقييم
                         </button>
                       </div>
                     </div>
                     <textarea id="portfolio-comment" name="supervisor_comment" className="form-textarea-custom" rows={2} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="ملاحظة (اختياري عند اعتماد المراجعة؛ مطلوب عند طلب التعديل)..." />
-                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
-                      <button className="btn-primary-custom" style={{ fontSize: "0.82rem", padding: "6px 12px" }} type="button" onClick={() => handleSubmitReview(entry.id, "reviewed")}>اعتماد المراجعة</button>
-                      <button style={{ fontSize: "0.82rem", padding: "6px 12px", borderRadius: "6px", border: "1px solid #fd7e14", background: "#fff3e0", color: "#c2410c", cursor: "pointer" }} type="button" onClick={() => handleSubmitReview(entry.id, "needs_revision")}>طلب تعديل</button>
-                      <button style={{ fontSize: "0.82rem", padding: "6px 12px", borderRadius: "6px", border: "1px solid #999", background: "#fff", cursor: "pointer" }} type="button" onClick={() => { setCommentingId(null); setCommentText(""); setDraftRating(null); }}>إلغاء</button>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <button className="btn-primary-custom text-[0.82rem] py-[6px] px-3" type="button" onClick={() => handleSubmitReview(entry.id, "reviewed")}>اعتماد المراجعة</button>
+                      <button className="text-[0.82rem] py-[6px] px-3 rounded-md border border-[#fd7e14] bg-[#fff3e0] text-[#c2410c] cursor-pointer" type="button" onClick={() => handleSubmitReview(entry.id, "needs_revision")}>طلب تعديل</button>
+                      <button className="text-[0.82rem] py-[6px] px-3 rounded-md border border-[#999] bg-white cursor-pointer" type="button" onClick={() => { setCommentingId(null); setCommentText(""); setDraftRating(null); }}>إلغاء</button>
                     </div>
                   </div>
                 ) : (
                   <button
-                    style={{ fontSize: "0.82rem", padding: "4px 12px", borderRadius: "6px", border: "1px solid #4361ee", background: "#fff", color: "#4361ee", cursor: "pointer" }}
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-white text-[#4361ee] cursor-pointer"
                     type="button"
                     onClick={() => openReviewPanel(entry)}
                   >

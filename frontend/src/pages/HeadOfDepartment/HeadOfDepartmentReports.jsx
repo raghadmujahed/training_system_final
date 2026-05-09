@@ -74,14 +74,14 @@ export default function HeadOfDepartmentReports() {
       <div className="activity-list">
         {reports.students_per_section.map((section) => (
           <div className="activity-item" key={section.section_id}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="flex justify-between items-start">
               <div>
                 <h6>{section.section_name}</h6>
                 <div className="activity-meta">
                   المساق: {section.course_name} · السعة: {section.capacity}
                 </div>
               </div>
-              <div style={{ textAlign: 'left' }}>
+              <div className="text-left">
                 <div className="activity-meta">الطلاب النشطين: {section.active_students}</div>
                 <div className="activity-meta">السعة المتاحة: {section.available_capacity}</div>
                 <div className="activity-meta">نسبة الاستخدام: {section.utilization_percentage}%</div>
@@ -131,7 +131,7 @@ export default function HeadOfDepartmentReports() {
       <div className="activity-list">
         {reports.capacity_utilization.map((item) => (
           <div className="activity-item" key={item.course_id}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="flex justify-between items-start">
               <div>
                 <h6>{item.course_name}</h6>
                 <div className="activity-meta">
@@ -166,16 +166,15 @@ export default function HeadOfDepartmentReports() {
   return (
     <div className="enrollments-list">
       <div className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="flex justify-between items-start">
           <div>
             <h1>التقارير</h1>
             <p>عرض وتحليل بيانات القسم والتوزيع</p>
           </div>
           <button
-            className="btn-secondary"
+            className="btn-secondary flex items-center gap-[6px]"
             onClick={fetchReports}
             disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
             {loading ? <LoadingSpinner size="button" /> : <Download size={16} />}
             تحديث
@@ -184,7 +183,7 @@ export default function HeadOfDepartmentReports() {
       </div>
 
       {error && (
-        <div className="section-card" style={{ marginBottom: 12 }}>
+        <div className="section-card mb-3">
           <p className="text-danger">{error}</p>
         </div>
       )}
@@ -228,7 +227,7 @@ export default function HeadOfDepartmentReports() {
       {loading ? (
         <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : (
-        <div style={{ marginTop: 16 }}>
+        <div className="mt-4">
           {renderReportContent()}
         </div>
       )}

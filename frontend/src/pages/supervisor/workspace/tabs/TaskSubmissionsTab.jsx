@@ -77,81 +77,81 @@ export default function TaskSubmissionsTab({ studentId }) {
   const lateSubmissions = rows.filter((s) => s.is_late).length;
 
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
-  if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
+  if (error) return <div className="text-[#dc3545] p-5">⚠️ {error}</div>;
 
   return (
     <div>
       {/* Summary */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px", marginBottom: "16px" }}>
-        <div style={{ padding: "12px", background: "#e3f2fd", borderRadius: "8px", textAlign: "center" }}>
-          <div style={{ fontSize: "1.2rem", fontWeight: "700", color: "#0d6efd" }}>{rows.length}</div>
-          <div style={{ fontSize: "0.75rem", color: "#666" }}>إجمالي</div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3 mb-4">
+        <div className="p-3 bg-[#e3f2fd] rounded-lg text-center">
+          <div className="text-[1.2rem] font-bold text-[#0d6efd]">{rows.length}</div>
+          <div className="text-[0.75rem] text-[#666]">إجمالي</div>
         </div>
-        <div style={{ padding: "12px", background: "#ffebee", borderRadius: "8px", textAlign: "center" }}>
-          <div style={{ fontSize: "1.2rem", fontWeight: "700", color: "#dc3545" }}>{notSubmitted}</div>
-          <div style={{ fontSize: "0.75rem", color: "#666" }}>لم يسلّم</div>
+        <div className="p-3 bg-[#ffebee] rounded-lg text-center">
+          <div className="text-[1.2rem] font-bold text-[#dc3545]">{notSubmitted}</div>
+          <div className="text-[0.75rem] text-[#666]">لم يسلّم</div>
         </div>
-        <div style={{ padding: "12px", background: "#fff3e0", borderRadius: "8px", textAlign: "center" }}>
-          <div style={{ fontSize: "1.2rem", fontWeight: "700", color: "#fd7e14" }}>{lateSubmissions}</div>
-          <div style={{ fontSize: "0.75rem", color: "#666" }}>تسليم متأخر</div>
+        <div className="p-3 bg-[#fff3e0] rounded-lg text-center">
+          <div className="text-[1.2rem] font-bold text-[#fd7e14]">{lateSubmissions}</div>
+          <div className="text-[0.75rem] text-[#666]">تسليم متأخر</div>
         </div>
       </div>
 
       {/* Filter */}
-      <div style={{ display: "flex", gap: "6px", marginBottom: "16px", flexWrap: "wrap" }}>
+      <div className="flex gap-[6px] mb-4 flex-wrap">
         {Object.entries(statusConfig).map(([key, cfg]) => (
           <button key={key} onClick={() => setFilterStatus(filterStatus === key ? "" : key)}
-            style={{ padding: "4px 10px", borderRadius: "14px", fontSize: "0.75rem", fontWeight: "600", border: `1px solid ${filterStatus === key ? cfg.color : "#dee2e6"}`, background: filterStatus === key ? cfg.bg : "#fff", color: filterStatus === key ? cfg.color : "#666", cursor: "pointer" }}>
+            className="py-1 px-[10px] rounded-[14px] text-[0.75rem] font-semibold cursor-pointer" style={{ border: `1px solid ${filterStatus === key ? cfg.color : "#dee2e6"}`, background: filterStatus === key ? cfg.bg : "#fff", color: filterStatus === key ? cfg.color : "#666" }}>
             {cfg.label}
           </button>
         ))}
       </div>
 
       {!filtered.length ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>📭 لا توجد حلول</div>
+        <div className="text-center p-10 text-[#999]">📭 لا توجد حلول</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="flex flex-col gap-3">
           {filtered.map((sub) => {
             const sc = statusConfig[sub.status] || statusConfig.not_submitted;
             return (
-              <div key={sub.id} style={{ background: "#fff", border: "1px solid #e9ecef", borderRadius: "10px", padding: "16px", borderRight: `4px solid ${sc.color}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
+              <div key={sub.id} className="bg-white border border-[#e9ecef] rounded-[10px] p-4" style={{ borderRight: `4px solid ${sc.color}` }}>
+                <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
                   <div>
-                    <h5 style={{ margin: "0 0 4px" }}>{sub.task_title || `مهمة #${sub.task_id}`}</h5>
-                    <span style={{ fontSize: "0.78rem", color: "#666" }}>
+                    <h5 className="m-0 mb-1">{sub.task_title || `مهمة #${sub.task_id}`}</h5>
+                    <span className="text-[0.78rem] text-[#666]">
                       التسليم: {sub.submitted_at || "—"}
-                      {sub.is_late && <span style={{ color: "#dc3545", fontWeight: "600", marginRight: "6px" }}>(متأخر)</span>}
+                      {sub.is_late && <span className="text-[#dc3545] font-semibold mr-[6px]">(متأخر)</span>}
                     </span>
                   </div>
-                  <span style={{ padding: "4px 12px", borderRadius: "16px", fontSize: "0.78rem", fontWeight: "600", color: sc.color, backgroundColor: sc.bg }}>{sc.label}</span>
+                  <span className="py-1 px-3 rounded-2xl text-[0.78rem] font-semibold" style={{ color: sc.color, backgroundColor: sc.bg }}>{sc.label}</span>
                 </div>
 
-                {sub.attachment_path && <div style={{ fontSize: "0.82rem", color: "#0d6efd", marginBottom: "8px" }}>📎 {sub.attachment_path}</div>}
-                {sub.student_notes && <div style={{ background: "#f0f7ff", borderRadius: "6px", padding: "8px", marginBottom: "8px", fontSize: "0.85rem" }}><span style={{ fontWeight: "600" }}>ملاحظة الطالب:</span> {sub.student_notes}</div>}
-                {sub.score != null && <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#28a745" }}>الدرجة: {sub.score}</div>}
+                {sub.attachment_path && <div className="text-[0.82rem] text-[#0d6efd] mb-2">📎 {sub.attachment_path}</div>}
+                {sub.student_notes && <div className="bg-[#f0f7ff] rounded-md p-2 mb-2 text-[0.85rem]"><span className="font-semibold">ملاحظة الطالب:</span> {sub.student_notes}</div>}
+                {sub.score != null && <div className="text-[0.9rem] font-semibold text-[#28a745]">الدرجة: {sub.score}</div>}
 
                 {gradingId === sub.id ? (
-                  <div style={{ marginTop: "10px", background: "#f8f9fa", padding: "12px", borderRadius: "8px" }}>
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "flex-end" }}>
+                  <div className="mt-[10px] bg-[#f8f9fa] p-3 rounded-lg">
+                    <div className="flex gap-2 flex-wrap items-end">
                       <div>
-                        <label style={{ fontSize: "0.8rem", color: "#666", display: "block", marginBottom: "4px" }}>الدرجة</label>
-                        <input id="grade-value" name="score" type="number" min="0" max="100" className="form-input-custom" value={gradeValue} onChange={(e) => setGradeValue(e.target.value)} style={{ width: "80px" }} />
+                        <label className="text-[0.8rem] text-[#666] block mb-1">الدرجة</label>
+                        <input id="grade-value" name="score" type="number" min="0" max="100" className="form-input-custom w-20" value={gradeValue} onChange={(e) => setGradeValue(e.target.value)} />
                       </div>
-                      <div style={{ flex: 1, minWidth: "150px" }}>
-                        <label style={{ fontSize: "0.8rem", color: "#666", display: "block", marginBottom: "4px" }}>ملاحظة</label>
+                      <div className="flex-1 min-w-[150px]">
+                        <label className="text-[0.8rem] text-[#666] block mb-1">ملاحظة</label>
                         <input id="grade-note" name="notes" className="form-input-custom" value={gradeNote} onChange={(e) => setGradeNote(e.target.value)} placeholder="ملاحظة..." />
                       </div>
-                      <button className="btn-primary-custom" style={{ fontSize: "0.82rem", padding: "6px 14px" }} onClick={() => handleGrade(sub.id)}>تقييم</button>
-                      <button style={{ fontSize: "0.82rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid #999", background: "#fff", cursor: "pointer" }} onClick={() => { setGradingId(null); setGradeValue(""); setGradeNote(""); }}>إلغاء</button>
+                      <button className="btn-primary-custom text-[0.82rem] py-[6px] px-[14px]" onClick={() => handleGrade(sub.id)}>تقييم</button>
+                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#999] bg-white cursor-pointer" onClick={() => { setGradingId(null); setGradeValue(""); setGradeNote(""); }}>إلغاء</button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                  <div className="flex gap-2 mt-[10px]">
                     {sub.status === "submitted" || sub.status === "under_review" ? (
-                      <button style={{ fontSize: "0.82rem", padding: "4px 12px", borderRadius: "6px", border: "1px solid #28a745", background: "#fff", color: "#28a745", cursor: "pointer" }} onClick={() => setGradingId(sub.id)}>📊 تقييم</button>
+                      <button className="text-[0.82rem] py-1 px-3 rounded-md border border-[#28a745] bg-white text-[#28a745] cursor-pointer" onClick={() => setGradingId(sub.id)}>📊 تقييم</button>
                     ) : null}
                     {sub.status === "graded" && (
-                      <button style={{ fontSize: "0.82rem", padding: "4px 12px", borderRadius: "6px", border: "1px solid #fd7e14", background: "#fff", color: "#fd7e14", cursor: "pointer" }} onClick={() => handleReopen(sub.id)}>🔄 إعادة فتح</button>
+                      <button className="text-[0.82rem] py-1 px-3 rounded-md border border-[#fd7e14] bg-white text-[#fd7e14] cursor-pointer" onClick={() => handleReopen(sub.id)}>🔄 إعادة فتح</button>
                     )}
                   </div>
                 )}

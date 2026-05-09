@@ -33,8 +33,33 @@ return new class extends Migration
             Schema::drop('portfolio_entries');
             DB::statement('ALTER TABLE portfolio_entries_new RENAME TO portfolio_entries');
         } else {
-            Schema::table('portfolio_entries', function (Blueprint $table) {
-                $table->dropUnique('portfolio_entries_student_portfolio_id_title_unique');
+            // MySQL: Check if constraints exist before dropping them
+            $connection = Schema::getConnection();
+            $tableName = 'portfolio_entries';
+            
+            // Get all foreign keys and unique indexes for this table
+            $foreignKeys = $connection->select("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL", [$tableName]);
+            $indexes = $connection->select("SHOW INDEX FROM {$tableName} WHERE Non_unique = 0 AND Key_name != 'PRIMARY'");
+            
+            Schema::table($tableName, function (Blueprint $table) use ($foreignKeys, $indexes) {
+                // Drop foreign key if it exists
+                foreach ($foreignKeys as $fk) {
+                    if ($fk->CONSTRAINT_NAME === 'portfolio_entries_student_portfolio_id_foreign') {
+                        $table->dropForeign(['student_portfolio_id']);
+                        break;
+                    }
+                }
+                
+                // Drop unique index if it exists
+                foreach ($indexes as $index) {
+                    if ($index->Key_name === 'portfolio_entries_student_portfolio_id_title_unique') {
+                        $table->dropUnique('portfolio_entries_student_portfolio_id_title_unique');
+                        break;
+                    }
+                }
+                
+                // Re-add the foreign key constraint (column already exists)
+                $table->foreign('student_portfolio_id')->references('id')->on('student_portfolios')->onDelete('cascade');
             });
         }
     }

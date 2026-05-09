@@ -52,34 +52,26 @@ export default function OfficialLetterPreview({
   return (
     <div className="section-card">
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
+        className="flex justify-between items-center mb-4"
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="flex items-center gap-[10px]">
           <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)" }}>
             <FileText size={20} />
           </div>
-          <h4 style={{ margin: 0 }}>معاملة طلبات تدريب — دفعة #{batch.id}</h4>
+          <h4 className="m-0">معاملة طلبات تدريب — دفعة #{batch.id}</h4>
         </div>
         <span
+          className="py-1 px-3 rounded-full font-bold text-[0.78rem]"
           style={{
             background: statusColors.bg,
             color: statusColors.text,
-            padding: "4px 12px",
-            borderRadius: 99,
-            fontWeight: 700,
-            fontSize: "0.78rem",
           }}
         >
           {statusLabel}
         </span>
       </div>
 
-      <div className="info-grid" style={{ marginBottom: 16 }}>
+      <div className="info-grid mb-4">
         <div className="info-card">
           <div className="info-content">
             <div className="info-label">الجهة المرسل إليها</div>
@@ -114,35 +106,18 @@ export default function OfficialLetterPreview({
 
       {/* Students Section */}
       {displayRequests.length > 0 && (
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}>
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-white" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
               <Users size={16} />
             </div>
-            <h5 style={{ margin: 0, fontSize: "0.95rem" }}>الطلاب في الدفعة</h5>
-            <span style={{
-              background: "rgba(59, 130, 182, 0.1)",
-              color: "var(--info)",
-              padding: "2px 10px",
-              borderRadius: 99,
-              fontSize: "0.78rem",
-              fontWeight: 700,
-            }}>
+            <h5 className="m-0 text-[0.95rem]">الطلاب في الدفعة</h5>
+            <span className="bg-[rgba(59,130,182,0.1)] text-[var(--info)] py-[2px] px-[10px] rounded-full text-[0.78rem] font-bold">
               {displayRequests.length}
             </span>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="flex flex-col gap-2">
             {visibleRequests.map((r) => {
               const s0 = r.students?.[0];
               const studentName = s0?.user?.name || r.requested_by?.name || "—";
@@ -154,34 +129,16 @@ export default function OfficialLetterPreview({
               return (
                 <div
                   key={r.id}
-                  style={{
-                    border: "1px solid var(--border)",
-                    borderRadius: 12,
-                    padding: "12px 14px",
-                    background: "#fff",
-                    transition: "var(--transition)",
-                  }}
+                  className="border border-[var(--border)] rounded-xl py-3 px-[14px] bg-white transition-[var(--transition)]"
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{
-                        width: 34,
-                        height: 34,
-                        borderRadius: 10,
-                        background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        fontSize: "0.82rem",
-                        fontWeight: 800,
-                      }}>
+                  <div className="flex justify-between items-center mb-[6px]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-[34px] h-[34px] rounded-[10px] shrink-0 flex items-center justify-center text-white text-[0.82rem] font-extrabold" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
                         {studentName.charAt(0)}
                       </div>
                       <div>
-                        <h6 style={{ margin: 0, fontSize: "0.9rem" }}>{studentName}</h6>
-                        <span style={{ fontSize: "0.78rem", color: "var(--text-faint)" }}>
+                        <h6 className="m-0 text-[0.9rem]">{studentName}</h6>
+                        <span className="text-[0.78rem] text-[var(--text-faint)]">
                           {universityId}
                         </span>
                       </div>
@@ -189,24 +146,24 @@ export default function OfficialLetterPreview({
                     <StatusBadge status={r.book_status} />
                   </div>
 
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: "0.82rem", color: "var(--text-soft)" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <GraduationCap size={13} style={{ color: "var(--accent)" }} />
+                  <div className="flex flex-wrap gap-x-4 gap-y-[6px] text-[0.82rem] text-[var(--text-soft)]">
+                    <span className="flex items-center gap-1">
+                      <GraduationCap size={13} className="text-[var(--accent)]" />
                       {courseName}
                     </span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <FileText size={13} style={{ color: "var(--info)" }} />
+                    <span className="flex items-center gap-1">
+                      <FileText size={13} className="text-[var(--info)]" />
                       {siteName}
                     </span>
                     {phone && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <Phone size={13} style={{ color: "var(--success)" }} />
+                      <span className="flex items-center gap-1">
+                        <Phone size={13} className="text-[var(--success)]" />
                         {phone}
                       </span>
                     )}
                     {email && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <Mail size={13} style={{ color: "var(--warning)" }} />
+                      <span className="flex items-center gap-1">
+                        <Mail size={13} className="text-[var(--warning)]" />
                         {email}
                       </span>
                     )}
@@ -219,38 +176,15 @@ export default function OfficialLetterPreview({
       )}
 
       {displayRequests.length === 0 && (
-        <div style={{
-          textAlign: "center",
-          padding: 20,
-          borderRadius: 12,
-          background: "#fbfcfe",
-          border: "1px dashed var(--border)",
-          marginBottom: 16,
-        }}>
-          <p style={{ color: "var(--text-faint)", margin: 0, fontSize: "0.88rem" }}>لا توجد طلبات في هذه الدفعة</p>
+        <div className="text-center p-5 rounded-xl bg-[#fbfcfe] border border-dashed border-[var(--border)] mb-4">
+          <p className="text-[var(--text-faint)] m-0 text-[0.88rem]">لا توجد طلبات في هذه الدفعة</p>
         </div>
       )}
 
       {hasMoreStudents && (
         <button
           onClick={() => setShowAllStudents(!showAllStudents)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            width: "100%",
-            padding: "10px",
-            marginTop: 8,
-            background: "transparent",
-            border: "1px dashed var(--border)",
-            borderRadius: 10,
-            color: "var(--info)",
-            fontSize: "0.85rem",
-            fontWeight: 700,
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
+          className="flex items-center justify-center gap-[6px] w-full py-[10px] mt-2 bg-transparent border border-dashed border-[var(--border)] rounded-[10px] text-[var(--info)] text-[0.85rem] font-bold cursor-pointer transition-all duration-200"
         >
           {showAllStudents ? (
             <>
@@ -266,16 +200,7 @@ export default function OfficialLetterPreview({
 
       {letter?.content && batch.status !== "draft" && (
         <div
-          style={{
-            background: "#f8f9fa",
-            border: "1px solid var(--border)",
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 16,
-            whiteSpace: "pre-wrap",
-            fontSize: "0.95rem",
-            lineHeight: 1.8,
-          }}
+          className="bg-[#f8f9fa] border border-[var(--border)] rounded-xl p-4 mb-4 whitespace-pre-wrap text-[0.95rem] leading-[1.8]"
         >
           <strong>نص المعاملة:</strong>
           <br />
@@ -285,62 +210,45 @@ export default function OfficialLetterPreview({
 
       {batch.status === "draft" && onSend && (
         <div
-          style={{
-            marginBottom: 12,
-            padding: 16,
-            borderRadius: 12,
-            border: "1px solid var(--border)",
-            background: "#fff",
-          }}
+          className="mb-3 p-4 rounded-xl border border-[var(--border)] bg-white"
         >
-          <div style={{ fontWeight: 700, marginBottom: 12, fontSize: "0.92rem" }}>
+          <div className="font-bold mb-3 text-[0.92rem]">
             بيانات المعاملة قبل الإرسال
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)", display: "flex", alignItems: "center", gap: 6 }}>
+          <div className="flex flex-col gap-3">
+            <label className="flex flex-col gap-[6px]">
+              <span className="text-[0.82rem] text-[var(--text-soft)] flex items-center gap-[6px]">
                 رقم المعاملة
-                <span style={{ fontSize: "0.72rem", background: "#e0f2fe", color: "#0369a1", padding: "1px 8px", borderRadius: 99, fontWeight: 700 }}>تلقائي</span>
+                <span className="text-[0.72rem] bg-[#e0f2fe] text-[#0369a1] py-[1px] px-2 rounded-full font-bold">تلقائي</span>
               </span>
               <input
                 type="text"
-                className="form-control"
+                className="form-control w-full py-[10px] px-3 rounded-[10px] border-[1.5px] border-[#bae6fd] bg-[#f0f9ff] font-bold text-[#0c4a6e]"
                 value={letterNumber}
                 onChange={(e) => setLetterNumber(e.target.value)}
                 placeholder={autoLetterNumber(batch.id)}
                 disabled={saving}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1.5px solid #bae6fd", background: "#f0f9ff", fontWeight: 700, color: "#0c4a6e" }}
               />
             </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>تاريخ المعاملة</span>
+            <label className="flex flex-col gap-[6px]">
+              <span className="text-[0.82rem] text-[var(--text-soft)]">تاريخ المعاملة</span>
               <input
                 type="date"
-                className="form-control"
+                className="form-control w-full py-[10px] px-3 rounded-[10px] border border-[var(--border)]"
                 value={letterDate}
                 onChange={(e) => setLetterDate(e.target.value)}
                 disabled={saving}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid var(--border)" }}
               />
             </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>نص المعاملة</span>
+            <label className="flex flex-col gap-[6px]">
+              <span className="text-[0.82rem] text-[var(--text-soft)]">نص المعاملة</span>
               <textarea
                 value={letterContent}
                 onChange={(e) => setLetterContent(e.target.value)}
                 placeholder="النص الكامل للمعاملة المرسلة إلى الجهة..."
                 disabled={saving}
                 rows={8}
-                style={{
-                  width: "100%",
-                  padding: "12px",
-                  borderRadius: 10,
-                  border: "1px solid var(--border)",
-                  fontFamily: "inherit",
-                  fontSize: "0.92rem",
-                  lineHeight: 1.7,
-                  resize: "vertical",
-                }}
+                className="w-full p-3 rounded-[10px] border border-[var(--border)] font-inherit text-[0.92rem] leading-[1.7] resize-y"
               />
             </label>
           </div>
@@ -349,17 +257,16 @@ export default function OfficialLetterPreview({
 
       {(formError || sendError) && (
         <div
-          className="alert-custom alert-danger"
-          style={{ marginBottom: 12, fontSize: "0.88rem" }}
+          className="alert-custom alert-danger mb-3 text-[0.88rem]"
         >
           {formError || sendError}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 8 }}>
+      <div className="flex gap-2">
         {batch.status === "draft" && onSend && (
           <button
-            className="btn-primary-custom"
+            className="btn-primary-custom flex items-center gap-[6px]"
             type="button"
             onClick={() => {
               const num = letterNumber.trim();
@@ -377,7 +284,6 @@ export default function OfficialLetterPreview({
               });
             }}
             disabled={saving}
-            style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             <Send size={16} />
             {saving ? "جاري الإرسال..." : "إرسال الدفعة للجهة"}

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getBackupTableData } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 
 export default function TableData() {
   const { id, tableName } = useParams();
@@ -40,44 +42,36 @@ export default function TableData() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>بيانات الجدول: {decodeURIComponent(tableName)}</h1>
-        <div>
-          <button onClick={() => navigate(-1)} className="btn-secondary">رجوع</button>
-          <button onClick={() => navigate(`/admin/backups/${id}`)} className="btn-primary">
-            تفاصيل النسخة
-          </button>
-        </div>
-      </div>
+      <PageHeader title={`بيانات الجدول: ${decodeURIComponent(tableName)}`} />
 
-      <div className="section-card">
-        <div style={{ marginBottom: "1rem" }}>
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+        <div className="mb-4">
           <strong>عدد السجلات:</strong> {data.length}
         </div>
 
         {data.length === 0 ? (
-          <p>لا توجد بيانات في هذا الجدول</p>
+          <p className="text-text-soft">لا توجد بيانات في هذا الجدول</p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table className="data-table">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-[0.9rem]">
               <thead>
-                <tr>
-                  <th>#</th>
+                <tr className="bg-[#f8fafc]">
+                  <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">#</th>
                   {columns.map((col, i) => (
-                    <th key={i}>{col}</th>
+                    <th key={i} className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {data.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
+                  <tr key={idx} className="border-b border-[#e2e8f0] hover:bg-[#f1f5f9]">
+                    <td className="py-3 px-4">{idx + 1}</td>
                     {columns.map((col, i) => (
-                      <td key={i}>
+                      <td key={i} className="py-3 px-4">
                         {row[col] === null || row[col] === undefined ? (
-                          <span style={{ color: "#999" }}>NULL</span>
+                          <span className="text-text-faint">NULL</span>
                         ) : typeof row[col] === "object" ? (
-                          <code style={{ fontSize: "0.85rem" }}>
+                          <code className="text-[0.85rem]">
                             {JSON.stringify(row[col])}
                           </code>
                         ) : (

@@ -73,70 +73,70 @@ export default function FieldStaffDashboard() {
       {loading ? (
         <div className="section-card">جاري التحميل...</div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {cards.map((c) => (
-            <div key={c.title} className="section-card" style={{ padding: 20, textAlign: "center", borderTop: `4px solid ${c.color}` }}>
-              <h3 style={{ margin: 0, color: c.color }}>{c.value}</h3>
-              <p style={{ margin: "8px 0 0", color: "#6c757d" }}>{c.title}</p>
+            <div key={c.title} className="section-card p-5 text-center" style={{ borderTop: `4px solid ${c.color}` }}>
+              <h3 className="m-0" style={{ color: c.color }}>{c.value}</h3>
+              <p className="mt-2 mb-0 text-[#6c757d]">{c.title}</p>
             </div>
           ))}
         </div>
       )}
 
       {/* Role-specific tips */}
-      <div className="section-card" style={{ marginTop: 24, padding: 20 }}>
+      <div className="section-card mt-6 p-5">
         <h5>إرشادات حسب دورك</h5>
         {isMentor && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>راجع السجلات اليومية المقدمة من الطلبة وقم بقبولها أو رفضها.</li>
             <li>استخدم نماذج التقييم الخاصة بك (المعلم المرشد) لتقييم أداء الطلبة.</li>
             <li>أضف ملاحظات سريعة على ملفات الطلبة لمتابعة تقدمهم.</li>
           </ul>
         )}
         {isAdviser && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>راجع السجلات الإرشادية المقدمة من الطلبة وقم بقبولها أو إعادتها.</li>
             <li>استخدم نماذج تقييم المرشد التربوي لمتابعة أداء الطلبة في النشاط الإرشادي.</li>
             <li>أضف ملاحظات تربوية مرتبطة بالحالات والتوصيات.</li>
           </ul>
         )}
         {isPsychologist && !isFieldSupervisor && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>راجع {terms.dailyReport || "التقارير المهنية"} المقدمة من الطلبة.</li>
             <li>استخدم {terms.evaluation || "تقييم المؤسسة"} (٢٠ معيارًا) من صفحة التقييمات بعد اختيار الطالب.</li>
             <li>أضف ملاحظات على {terms.topic || "الحالات"} وسجّل الحضور والمهام كباقي مسار المشرف الميداني.</li>
           </ul>
         )}
         {isSupervisor && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>تابع الزيارات الميدانية وسجّل ملاحظاتك.</li>
             <li>استخدم نماذج التقييم الأكاديمي لتقييم أداء الطلبة.</li>
             <li>راجع تقارير الحضور والمهام المسلّمة.</li>
           </ul>
         )}
         {isPrincipal && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>عيّن المعلم المرشد للطلبة المتدربين في جهتك.</li>
             <li>استخدم نماذج تقييم مدير المدرسة لتقييم الأداء العام.</li>
             <li>تابع دفعات طلبات التدريب والطلبة المتدربين.</li>
           </ul>
         )}
         {isFieldSupervisor && supervisorSubtype === "mentor_teacher" && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>راجع {terms.dailyReport || "التقارير اليومية"} المقدمة من الطلبة وقم بتأكيدها أو إعادتها.</li>
             <li>استخدم نماذج {terms.evaluation || "التقييم"} لتقييم أداء الطلبة في {terms.lesson || "الحصة"}.</li>
             <li>سجّل ملاحظاتك على {terms.classroom || "إدارة الصف"} وأضف ملاحظات سريعة.</li>
           </ul>
         )}
         {isFieldSupervisor && supervisorSubtype === "school_counselor" && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>راجع {terms.dailyReport || "التقارير الإرشادية"} المقدمة من الطلبة.</li>
             <li>استخدم نماذج {terms.evaluation || "التقييم الإرشادي"} لتقييم أداء الطلبة في {terms.lesson || "النشاط الإرشادي"}.</li>
             <li>أضف ملاحظات على {terms.topic || "الحالات"} ومتابعة التوصيات.</li>
           </ul>
         )}
         {isFieldSupervisor && supervisorSubtype === "psychologist" && (
-          <ul style={{ paddingRight: 20 }}>
+          <ul className="pr-5">
             <li>راجع {terms.dailyReport || "التقارير المهنية"} المقدمة من الطلبة.</li>
             <li>استخدم نماذج {terms.evaluation || "التقييم المهني"} لتقييم أداء الطلبة في {terms.lesson || "الجلسات"}.</li>
             <li>أضف ملاحظات على {terms.topic || "الحالات"} والالتزام بالأخلاقيات المهنية.</li>

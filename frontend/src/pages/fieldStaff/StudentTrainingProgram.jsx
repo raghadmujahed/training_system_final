@@ -75,13 +75,13 @@ export default function StudentTrainingProgram() {
             <div className="hero-icon">
               <BookOpen size={44} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div className="flex-1">
               <h1 className="hero-title">برنامج التدريب</h1>
               <p className="hero-subtitle">عرض جدول الحصص الأسبوعي للطالب</p>
             </div>
           </div>
         </div>
-        <div className="alert-custom alert-danger mb-3" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="alert-custom alert-danger mb-3 flex items-center gap-2">
           <AlertCircle size={18} /> {error}
         </div>
       </div>
@@ -96,16 +96,15 @@ export default function StudentTrainingProgram() {
           <div className="hero-icon">
             <BookOpen size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">برنامج التدريب</h1>
             <p className="hero-subtitle">
               عرض جدول الحصص الأسبوعي كما أدخله الطالب
             </p>
           </div>
           <button
-            className="btn-outline-custom"
             onClick={() => navigate(-1)}
-            style={{ display: "flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}
+            className="btn-outline-custom flex items-center gap-[6px] whitespace-nowrap"
           >
             <ArrowRight size={16} />
             رجوع
@@ -115,31 +114,19 @@ export default function StudentTrainingProgram() {
 
       {/* Student Info Card */}
       <div className="section-card mb-4">
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)",
-            color: "#fff",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1.1rem",
-            fontWeight: 800,
-            flexShrink: 0,
-          }}>
-            {studentInfo.name?.charAt(0) || "—"}
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl shrink-0 flex items-center justify-center text-white text-[1.1rem] font-extrabold" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
+            {studentInfo.name?.charAt(0) || "—" }
           </div>
-          <div style={{ flex: 1 }}>
-            <h5 style={{ margin: 0, fontSize: "1rem" }}>{studentInfo.name}</h5>
-            <div style={{ display: "flex", gap: 16, fontSize: "0.82rem", color: "var(--text-soft)", marginTop: 2 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <GraduationCap size={13} style={{ color: "var(--info)" }} />
+          <div className="flex-1">
+            <h5 className="m-0 text-[1rem]">{studentInfo.name}</h5>
+            <div className="flex gap-4 text-[0.82rem] text-[var(--text-soft)] mt-[2px]">
+              <span className="flex items-center gap-1">
+                <GraduationCap size={13} className="text-[var(--info)]" />
                 {studentInfo.university_id}
               </span>
-              <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <CheckCircle2 size={13} style={{ color: "var(--success)" }} />
+              <span className="flex items-center gap-1">
+                <CheckCircle2 size={13} className="text-[var(--success)]" />
                 {hasAnyContent ? "تم إدخال الجدول" : "لم يتم إدخال الجدول بعد"}
               </span>
             </div>
@@ -149,21 +136,21 @@ export default function StudentTrainingProgram() {
 
       {/* Schedule Table */}
       <div className="section-card">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div className="flex items-center gap-[10px] mb-4">
           <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
             <BookOpen size={18} />
           </div>
-          <h5 style={{ margin: 0 }}>جدول التطبيق</h5>
+          <h5 className="m-0">جدول التطبيق</h5>
         </div>
 
         {hasAnyContent ? (
           <div className="table-wrapper">
-            <table className="data-table" style={{ textAlign: "center" }}>
+            <table className="data-table text-center">
               <thead>
                 <tr>
-                  <th style={{ textAlign: "center", minWidth: 90 }}>اليوم / الحصة</th>
+                  <th className="text-center min-w-[90px]">اليوم / الحصة</th>
                   {periods.map((period) => (
-                    <th key={period.id} style={{ textAlign: "center", minWidth: 80 }}>
+                    <th key={period.id} className="text-center min-w-[80px]">
                       {period.label}
                     </th>
                   ))}
@@ -172,16 +159,13 @@ export default function StudentTrainingProgram() {
               <tbody>
                 {days.map((day) => (
                   <tr key={day.id}>
-                    <td style={{ fontWeight: 700, background: "#f8f9fa" }}>
+                    <td className="font-bold bg-[#f8f9fa]">
                       {day.label}
                     </td>
                     {periods.map((period) => {
                       const value = getCellValue(day.id, period.id);
                       return (
-                        <td key={`${day.id}-${period.id}`} style={{
-                          color: value ? "var(--text-primary)" : "var(--text-faint)",
-                          background: value ? "#fff" : "#fafbfc",
-                        }}>
+                        <td key={`${day.id}-${period.id}`} className={value ? "text-[var(--text-primary)] bg-white" : "text-[var(--text-faint)] bg-[#fafbfc]"}>
                           {value || "—"}
                         </td>
                       );
@@ -192,13 +176,9 @@ export default function StudentTrainingProgram() {
             </table>
           </div>
         ) : (
-          <div style={{
-            textAlign: "center",
-            padding: "40px 20px",
-            color: "var(--text-faint)",
-          }}>
-            <BookOpen size={40} style={{ marginBottom: 10, opacity: 0.3 }} />
-            <p style={{ margin: 0, fontSize: "0.9rem" }}>لم يقم الطالب بإدخال جدول الحصص بعد.</p>
+          <div className="text-center py-10 px-5 text-[var(--text-faint)]">
+            <BookOpen size={40} className="mb-[10px] opacity-30" />
+            <p className="m-0 text-[0.9rem]">لم يقم الطالب بإدخال جدول الحصص بعد.</p>
           </div>
         )}
       </div>

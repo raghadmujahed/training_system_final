@@ -103,7 +103,7 @@ export default function ActivityLogsList() {
         <select
           value={perPage}
           onChange={(e) => setPerPage(Number(e.target.value))}
-          style={{ width: "auto" }}
+          className="w-auto"
         >
           <option value="10">10 سجلات</option>
           <option value="20">20 سجل</option>

@@ -48,56 +48,52 @@ export default function ActivityTimelineTab({ studentId }) {
   useEffect(() => { loadTimeline(); }, [loadTimeline]);
 
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
-  if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
+  if (error) return <div className="text-[#dc3545] p-5">⚠️ {error}</div>;
 
   return (
     <div>
-      <h4 style={{ margin: "0 0 16px" }}>🕐 سجل النشاط الكامل</h4>
+      <h4 className="m-0 mb-4">🕐 سجل النشاط الكامل</h4>
 
       {!events.length ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>📭</div>
+        <div className="text-center p-10 text-[#999]">
+          <div className="text-[2rem] mb-3">📭</div>
           لا توجد أنشطة مسجلة بعد
         </div>
       ) : (
-        <div style={{ position: "relative", paddingRight: "24px" }}>
+        <div className="relative pr-6">
           {/* Timeline line */}
-          <div style={{ position: "absolute", right: "8px", top: "0", bottom: "0", width: "2px", background: "#dee2e6" }} />
+          <div className="absolute right-2 top-0 bottom-0 w-[2px] bg-[#dee2e6]" />
 
           {events.map((event, i) => {
             const cfg = EVENT_CONFIG[event.event_type] || { label: event.event_type, icon: "📌", color: "#666" };
             return (
-              <div key={event.id || i} style={{ position: "relative", marginBottom: "20px", paddingRight: "20px" }}>
+              <div key={event.id || i} className="relative mb-5 pr-5">
                 {/* Timeline dot */}
-                <div style={{
-                  position: "absolute", right: "-20px", top: "14px",
-                  width: "14px", height: "14px", borderRadius: "50%",
-                  background: cfg.color, border: "3px solid #fff",
-                  boxShadow: "0 0 0 2px #dee2e6",
-                  zIndex: 1,
-                }} />
+                <div
+                  className="absolute right-[-20px] top-[14px] w-[14px] h-[14px] rounded-full border-[3px] border-white z-[1]"
+                  style={{ background: cfg.color }}
+                />
 
-                <div style={{
-                  background: "#fff", border: "1px solid #e9ecef",
-                  borderRadius: "10px", padding: "14px",
-                  borderRight: `3px solid ${cfg.color}`,
-                }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px", flexWrap: "wrap", gap: "4px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "1.1rem" }}>{cfg.icon}</span>
-                      <span style={{ fontWeight: "600", fontSize: "0.9rem", color: cfg.color }}>{cfg.label}</span>
+                <div
+                  className="bg-white border border-[#e9ecef] rounded-[10px] p-[14px] border-r-[3px]"
+                  style={{ borderRightColor: cfg.color }}
+                >
+                  <div className="flex justify-between items-center mb-[6px] flex-wrap gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[1.1rem]">{cfg.icon}</span>
+                      <span className="font-semibold text-[0.9rem]" style={{ color: cfg.color }}>{cfg.label}</span>
                     </div>
-                    <span style={{ fontSize: "0.72rem", color: "#999" }}>{event.created_at || event.timestamp || ""}</span>
+                    <span className="text-[0.72rem] text-[#999]">{event.created_at || event.timestamp || ""}</span>
                   </div>
 
                   {event.description && (
-                    <p style={{ margin: "0", fontSize: "0.85rem", color: "#555", lineHeight: "1.5" }}>
+                    <p className="m-0 text-[0.85rem] text-[#555] leading-[1.5]">
                       {event.description}
                     </p>
                   )}
 
                   {event.performed_by && (
-                    <div style={{ fontSize: "0.75rem", color: "#999", marginTop: "6px" }}>
+                    <div className="text-[0.75rem] text-[#999] mt-[6px]">
                       بواسطة: {event.performed_by}
                     </div>
                   )}

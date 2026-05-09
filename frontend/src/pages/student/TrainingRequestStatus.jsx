@@ -36,7 +36,7 @@ const StatusBadge = ({ status }) => {
   const cfg = STATUS_MAP[status] || { label: status || "قيد المعالجة", color: "#64748b", bg: "#f1f5f9", icon: Clock };
   const Icon = cfg.icon;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "0.3rem 0.8rem", borderRadius: 99, fontSize: "0.8rem", fontWeight: 700, background: cfg.bg, color: cfg.color }}>
+    <span className="inline-flex items-center gap-[5px] py-[0.3rem] px-[0.8rem] rounded-full text-[0.8rem] font-bold" style={{ background: cfg.bg, color: cfg.color }}>
       <Icon size={13} /> {cfg.label}
     </span>
   );
@@ -89,20 +89,15 @@ export default function TrainingRequestStatus() {
   return (
     <>
       <style>{fadeIn}{spin}</style>
-      <div style={{ animation: "fadeIn 0.4s ease" }}>
+      <div className="animate-[fadeIn_0.4s_ease]">
         {/* Hero */}
-        <div style={{
-          background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-          borderRadius: 20, padding: "1.75rem 2.5rem", color: "white",
-          marginBottom: "1.5rem", boxShadow: "0 8px 32px rgba(30,58,95,0.3)",
-          display: "flex", alignItems: "center", gap: "1rem",
-        }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div className="bg-gradient-to-br from-[#1e3a5f] via-[#2d5f8a] to-[#3b82f6] rounded-[20px] py-7 px-10 text-white mb-6 shadow-[0_8px_32px_rgba(30,58,95,0.3)] flex items-center gap-4">
+          <div className="w-[52px] h-[52px] rounded-[14px] bg-white/20 flex items-center justify-center shrink-0">
             <ClipboardList size={26} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800 }}>متابعة حالة طلب التدريب</h1>
-            <p style={{ margin: "0.25rem 0 0", opacity: 0.85, fontSize: "0.85rem", display: "flex", alignItems: "center", gap: 5 }}>
+            <h1 className="m-0 text-[1.4rem] font-extrabold">متابعة حالة طلب التدريب</h1>
+            <p className="m-0 mt-1 opacity-85 text-[0.85rem] flex items-center gap-[5px]">
               <Clock size={13} /> آخر تحديث: {formatDate(lastUpdate)} · يتجدد كل 30 ثانية
             </p>
           </div>
@@ -115,24 +110,24 @@ export default function TrainingRequestStatus() {
 
         {/* Error */}
         {error && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#fee2e2", color: "#dc2626", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
+          <div className="flex items-center gap-2 py-[0.85rem] px-[1.25rem] bg-[#fee2e2] text-[#dc2626] rounded-[14px] text-[0.9rem] font-semibold mb-4">
             <AlertCircle size={20} /> {error}
           </div>
         )}
 
         {/* No request */}
         {!loading && !error && !requestItem && (
-          <div style={{ background: "#fff", borderRadius: 16, padding: "3rem", textAlign: "center", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
-            <ClipboardList size={56} style={{ marginBottom: "1rem", opacity: 0.3, color: "#94a3b8" }} />
-            <h3 style={{ margin: "0 0 0.5rem", color: "#64748b" }}>لا يوجد طلب تدريب حالي</h3>
-            <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.9rem" }}>يمكنك تقديم طلب جديد من صفحة طلب التدريب.</p>
+          <div className="bg-white rounded-2xl p-12 text-center border border-[#e2e8f0] shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+            <ClipboardList size={56} className="mb-4 opacity-30 text-[#94a3b8]" />
+            <h3 className="m-0 mb-2 text-[#64748b]">لا يوجد طلب تدريب حالي</h3>
+            <p className="m-0 text-[#94a3b8] text-[0.9rem]">يمكنك تقديم طلب جديد من صفحة طلب التدريب.</p>
           </div>
         )}
 
         {!loading && !error && requestItem && (
           <>
             {/* Stepper */}
-            <div style={{ background: "#fff", borderRadius: 16, padding: "1.5rem 2rem", border: "1px solid #e2e8f0", marginBottom: "1.25rem", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
+            <div className="bg-white rounded-2xl py-6 px-8 border border-[#e2e8f0] mb-5 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
               <TrainingRequestWorkflowStepper
                 bookStatus={requestItem.book_status}
                 governingBody={requestItem.governing_body}
@@ -140,18 +135,18 @@ export default function TrainingRequestStatus() {
             </div>
 
             {/* Info Cards */}
-            <div style={{ background: "#fff", borderRadius: 16, padding: "1.5rem 2rem", border: "1px solid #e2e8f0", marginBottom: "1.25rem", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "#dbeafe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="bg-white rounded-2xl py-6 px-8 border border-[#e2e8f0] mb-5 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+              <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+                <div className="flex items-center gap-[0.6rem]">
+                  <div className="w-[38px] h-[38px] rounded-[10px] bg-[#dbeafe] text-[#2563eb] flex items-center justify-center">
                     <Building2 size={18} />
                   </div>
-                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>حالة الطلب الحالي</h3>
+                  <h3 className="m-0 text-[1rem] font-bold text-[#1e293b]">حالة الطلب الحالي</h3>
                 </div>
                 <StatusBadge status={requestItem.book_status} />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
                 {[
                   { icon: ClipboardList, label: "حالة الطلب",      value: <StatusBadge status={requestItem.book_status} />, color: "#3b82f6", bg: "#dbeafe" },
                   { icon: Building2,    label: "الجهة المعتمدة",   value: requestItem.training_site?.name || "—",           color: "#059669", bg: "#d1fae5" },
@@ -160,13 +155,13 @@ export default function TrainingRequestStatus() {
                 ].map((item, i) => {
                   const Icon = item.icon;
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.85rem 1rem", background: "#f8fafc", borderRadius: 12, border: "1px solid #f1f5f9" }}>
-                      <div style={{ width: 38, height: 38, borderRadius: 9, background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <div key={i} className="flex items-center gap-3 py-[0.85rem] px-4 bg-[#f8fafc] rounded-xl border border-[#f1f5f9]">
+                      <div className="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center shrink-0" style={{ background: item.bg, color: item.color }}>
                         <Icon size={17} />
                       </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 500 }}>{item.label}</div>
-                        <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1e293b", marginTop: 2 }}>{item.value}</div>
+                      <div className="min-w-0">
+                        <div className="text-[0.72rem] text-[#94a3b8] font-medium">{item.label}</div>
+                        <div className="text-[0.88rem] font-bold text-[#1e293b] mt-[2px]">{item.value}</div>
                       </div>
                     </div>
                   );
@@ -174,79 +169,76 @@ export default function TrainingRequestStatus() {
               </div>
 
               {(requestItem.rejection_reason || requestItem.coordinator_rejection_reason || requestItem.needs_edit_reason) && (
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", padding: "1rem 1.25rem", background: "#fef3c7", color: "#92400e", borderRadius: 12, marginTop: "1rem", border: "1px solid #fde68a" }}>
-                  <AlertCircle size={20} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div className="flex items-start gap-3 py-4 px-5 bg-[#fef3c7] text-[#92400e] rounded-xl mt-4 border border-[#fde68a]">
+                  <AlertCircle size={20} className="shrink-0 mt-[2px]" />
                   <div>
-                    <div style={{ fontWeight: 700, marginBottom: "0.25rem" }}>ملاحظات على الطلب:</div>
-                    <div style={{ fontSize: "0.9rem" }}>{requestItem.rejection_reason || requestItem.coordinator_rejection_reason || requestItem.needs_edit_reason}</div>
+                    <div className="font-bold mb-1">ملاحظات على الطلب:</div>
+                    <div className="text-[0.9rem]">{requestItem.rejection_reason || requestItem.coordinator_rejection_reason || requestItem.needs_edit_reason}</div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Dates */}
-            <div style={{ background: "#fff", borderRadius: 16, padding: "1.5rem 2rem", border: "1px solid #e2e8f0", marginBottom: "1.25rem", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1rem" }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "#e0f2fe", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="bg-white rounded-2xl py-6 px-8 border border-[#e2e8f0] mb-5 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+              <div className="flex items-center gap-[0.6rem] mb-4">
+                <div className="w-[38px] h-[38px] rounded-[10px] bg-[#e0f2fe] text-[#0284c7] flex items-center justify-center">
                   <Calendar size={18} />
                 </div>
-                <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>تفاصيل الطلب</h3>
+                <h3 className="m-0 text-[1rem] font-bold text-[#1e293b]">تفاصيل الطلب</h3>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
                 {[
                   { label: "تاريخ التقديم", value: formatDate(requestItem.created_at) },
                   { label: "آخر تحديث",     value: formatDate(requestItem.updated_at) },
                 ].map((item, i) => (
-                  <div key={i} style={{ padding: "0.85rem 1rem", background: "#f8fafc", borderRadius: 12, border: "1px solid #f1f5f9" }}>
-                    <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 500, marginBottom: 4 }}>{item.label}</div>
-                    <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#1e293b" }}>{item.value}</div>
+                  <div key={i} className="py-[0.85rem] px-4 bg-[#f8fafc] rounded-xl border border-[#f1f5f9]">
+                    <div className="text-[0.72rem] text-[#94a3b8] font-medium mb-1">{item.label}</div>
+                    <div className="text-[0.9rem] font-bold text-[#1e293b]">{item.value}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Activity Log */}
-            <div style={{ background: "#fff", borderRadius: 16, padding: "1.5rem 2rem", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "#ede9fe", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="bg-white rounded-2xl py-6 px-8 border border-[#e2e8f0] shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-[0.6rem]">
+                  <div className="w-[38px] h-[38px] rounded-[10px] bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center">
                     <History size={18} />
                   </div>
-                  <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>سجل تحديثات الطلب</h3>
+                  <h3 className="m-0 text-[1rem] font-bold text-[#1e293b]">سجل تحديثات الطلب</h3>
                 </div>
-                <span style={{ padding: "0.25rem 0.75rem", background: "#f1f5f9", color: "#64748b", borderRadius: 99, fontSize: "0.78rem", fontWeight: 700 }}>{activityLogs.length} تحديث</span>
+                <span className="py-1 px-3 bg-[#f1f5f9] text-[#64748b] rounded-full text-[0.78rem] font-bold">{activityLogs.length} تحديث</span>
               </div>
 
               {activityLogs.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "2.5rem", color: "#94a3b8" }}>
-                  <History size={40} style={{ marginBottom: "0.75rem", opacity: 0.3 }} />
+                <div className="text-center p-10 text-[#94a3b8]">
+                  <History size={40} className="mb-3 opacity-30" />
                   <div>لا توجد تحديثات مسجلة</div>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                <div className="flex flex-col gap-0">
                   {activityLogs.map((log, idx) => (
-                    <div key={idx} style={{
-                      display: "flex", gap: "1rem", padding: "1rem 0",
-                      borderBottom: idx < activityLogs.length - 1 ? "1px solid #f1f5f9" : "none",
-                    }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                        <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f8fafc", border: "1.5px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div key={idx} className={`flex gap-4 py-4 ${idx < activityLogs.length - 1 ? 'border-b border-[#f1f5f9]' : ''}`}>
+                      <div className="flex flex-col items-center gap-1 shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#f8fafc] border-[1.5px] border-[#e2e8f0] flex items-center justify-center">
                           {getLogIcon(log.event)}
                         </div>
-                        {idx < activityLogs.length - 1 && <div style={{ width: 1, flex: 1, background: "#e2e8f0" }} />}
+                        {idx < activityLogs.length - 1 && <div className="w-px flex-1 bg-[#e2e8f0]" />}
                       </div>
-                      <div style={{ flex: 1, paddingBottom: "0.5rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <div className="flex-1 pb-2">
+                        <div className="flex justify-between items-start gap-2 flex-wrap">
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "#1e293b" }}>{log.description || log.event || "تحديث"}</div>
-                            {log.causer?.name && <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: 2 }}>بواسطة: {log.causer.name}</div>}
+                            <div className="font-bold text-[0.9rem] text-[#1e293b]">{log.description || log.event || "تحديث"}</div>
+                            {log.causer?.name && <div className="text-[0.78rem] text-[#94a3b8] mt-[2px]">بواسطة: {log.causer.name}</div>}
                           </div>
-                          <div style={{ fontSize: "0.75rem", color: "#94a3b8", whiteSpace: "nowrap" }}>{formatDate(log.created_at)}</div>
+                          <div className="text-[0.75rem] text-[#94a3b8] whitespace-nowrap">{formatDate(log.created_at)}</div>
                         </div>
                         {log.properties && Object.keys(log.properties).length > 0 && (
-                          <details style={{ marginTop: "0.5rem" }}>
-                            <summary style={{ cursor: "pointer", fontSize: "0.8rem", color: "#3b82f6", fontWeight: 600 }}>عرض التفاصيل</summary>
-                            <pre style={{ marginTop: "0.5rem", padding: "0.75rem", background: "#f8fafc", borderRadius: 8, fontSize: "0.72rem", overflow: "auto" }}>
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-[0.8rem] text-[#3b82f6] font-semibold">عرض التفاصيل</summary>
+                            <pre className="mt-2 p-3 bg-[#f8fafc] rounded-lg text-[0.72rem] overflow-auto">
                               {JSON.stringify(log.properties, null, 2)}
                             </pre>
                           </details>

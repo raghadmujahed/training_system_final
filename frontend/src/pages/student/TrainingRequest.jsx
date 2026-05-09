@@ -44,15 +44,15 @@ const StatusBadge = ({ status }) => {
   const cfg = STATUS_INLINE[status] || { label: meta?.label || status || "قيد المعالجة", color: "#64748b", bg: "#f1f5f9", icon: ClipboardList };
   const Icon = cfg.icon;
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "0.3rem 0.8rem", borderRadius: 99, fontSize: "0.8rem", fontWeight: 700, background: cfg.bg, color: cfg.color }}>
+    <span className="inline-flex items-center gap-[5px] py-[0.3rem] px-[0.8rem] rounded-full text-[0.8rem] font-bold" style={{ background: cfg.bg, color: cfg.color }}>
       <Icon size={13} /> {cfg.label}
     </span>
   );
 };
 
-const cardStyle = { background: "#fff", borderRadius: 16, padding: "1.5rem 2rem", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.05)" };
-const labelStyle = { fontSize: "0.82rem", fontWeight: 600, color: "#475569", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: 4 };
-const inputStyle = { width: "100%", padding: "0.6rem 0.85rem", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", color: "#1e293b", outline: "none" };
+const cardStyle = "bg-white rounded-2xl p-6 px-8 border border-[#e2e8f0] shadow-[0_4px_16px_rgba(0,0,0,0.05)]";
+const labelStyle = "text-[0.82rem] font-semibold text-[#475569] mb-[0.4rem] flex items-center gap-1";
+const inputStyle = "w-full py-[0.6rem] px-[0.85rem] rounded-[10px] border-[1.5px] border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] text-[#1e293b] outline-none";
 
 export default function TrainingRequest() {
   const { isEducation: isEducationFlow, isPsychology: isPsychologyFlow, config } = useStudentTrack();
@@ -212,20 +212,15 @@ export default function TrainingRequest() {
   return (
     <>
       <style>{fadeIn}{spin}</style>
-      <div style={{ animation: "fadeIn 0.4s ease" }}>
+      <div className="animate-[fadeIn_0.4s_ease]">
         {/* Hero */}
-        <div style={{
-          background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-          borderRadius: 20, padding: "1.75rem 2.5rem", color: "white",
-          marginBottom: "1.5rem", boxShadow: "0 8px 32px rgba(30,58,95,0.3)",
-          display: "flex", alignItems: "center", gap: "1rem",
-        }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div className="bg-gradient-to-br from-[#1e3a5f] via-[#2d5f8a] to-[#3b82f6] rounded-[20px] py-7 px-10 text-white mb-6 shadow-[0_8px_32px_rgba(30,58,95,0.3)] flex items-center gap-4">
+          <div className="w-[52px] h-[52px] rounded-[14px] bg-white/20 flex items-center justify-center shrink-0">
             <ClipboardList size={26} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800 }}>طلب التدريب الميداني</h1>
-            <p style={{ margin: "0.25rem 0 0", opacity: 0.9, fontSize: "0.92rem", display: "flex", alignItems: "center", gap: 5 }}>
+            <h1 className="m-0 text-[1.4rem] font-extrabold">طلب التدريب الميداني</h1>
+            <p className="m-0 mt-1 opacity-90 text-[0.92rem] flex items-center gap-[5px]">
               <Building2 size={13} /> اختر المديرية ثم جهة التدريب التابعة لها لإرسال طلبك
             </p>
           </div>
@@ -233,37 +228,37 @@ export default function TrainingRequest() {
 
         {/* Messages */}
         {error && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#fee2e2", color: "#dc2626", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
+          <div className="flex items-center gap-2 py-[0.85rem] px-5 bg-[#fee2e2] text-[#dc2626] rounded-[14px] text-[0.9rem] font-semibold mb-4">
             <AlertCircle size={20} /> {error}
           </div>
         )}
         {success && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#d1fae5", color: "#059669", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
+          <div className="flex items-center gap-2 py-[0.85rem] px-5 bg-[#d1fae5] text-[#059669] rounded-[14px] text-[0.9rem] font-semibold mb-4">
             <CheckCircle2 size={20} /> {success}
           </div>
         )}
 
         {/* Stepper */}
         {hasSubmittedRequest && latestRequest && (
-          <div style={{ ...cardStyle, marginBottom: "1.25rem" }}>
+          <div className={`${cardStyle} mb-5`}>
             <TrainingRequestWorkflowStepper bookStatus={latestRequest.book_status} governingBody={latestRequest.governing_body} />
           </div>
         )}
 
         {/* Current Request Info */}
         {hasSubmittedRequest && (
-          <div style={{ ...cardStyle, marginBottom: "1.25rem" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem", flexWrap: "wrap", gap: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: "#dbeafe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className={`${cardStyle} mb-5`}>
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+              <div className="flex items-center gap-[0.6rem]">
+                <div className="w-[38px] h-[38px] rounded-[10px] bg-[#dbeafe] text-[#2563eb] flex items-center justify-center">
                   <Building2 size={18} />
                 </div>
-                <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>حالة الطلب الحالي</h3>
+                <h3 className="m-0 text-[1rem] font-bold text-[#1e293b]">حالة الطلب الحالي</h3>
               </div>
               <StatusBadge status={latestRequest.book_status} />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
               {[
                 { icon: ClipboardList, label: "حالة الطلب", value: <StatusBadge status={latestRequest.book_status} />, color: "#3b82f6", bg: "#dbeafe" },
                 { icon: Building2, label: "الجهة المعتمدة", value: latestRequest.training_site?.name || "—", color: "#059669", bg: "#d1fae5" },
@@ -272,13 +267,13 @@ export default function TrainingRequest() {
               ].map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.85rem 1rem", background: "#f8fafc", borderRadius: 12, border: "1px solid #f1f5f9" }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 9, background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div key={i} className="flex items-center gap-3 py-[0.85rem] px-4 bg-[#f8fafc] rounded-xl border border-[#f1f5f9]">
+                    <div className="w-[38px] h-[38px] rounded-[9px] flex items-center justify-center shrink-0" style={{ background: item.bg, color: item.color }}>
                       <Icon size={17} />
                     </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 500 }}>{item.label}</div>
-                      <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1e293b", marginTop: 2 }}>{item.value}</div>
+                    <div className="min-w-0">
+                      <div className="text-[0.72rem] text-[#94a3b8] font-medium">{item.label}</div>
+                      <div className="text-[0.88rem] font-bold text-[#1e293b] mt-[2px]">{item.value}</div>
                     </div>
                   </div>
                 );
@@ -286,25 +281,27 @@ export default function TrainingRequest() {
             </div>
 
             {(latestRequest.rejection_reason || latestRequest.coordinator_rejection_reason || latestRequest.needs_edit_reason) && (
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", padding: "1rem 1.25rem", background: "#fef3c7", color: "#92400e", borderRadius: 12, marginTop: "1rem", border: "1px solid #fde68a" }}>
-                <AlertCircle size={20} style={{ flexShrink: 0, marginTop: 2 }} />
+              <div className="flex items-start gap-3 py-4 px-5 bg-[#fef3c7] text-[#92400e] rounded-xl mt-4 border border-[#fde68a]">
+                <AlertCircle size={20} className="shrink-0 mt-[2px]" />
                 <div>
-                  <div style={{ fontWeight: 700, marginBottom: "0.25rem" }}>ملاحظات على الطلب:</div>
-                  <div style={{ fontSize: "0.9rem" }}>{latestRequest.rejection_reason || latestRequest.coordinator_rejection_reason || latestRequest.needs_edit_reason}</div>
+                  <div className="font-bold mb-1">ملاحظات على الطلب:</div>
+                  <div className="text-[0.9rem]">{latestRequest.rejection_reason || latestRequest.coordinator_rejection_reason || latestRequest.needs_edit_reason}</div>
                 </div>
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "0.5rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
+            <div className="flex gap-2 mt-5 flex-wrap">
               {canEditLatestRequest && (
                 <button type="button" onClick={() => startEdit(latestRequest)} disabled={saving}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "0.55rem 1.25rem", background: "linear-gradient(135deg, #1e3a5f, #2d5f8a)", color: "white", border: "none", borderRadius: 10, fontWeight: 700, fontSize: "0.88rem", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+                  className="inline-flex items-center gap-[6px] py-[0.55rem] px-5 bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] text-white border-none rounded-[10px] font-bold text-[0.88rem]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                >
                   <Edit3 size={16} /> تعديل نفس الطلب
                 </button>
               )}
               {canCancelLatestRequest && (
                 <button type="button" onClick={handleCancelLatestRequest} disabled={saving}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "0.55rem 1.25rem", background: "white", color: "#dc2626", border: "1.5px solid #fecaca", borderRadius: 10, fontWeight: 700, fontSize: "0.88rem", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}>
+                  className="inline-flex items-center gap-[6px] py-[0.55rem] px-5 bg-white text-[#dc2626] border-[1.5px] border-[#fecaca] rounded-[10px] font-bold text-[0.88rem]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                >
                   <Trash2 size={16} /> إلغاء الطلب
                 </button>
               )}
@@ -314,17 +311,17 @@ export default function TrainingRequest() {
 
         {/* Form */}
         {(!hasSubmittedRequest || editingId) && (
-          <div style={cardStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1.25rem" }}>
-              <div style={{ width: 38, height: 38, borderRadius: 10, background: "#dbeafe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className={cardStyle}>
+            <div className="flex items-center gap-[0.6rem] mb-5">
+              <div className="w-[38px] h-[38px] rounded-[10px] bg-[#dbeafe] text-[#2563eb] flex items-center justify-center">
                 <Send size={18} />
               </div>
-              <h3 style={{ margin: 0, fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>
+              <h3 className="m-0 text-[1rem] font-bold text-[#1e293b]">
                 {editingId ? "تعديل الطلب" : hasSubmittedRequest ? "إعادة إرسال الطلب" : "إرسال طلب جديد"}
               </h3>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1rem", background: "#eff6ff", color: "#1e40af", borderRadius: 12, marginBottom: "1.25rem", fontSize: "0.85rem", fontWeight: 600, border: "1px solid #bfdbfe" }}>
+            <div className="flex items-center gap-2 py-3 px-4 bg-[#eff6ff] text-[#1e40af] rounded-xl mb-5 text-[0.85rem] font-semibold border border-[#bfdbfe]">
               <AlertCircle size={16} />
               {hasSubmittedRequest && !canEditLatestRequest
                 ? "تم إرسال طلبك مسبقًا. يمكنك فقط متابعة الحالة حتى يتم رفض الطلب."
@@ -332,35 +329,35 @@ export default function TrainingRequest() {
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.25rem" }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 mb-5">
                 {/* Governing Body */}
                 <div>
-                  <label style={labelStyle}><Building2 size={13} /> الجهة الرسمية</label>
-                  <input value={governingBodyLabel} readOnly style={{ ...inputStyle, background: "#f1f5f9" }} />
+                  <label className={labelStyle}><Building2 size={13} /> الجهة الرسمية</label>
+                  <input value={governingBodyLabel} readOnly className={`${inputStyle} bg-[#f1f5f9]`} />
                 </div>
 
                 {/* Directorate */}
                 <div>
-                  <label style={labelStyle}><MapPin size={13} /> المديرية</label>
+                  <label className={labelStyle}><MapPin size={13} /> المديرية</label>
                   <select value={filters.directorate}
                     onChange={(e) => setFilters(prev => ({ ...prev, directorate: e.target.value, gender_classification: "", school_level: "" }))}
                     disabled={!filters.governing_body}
-                    style={{ ...inputStyle, appearance: "auto", borderColor: validationErrors.directorate ? "#f87171" : "#e2e8f0" }}
+                    className={`${inputStyle} appearance-auto ${validationErrors.directorate ? 'border-[#f87171]' : ''}`}
                   >
                     <option value="">اختر المديرية</option>
                     {directorates.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
-                  {validationErrors.directorate && <div style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: 4 }}>{validationErrors.directorate}</div>}
+                  {validationErrors.directorate && <div className="text-[0.75rem] text-[#dc2626] mt-1">{validationErrors.directorate}</div>}
                 </div>
 
                 {/* Gender Classification */}
                 {isEducationFlow && (
                   <div>
-                    <label style={labelStyle}><Users size={13} /> تصنيف المدرسة</label>
+                    <label className={labelStyle}><Users size={13} /> تصنيف المدرسة</label>
                     <select value={filters.gender_classification}
                       onChange={(e) => setFilters(prev => ({ ...prev, gender_classification: e.target.value }))}
                       disabled={!filters.directorate}
-                      style={{ ...inputStyle, appearance: "auto" }}
+                      className={`${inputStyle} appearance-auto`}
                     >
                       <option value="">الكل (ذكور وإناث)</option>
                       <option value="boys">مدرسة ذكور</option>
@@ -373,11 +370,11 @@ export default function TrainingRequest() {
                 {/* School Level */}
                 {isEducationFlow && (
                   <div>
-                    <label style={labelStyle}><School size={13} /> مرحلة المدرسة</label>
+                    <label className={labelStyle}><School size={13} /> مرحلة المدرسة</label>
                     <select value={filters.school_level}
                       onChange={(e) => setFilters(prev => ({ ...prev, school_level: e.target.value }))}
                       disabled={!filters.directorate}
-                      style={{ ...inputStyle, appearance: "auto" }}
+                      className={`${inputStyle} appearance-auto`}
                     >
                       <option value="">الكل (دنيا وعليا)</option>
                       <option value="lower">أساسية دنيا</option>
@@ -387,9 +384,9 @@ export default function TrainingRequest() {
                 )}
 
                 {/* Site Search */}
-                <div style={{ gridColumn: isEducationFlow ? "span 2" : "span 2" }}>
-                  <label style={labelStyle}><Search size={13} /> {config.siteSearchLabel}</label>
-                  <div style={{ position: "relative" }}>
+                <div className="col-span-2">
+                  <label className={labelStyle}><Search size={13} /> {config.siteSearchLabel}</label>
+                  <div className="relative">
                     <input
                       placeholder={!filters.directorate ? "اختر المديرية أولاً" : "اكتب للبحث ثم اختر الجهة"}
                       value={siteSearch}
@@ -409,17 +406,12 @@ export default function TrainingRequest() {
                         else if (e.key === "Escape") setIsSiteMenuOpen(false);
                       }}
                       disabled={!filters.directorate}
-                      style={{ ...inputStyle, borderColor: validationErrors.training_site_id ? "#f87171" : "#e2e8f0" }}
+                      className={`${inputStyle} ${validationErrors.training_site_id ? 'border-[#f87171]' : ''}`}
                     />
                     {isSiteMenuOpen && filters.directorate && (
-                      <div style={{
-                        position: "absolute", top: "calc(100% + 6px)", right: 0, left: 0,
-                        maxHeight: 240, overflowY: "auto", background: "#fff",
-                        border: "1px solid #e2e8f0", borderRadius: 12, zIndex: 25,
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-                      }}>
+                      <div className="absolute top-[calc(100%+6px)] right-0 left-0 max-h-[240px] overflow-y-auto bg-white border border-[#e2e8f0] rounded-xl z-25 shadow-[0_8px_24px_rgba(0,0,0,0.1)]">
                         {filteredSchools.length === 0 ? (
-                          <div style={{ padding: "1rem", color: "#94a3b8", fontSize: "0.88rem", textAlign: "center" }}>لا توجد نتائج مطابقة</div>
+                          <div className="py-4 px-4 text-[#94a3b8] text-[0.88rem] text-center">لا توجد نتائج مطابقة</div>
                         ) : filteredSchools.map((s, idx) => {
                           const isSelected = String(s.id) === String(formData.training_site_id);
                           const isHighlighted = idx === highlightedSiteIndex;
@@ -430,22 +422,14 @@ export default function TrainingRequest() {
                               onMouseDown={(e) => e.preventDefault()}
                               onClick={() => { if (atCapacity) return; setFormData(prev => ({ ...prev, training_site_id: String(s.id) })); setSiteSearch(s.name || ""); setIsSiteMenuOpen(false); }}
                               disabled={atCapacity}
-                              style={{
-                                width: "100%", textAlign: "right", border: "none",
-                                background: isHighlighted ? "#eff6ff" : isSelected ? "#f8fafc" : "white",
-                                padding: "0.7rem 1rem", fontSize: "0.88rem",
-                                color: atCapacity ? "#94a3b8" : "#1e293b",
-                                cursor: atCapacity ? "not-allowed" : "pointer",
-                                opacity: atCapacity ? 0.65 : 1,
-                                borderBottom: idx < filteredSchools.length - 1 ? "1px solid #f1f5f9" : "none",
-                              }}
+                              className={`w-full text-right border-none py-[0.7rem] px-4 text-[0.88rem] ${atCapacity ? 'text-[#94a3b8] cursor-not-allowed opacity-65' : 'text-[#1e293b] cursor-pointer'} ${isHighlighted ? 'bg-[#eff6ff]' : isSelected ? 'bg-[#f8fafc]' : 'bg-white'} ${idx < filteredSchools.length - 1 ? 'border-b border-[#f1f5f9]' : ''}`}
                             >
-                              <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-                                <span style={{ fontWeight: 600 }}>{s.name}</span>
+                              <span className="flex items-center justify-between gap-2">
+                                <span className="font-semibold">{s.name}</span>
                                 {atCapacity ? (
-                                  <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#b91c1c", background: "#fee2e2", padding: "2px 8px", borderRadius: 99 }}>مكتملة السعة</span>
+                                  <span className="text-[0.7rem] font-bold text-[#b91c1c] bg-[#fee2e2] py-[2px] px-2 rounded-full">مكتملة السعة</span>
                                 ) : rem != null && Number.isFinite(rem) ? (
-                                  <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#0369a1" }}>متبقي: {rem}</span>
+                                  <span className="text-[0.7rem] font-semibold text-[#0369a1]">متبقي: {rem}</span>
                                 ) : null}
                               </span>
                             </button>
@@ -454,24 +438,24 @@ export default function TrainingRequest() {
                       </div>
                     )}
                   </div>
-                  {validationErrors.training_site_id && <div style={{ fontSize: "0.75rem", color: "#dc2626", marginTop: 4 }}>{validationErrors.training_site_id}</div>}
+                  {validationErrors.training_site_id && <div className="text-[0.75rem] text-[#dc2626] mt-1">{validationErrors.training_site_id}</div>}
                 </div>
               </div>
 
               {/* Notes */}
-              <div style={{ marginBottom: "1.25rem" }}>
-                <label style={labelStyle}><FileText size={13} /> ملاحظات (اختياري)</label>
+              <div className="mb-5">
+                <label className={labelStyle}><FileText size={13} /> ملاحظات (اختياري)</label>
                 <textarea rows={3} value={formData.notes}
                   onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                   placeholder="أي ملاحظات إضافية تريد إرفاقها بالطلب..."
-                  style={{ ...inputStyle, resize: "vertical" }}
+                  className={`${inputStyle} resize-y`}
                 />
               </div>
 
               {/* Validation warnings */}
               {(Object.keys(validationErrors).length > 0 || (hasSubmittedRequest && !submitTargetRequestId)) && (
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", padding: "0.85rem 1.25rem", background: "#fef3c7", color: "#92400e", borderRadius: 12, marginBottom: "1rem", border: "1px solid #fde68a", fontSize: "0.85rem" }}>
-                  <AlertCircle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div className="flex items-start gap-2 py-[0.85rem] px-5 bg-[#fef3c7] text-[#92400e] rounded-xl mb-4 border border-[#fde68a] text-[0.85rem]">
+                  <AlertCircle size={18} className="shrink-0 mt-[2px]" />
                   <div>
                     {validationErrors.directorate && <div>• {validationErrors.directorate}</div>}
                     {validationErrors.training_site_id && <div>• {validationErrors.training_site_id}</div>}
@@ -481,17 +465,9 @@ export default function TrainingRequest() {
               )}
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <div className="flex gap-2 flex-wrap">
                 <button type="submit" disabled={saving || (hasSubmittedRequest && !submitTargetRequestId)}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "0.7rem 1.75rem", border: "none", borderRadius: 12,
-                    background: "linear-gradient(135deg, #1e3a5f, #2d5f8a)",
-                    color: "white", fontSize: "0.95rem", fontWeight: 700,
-                    cursor: saving || (hasSubmittedRequest && !submitTargetRequestId) ? "not-allowed" : "pointer",
-                    opacity: saving ? 0.7 : 1,
-                    boxShadow: "0 4px 12px rgba(30,58,95,0.3)",
-                  }}
+                  className="inline-flex items-center gap-[6px] py-[0.7rem] px-7 border-none rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] text-white text-[0.95rem] font-bold shadow-[0_4px_12px_rgba(30,58,95,0.3)]" style={{ cursor: saving || (hasSubmittedRequest && !submitTargetRequestId) ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
                 >
                   {saving ? <LoadingSpinner size="button" /> : submitTargetRequestId ? <Edit3 size={18} /> : <Send size={18} />}
                   {saving ? "جاري الحفظ..." : submitTargetRequestId ? "حفظ التعديلات" : "إرسال الطلب"}
@@ -499,7 +475,7 @@ export default function TrainingRequest() {
                 {editingId && (
                   <button type="button"
                     onClick={() => { setEditingId(null); setError(""); setSuccess(""); }}
-                    style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "0.7rem 1.25rem", background: "white", color: "#64748b", border: "1.5px solid #e2e8f0", borderRadius: 12, fontWeight: 700, fontSize: "0.88rem", cursor: "pointer" }}
+                    className="inline-flex items-center gap-[6px] py-[0.7rem] px-5 bg-white text-[#64748b] border-[1.5px] border-[#e2e8f0] rounded-xl font-bold text-[0.88rem] cursor-pointer"
                   >
                     <XCircle size={16} /> إلغاء
                   </button>

@@ -68,20 +68,19 @@ const OfficialLetters = () => {
   return (
     <>
       <style>{fadeIn}{spin}</style>
-      <div style={{ animation: "fadeIn 0.4s ease" }}>
+      <div className="animate-[fadeIn_0.4s_ease]">
         {/* Hero */}
-        <div style={{
+        <div className="text-white mb-6 py-8 px-10 rounded-[20px]" style={{
           background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-          borderRadius: 20, padding: "2rem 2.5rem", color: "white", marginBottom: "1.5rem",
           boxShadow: "0 8px 32px rgba(30,58,95,0.3)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[rgba(255,255,255,0.2)] flex items-center justify-center">
               <Mail size={28} />
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>طلبات التدريب</h1>
-              <p style={{ margin: "0.25rem 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
+              <h1 className="m-0 text-[1.5rem] font-extrabold">طلبات التدريب</h1>
+              <p className="mt-1 opacity-90 text-[0.95rem]">
                 متابعة طلبات التدريب الواردة من المديرية أو الكلية وإدارة حالتها
               </p>
             </div>
@@ -94,7 +93,7 @@ const OfficialLetters = () => {
         ) : (
           <>
             {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
               {[
                 { title: "إجمالي الكتب", value: letters.length, icon: FileText, color: "#1e3a5f", bg: "#dbeafe" },
                 { title: "كتب معلقة", value: pendingCount, icon: Clock, color: "#f59e0b", bg: "#fef3c7" },
@@ -102,17 +101,13 @@ const OfficialLetters = () => {
               ].map((card, i) => {
                 const Icon = card.icon;
                 return (
-                  <div key={i} style={{
-                    background: "#fff", borderRadius: 16, padding: "1.25rem",
-                    border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "1rem",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                  }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: card.bg, color: card.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div key={i} className="bg-white rounded-2xl p-5 border border-[#e2e8f0] flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                    <div className="w-12 h-12 rounded-[14px] shrink-0 flex items-center justify-center" style={{ background: card.bg, color: card.color }}>
                       <Icon size={22} />
                     </div>
                     <div>
-                      <div style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: 500 }}>{card.title}</div>
-                      <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b" }}>{card.value}</div>
+                      <div className="text-[0.78rem] text-[#94a3b8] font-medium">{card.title}</div>
+                      <div className="text-[1.5rem] font-extrabold text-[#1e293b]">{card.value}</div>
                     </div>
                   </div>
                 );
@@ -121,16 +116,13 @@ const OfficialLetters = () => {
 
             {/* Letters List */}
             {letters.length === 0 ? (
-              <div style={{
-                background: "#fff", borderRadius: 16, padding: "3rem", textAlign: "center",
-                border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-              }}>
-                <Inbox size={56} style={{ marginBottom: "1rem", opacity: 0.3, color: "#94a3b8" }} />
-                <h3 style={{ margin: "0 0 0.5rem", color: "#64748b", fontSize: "1.1rem" }}>لا توجد كتب رسمية حاليًا</h3>
-                <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.9rem" }}>عند وصول كتاب من المديرية سيظهر هنا</p>
+              <div className="bg-white rounded-2xl p-12 text-center border border-[#e2e8f0] shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+                <Inbox size={56} className="mb-4 opacity-30 text-[#94a3b8]" />
+                <h3 className="m-0 mb-2 text-[#64748b] text-[1.1rem]">لا توجد كتب رسمية حاليًا</h3>
+                <p className="m-0 text-[#94a3b8] text-[0.9rem]">عند وصول كتاب من المديرية سيظهر هنا</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div className="flex flex-col gap-4">
                 {letters.map((letter) => {
                   const st = statusConfig[letter.status] || { label: letter.statusLabel, color: "#6b7280", bg: "#f3f4f6", icon: Clock };
                   const StatusIcon = st.icon;
@@ -139,56 +131,36 @@ const OfficialLetters = () => {
                   const isSaving = savingId === letter.id;
 
                   return (
-                    <div key={letter.id} style={{
-                      background: "#fff", borderRadius: 16, overflow: "hidden",
-                      border: isReceived ? "1px solid #d1fae5" : "1px solid #e2e8f0",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                      transition: "all 0.2s",
-                    }}>
+                    <div key={letter.id} className="bg-white rounded-2xl overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all duration-200" style={{ border: isReceived ? "1px solid #d1fae5" : "1px solid #e2e8f0" }}>
                       {/* Letter Header */}
-                      <div style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "1.25rem 1.5rem", gap: "1rem", flexWrap: "wrap",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flex: 1, minWidth: 200 }}>
-                          <div style={{
-                            width: 44, height: 44, borderRadius: 12,
+                      <div className="flex items-center justify-between py-5 px-6 gap-4 flex-wrap">
+                        <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                          <div className="w-11 h-11 rounded-xl shrink-0 flex items-center justify-center" style={{
                             background: isReceived ? "#d1fae5" : "#fef3c7",
                             color: isReceived ? "#059669" : "#d97706",
-                            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
                           }}>
                             <FileText size={22} />
                           </div>
                           <div>
-                            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1rem", fontWeight: 700, color: "#1e293b" }}>{letter.subject}</h4>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", fontSize: "0.8rem", color: "#64748b" }}>
-                              <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                            <h4 className="m-0 mb-1 text-base font-bold text-[#1e293b]">{letter.subject}</h4>
+                            <div className="flex flex-wrap gap-3 text-[0.8rem] text-[#64748b]">
+                              <span className="flex items-center gap-1">
                                 <Send size={13} /> {letter.sender}
                               </span>
-                              <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                              <span className="flex items-center gap-1">
                                 <Clock size={13} /> {letter.date}
                               </span>
                             </div>
                           </div>
                         </div>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                          <span style={{
-                            display: "inline-flex", alignItems: "center", gap: "0.375rem",
-                            padding: "0.375rem 0.75rem", borderRadius: 99,
-                            fontSize: "0.8rem", fontWeight: 700,
-                            background: st.bg, color: st.color,
-                          }}>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center gap-[0.375rem] py-[0.375rem] px-3 rounded-full text-[0.8rem] font-bold" style={{ background: st.bg, color: st.color }}>
                             <StatusIcon size={14} /> {st.label}
                           </span>
 
                           <button type="button" onClick={() => toggleContent(letter.id)}
-                            style={{
-                              display: "inline-flex", alignItems: "center", gap: 4,
-                              padding: "0.5rem 0.85rem", background: "#f8fafc",
-                              color: "#475569", border: "1px solid #e2e8f0",
-                              borderRadius: 8, fontSize: "0.82rem", fontWeight: 600, cursor: "pointer",
-                            }}
+                            className="inline-flex items-center gap-1 py-2 px-[0.85rem] bg-[#f8fafc] text-[#475569] border border-[#e2e8f0] rounded-lg text-[0.82rem] font-semibold cursor-pointer"
                           >
                             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                             {isExpanded ? "إخفاء" : "المحتوى"}
@@ -196,12 +168,8 @@ const OfficialLetters = () => {
 
                           {!isReceived && (
                             <button type="button" onClick={() => handleReceive(letter)} disabled={isSaving}
-                              style={{
-                                display: "inline-flex", alignItems: "center", gap: 4,
-                                padding: "0.5rem 1rem",
+                              className="inline-flex items-center gap-1 py-2 px-4 text-white border-none rounded-lg text-[0.85rem] font-semibold" style={{
                                 background: "linear-gradient(135deg, #10b981, #059669)",
-                                color: "white", border: "none", borderRadius: 8,
-                                fontSize: "0.85rem", fontWeight: 600,
                                 cursor: isSaving ? "not-allowed" : "pointer",
                                 opacity: isSaving ? 0.7 : 1,
                               }}
@@ -215,16 +183,8 @@ const OfficialLetters = () => {
 
                       {/* Expanded Content */}
                       {isExpanded && (
-                        <div style={{
-                          padding: "0 1.5rem 1.25rem",
-                          animation: "fadeIn 0.3s ease",
-                        }}>
-                          <div style={{
-                            background: "#f8fafc", border: "1px solid #e2e8f0",
-                            borderRadius: 12, padding: "1rem 1.25rem",
-                            whiteSpace: "pre-wrap", lineHeight: 1.8,
-                            fontSize: "0.9rem", color: "#334155",
-                          }}>
+                        <div className="px-6 pb-5 animate-[fadeIn_0.3s_ease]">
+                          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl py-4 px-5 whitespace-pre-wrap leading-[1.8] text-[0.9rem] text-[#334155]">
                             {letter.content || "لا يوجد محتوى محفوظ لهذا الكتاب."}
                           </div>
                         </div>

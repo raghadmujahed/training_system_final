@@ -293,36 +293,23 @@ export default function StudentDashboard({ forcedTrack = null }) {
 
       {effectiveTrack === "psychology" && (
         <div
-          className="section-card mb-4"
-          style={{
-            borderRight: "4px solid #0284c7",
-            background: "linear-gradient(135deg, #f0f9ff 0%, #fff 100%)",
-          }}
+          className="bg-gradient-to-br from-[#f0f9ff] to-white border border-border rounded-[18px] p-5 mb-4 border-r-4 border-r-info"
         >
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+          <div className="flex items-start gap-3.5">
             <div
-              className="section-icon"
-              style={{ background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)", flexShrink: 0 }}
+              className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-info to-[#0369a1] flex items-center justify-center text-white shrink-0"
             >
               <ClipboardList size={20} />
             </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>طلب التدريب — قسم علم النفس</h4>
-              <p style={{ margin: 0, fontSize: "0.92rem", lineHeight: 1.65, color: "var(--text-soft)" }}>
+            <div className="flex-1">
+              <h4 className="m-0 mb-2 text-secondary font-extrabold text-[1.05rem]">طلب التدريب — قسم علم النفس</h4>
+              <p className="m-0 text-text-soft text-[0.92rem] leading-relaxed">
                 لا يتم إنشاء طلب التدريب من حساب الطالب. يقوم المشرف الأكاديمي للقسم بإنشاء الطلب ومتابعة الجهات
                 الرسمية حتى صدور الموافقة النهائية من جهة التدريب.
               </p>
               <Link
                 to="/student/training-request-status"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 12,
-                  fontWeight: 700,
-                  color: "#0284c7",
-                  textDecoration: "none",
-                }}
+                className="inline-flex items-center gap-1.5 mt-3 font-bold text-info no-underline hover:underline"
               >
                 متابعة حالة طلب التدريب <ArrowLeft size={16} />
               </Link>
@@ -332,28 +319,23 @@ export default function StudentDashboard({ forcedTrack = null }) {
       )}
 
       {publicAnnouncements.length > 0 ? (
-        <div className="section-card mb-4" style={{ borderRight: "4px solid var(--accent, #b08d57)" }}>
-          <div className="d-flex align-items-center gap-2 mb-3">
-            <div className="section-icon">
+        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-4 border-r-4 border-r-accent">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 rounded-[10px] bg-accent/12 flex items-center justify-center text-accent">
               <Megaphone size={20} />
             </div>
-            <h4 className="mb-0">إعلانات عامة</h4>
+            <h4 className="m-0 text-secondary font-extrabold">إعلانات عامة</h4>
           </div>
-          <ul className="list-unstyled mb-0" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <ul className="list-none p-0 m-0 flex flex-col gap-3">
             {publicAnnouncements.map((a) => (
               <li
                 key={a.id}
-                style={{
-                  padding: "12px 14px",
-                  borderRadius: 12,
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                }}
+                className="p-3 rounded-xl bg-[#f8fafc] border border-[#e2e8f0]"
               >
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>{a.title}</div>
-                <div style={{ fontSize: "0.88rem", lineHeight: 1.55, whiteSpace: "pre-wrap" }}>{a.content}</div>
+                <div className="font-bold mb-1.5 text-text">{a.title}</div>
+                <div className="text-[0.88rem] leading-relaxed whitespace-pre-wrap text-text-soft">{a.content}</div>
                 {a.published_at ? (
-                  <div style={{ fontSize: "0.78rem", color: "var(--text-soft)", marginTop: 8 }}>
+                  <div className="text-[0.78rem] text-text-soft mt-2">
                     نُشر في {new Date(a.published_at).toLocaleString("ar-SA")}
                   </div>
                 ) : null}
@@ -527,48 +509,36 @@ export default function StudentDashboard({ forcedTrack = null }) {
             <div className="section-icon"><Bell size={20} /></div>
             <h4 className="mb-0">آخر الإشعارات والتحديثات</h4>
           </div>
-          <Link to="/student/notifications-updates" style={{ fontSize: "0.82rem", color: "#6366f1", fontWeight: 600, textDecoration: "none" }}>عرض الكل ←</Link>
+          <Link to="/student/notifications-updates" className="text-[0.82rem] text-[#6366f1] font-semibold no-underline hover:underline">عرض الكل ←</Link>
         </div>
         {latestItems.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "2rem 1rem", color: "#94a3b8" }}>
-            <Bell size={32} style={{ marginBottom: "0.5rem", opacity: 0.4 }} />
-            <p style={{ margin: 0, fontSize: "0.9rem" }}>لا توجد إشعارات حديثة.</p>
+          <div className="text-center py-8 px-4 text-text-faint">
+            <Bell size={32} className="mb-2 opacity-40 mx-auto" />
+            <p className="m-0 text-[0.9rem]">لا توجد إشعارات حديثة.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+          <div className="flex flex-col gap-2.5">
             {latestItems.map((item, index) => (
               <div
                 key={index}
-                style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "0.85rem",
-                  padding: "0.85rem 1rem",
-                  borderRadius: "12px",
-                  backgroundColor: item.bg,
-                  border: `1px solid ${item.color}22`,
-                  transition: "box-shadow 0.2s",
-                }}
+                className="flex items-start gap-3 p-3.5 rounded-xl transition-shadow"
+                style={{ backgroundColor: item.bg, border: `1px solid ${item.color}22` }}
               >
-                <div style={{
-                  width: "10px", height: "10px", borderRadius: "50%",
-                  backgroundColor: item.dot, marginTop: "5px", flexShrink: 0,
-                  boxShadow: `0 0 0 3px ${item.dot}33`,
-                }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.2rem" }}>
-                    <span style={{ fontWeight: 700, fontSize: "0.87rem", color: item.color }}>{item.title}</span>
-                    {item.time && <span style={{ fontSize: "0.73rem", color: "#94a3b8", flexShrink: 0 }}>{item.time}</span>}
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0 mt-[5px]"
+                  style={{ backgroundColor: item.dot, boxShadow: `0 0 0 3px ${item.dot}33` }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <span className="font-bold text-[0.87rem]" style={{ color: item.color }}>{item.title}</span>
+                    {item.time && <span className="text-[0.73rem] text-text-faint shrink-0">{item.time}</span>}
                   </div>
-                  <p style={{ margin: 0, fontSize: "0.82rem", color: "#475569", lineHeight: 1.5,
-                    overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box",
-                    WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                  <p className="m-0 text-[0.82rem] text-[#475569] leading-relaxed line-clamp-2">
                     {item.text}
                   </p>
                 </div>
                 {!item.read && (
-                  <div style={{ width: "7px", height: "7px", borderRadius: "50%",
-                    backgroundColor: "#6366f1", flexShrink: 0, marginTop: "6px" }} />
+                  <div className="w-[7px] h-[7px] rounded-full bg-[#6366f1] shrink-0 mt-1.5" />
                 )}
               </div>
             ))}
@@ -582,29 +552,21 @@ export default function StudentDashboard({ forcedTrack = null }) {
             <div className="section-icon"><FileText size={20} /></div>
             <h4 className="mb-0">آخر التكليفات</h4>
           </div>
-          <Link to="/student/assignments" style={{ fontSize: "0.82rem", color: "#6366f1", fontWeight: 600, textDecoration: "none" }}>عرض الكل ←</Link>
+          <Link to="/student/assignments" className="text-[0.82rem] text-[#6366f1] font-semibold no-underline hover:underline">عرض الكل ←</Link>
         </div>
         {latestTasks.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "1.5rem 1rem", color: "#94a3b8" }}>
-            <FileText size={28} style={{ marginBottom: "0.4rem", opacity: 0.4 }} />
-            <p style={{ margin: 0, fontSize: "0.9rem" }}>لا توجد تكليفات حديثة.</p>
+          <div className="text-center py-6 px-4 text-text-faint">
+            <FileText size={28} className="mb-2 opacity-40 mx-auto" />
+            <p className="m-0 text-[0.9rem]">لا توجد تكليفات حديثة.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div className="flex flex-col gap-2">
             {latestTasks.map((task) => (
-              <div key={task.id} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "0.75rem 1rem", borderRadius: "10px",
-                backgroundColor: "#f8fafc", border: "1px solid #e2e8f0",
-              }}>
-                <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b" }}>{task.title || "تكليف"}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
-                  {task.due_date && <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>{task.due_date}</span>}
-                  <span style={{
-                    fontSize: "0.73rem", fontWeight: 600, padding: "2px 8px", borderRadius: "99px",
-                    backgroundColor: isTaskPending(task.status) ? "#fef3c7" : "#dcfce7",
-                    color: isTaskPending(task.status) ? "#92400e" : "#166534",
-                  }}>{task.status_label || task.status || "—"}</span>
+              <div key={task.id} className="flex items-center justify-between p-3 rounded-[10px] bg-[#f8fafc] border border-[#e2e8f0]">
+                <span className="font-semibold text-[0.85rem] text-text">{task.title || "تكليف"}</span>
+                <div className="flex items-center gap-3 shrink-0">
+                  {task.due_date && <span className="text-[0.75rem] text-text-faint">{task.due_date}</span>}
+                  <span className={`text-[0.73rem] font-semibold px-2 py-0.5 rounded-full ${isTaskPending(task.status) ? "bg-warning/15 text-[#92400e]" : "bg-success/15 text-[#166534]"}`}>{task.status_label || task.status || "—"}</span>
                 </div>
               </div>
             ))}

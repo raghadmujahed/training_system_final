@@ -171,7 +171,7 @@ export default function HeadOfDepartmentSectionForm() {
             {errors.course_id && <span className="error">{errors.course_id[0]}</span>}
           </div>
 
-          <div className="form-group" style={{ position: "relative" }}>
+          <div className="form-group relative">
             <label htmlFor="hod-sf-supervisor-search">المشرف الأكاديمي</label>
             <input
               id="hod-sf-supervisor-search"
@@ -190,7 +190,7 @@ export default function HeadOfDepartmentSectionForm() {
               onFocus={() => {
                 if (supervisors.length > 0) setShowSupervisorDropdown(true);
               }}
-              style={{ width: "100%" }}
+              className="w-full"
             />
             <input
               type="hidden"
@@ -200,37 +200,20 @@ export default function HeadOfDepartmentSectionForm() {
             />
             
             {supervisorLoading && (
-              <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+              <div className="text-[12px] text-[#666] mt-1">
                 جاري البحث...
               </div>
             )}
             
             {showSupervisorDropdown && supervisors.length > 0 && (
               <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  backgroundColor: "white",
-                  border: "1px solid #ddd",
-                  borderRadius: 4,
-                  maxHeight: 200,
-                  overflowY: "auto",
-                  zIndex: 1000,
-                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                }}
+                className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded max-h-[200px] overflow-y-auto z-[1000] shadow-[0_4px_8px_rgba(0,0,0,0.1)]"
               >
                 {supervisors.map((supervisor) => (
                   <div
                     key={supervisor.id}
                     onClick={() => handleSupervisorSelect(supervisor)}
-                    style={{
-                      padding: "10px 12px",
-                      cursor: "pointer",
-                      borderBottom: "1px solid #f0f0f0",
-                      fontSize: 14,
-                    }}
+                    className="py-[10px] px-3 cursor-pointer border-b border-[#f0f0f0] text-[14px]"
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = "#f5f5f5";
                     }}
@@ -238,9 +221,9 @@ export default function HeadOfDepartmentSectionForm() {
                       e.currentTarget.style.backgroundColor = "white";
                     }}
                   >
-                    <div style={{ fontWeight: 500 }}>{supervisor.name}</div>
+                    <div className="font-medium">{supervisor.name}</div>
                     {supervisor.email && (
-                      <div style={{ fontSize: 12, color: "#666" }}>
+                      <div className="text-[12px] text-[#666]">
                         {supervisor.email}
                       </div>
                     )}
@@ -251,19 +234,7 @@ export default function HeadOfDepartmentSectionForm() {
             
             {showSupervisorDropdown && supervisorSearch.length >= 1 && supervisors.length === 0 && !supervisorLoading && (
               <div
-                style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  right: 0,
-                  backgroundColor: "white",
-                  border: "1px solid #ddd",
-                  borderRadius: 4,
-                  padding: "10px 12px",
-                  fontSize: 14,
-                  color: "#666",
-                  zIndex: 1000,
-                }}
+                className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded py-[10px] px-3 text-[14px] text-[#666] z-[1000]"
               >
                 لم يتم العثور على مشرفين
               </div>

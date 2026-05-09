@@ -133,7 +133,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
           <div className="hero-icon">
             <FileText size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">{isPsych ? "الكتب الرسمية / الدفعات — علم النفس" : "دفعات طلبات التدريب"}</h1>
             <p className="hero-subtitle">
               {isPsych
@@ -146,7 +146,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
 
       {error && (
         <div className="alert-custom alert-danger mb-3">
-          <p style={{ margin: 0 }}>{error}</p>
+          <p className="m-0">{error}</p>
         </div>
       )}
 
@@ -166,11 +166,11 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
 
       {/* Batches Table */}
       <div className="section-card">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div className="flex items-center gap-[10px] mb-4">
           <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
             <FileText size={20} />
           </div>
-          <h4 style={{ margin: 0 }}>قائمة الدفعات ({listBatches.length})</h4>
+          <h4 className="m-0">قائمة الدفعات ({listBatches.length})</h4>
         </div>
         {listBatches.length === 0 ? (
           <EmptyState title="لا توجد دفعات" description="لم تُنشأ أي دفعات طلبات تدريب بعد." />
@@ -200,35 +200,32 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
                   };
                   return (
                     <tr key={b.id}>
-                      <td style={{ fontWeight: 700 }}>#{b.id}</td>
+                      <td className="font-bold">#{b.id}</td>
                       <td>{b.recipient_label || getGoverningBodyLabel(b.governing_body)}</td>
                       <td>{b.directorate || "—"}</td>
                       <td>{b.items_count ?? "—"}</td>
                       <td>
                         <span
+                          className="py-[3px] px-[10px] rounded-full text-[0.78rem] font-bold"
                           style={{
                             background: statusColors.bg,
                             color: statusColors.text,
-                            padding: "3px 10px",
-                            borderRadius: 99,
-                            fontSize: "0.78rem",
-                            fontWeight: 700,
                           }}
                         >
                           {statusLabel}
                         </span>
                       </td>
-                      <td style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>
+                      <td className="text-[0.82rem] text-[var(--text-soft)]">
                         {b.created_at ? new Date(b.created_at).toLocaleString("ar-SA") : "—"}
                       </td>
-                      <td style={{ fontSize: "0.82rem", color: "var(--text-soft)" }}>
+                      <td className="text-[0.82rem] text-[var(--text-soft)]">
                         {b.sent_at ? new Date(b.sent_at).toLocaleString("ar-SA") : "—"}
                       </td>
                       <td>{b.letter_number || "—"}</td>
                       <td>
                         <button
                           type="button"
-                          className="btn-primary-custom"
+                          className="btn-outline-custom inline-flex items-center gap-[6px] py-1 px-[10px] text-[0.8rem] rounded-lg"
                           onClick={async () => {
                             setPrintingBatchId(b.id);
                             try {
@@ -250,14 +247,6 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
                           }}
                           disabled={printingBatchId === b.id}
                           title="كشف أسماء هذه الدفعة فقط"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "4px 10px",
-                            fontSize: "0.8rem",
-                            borderRadius: 8,
-                          }}
                         >
                           <Printer size={14} />
                           {printingBatchId === b.id ? "..." : "طباعة"}
@@ -265,9 +254,8 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
                       </td>
                       <td>
                         <button
-                          className="btn-primary-custom"
                           onClick={() => openDrawer(b.id)}
-                          style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", fontSize: "0.82rem", borderRadius: 8 }}
+                          className="btn-primary-custom flex items-center gap-1 py-1 px-3 text-[0.82rem] rounded-lg"
                         >
                           <Eye size={14} />
                           عرض
@@ -283,23 +271,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
         {hasMoreBatches && (
           <button
             onClick={() => setShowAllBatches(!showAllBatches)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              width: "100%",
-              padding: "12px",
-              marginTop: 12,
-              background: "transparent",
-              border: "1px dashed var(--border)",
-              borderRadius: 12,
-              color: "var(--info)",
-              fontSize: "0.9rem",
-              fontWeight: 700,
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
+            className="flex items-center justify-center gap-[6px] w-full py-3 mt-3 bg-transparent border border-dashed border-[var(--border)] rounded-xl text-[var(--info)] text-[0.9rem] font-bold cursor-pointer transition-all duration-200"
           >
             {showAllBatches ? (
               <>
@@ -318,49 +290,23 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
       {drawerOpen && (
         <div
           onClick={closeDrawer}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.35)",
-            backdropFilter: "blur(2px)",
-            zIndex: 999,
-            animation: "fadeIn 0.2s ease",
-          }}
+          className="fixed inset-0 z-[999] animate-[fadeIn_0.2s_ease] bg-[rgba(0,0,0,0.35)] backdrop-blur-[2px]"
         />
       )}
 
       {/* Drawer Panel */}
       <div
+        className="fixed top-0 left-0 bottom-0 w-[min(520px,90vw)] bg-[#f5f6fa] shadow-[4px_0_24px_rgba(0,0,0,0.12)] z-[1000] overflow-y-auto p-0 transition-transform duration-300"
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: "min(520px, 90vw)",
-          background: "#f5f6fa",
-          boxShadow: "4px 0 24px rgba(0,0,0,0.12)",
-          zIndex: 1000,
           transform: drawerOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
-          overflowY: "auto",
-          padding: 0,
+          transitionTimingFunction: "cubic-bezier(0.4,0,0.2,1)",
         }}
       >
         {/* Drawer Header */}
-        <div style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)",
-          color: "#fff",
-          padding: "18px 20px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="sticky top-0 z-10 text-white py-[18px] px-5 flex justify-between items-center" style={{ background: "linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)" }}>
+          <div className="flex items-center gap-[10px]">
             <FileText size={22} />
-            <h3 style={{ margin: 0, fontSize: "1.1rem" }}>
+            <h3 className="m-0 text-[1.1rem]">
               تفاصيل دفعة طلبات التدريب
             </h3>
           </div>
@@ -368,18 +314,12 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
             type="button"
             onClick={closeDrawer}
             aria-label="إغلاق"
+            className="w-11 h-11 flex items-center justify-center cursor-pointer transition-all duration-200"
             style={{
               background: "rgba(255,255,255,0.15)",
               border: "1px solid rgba(255,255,255,0.25)",
               color: "#fff",
               borderRadius: 10,
-              width: 44,
-              height: 44,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              transition: "all 0.2s",
             }}
           >
             <X size={26} strokeWidth={2.25} />
@@ -387,7 +327,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
         </div>
 
         {/* Drawer Content */}
-        <div style={{ padding: "20px" }}>
+        <div className="p-5">
           {detailLoading ? (
             <LoadingSpinner size="section" text="جاري تحميل تفاصيل الدفعة..." />
           ) : selectedBatch && (

@@ -231,10 +231,10 @@ export default function MentorAssignment({ siteType = "school" }) {
       {/* Hero Section */}
       <div className="hero-section mb-4">
         <div className="hero-content">
-          <div className="hero-icon" style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)" }}>
+          <div className="hero-icon bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a]">
             <ClipboardList size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">{labels.requestTitle}</h1>
             <p className="hero-subtitle">
               {"راجع بيانات كل طالب، عيّن "}{labels.mentorLabel}{"، ثم اعتمد الطلب أو ارفضه مع توضيح السبب"}
@@ -244,7 +244,7 @@ export default function MentorAssignment({ siteType = "school" }) {
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         {[
           { title: "إجمالي الطلبات", value: requests.length, icon: FileText, color: "#3b82f6", bg: "#dbeafe" },
           { title: "طلبات معلقة", value: pendingCount, icon: Clock, color: "#f59e0b", bg: "#fef3c7" },
@@ -253,13 +253,13 @@ export default function MentorAssignment({ siteType = "school" }) {
         ].map((card, i) => {
           const Icon = card.icon;
           return (
-            <div key={i} style={{ background: "#fff", borderRadius: "16px", padding: "1.25rem", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div style={{ width: 48, height: 48, borderRadius: "14px", background: card.bg, color: card.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div key={i} className="bg-white rounded-2xl p-5 border border-[#e2e8f0] flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0" style={{ background: card.bg, color: card.color }}>
                 <Icon size={24} />
               </div>
               <div>
-                <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>{card.title}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b" }}>{card.value}</div>
+                <div className="text-[0.8rem] text-[#94a3b8]">{card.title}</div>
+                <div className="text-[1.5rem] font-extrabold text-[#1e293b]">{card.value}</div>
               </div>
             </div>
           );
@@ -269,10 +269,10 @@ export default function MentorAssignment({ siteType = "school" }) {
 
       {/* Empty State */}
       {requests.length === 0 ? (
-        <div className="section-card" style={{ padding: "3rem", borderRadius: "16px", border: "1px solid #e2e8f0", textAlign: "center" }}>
-          <ClipboardList size={56} style={{ marginBottom: "1rem", opacity: 0.3, color: "#94a3b8" }} />
-          <h3 style={{ margin: "0 0 0.5rem", color: "#64748b", fontSize: "1.1rem" }}>{"لا توجد طلبات حاليًا"}</h3>
-          <p style={{ margin: 0, color: "#94a3b8", fontSize: "0.9rem" }}>
+        <div className="section-card p-12 rounded-2xl border border-[#e2e8f0] text-center">
+          <ClipboardList size={56} className="mb-4 opacity-30 text-[#94a3b8]" />
+          <h3 className="m-0 mb-2 text-[#64748b] text-[1.1rem]">{"لا توجد طلبات حاليًا"}</h3>
+          <p className="m-0 text-[#94a3b8] text-[0.9rem]">
             {"عند وصول كتاب من الجهة الرسمية سيظهر الطلب هنا"}
           </p>
         </div>
@@ -298,61 +298,60 @@ export default function MentorAssignment({ siteType = "school" }) {
             <div
               key={req.id}
               ref={(el) => { if (el) cardRefs.current[req.id] = el; }}
-              className="section-card mb-4"
+              className="section-card mb-4 p-6 rounded-2xl transition-all duration-400 ease"
               style={{
-                padding: "1.5rem",
-                borderRadius: "16px",
                 border: isHighlighted ? "2px solid #f59e0b" : "1px solid #e2e8f0",
                 boxShadow: isHighlighted ? "0 0 0 4px rgba(245, 158, 11, 0.2)" : undefined,
-                transition: "all 0.4s ease",
               }}
             >
               {/* Request Header */}
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0", flexWrap: "wrap" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "10px", background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", flexShrink: 0 }}>
+              <div className="flex items-start justify-between gap-4 mb-5 pb-4 border-b border-[#e2e8f0] flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-[10px] flex items-center justify-center text-white shrink-0 bg-gradient-to-br from-[#f59e0b] to-[#d97706]">
                     <FileText size={22} />
                   </div>
                   <div>
-                    <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>
+                    <h4 className="m-0 mb-1 text-[1.1rem] font-bold">
                       {"طلب تدريب #"}{req.id}{req.letter_number ? ` — ${req.letter_number}` : ""}
                     </h4>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", fontSize: "0.8rem", color: "#64748b" }}>
+                    <div className="flex flex-wrap gap-3 text-[0.8rem] text-[#64748b]">
                       {site?.name && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <span className="flex items-center gap-1">
                           <Building2 size={13} /> {site.name}
                         </span>
                       )}
                       {site?.location && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <span className="flex items-center gap-1">
                           <MapPin size={13} /> {site.location}
                         </span>
                       )}
                       {site?.directorate && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <span className="flex items-center gap-1">
                           <School size={13} /> {site.directorate}
                         </span>
                       )}
                       {period?.name && (
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                        <span className="flex items-center gap-1">
                           <Clock size={13} /> {period.name}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "9999px", fontSize: "0.8rem", fontWeight: 600, background: "#fef3c7", color: "#d97706" }}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-[0.375rem] py-[0.375rem] px-3 rounded-full text-[0.8rem] font-semibold bg-[#fef3c7] text-[#d97706]">
                     <Clock size={14} /> {req.book_status_label || req.book_status}
                   </span>
                   <button type="button" onClick={() => handleRequestApprove(req.id)} disabled={isSaving}
-                    style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.5rem 1rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "white", border: "none", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer", opacity: isSaving ? 0.7 : 1 }}
+                    className="inline-flex items-center gap-1 py-2 px-4 text-white border-none rounded-lg text-[0.85rem] font-semibold"
+                    style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", cursor: isSaving ? "not-allowed" : "pointer", opacity: isSaving ? 0.7 : 1 }}
                   >
                     {isSaving ? <LoadingSpinner size="button" /> : <CheckCircle2 size={14} />}
                     {labels.approveBtn}
                   </button>
                   <button type="button" onClick={() => handleRequestReject(req.id)} disabled={isSaving}
-                    style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.5rem 1rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, fontSize: "0.85rem", fontWeight: 600, cursor: isSaving ? "not-allowed" : "pointer" }}
+                    className="inline-flex items-center gap-1 py-2 px-4 bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] rounded-lg text-[0.85rem] font-semibold"
+                    style={{ cursor: isSaving ? "not-allowed" : "pointer" }}
                   >
                     <XCircle size={14} /> {"رفض الطلب"}
                   </button>
@@ -360,50 +359,51 @@ export default function MentorAssignment({ siteType = "school" }) {
               </div>
 
               {/* Students Table */}
-              <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+              <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+                <table className="w-full border-collapse text-[0.85rem]">
                   <thead>
-                    <tr style={{ background: "#f8fafc" }}>
+                    <tr className="bg-[#f8fafc]">
                       {tableHeadCells.map((h) => (
-                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
+                        <th key={h} className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0] whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {reqRows.length === 0 ? (
                       <tr>
-                        <td colSpan={emptyColSpan} style={{ padding: "2rem", textAlign: "center", color: "#94a3b8" }}>
+                        <td colSpan={emptyColSpan} className="p-8 text-center text-[#94a3b8]">
                           {"لا يوجد طلاب مرتبطون بهذا الطلب"}
                         </td>
                       </tr>
                     ) : (
                       reqRows.map((student, idx) => {
                         return (
-                        <tr key={student.studentRowId} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc" }}>
-                          <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                              <div style={{ width: 32, height: 32, borderRadius: "8px", background: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <tr key={student.studentRowId} className={idx % 2 === 0 ? "bg-white" : "bg-[#f8fafc]"}>
+                          <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] text-[#2563eb]">
                                 <User size={14} />
                               </div>
-                              <span style={{ fontWeight: 600 }}>{student.studentName}</span>
+                              <span className="font-semibold">{student.studentName}</span>
                             </div>
                           </td>
-                          <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                          <td className="py-3 px-4 border-b border-[#e2e8f0] text-[#64748b]">
                             {student.universityId}
                           </td>
-                          <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", color: "#64748b" }}>
+                          <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                            <span className="inline-flex items-center gap-1 text-[#64748b]">
                               <GraduationCap size={13} /> {student.specialization}
                             </span>
                           </td>
-                          <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.25rem 0.625rem", borderRadius: "9999px", fontSize: "0.75rem", fontWeight: 600, background: "#dbeafe", color: "#2563eb" }}>
+                          <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                            <span className="inline-flex items-center gap-[0.375rem] py-1 px-[0.625rem] rounded-full text-[0.75rem] font-semibold bg-[#dbeafe] text-[#2563eb]">
                               {student.status}
                             </span>
                           </td>
-                          <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", minWidth: 200 }}>
+                          <td className="py-3 px-4 border-b border-[#e2e8f0] min-w-[200px]">
                             <select value={student.mentorId} onChange={(e) => handleMentorChange(student.studentRowId, e.target.value)}
-                              style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: student.mentorId ? "1px solid #10b981" : "1px solid #e2e8f0", fontSize: "0.8rem", background: student.mentorId ? "#f0fdf4" : "#f8fafc", outline: "none" }}
+                              className="w-full py-[0.375rem] px-2 rounded-md text-[0.8rem] outline-none"
+                              style={{ border: student.mentorId ? "1px solid #10b981" : "1px solid #e2e8f0", background: student.mentorId ? "#f0fdf4" : "#f8fafc" }}
                             >
                               <option value="">{labels.mentorSelect}</option>
                               {teachers.map((mentor) => (
@@ -411,10 +411,10 @@ export default function MentorAssignment({ siteType = "school" }) {
                               ))}
                             </select>
                           </td>
-                          <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0", minWidth: 180 }}>
+                          <td className="py-3 px-4 border-b border-[#e2e8f0] min-w-[180px]">
                             <textarea value={student.notes} onChange={(e) => handleNotesChange(student.studentRowId, e.target.value)}
                               placeholder={"ملاحظات (اختياري)"} rows={2}
-                              style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #e2e8f0", fontSize: "0.8rem", background: "#f8fafc", resize: "vertical", outline: "none" }}
+                              className="w-full py-[0.375rem] px-2 rounded-md border border-[#e2e8f0] text-[0.8rem] bg-[#f8fafc] resize-y outline-none"
                             />
                           </td>
                         </tr>

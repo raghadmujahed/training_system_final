@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingSite, createTrainingSite, updateTrainingSite } from "../../../services/api";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 
 export default function TrainingSiteForm() {
   const toast = useAppToast();
@@ -162,16 +164,11 @@ export default function TrainingSiteForm() {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>{id ? "تعديل موقع تدريب" : "إضافة مواقع تدريب (فردي / جماعي)"}</h1>
-        <button onClick={() => navigate("/admin/training-sites")} className="btn-secondary">
-          رجوع
-        </button>
-      </div>
+      <PageHeader title={id ? "تعديل موقع تدريب" : "إضافة مواقع تدريب (فردي / جماعي)"} />
 
       {/* نموذج الإضافة الفردية */}
-      <form onSubmit={handleSubmit} className="form" style={{ marginBottom: "2rem", border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-        <h3>إضافة فردية</h3>
+      <form onSubmit={handleSubmit} className="form border border-[#ccc] p-4 rounded-lg mb-8">
+        <h3 className="font-bold text-text mb-3">إضافة فردية</h3>
         <div className="form-group">
           <label>الاسم *</label>
           <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -259,20 +256,20 @@ export default function TrainingSiteForm() {
       </form>
 
       {/* قسم الإضافة الجماعية */}
-      <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-        <legend style={{ fontWeight: "bold" }}>إضافة جماعية عبر ملف Excel</legend>
-        <p>
+      <fieldset className="border border-[#ccc] p-4 rounded-lg">
+        <legend className="font-bold">إضافة جماعية عبر ملف Excel</legend>
+        <p className="text-text-soft text-[0.88rem]">
           الأعمدة المطلوبة: <strong>الاسم</strong> (إجباري)، الموقع، الهاتف، البريد، المحمول، الوصف، المديرية، السعة، نوع الموقع (مدرسة/مركز صحي)، نوع المدرسة (public/private)، التصنيف (boys/girls/mixed)، المرحلة (lower/upper)، الجهة المسؤولة، نشط (نعم/لا).
         </p>
-        <input type="file" id="bulk-file-input" accept=".xlsx, .xls" onChange={handleFileChange} />
-        <button onClick={processBulkUpload} disabled={bulkLoading} style={{ marginTop: "0.5rem" }} className="btn-secondary">
+        <input type="file" id="bulk-file-input" accept=".xlsx, .xls" onChange={handleFileChange} className="my-2" />
+        <Button variant="outline" onClick={processBulkUpload} disabled={bulkLoading}>
           {bulkLoading ? "جاري الرفع..." : "رفع وإضافة"}
-        </button>
+        </Button>
         {bulkResults && (
-          <div style={{ marginTop: "1rem" }}>
-            <div style={{ color: "green" }}>✅ نجح: {bulkResults.success.length} موقع</div>
+          <div className="mt-4">
+            <div className="text-success font-bold">✅ نجح: {bulkResults.success.length} موقع</div>
             {bulkResults.errors.length > 0 && (
-              <div style={{ color: "red" }}>
+              <div className="text-danger font-bold">
                 ❌ فشل: {bulkResults.errors.map((e) => `${e.name} (${e.error})`).join("; ")}
               </div>
             )}

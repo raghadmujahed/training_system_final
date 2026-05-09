@@ -155,23 +155,21 @@ const TraineeStudents = ({ siteType = "school" }) => {
   return (
     <>
       <style>{fadeIn}{spin}</style>
-      <div style={{ animation: "fadeIn 0.4s ease" }}>
+      <div className="animate-[fadeIn_0.4s_ease]">
         {/* Hero */}
-        <div style={{
+        <div className="text-white mb-6 py-8 px-10 rounded-[20px] transition-all duration-400 ease" style={{
           background: usePsychForm
             ? "linear-gradient(135deg, #0e7490 0%, #0891b2 60%, #06b6d4 100%)"
             : "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-          borderRadius: 20, padding: "2rem 2.5rem", color: "white", marginBottom: "1.5rem",
           boxShadow: usePsychForm ? "0 8px 32px rgba(14,116,144,0.3)" : "0 8px 32px rgba(30,58,95,0.3)",
-          transition: "all 0.4s ease",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
               <ClipboardCheck size={28} />
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>تقييم الطلبة</h1>
-              <p style={{ margin: "0.25rem 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
+              <h1 className="m-0 text-[1.5rem] font-extrabold">تقييم الطلبة</h1>
+              <p className="m-0 mt-1 opacity-90 text-[0.95rem]">
                 {usePsychForm ? "نموذج تقييم طلاب علم النفس" : "نموذج تقييم طلاب أصول التربية"}
               </p>
             </div>
@@ -185,33 +183,28 @@ const TraineeStudents = ({ siteType = "school" }) => {
         ) : (
           <>
             {/* Student Selection Card */}
-            <div style={{
-              background: "#fff", borderRadius: 16, padding: "1.5rem 2rem",
-              border: "1px solid #e2e8f0", marginBottom: "1.25rem",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #dbeafe, #bfdbfe)", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div className="bg-white rounded-2xl p-6 px-8 border border-[#e2e8f0] mb-5 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-[10px] text-[#2563eb] flex items-center justify-center bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe]">
                   <Filter size={18} />
                 </div>
-                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#1e293b" }}>اختيار الطالب</h3>
+                <h3 className="m-0 text-[1.1rem] font-bold text-[#1e293b]">اختيار الطالب</h3>
               </div>
 
               {isSchoolManager && (
-                <div style={{ marginBottom: "1rem" }}>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.5rem", display: "block" }}>تصفية حسب القسم</label>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div className="mb-4">
+                  <label className="text-[0.85rem] font-semibold text-[#475569] mb-2 block">تصفية حسب القسم</label>
+                  <div className="flex gap-2">
                     {[
                       { val: "education", label: "أصول التربية", activeBg: "#1d4ed8" },
                       { val: "psychology", label: "علم النفس", activeBg: "#7c3aed" },
                     ].map(opt => (
                       <button key={opt.val} type="button" onClick={() => handleDeptFilterChange(opt.val)}
+                        className="py-2 px-5 rounded-full font-bold text-[0.85rem] cursor-pointer transition-all"
                         style={{
-                          padding: "0.5rem 1.25rem", borderRadius: 99, fontWeight: 700, fontSize: "0.85rem",
                           border: deptFilter === opt.val ? "none" : "1.5px solid #e2e8f0",
                           background: deptFilter === opt.val ? opt.activeBg : "#f8fafc",
                           color: deptFilter === opt.val ? "white" : "#475569",
-                          cursor: "pointer", transition: "all 0.2s",
                           boxShadow: deptFilter === opt.val ? `0 2px 8px ${opt.activeBg}40` : "none",
                         }}
                       >{opt.label}</button>
@@ -221,13 +214,9 @@ const TraineeStudents = ({ siteType = "school" }) => {
               )}
 
               <div>
-                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.5rem", display: "block" }}>اختر الطالب المتدرب</label>
+                <label className="text-[0.85rem] font-semibold text-[#475569] mb-2 block">اختر الطالب المتدرب</label>
                 <select value={selectedStudentId ?? ""} onChange={handleStudentChange} disabled={!filteredStudents.length}
-                  style={{
-                    width: "100%", maxWidth: 400, padding: "0.65rem 1rem", borderRadius: 10,
-                    border: "1.5px solid #e2e8f0", fontSize: "0.9rem", fontWeight: 500,
-                    background: "#f8fafc", color: "#1e293b", outline: "none",
-                  }}
+                  className="w-full max-w-[400px] py-[0.65rem] px-4 rounded-[10px] border-[1.5px] border-[#e2e8f0] text-[0.9rem] font-medium bg-[#f8fafc] text-[#1e293b] outline-none"
                 >
                   <option value="">— اختر الطالب —</option>
                   {filteredStudents.map((s) => (
@@ -241,19 +230,15 @@ const TraineeStudents = ({ siteType = "school" }) => {
 
             {/* Student Info Card */}
             {selectedStudent && (
-              <div style={{
-                background: "#fff", borderRadius: 16, padding: "1.5rem 2rem",
-                border: "1px solid #e2e8f0", marginBottom: "1.25rem",
-                boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #e0f2fe, #bae6fd)", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div className="bg-white rounded-2xl p-6 px-8 border border-[#e2e8f0] mb-5 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-[10px] text-[#0284c7] flex items-center justify-center bg-gradient-to-br from-[#e0f2fe] to-[#bae6fd]">
                     <User size={18} />
                   </div>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#1e293b" }}>بيانات الطالب</h3>
+                  <h3 className="m-0 text-[1.1rem] font-bold text-[#1e293b]">بيانات الطالب</h3>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
                   {[
                     { icon: User, label: "اسم الطالب", value: selectedStudent.name, color: "#2563eb", bg: "#dbeafe" },
                     { icon: GraduationCap, label: "الجامعة", value: selectedStudent.universityName, color: "#7c3aed", bg: "#ede9fe" },
@@ -266,13 +251,13 @@ const TraineeStudents = ({ siteType = "school" }) => {
                   ].map((item, i) => {
                     const Icon = item.icon;
                     return (
-                      <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", background: "#f8fafc", borderRadius: 10, border: "1px solid #f1f5f9" }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 9, background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <div key={i} className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-[10px] border border-[#f1f5f9]">
+                        <div className="w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0" style={{ background: item.bg, color: item.color }}>
                           <Icon size={16} />
                         </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 500 }}>{item.label}</div>
-                          <div style={{ fontSize: "0.88rem", fontWeight: 700, color: "#1e293b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.value}</div>
+                        <div className="min-w-0">
+                          <div className="text-[0.72rem] text-[#94a3b8] font-medium">{item.label}</div>
+                          <div className="text-[0.88rem] font-bold text-[#1e293b] overflow-hidden text-ellipsis whitespace-nowrap">{item.value}</div>
                         </div>
                       </div>
                     );
@@ -282,50 +267,42 @@ const TraineeStudents = ({ siteType = "school" }) => {
             )}
 
             {/* Evaluation Form Card */}
-            <div style={{
-              background: "#fff", borderRadius: 16, padding: "1.5rem 2rem",
-              border: "1px solid #e2e8f0",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 10,
+            <div className="bg-white rounded-2xl p-6 px-8 border border-[#e2e8f0] shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-10 h-10 rounded-[10px] flex items-center justify-center" style={{
                   background: usePsychForm ? "linear-gradient(135deg, #ecfeff, #cffafe)" : "linear-gradient(135deg, #dbeafe, #bfdbfe)",
                   color: usePsychForm ? "#0e7490" : "#1e3a5f",
-                  display: "flex", alignItems: "center", justifyContent: "center",
                 }}>
                   <ClipboardCheck size={18} />
                 </div>
-                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, color: "#1e293b" }}>نموذج التقييم</h3>
+                <h3 className="m-0 text-[1.1rem] font-bold text-[#1e293b]">نموذج التقييم</h3>
               </div>
 
               <form onSubmit={handleSubmit}>
                 {usePsychForm ? (
-                  <div style={{ overflowX: "auto", marginBottom: "1.5rem", borderRadius: 12, border: "1px solid #cffafe" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", direction: "rtl", fontSize: "0.88rem" }}>
+                  <div className="overflow-x-auto mb-6 rounded-xl border border-[#cffafe]">
+                    <table className="w-full border-collapse direction-rtl text-[0.88rem]">
                       <thead>
-                        <tr style={{ background: "linear-gradient(135deg, #0e7490 0%, #0891b2 100%)", color: "white" }}>
-                          <th style={{ padding: "0.85rem 0.6rem", width: 44, textAlign: "center" }}>#</th>
-                          <th style={{ padding: "0.85rem 0.8rem" }}>المؤشر</th>
-                          {[1,2,3,4,5].map(n => <th key={n} style={{ padding: "0.85rem 0.4rem", width: 54, textAlign: "center" }}>{n}</th>)}
+                        <tr className="text-white bg-gradient-to-br from-[#0e7490] to-[#0891b2]">
+                          <th className="py-[0.85rem] px-[0.6rem] w-11 text-center">#</th>
+                          <th className="py-[0.85rem] px-[0.8rem]">المؤشر</th>
+                          {[1,2,3,4,5].map(n => <th key={n} className="py-[0.85rem] px-[0.4rem] w-[54px] text-center">{n}</th>)}
                         </tr>
                       </thead>
                       <tbody>
                         {PSYCH_EVAL_FIELDS.map((field, idx) => (
-                          <tr key={field.key} style={{ background: idx % 2 === 0 ? "#f0fdfa" : "white" }}>
-                            <td style={{ padding: "0.75rem", textAlign: "center", fontWeight: 700, color: "#0e7490" }}>{idx + 1}</td>
-                            <td style={{ padding: "0.75rem 1rem", color: "#1e293b", fontWeight: 500 }}>{field.label}</td>
+                          <tr key={field.key} className={idx % 2 === 0 ? "bg-[#f0fdfa]" : "bg-white"}>
+                            <td className="py-3 text-center font-bold text-[#0e7490]">{idx + 1}</td>
+                            <td className="py-3 px-4 text-[#1e293b] font-medium">{field.label}</td>
                             {[1,2,3,4,5].map(rating => (
-                              <td key={rating} style={{ padding: "0.4rem", textAlign: "center" }}>
+                              <td key={rating} className="py-[0.4rem] text-center">
                                 <button type="button" onClick={() => handleNotesChange(field.key, rating)}
+                                  className="w-9 h-9 rounded-full font-bold cursor-pointer transition-all text-[0.82rem]"
                                   style={{
-                                    width: 36, height: 36, borderRadius: "50%",
                                     border: selectedScores[field.key] === rating ? "none" : "1.5px solid #a5f3fc",
                                     background: selectedScores[field.key] === rating
                                       ? "linear-gradient(135deg, #0e7490, #0891b2)" : "#f0fdfa",
                                     color: selectedScores[field.key] === rating ? "white" : "#0e7490",
-                                    fontWeight: 700, cursor: "pointer", fontSize: "0.82rem",
-                                    transition: "all 0.15s",
                                     boxShadow: selectedScores[field.key] === rating ? "0 2px 8px rgba(14,116,144,0.3)" : "none",
                                   }}
                                 >{rating}</button>
@@ -333,57 +310,49 @@ const TraineeStudents = ({ siteType = "school" }) => {
                             ))}
                           </tr>
                         ))}
-                        <tr style={{ background: "#ecfeff" }}>
-                          <td colSpan={2} style={{ padding: "0.85rem", textAlign: "center", fontWeight: 800, color: "#0e7490" }}>المجموع</td>
-                          <td colSpan={5} style={{ padding: "0.85rem", textAlign: "center", fontWeight: 800, color: "#0e7490", fontSize: "1.1rem" }}>{psychTotal} / 25</td>
+                        <tr className="bg-[#ecfeff]">
+                          <td colSpan={2} className="py-[0.85rem] text-center font-extrabold text-[#0e7490]">المجموع</td>
+                          <td colSpan={5} className="py-[0.85rem] text-center font-extrabold text-[#0e7490] text-[1.1rem]">{psychTotal} / 25</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <div style={{ overflowX: "auto", marginBottom: "1.5rem", borderRadius: 12, border: "1px solid #dbeafe" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", direction: "rtl", fontSize: "0.88rem" }}>
+                  <div className="overflow-x-auto mb-6 rounded-xl border border-[#dbeafe]">
+                    <table className="w-full border-collapse direction-rtl text-[0.88rem]">
                       <thead>
-                        <tr style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)", color: "white" }}>
-                          <th style={{ padding: "0.85rem 0.6rem", width: 44, textAlign: "center" }}>#</th>
-                          <th style={{ padding: "0.85rem 0.8rem" }}>المحور</th>
-                          <th style={{ padding: "0.85rem 0.6rem", width: 130, textAlign: "center" }}>التقدير (0-10)</th>
-                          <th style={{ padding: "0.85rem 0.8rem" }}>الملاحظات</th>
+                        <tr className="text-white bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a]">
+                          <th className="py-[0.85rem] px-[0.6rem] w-11 text-center">#</th>
+                          <th className="py-[0.85rem] px-[0.8rem]">المحور</th>
+                          <th className="py-[0.85rem] px-[0.6rem] w-[130px] text-center">التقدير (0-10)</th>
+                          <th className="py-[0.85rem] px-[0.8rem]">الملاحظات</th>
                         </tr>
                       </thead>
                       <tbody>
                         {EDUC_EVAL_FIELDS.map((field, idx) => (
-                          <tr key={field.key} style={{ background: idx % 2 === 0 ? "#f8fafc" : "white" }}>
-                            <td style={{ padding: "0.75rem", textAlign: "center", fontWeight: 700, color: "#1e3a5f" }}>{idx + 1}</td>
-                            <td style={{ padding: "0.75rem 1rem", fontWeight: 500, color: "#1e293b" }}>{field.label}</td>
-                            <td style={{ padding: "0.5rem", textAlign: "center" }}>
+                          <tr key={field.key} className={idx % 2 === 0 ? "bg-[#f8fafc]" : "bg-white"}>
+                            <td className="py-3 text-center font-bold text-[#1e3a5f]">{idx + 1}</td>
+                            <td className="py-3 px-4 font-medium text-[#1e293b]">{field.label}</td>
+                            <td className="py-2 text-center">
                               <input type="number" min="0" max="10"
                                 value={selectedScores[field.key] ?? ""}
                                 onChange={(e) => handleNotesChange(field.key, e.target.value)}
                                 placeholder="0-10"
-                                style={{
-                                  width: 80, textAlign: "center", border: "1.5px solid #cbd5e1",
-                                  borderRadius: 8, padding: "0.4rem 0.5rem", fontSize: "0.9rem",
-                                  fontWeight: 600, background: "#f8fafc", outline: "none",
-                                }}
+                                className="w-20 text-center border-[1.5px] border-[#cbd5e1] rounded-lg py-[0.4rem] px-[0.5rem] text-[0.9rem] font-semibold bg-[#f8fafc] outline-none"
                               />
                             </td>
-                            <td style={{ padding: "0.5rem" }}>
+                            <td className="py-2">
                               <textarea value={selectedScores[`${field.key}__notes`] || ""}
                                 onChange={(e) => handleNotesChange(`${field.key}__notes`, e.target.value)}
                                 placeholder="ملاحظات" rows={2}
-                                style={{
-                                  width: "100%", border: "1.5px solid #e2e8f0", borderRadius: 8,
-                                  padding: "0.4rem 0.6rem", fontSize: "0.85rem", resize: "vertical",
-                                  background: "#f8fafc", outline: "none",
-                                }}
+                                className="w-full border-[1.5px] border-[#e2e8f0] rounded-lg py-[0.4rem] px-[0.6rem] text-[0.85rem] resize-y bg-[#f8fafc] outline-none"
                               />
                             </td>
                           </tr>
                         ))}
-                        <tr style={{ background: "#eff6ff" }}>
-                          <td colSpan={2} style={{ padding: "0.85rem", textAlign: "center", fontWeight: 800, color: "#1e3a5f" }}>المجموع</td>
-                          <td style={{ padding: "0.85rem", textAlign: "center", fontWeight: 800, color: "#1e3a5f", fontSize: "1.1rem" }}>{educTotal} / 100</td>
+                        <tr className="bg-[#eff6ff]">
+                          <td colSpan={2} className="py-[0.85rem] text-center font-extrabold text-[#1e3a5f]">المجموع</td>
+                          <td className="py-[0.85rem] text-center font-extrabold text-[#1e3a5f] text-[1.1rem]">{educTotal} / 100</td>
                           <td />
                         </tr>
                       </tbody>
@@ -392,32 +361,25 @@ const TraineeStudents = ({ siteType = "school" }) => {
                 )}
 
                 {/* General Notes */}
-                <div style={{ marginBottom: "1.5rem" }}>
-                  <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.5rem", display: "block" }}>ملاحظات عامة</label>
+                <div className="mb-6">
+                  <label className="text-[0.85rem] font-semibold text-[#475569] mb-2 block">ملاحظات عامة</label>
                   <textarea value={selectedScores.__generalNotes || ""}
                     onChange={(e) => handleGeneralNotesChange(e.target.value)}
                     placeholder="اكتب ملاحظات عامة حول أداء الطالب..." rows={3}
-                    style={{
-                      width: "100%", border: "1.5px solid #e2e8f0", borderRadius: 12,
-                      padding: "0.75rem 1rem", fontSize: "0.9rem", resize: "vertical",
-                      background: "#f8fafc", outline: "none",
-                    }}
+                    className="w-full border-[1.5px] border-[#e2e8f0] rounded-xl py-3 px-4 text-[0.9rem] resize-y bg-[#f8fafc] outline-none"
                   />
                 </div>
 
                 {/* Submit */}
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div className="flex justify-end">
                   <button type="submit" disabled={saving || !selectedStudent}
+                    className="inline-flex items-center gap-2 py-[0.85rem] px-8 border-none rounded-xl text-white text-[1rem] font-bold transition-all shadow-[0_4px_12px_rgba(30,58,95,0.3)]"
                     style={{
-                      display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                      padding: "0.85rem 2rem", border: "none", borderRadius: 12,
                       background: saving ? "#94a3b8" : usePsychForm
                         ? "linear-gradient(135deg, #0e7490, #0891b2)"
                         : "linear-gradient(135deg, #1e3a5f, #2d5f8a)",
-                      color: "white", fontSize: "1rem", fontWeight: 700,
                       cursor: saving || !selectedStudent ? "not-allowed" : "pointer",
-                      opacity: saving ? 0.7 : 1, transition: "all 0.2s",
-                      boxShadow: "0 4px 12px rgba(30,58,95,0.3)",
+                      opacity: saving ? 0.7 : 1,
                     }}
                   >
                     {saving ? <LoadingSpinner size="button" /> : <Save size={20} />}

@@ -43,7 +43,7 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
           <div className="hero-icon">
             <GitBranch size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">{isPsych ? "متابعة حالة الطلبات — علم النفس" : "حالة التوزيع"}</h1>
             <p className="hero-subtitle">
               {isPsych
@@ -56,7 +56,7 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
 
       {error && (
         <div className="alert-custom alert-danger mb-3">
-          <p style={{ margin: 0 }}>{error}</p>
+          <p className="m-0">{error}</p>
         </div>
       )}
 
@@ -78,14 +78,14 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
         <EmptyState title="لا توجد طلبات" description="لا يوجد طلبات تطابق الفلاتر المحددة." />
       ) : (
         <div className="section-card">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div className="flex items-center gap-[10px] mb-4">
             <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
               <GitBranch size={20} />
             </div>
-            <h4 style={{ margin: 0 }}>مسارات التوزيع ({requests.length})</h4>
+            <h4 className="m-0">مسارات التوزيع ({requests.length})</h4>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {visibleRequests.map((r) => {
               const s0 = r.students?.[0];
               const studentName = s0?.user?.name || r.requested_by?.name || "—";
@@ -99,35 +99,17 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
               return (
                 <div
                   key={r.id}
-                  style={{
-                    border: "1px solid var(--border)",
-                    borderRadius: 14,
-                    padding: "16px 18px",
-                    background: "#fff",
-                    transition: "var(--transition)",
-                  }}
+                  className="border border-[var(--border)] rounded-[14px] py-4 px-[18px] bg-white transition-[var(--transition)]"
                 >
                   {/* Header Row */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 10,
-                        background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                        fontSize: "0.88rem",
-                        fontWeight: 800,
-                      }}>
+                  <div className="flex justify-between items-center mb-[10px]">
+                    <div className="flex items-center gap-[10px]">
+                      <div className="w-[38px] h-[38px] rounded-[10px] shrink-0 flex items-center justify-center text-white text-[0.95rem] font-extrabold" style={{ background: "linear-gradient(135deg, var(--accent) 0%, #c49b66 100%)" }}>
                         {studentName.charAt(0)}
                       </div>
                       <div>
-                        <h6 style={{ margin: 0, fontSize: "0.95rem" }}>{studentName}</h6>
-                        <span style={{ fontSize: "0.78rem", color: "var(--text-faint)" }}>
+                        <h6 className="m-0 text-[0.95rem]">{studentName}</h6>
+                        <span className="text-[0.78rem] text-[var(--text-faint)]">
                           {universityId}
                         </span>
                       </div>
@@ -136,40 +118,35 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
                   </div>
 
                   {/* Info Chips */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 14px", fontSize: "0.82rem", color: "var(--text-soft)", marginBottom: 12 }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <GraduationCap size={13} style={{ color: "var(--accent)" }} />
+                  <div className="flex flex-wrap gap-x-[14px] gap-y-[6px] text-[0.82rem] text-[var(--text-soft)] mb-3">
+                    <span className="flex items-center gap-1">
+                      <GraduationCap size={13} className="text-[var(--accent)]" />
                       {courseName}
                     </span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                      <Building2 size={13} style={{ color: "var(--info)" }} />
+                    <span className="flex items-center gap-1">
+                      <Building2 size={13} className="text-[var(--info)]" />
                       {siteName}
                     </span>
                     {governingBody && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <GitBranch size={13} style={{ color: "var(--primary)" }} />
+                      <span className="flex items-center gap-1">
+                        <GitBranch size={13} className="text-[var(--primary)]" />
                         {getGoverningBodyLabel(governingBody)}
                       </span>
                     )}
                     {phone && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4, direction: "ltr" }}>
+                      <span className="flex items-center gap-1 direction-ltr">
                         📱 {phone}
                       </span>
                     )}
                     {email && (
-                      <span style={{ display: "flex", alignItems: "center", gap: 4, direction: "ltr" }}>
+                      <span className="flex items-center gap-1 direction-ltr">
                         ✉️ {email}
                       </span>
                     )}
                   </div>
 
                   {/* Stepper */}
-                  <div style={{
-                    background: "#f8f9fb",
-                    borderRadius: 10,
-                    padding: "10px 14px",
-                    border: "1px solid var(--border)",
-                  }}>
+                  <div className="bg-[#f8f9fb] rounded-[10px] py-[10px] px-[14px] border border-[var(--border)]">
                     <DistributionStatusStepper
                       currentStatus={r.book_status}
                       governingBody={governingBody}
@@ -184,23 +161,7 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
           {hasMore && (
             <button
               onClick={() => setShowAll(!showAll)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                width: "100%",
-                padding: "12px",
-                marginTop: 12,
-                background: "transparent",
-                border: "1px dashed var(--border)",
-                borderRadius: 12,
-                color: "var(--info)",
-                fontSize: "0.9rem",
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
+              className="flex items-center justify-center gap-[6px] w-full py-3 mt-3 bg-transparent border border-dashed border-[var(--border)] rounded-xl text-[var(--info)] text-[0.9rem] font-bold cursor-pointer transition-all duration-200"
             >
               {showAll ? (
                 <>

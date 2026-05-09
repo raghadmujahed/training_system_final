@@ -104,14 +104,14 @@ export default function DailyReports() {
             const stu = log.training_assignment?.enrollment?.user;
             return (
               <div className="list-item-card" key={log.id}>
-                <div className="panel-header" style={{ alignItems: "center" }}>
+                <div className="panel-header items-center">
                   <div>
                     <h4 className="panel-title">{stu?.name || "طالب"}</h4>
                     <p className="panel-subtitle">
                       التاريخ: {log.log_date} | من {log.start_time || "—"} إلى {log.end_time || "—"}
                     </p>
                   </div>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div className="flex gap-2 items-center">
                     {statusBadge(log.status)}
                     {log.status === "submitted" && (
                       <button
@@ -125,23 +125,23 @@ export default function DailyReports() {
                 </div>
 
                 {log.activities_performed && (
-                  <div style={{ marginTop: 8 }}>
+                  <div className="mt-2">
                     <strong>الأنشطة:</strong>
-                    <p className="text-soft" style={{ marginTop: 4 }}>{log.activities_performed}</p>
+                    <p className="text-soft mt-1">{log.activities_performed}</p>
                   </div>
                 )}
 
                 {log.student_reflection && (
-                  <div style={{ marginTop: 6 }}>
+                  <div className="mt-[6px]">
                     <strong>تأمل الطالب:</strong>
-                    <p className="text-soft" style={{ marginTop: 4 }}>{log.student_reflection}</p>
+                    <p className="text-soft mt-1">{log.student_reflection}</p>
                   </div>
                 )}
 
                 {log.supervisor_notes && (
-                  <div style={{ marginTop: 6 }}>
+                  <div className="mt-[6px]">
                     <strong>ملاحظات المشرف:</strong>
-                    <p style={{ marginTop: 4 }}>{log.supervisor_notes}</p>
+                    <p className="mt-1">{log.supervisor_notes}</p>
                   </div>
                 )}
               </div>
@@ -153,7 +153,7 @@ export default function DailyReports() {
       {/* Review Modal */}
       {showModal && selectedLog && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+          <div className="modal-content max-w-[520px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>مراجعة السجل اليومي</h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
@@ -162,7 +162,7 @@ export default function DailyReports() {
               <div className="modal-body">
                 {formError && <p className="text-danger">{formError}</p>}
 
-                <div style={{ marginBottom: 12 }}>
+                <div className="mb-3">
                   <p><strong>الطالب:</strong> {selectedLog.training_assignment?.enrollment?.user?.name || "—"}</p>
                   <p><strong>التاريخ:</strong> {selectedLog.log_date}</p>
                   <p><strong>الأنشطة:</strong> {selectedLog.activities_performed || "—"}</p>

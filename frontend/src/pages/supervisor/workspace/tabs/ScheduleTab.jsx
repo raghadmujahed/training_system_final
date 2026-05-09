@@ -164,21 +164,21 @@ export default function ScheduleTab({ studentId, student }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ padding: "2.5rem", textAlign: "center" }}>
-        <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(176,58,72,0.08)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+      <div className="section-card p-10 text-center">
+        <div className="w-14 h-14 rounded-full bg-[rgba(176,58,72,0.08)] flex items-center justify-center mx-auto mb-4">
           <AlertCircle size={28} style={{ color: "var(--danger)" }} />
         </div>
-        <p className="text-danger" style={{ fontSize: "1.05rem", fontWeight: 600, margin: 0 }}>{error}</p>
+        <p className="text-danger text-[1.05rem] font-semibold m-0">{error}</p>
       </div>
     );
   }
 
   if (!hasSchedule) {
     return (
-      <div className="section-card" style={{ padding: "3rem", textAlign: "center" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📅</div>
-        <h4 style={{ margin: "0 0 0.5rem", color: "#142a42" }}>لم يتم إنشاء جدول الحصص الأسبوعية بعد</h4>
-        <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>
+      <div className="section-card p-12 text-center">
+        <div className="text-[3rem] mb-4">📅</div>
+        <h4 className="m-0 mb-2 text-[#142a42]">لم يتم إنشاء جدول الحصص الأسبوعية بعد</h4>
+        <p className="m-0 text-[#64748b] text-[0.9rem]">
           الطالب لم يقم بإنشاء جدول الحصص الأسبوعية حتى الآن.
         </p>
       </div>
@@ -190,30 +190,28 @@ export default function ScheduleTab({ studentId, student }) {
       <style>{printStyles}</style>
 
       {/* Progress Card */}
-      <div className="section-card no-print" style={{ marginBottom: "16px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-          <h4 style={{ margin: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="section-card no-print mb-4">
+        <div className="flex justify-between items-center mb-3">
+          <h4 className="m-0 flex items-center gap-2">
             <Calendar size={18} /> نسبة اكتمال جدول الحصص
           </h4>
-          <span style={{ fontSize: "1.3rem", fontWeight: "700", color: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545" }}>
+          <span className="text-[1.3rem] font-bold" style={{ color: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545" }}>
             {completionRate}%
           </span>
         </div>
-        <div style={{ background: "#e9ecef", borderRadius: "10px", height: "12px", overflow: "hidden" }}>
+        <div className="bg-[#e9ecef] rounded-[10px] h-3 overflow-hidden">
           <div
+            className="h-full rounded-[10px] transition-[width] duration-500 ease"
             style={{
-              height: "100%",
               width: `${completionRate}%`,
               background: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545",
-              borderRadius: "10px",
-              transition: "width 0.5s ease",
             }}
           />
         </div>
-        <div style={{ marginTop: "12px", display: "flex", gap: "16px", flexWrap: "wrap", fontSize: "0.85rem", color: "#64748b" }}>
+        <div className="mt-3 flex gap-4 flex-wrap text-[0.85rem] text-[#64748b]">
           <span>📊 الحصص المحددة: {filledCount} من {totalCells}</span>
           {programStatus && (
-            <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <span className="flex items-center gap-1">
               <CheckCircle size={14} /> الحالة: {programStatus === "approved" ? "معتمد" : programStatus === "submitted" ? "مُقدم" : "مسودة"}
             </span>
           )}
@@ -221,20 +219,10 @@ export default function ScheduleTab({ studentId, student }) {
       </div>
 
       {/* Actions */}
-      <div className="section-card no-print" style={{ marginBottom: "16px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+      <div className="section-card no-print mb-4 flex gap-3 flex-wrap">
         <button
           onClick={handlePrint}
-          style={{
-            padding: "0.5rem 1rem",
-            fontSize: "0.85rem",
-            border: "1px solid #e2e8f0",
-            borderRadius: "6px",
-            background: "white",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.4rem",
-          }}
+          className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-white cursor-pointer flex items-center gap-[0.4rem]"
         >
           <Printer size={16} /> طباعة
         </button>
@@ -243,19 +231,7 @@ export default function ScheduleTab({ studentId, student }) {
             href={`${apiOrigin}/storage/${filePath.replace(/^\//, "")}`}
             target="_blank"
             rel="noreferrer"
-            style={{
-              padding: "0.5rem 1rem",
-              fontSize: "0.85rem",
-              border: "1px solid #e2e8f0",
-              borderRadius: "6px",
-              background: "white",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              color: "#0d6efd",
-              textDecoration: "none",
-            }}
+            className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-white cursor-pointer flex items-center gap-[0.4rem] text-[#0d6efd] no-underline"
           >
             <Download size={16} /> تحميل PDF
           </a>
@@ -263,53 +239,53 @@ export default function ScheduleTab({ studentId, student }) {
       </div>
 
       {/* Schedule Display */}
-      <div id="printable-schedule" className="section-card" style={{ padding: "1.5rem" }}>
+      <div id="printable-schedule" className="section-card p-6">
         {/* Print Header */}
-        <div className="print-header" style={{ marginBottom: "20px" }}>
-          <h2 style={{ margin: 0, fontSize: "16px", fontWeight: 700, textAlign: "center", color: "#142a42" }}>
+        <div className="print-header mb-5">
+          <h2 className="m-0 text-[16px] font-bold text-center text-[#142a42]">
             نموذج جدول الحصص الأسبوعية
           </h2>
-          <p style={{ margin: "4px 0 0", fontSize: "12px", textAlign: "center", color: "#64748b" }}>
+          <p className="m-0 mt-1 text-[12px] text-center text-[#64748b]">
             برنامج التدريب العملي - جامعة الخليل
           </p>
         </div>
 
         {/* Student Info Table */}
-        <div className="print-header" style={{ marginBottom: "20px" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px", direction: "rtl", border: "1px solid #142a42" }}>
+        <div className="print-header mb-5">
+          <table className="w-full border-collapse text-[12px] direction-rtl border border-[#142a42]">
             <tbody>
               <tr>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", width: "15%", background: "#142a42", color: "white", fontWeight: 700 }}>اسم الطالب:</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", width: "35%" }}>{studentInfo.name}</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", width: "15%", background: "#142a42", color: "white", fontWeight: 700 }}>المدرسة:</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", width: "35%" }}>{studentInfo.school}</td>
+                <td className="py-2 px-3 border border-[#142a42] w-[15%] bg-[#142a42] text-white font-bold">اسم الطالب:</td>
+                <td className="py-2 px-3 border border-[#142a42] w-[35%]">{studentInfo.name}</td>
+                <td className="py-2 px-3 border border-[#142a42] w-[15%] bg-[#142a42] text-white font-bold">المدرسة:</td>
+                <td className="py-2 px-3 border border-[#142a42] w-[35%]">{studentInfo.school}</td>
               </tr>
-              <tr style={{ background: "#f8fafc" }}>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", background: "#142a42", color: "white", fontWeight: 700 }}>الرقم الجامعي:</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42" }}>{studentInfo.university_id}</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", background: "#142a42", color: "white", fontWeight: 700 }}>المعلم المتعاون:</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42" }}>{studentInfo.teacher_name}</td>
+              <tr className="bg-[#f8fafc]">
+                <td className="py-2 px-3 border border-[#142a42] bg-[#142a42] text-white font-bold">الرقم الجامعي:</td>
+                <td className="py-2 px-3 border border-[#142a42]">{studentInfo.university_id}</td>
+                <td className="py-2 px-3 border border-[#142a42] bg-[#142a42] text-white font-bold">المعلم المتعاون:</td>
+                <td className="py-2 px-3 border border-[#142a42]">{studentInfo.teacher_name}</td>
               </tr>
               <tr>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", background: "#142a42", color: "white", fontWeight: 700 }}>التخصص:</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42" }}>{studentInfo.major}</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42", background: "#142a42", color: "white", fontWeight: 700 }}>الفترة:</td>
-                <td style={{ padding: "8px 12px", border: "1px solid #142a42" }}>{studentInfo.semester}</td>
+                <td className="py-2 px-3 border border-[#142a42] bg-[#142a42] text-white font-bold">التخصص:</td>
+                <td className="py-2 px-3 border border-[#142a42]">{studentInfo.major}</td>
+                <td className="py-2 px-3 border border-[#142a42] bg-[#142a42] text-white font-bold">الفترة:</td>
+                <td className="py-2 px-3 border border-[#142a42]">{studentInfo.semester}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* Schedule Table */}
-        <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "center", fontSize: "0.9rem" }}>
+        <div className="border border-[#e2e8f0] rounded-lg overflow-hidden">
+          <table className="w-full border-collapse text-center text-[0.9rem]">
             <thead>
               <tr>
-                <th style={{ padding: "12px", background: "#142a42", color: "white", fontWeight: 700, fontSize: "0.85rem", width: "90px" }}>
+                <th className="p-3 bg-[#142a42] text-white font-bold text-[0.85rem] w-[90px]">
                   اليوم / الحصة
                 </th>
                 {periods.map((period) => (
-                  <th key={period.id} style={{ padding: "10px 4px", background: "#142a42", color: "white", fontWeight: 600, fontSize: "0.8rem" }}>
+                  <th key={period.id} className="py-[10px] px-1 bg-[#142a42] text-white font-semibold text-[0.8rem]">
                     {period.label}
                   </th>
                 ))}
@@ -317,8 +293,8 @@ export default function ScheduleTab({ studentId, student }) {
             </thead>
             <tbody>
               {days.map((day, dayIdx) => (
-                <tr key={day.id} style={{ backgroundColor: dayIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
-                  <td style={{ padding: "12px", fontWeight: 700, fontSize: "0.85rem", color: "#142a42", border: "1px solid #e2e8f0", background: "#f1f5f9" }}>
+                <tr key={day.id} className={dayIdx % 2 === 0 ? "bg-white" : "bg-[#f8fafc]"}>
+                  <td className="p-3 font-bold text-[0.85rem] text-[#142a42] border border-[#e2e8f0] bg-[#f1f5f9]">
                     {day.label}
                   </td>
                   {periods.map((period) => {
@@ -327,10 +303,8 @@ export default function ScheduleTab({ studentId, student }) {
                     return (
                       <td
                         key={`${day.id}-${period.id}`}
+                        className="py-3 px-2 border border-[#e2e8f0] min-w-[80px]"
                         style={{
-                          padding: "12px 8px",
-                          border: "1px solid #e2e8f0",
-                          minWidth: "80px",
                           backgroundColor: isFilled ? "#f0f9ff" : "white",
                           color: isFilled ? "#0369a1" : "#94a3b8",
                           fontWeight: isFilled ? 600 : 400,
@@ -347,13 +321,13 @@ export default function ScheduleTab({ studentId, student }) {
         </div>
 
         {/* Legend */}
-        <div className="no-print" style={{ marginTop: "1rem", display: "flex", gap: "1rem", fontSize: "0.8rem", color: "#64748b" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <span style={{ width: 16, height: 16, background: "#f0f9ff", border: "1px solid #e2e8f0", borderRadius: "4px" }}></span>
+        <div className="no-print mt-4 flex gap-4 text-[0.8rem] text-[#64748b]">
+          <span className="flex items-center gap-1">
+            <span className="w-4 h-4 bg-[#f0f9ff] border border-[#e2e8f0] rounded"></span>
             حصة محددة
           </span>
-          <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            <span style={{ width: 16, height: 16, background: "white", border: "1px solid #e2e8f0", borderRadius: "4px" }}></span>
+          <span className="flex items-center gap-1">
+            <span className="w-4 h-4 bg-white border border-[#e2e8f0] rounded"></span>
             غير محدد
           </span>
         </div>

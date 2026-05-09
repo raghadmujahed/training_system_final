@@ -46,8 +46,8 @@ export default function CommunicationTab({ studentId }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
-        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card border-r-4 border-[var(--danger)]">
+        <p className="m-0 flex items-center gap-2">
           <AlertTriangle size={20} />
           {error}
         </p>
@@ -85,19 +85,19 @@ export default function CommunicationTab({ studentId }) {
 
   return (
     <div>
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card mb-4">
+        <h4 className="mt-0 flex items-center gap-2">
           <Send size={20} />
           إرسال رسالة جديدة
         </h4>
         {success && (
-          <div className="section-card" style={{ padding: 12, marginBottom: 12, background: "rgba(25, 135, 84, 0.08)" }}>
-            <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+          <div className="section-card p-3 mb-3 bg-[rgba(25,135,84,0.08)]">
+            <Check size={18} className="align-middle ml-[6px]" />
             تم إرسال الرسالة بنجاح
           </div>
         )}
         <form onSubmit={handleSend}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 16 }}>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
             <div className="form-field">
               <label className="form-label-custom" htmlFor="comm-message-to">
                 المرسل إليه
@@ -151,61 +151,44 @@ export default function CommunicationTab({ studentId }) {
       </div>
 
       <div className="section-card">
-        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+        <h4 className="mt-0 flex items-center gap-2">
           <MessageCircle size={20} />
           سجل الرسائل
         </h4>
         {messages.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 32 }} className="text-soft">
+          <div className="text-center p-8 text-soft">
             لا توجد رسائل مسجلة
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {messages.map((message) => (
               <div
                 key={message.id}
-                style={{
-                  display: "flex",
-                  justifyContent: message.is_from_me ? "flex-start" : "flex-end",
-                }}
+                className={`flex ${message.is_from_me ? "justify-start" : "justify-end"}`}
               >
                 <div
-                  className="section-card"
-                  style={{
-                    maxWidth: "85%",
-                    padding: 14,
-                    background: message.is_from_me ? "rgba(13, 110, 253, 0.07)" : "#f7f9fc",
-                    borderColor: message.is_from_me ? "rgba(13, 110, 253, 0.2)" : "var(--border)",
-                  }}
+                  className={`section-card max-w-[85%] p-[14px] ${message.is_from_me ? "bg-[rgba(13,110,253,0.07)] border-[rgba(13,110,253,0.2)]" : "bg-[#f7f9fc] border-[var(--border)]"}`}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <div className="flex items-center gap-2 mb-2">
                     <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: message.is_from_me ? "rgba(13, 110, 253, 0.15)" : "#e9ecef",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
+                      className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center ${message.is_from_me ? "bg-[rgba(13,110,253,0.15)] text-[#0d6efd]" : "bg-[#e9ecef] text-[#666]"}`}
                     >
                       <User size={16} />
                     </div>
                     <div>
-                      <strong style={{ fontSize: "0.95rem" }}>{message.is_from_me ? "أنت" : message.sender_name}</strong>
-                      <div className="text-soft" style={{ fontSize: "0.82rem" }}>
+                      <strong className="text-[0.95rem]">{message.is_from_me ? "أنت" : message.sender_name}</strong>
+                      <div className="text-soft text-[0.82rem]">
                         {message.created_at}
                       </div>
                     </div>
                   </div>
                   {message.related_to && (
-                    <div className="table-actions" style={{ marginBottom: 8 }}>
+                    <div className="table-actions mb-2">
                       {getRelatedIcon(message.related_to)}
                       <span className="badge-custom badge-primary">{getRelatedLabel(message.related_to)}</span>
                     </div>
                   )}
-                  <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{message.content}</p>
+                  <p className="m-0 whitespace-pre-wrap">{message.content}</p>
                 </div>
               </div>
             ))}

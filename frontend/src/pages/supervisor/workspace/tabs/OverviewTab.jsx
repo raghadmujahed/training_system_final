@@ -67,20 +67,20 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+    <div className="grid grid-cols-2 gap-5">
       {hasNoAssignment && (
-        <div className="section-card" style={{ gridColumn: "1 / -1", borderRight: "4px solid #ffc107", backgroundColor: "#fff8e1" }}>
-          <p style={{ margin: 0, color: "#856404", fontSize: "0.9rem" }}>
+        <div className="section-card col-span-2 border-r-4 border-[#ffc107] bg-[#fff8e1]">
+          <p className="m-0 text-[#856404] text-[0.9rem]">
             ⚠️ هذا الطالب مسجل في شعبتك لكن لم يُعيّن في جهة تدريب بعد. بعض البيانات (الحضور، السجلات، التقييم) ستكون متاحة بعد تعيينه.
           </p>
         </div>
       )}
       {/* Student Info Card */}
-      <div className="section-card" style={{ gridColumn: "1 / -1" }}>
-        <h4 style={{ margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+      <div className="section-card col-span-2">
+        <h4 className="m-0 mb-4 flex items-center gap-2">
           📋 البيانات الأساسية
         </h4>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
           <InfoItem label="الاسم الكامل" value={s.name} />
           <InfoItem label="الرقم الجامعي" value={s.university_id} />
           <InfoItem label="التخصص" value={s.specialization} />
@@ -102,10 +102,10 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
 
       {/* Quick Actions */}
       <div className="section-card">
-        <h4 style={{ margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <h4 className="m-0 mb-4 flex items-center gap-2">
           ⚡ إجراءات سريعة
         </h4>
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div className="flex flex-col gap-[10px]">
           <ActionButton icon="💬" label="إرسال رسالة للطالب" onClick={() => handleQuickAction("message_student")} />
           <ActionButton icon="👨‍🏫" label="إرسال رسالة للمشرف الميداني" onClick={() => handleQuickAction("message_mentor")} />
           <ActionButton icon="🗓️" label="جدولة زيارة ميدانية" onClick={() => handleQuickAction("schedule_visit")} color="#6f42c1" />
@@ -117,10 +117,10 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
 
       {/* Summary Stats */}
       <div className="section-card">
-        <h4 style={{ margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+        <h4 className="m-0 mb-4 flex items-center gap-2">
           📊 ملخص الأداء
         </h4>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div className="grid grid-cols-2 gap-3">
           <StatBox label="الحضور" value={data.attendance_rate != null ? `${data.attendance_rate}%` : "—"} color={data.attendance_rate >= 80 ? "#28a745" : "#dc3545"} />
           <StatBox label="السجلات اليومية" value={data.logs_reviewed != null ? `${data.logs_reviewed} / ${data.logs_total}` : "—"} color="#ff9800" />
           <StatBox label="ملف الإنجاز" value={data.portfolio_completion != null ? `${data.portfolio_completion}%` : "—"} color={data.portfolio_completion >= 80 ? "#28a745" : "#fd7e14"} />
@@ -136,12 +136,11 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
 function InfoItem({ label, value, highlight }) {
   return (
     <div>
-      <span style={{ fontSize: "0.75rem", color: "#999", display: "block", marginBottom: "2px" }}>{label}</span>
-      <span style={{
-        fontSize: "0.9rem",
-        fontWeight: "500",
-        color: highlight === true ? "#28a745" : highlight === false ? "#dc3545" : "#333",
-      }}>
+      <span className="text-[0.75rem] text-[#999] block mb-[2px]">{label}</span>
+      <span
+        className="text-[0.9rem] font-medium"
+        style={{ color: highlight === true ? "#28a745" : highlight === false ? "#dc3545" : "#333" }}
+      >
         {value || "—"}
       </span>
     </div>
@@ -152,21 +151,8 @@ function ActionButton({ icon, label, onClick, color }) {
   return (
     <button
       onClick={onClick}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        padding: "10px 14px",
-        background: "#f8f9fa",
-        border: "1px solid #e9ecef",
-        borderRadius: "8px",
-        cursor: "pointer",
-        fontSize: "0.85rem",
-        textAlign: "right",
-        width: "100%",
-        transition: "all 0.2s",
-        borderRight: `3px solid ${color || "#4361ee"}`,
-      }}
+      className="flex items-center gap-[10px] p-3 rounded-lg border border-[#eee] bg-white cursor-pointer transition-colors text-[0.88rem] w-full text-right border-r-[3px]"
+      style={{ color: color || "#333", borderRightColor: color || "#4361ee" }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = "#eef0ff";
       }}
@@ -174,7 +160,7 @@ function ActionButton({ icon, label, onClick, color }) {
         e.currentTarget.style.background = "#f8f9fa";
       }}
     >
-      <span style={{ fontSize: "1.1rem" }}>{icon}</span>
+      <span className="text-[1.1rem]">{icon}</span>
       {label}
     </button>
   );
@@ -183,16 +169,14 @@ function ActionButton({ icon, label, onClick, color }) {
 function StatBox({ label, value, color }) {
   return (
     <div
+      className="p-3 rounded-lg text-center"
       style={{
-        padding: "12px",
         background: color + "10",
-        borderRadius: "8px",
-        textAlign: "center",
         border: `1px solid ${color}20`,
       }}
     >
-      <div style={{ fontSize: "1.2rem", fontWeight: "700", color }}>{value}</div>
-      <div style={{ fontSize: "0.72rem", color: "#666", marginTop: "4px" }}>{label}</div>
+      <div className="text-[1.2rem] font-bold" style={{ color }}>{value}</div>
+      <div className="text-[0.72rem] text-[#666] mt-1">{label}</div>
     </div>
   );
 }

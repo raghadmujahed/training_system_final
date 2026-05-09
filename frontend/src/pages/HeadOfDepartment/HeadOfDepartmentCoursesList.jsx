@@ -81,26 +81,12 @@ export default function HeadOfDepartmentCoursesList() {
     return (
       <div className="container">
         <div
-          style={{
-            backgroundColor: "#fee",
-            color: "#c33",
-            padding: 16,
-            borderRadius: 8,
-            marginBottom: 16,
-          }}
+          className="bg-[#fee] text-[#c33] p-4 rounded-lg mb-4"
         >
           {error}
           <button
             onClick={fetchCourses}
-            style={{
-              marginRight: 12,
-              padding: "6px 12px",
-              backgroundColor: "#c33",
-              color: "white",
-              border: "none",
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
+            className="mr-3 py-[6px] px-3 bg-[#c33] text-white border-none rounded cursor-pointer"
           >
             إعادة المحاولة
           </button>
@@ -112,18 +98,12 @@ export default function HeadOfDepartmentCoursesList() {
   return (
     <div className="container">
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-        }}
+        className="flex justify-between items-center mb-4"
       >
-        <h1>إدارة المساقات</h1>
+        <h2>المساقات</h2>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary flex items-center gap-2"
           onClick={() => navigate("/head-department/courses/create")}
-          style={{ display: "flex", alignItems: "center", gap: 8 }}
         >
           <Plus size={18} />
           إضافة مساق جديد
@@ -132,135 +112,76 @@ export default function HeadOfDepartmentCoursesList() {
 
       {courses.length === 0 ? (
         <div
-          style={{
-            textAlign: "center",
-            padding: 40,
-            backgroundColor: "#f9f9f9",
-            borderRadius: 8,
-            color: "#666",
-          }}
+          className="text-center p-10 bg-[#f9f9f9] rounded-lg text-[#666]"
         >
-          <BookOpen size={48} style={{ marginBottom: 16, opacity: 0.5 }} />
+          <BookOpen size={48} className="mb-4 opacity-50" />
           <p>لا يوجد مساقات في قسمك حالياً</p>
           <button
-            className="btn btn-primary"
             onClick={() => navigate("/head-department/courses/create")}
-            style={{ marginTop: 16 }}
+            className="btn btn-primary mt-4"
           >
             إضافة مساق جديد
           </button>
         </div>
       ) : (
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: 16,
-          }}
+          className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4"
         >
           {courses.map((course) => (
             <div
               key={course.id}
-              style={{
-                backgroundColor: "white",
-                border: "1px solid #e0e0e0",
-                borderRadius: 8,
-                padding: 20,
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              }}
+              className="bg-white border border-[#e0e0e0] rounded-lg p-4"
             >
               <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: 12,
-                }}
+                className="flex justify-between items-start mb-3"
               >
-                <div style={{ flex: 1 }}>
-                  <h3 style={{ margin: 0, marginBottom: 8 }}>{course.name}</h3>
+                <div className="flex-1">
+                  <h3 className="m-0 mb-2">{course.name}</h3>
                   <p
-                    style={{
-                      margin: 0,
-                      color: "#666",
-                      fontSize: 14,
-                    }}
+                    className="m-0 text-[#666] text-sm"
                   >
                     كود المساق: {course.code || "غير محدد"}
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className="flex gap-2">
                   <button
                     onClick={() =>
                       navigate(`/head-department/courses/edit/${course.id}`)
                     }
-                    style={{
-                      padding: 8,
-                      backgroundColor: "#e3f2fd",
-                      border: "none",
-                      borderRadius: 6,
-                      cursor: "pointer",
-                      color: "#1976d2",
-                    }}
-                    title="تعديل"
+                    className="p-2 bg-[#e3f2fd] border-none rounded cursor-pointer"
                   >
-                    <Edit size={16} />
+                    <Edit size={16} className="text-[#1976d2]" />
                   </button>
-                  
                   {course.sections_count > 0 || course.sections?.length > 0 ? (
                     <button
                       onClick={() => handleArchive(course.id)}
                       disabled={archiveLoading === course.id}
-                      style={{
-                        padding: 8,
-                        backgroundColor: "#fff3e0",
-                        border: "none",
-                        borderRadius: 6,
-                        cursor: archiveLoading === course.id ? "not-allowed" : "pointer",
-                        color: "#e65100",
-                        opacity: archiveLoading === course.id ? 0.6 : 1,
-                      }}
-                      title="أرشفة (المساق مرتبط بشعب)"
+                      className="p-2 bg-[#fff3e0] border-none rounded cursor-pointer disabled:cursor-not-allowed"
                     >
-                      <Archive size={16} />
+                      <Archive size={16} className="text-[#f57c00]" />
                     </button>
                   ) : (
                     <button
                       onClick={() => handleDelete(course.id, false)}
                       disabled={deleteLoading === course.id}
-                      style={{
-                        padding: 8,
-                        backgroundColor: "#ffebee",
-                        border: "none",
-                        borderRadius: 6,
-                        cursor: deleteLoading === course.id ? "not-allowed" : "pointer",
-                        color: "#c33",
-                        opacity: deleteLoading === course.id ? 0.6 : 1,
-                      }}
-                      title="حذف"
+                      className="p-2 bg-[#ffebee] border-none rounded cursor-pointer disabled:cursor-not-allowed"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={16} className="text-[#d32f2f]" />
                     </button>
                   )}
                 </div>
               </div>
 
               <div
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  marginTop: 16,
-                  paddingTop: 16,
-                  borderTop: "1px solid #f0f0f0",
-                }}
+                className="flex gap-3 mt-4 pt-3 border-t border-[#f0f0f0]"
               >
-                <div style={{ fontSize: 13, color: "#666" }}>
+                <div className="text-[13px] text-[#666]">
                   <strong>الساعات الجامعية:</strong> {course.credit_hours || "-"}
                 </div>
-                <div style={{ fontSize: 13, color: "#666" }}>
+                <div className="text-[13px] text-[#666]">
                   <strong>الساعات التدريبية:</strong> {course.training_hours || "-"}
                 </div>
-                <div style={{ fontSize: 13, color: "#666" }}>
+                <div className="text-[13px] text-[#666]">
                   <strong>الشعب:</strong> {course.sections_count || 0}
                 </div>
               </div>

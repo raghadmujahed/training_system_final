@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
+import PageHeader from "../../components/common/PageHeader";
 import useAppToast from "../../hooks/useAppToast";
 
 const getSchoolTypeFromItem = (item) => {
@@ -288,20 +289,15 @@ export default function TrainingPlaces() {
   return (
     <div>
       {/* Hero Section */}
-      <div className="hero-section mb-4">
-        <div className="hero-content" style={{ alignItems: "flex-start" }}>
-          <MinistryEducationSeal size={54} />
-          <div style={{ flex: 1 }}>
-            <h1 className="hero-title">{"أماكن التدريب"}</h1>
-            <p className="hero-subtitle">
-              {"إدارة وعرض أماكن التدريب المعتمدة التابعة لمديرية التربية والتعليم"}
-            </p>
-          </div>
+      <div className="flex items-start gap-3 flex-wrap mb-4">
+        <MinistryEducationSeal size={54} />
+        <div className="flex-1">
+          <PageHeader title="أماكن التدريب" subtitle="إدارة وعرض أماكن التدريب المعتمدة التابعة لمديرية التربية والتعليم" icon={Building2} />
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4 mb-6">
         {[
           { title: "إجمالي الأماكن", value: places.length, icon: Building2, color: "#3b82f6", bg: "#dbeafe" },
           { title: "أماكن نشطة", value: activeCount, icon: CheckCircle2, color: "#10b981", bg: "#d1fae5" },
@@ -310,13 +306,13 @@ export default function TrainingPlaces() {
         ].map((card, i) => {
           const Icon = card.icon;
           return (
-            <div key={i} style={{ background: "#fff", borderRadius: "16px", padding: "1.25rem", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "1rem" }}>
-              <div style={{ width: 48, height: 48, borderRadius: "14px", background: card.bg, color: card.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div key={i} className="bg-white rounded-2xl p-5 border border-[#e2e8f0] flex items-center gap-4">
+              <div className="w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0" style={{ background: card.bg, color: card.color }}>
                 <Icon size={24} />
               </div>
               <div>
-                <div style={{ fontSize: "0.8rem", color: "#94a3b8" }}>{card.title}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b" }}>{card.value}</div>
+                <div className="text-[0.8rem] text-[#94a3b8]">{card.title}</div>
+                <div className="text-2xl font-extrabold text-[#1e293b]">{card.value}</div>
               </div>
             </div>
           );
@@ -324,162 +320,135 @@ export default function TrainingPlaces() {
       </div>
 
       {/* Add Form */}
-      <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0] mb-4">
+        <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+          <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#10b981] to-[#059669] flex items-center justify-center text-white">
             <Plus size={20} />
           </div>
-          <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>{"إضافة مكان تدريب جديد"}</h4>
+          <h4 className="m-0 text-[1.1rem] font-bold">إضافة مكان تدريب جديد</h4>
         </div>
 
         <form onSubmit={handleAddPlace}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"اسم مكان التدريب"}
-              </label>
-              <div style={{ position: "relative" }}>
-                <School size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                <input type="text" name="name" placeholder={"أدخل اسم مكان التدريب"} value={formData.name} onChange={handleChange}
-                  style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#3b82f6")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">اسم مكان التدريب</label>
+              <div className="relative">
+                <School size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                <input type="text" name="name" placeholder="أدخل اسم مكان التدريب" value={formData.name} onChange={handleChange}
+                  className="w-full py-2.5 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"نوع المدرسة"}
-              </label>
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">نوع المدرسة</label>
               <select name="school_type" value={formData.school_type} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               >
-                <option value="حكومية">{"حكومية"}</option>
-                <option value="خاصة">{"خاصة"}</option>
+                <option value="حكومية">حكومية</option>
+                <option value="خاصة">خاصة</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"المدينة / الموقع"}
-              </label>
-              <div style={{ position: "relative" }}>
-                <MapPin size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                <input type="text" name="city" placeholder={"أدخل المدينة أو الموقع"} value={formData.city} onChange={handleChange}
-                  style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#3b82f6")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">المدينة / الموقع</label>
+              <div className="relative">
+                <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                <input type="text" name="city" placeholder="أدخل المدينة أو الموقع" value={formData.city} onChange={handleChange}
+                  className="w-full py-2.5 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"السعة الاستيعابية"}
-              </label>
-              <div style={{ position: "relative" }}>
-                <Users size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                <input type="number" name="capacity" placeholder={"عدد الطلبة"} value={formData.capacity} onChange={handleChange} min="1"
-                  style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                  onFocus={(e) => (e.target.style.borderColor = "#3b82f6")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">السعة الاستيعابية</label>
+              <div className="relative">
+                <Users size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                <input type="number" name="capacity" placeholder="عدد الطلبة" value={formData.capacity} onChange={handleChange} min="1"
+                  className="w-full py-2.5 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"المديرية"}
-              </label>
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">المديرية</label>
               <select name="directorate" value={formData.directorate} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               >
-                <option value="وسط">{"وسط"}</option>
-                <option value="شمال">{"شمال"}</option>
-                <option value="جنوب">{"جنوب"}</option>
-                <option value="يطا">{"يطا"}</option>
+                <option value="وسط">وسط</option>
+                <option value="شمال">شمال</option>
+                <option value="جنوب">جنوب</option>
+                <option value="يطا">يطا</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"الهاتف"}
-              </label>
-              <input type="text" name="phone" placeholder={"رقم الهاتف"} value={formData.phone} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">الهاتف</label>
+              <input type="text" name="phone" placeholder="رقم الهاتف" value={formData.phone} onChange={handleChange}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"البريد الإلكتروني"}
-              </label>
-              <input type="email" name="email" placeholder={"بريد المدير"} value={formData.email} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">البريد الإلكتروني</label>
+              <input type="email" name="email" placeholder="بريد المدير" value={formData.email} onChange={handleChange}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"رقم المحمول"}
-              </label>
-              <input type="text" name="mobile" placeholder={"رقم المحمول"} value={formData.mobile} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">رقم المحمول</label>
+              <input type="text" name="mobile" placeholder="رقم المحمول" value={formData.mobile} onChange={handleChange}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"تصنيف المدرسة"}
-              </label>
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">تصنيف المدرسة</label>
               <select name="gender_classification" value={formData.gender_classification} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               >
-                <option value="">{"-- اختر --"}</option>
-                <option value="boys">{"ذكور"}</option>
-                <option value="girls">{"إناث"}</option>
-                <option value="mixed">{"مختلطة"}</option>
+                <option value="">-- اختر --</option>
+                <option value="boys">ذكور</option>
+                <option value="girls">إناث</option>
+                <option value="mixed">مختلطة</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
-                {"مرحلة المدرسة"}
-              </label>
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">مرحلة المدرسة</label>
               <select name="school_level" value={formData.school_level} onChange={handleChange}
-                style={{ width: "100%", padding: "0.625rem 0.75rem", borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none" }}
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               >
-                <option value="">{"-- اختر --"}</option>
-                <option value="lower">{"دنيا"}</option>
-                <option value="upper">{"عليا"}</option>
+                <option value="">-- اختر --</option>
+                <option value="lower">دنيا</option>
+                <option value="upper">عليا</option>
               </select>
             </div>
 
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "1.25rem", flexWrap: "wrap" }}>
-            <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.625rem 1.25rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "white", border: "none", borderRadius: 10, fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", transition: "transform 0.2s, box-shadow 0.2s" }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(16, 185, 129, 0.3)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-            >
-              <Save size={16} /> {"حفظ مكان التدريب"}
+          <div className="flex items-center gap-4 mt-5 flex-wrap">
+            <button type="submit" className="inline-flex items-center gap-2 py-2.5 px-5 bg-gradient-to-br from-[#10b981] to-[#059669] text-white border-none rounded-[10px] text-[0.9rem] font-semibold cursor-pointer hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all">
+              <Save size={16} /> حفظ مكان التدريب
             </button>
-
           </div>
         </form>
       </div>
 
       {/* Training Sites List */}
-      <div className="section-card" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0]">
+        <div className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-[#e2e8f0] flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center text-white">
               <Building2 size={20} />
             </div>
-            <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>{"قائمة أماكن التدريب"}</h4>
+            <h4 className="m-0 text-[1.1rem] font-bold">قائمة أماكن التدريب</h4>
           </div>
-          <div style={{ position: "relative", minWidth: 220 }}>
-            <Search size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-            <input type="text" placeholder={"بحث بالاسم أو المدينة..."} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: "100%", padding: "0.5rem 0.75rem 0.5rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.85rem", background: "#f8fafc", outline: "none" }}
+          <div className="relative min-w-[220px]">
+            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+            <input type="text" placeholder="بحث بالاسم أو المدينة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-2 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.85rem] bg-[#f8fafc] outline-none"
             />
           </div>
         </div>
@@ -487,145 +456,128 @@ export default function TrainingPlaces() {
         {loading ? (
           <LoadingSpinner size="section" text="جاري تحميل أماكن التدريب..." />
         ) : (
-          <div style={{ borderRadius: "12px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
+          <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+            <table className="w-full border-collapse text-[0.9rem]">
               <thead>
-                <tr style={{ background: "#f8fafc" }}>
+                <tr className="bg-[#f8fafc]">
                   {["اسم المكان", "نوع المدرسة", "المدينة", "الهاتف", "البريد", "المحمول", "السعة", "المديرية", "الحالة", "الإجراءات"].map((h) => (
-                    <th key={h} style={{ padding: "0.875rem 1rem", textAlign: "right", fontWeight: 600, color: "#475569", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} className="py-3.5 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0] whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filteredPlaces.map((place, idx) =>
                   editingId === place.id ? (
-                    <tr key={place.id} style={{ background: "#fef3c7" }}>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                    <tr key={place.id} className="bg-[#fef3c7]">
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <input type="text" name="name" value={editFormData.name} onChange={handleEditChange}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <select name="school_type" value={editFormData.school_type} onChange={handleEditChange}
-                          style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         >
-                          <option value="حكومية">{"حكومية"}</option>
-                          <option value="خاصة">{"خاصة"}</option>
+                          <option value="حكومية">حكومية</option>
+                          <option value="خاصة">خاصة</option>
                         </select>
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <input type="text" name="city" value={editFormData.city} onChange={handleEditChange}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <input type="text" name="phone" value={editFormData.phone} onChange={handleEditChange}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <input type="email" name="email" value={editFormData.email} onChange={handleEditChange}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <input type="text" name="mobile" value={editFormData.mobile} onChange={handleEditChange}
-                          style={{ width: "100%", padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <input type="number" name="capacity" value={editFormData.capacity} onChange={handleEditChange} min="1"
-                          style={{ width: 70, padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="w-[70px] py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <select name="directorate" value={editFormData.directorate} onChange={handleEditChange}
-                          style={{ padding: "0.375rem 0.5rem", borderRadius: 6, border: "1px solid #d97706", fontSize: "0.85rem" }}
+                          className="py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         >
-                          <option value="وسط">{"وسط"}</option>
-                          <option value="شمال">{"شمال"}</option>
-                          <option value="جنوب">{"جنوب"}</option>
-                          <option value="يطا">{"يطا"}</option>
+                          <option value="وسط">وسط</option>
+                          <option value="شمال">شمال</option>
+                          <option value="جنوب">جنوب</option>
+                          <option value="يطا">يطا</option>
                         </select>
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <label style={{ display: "flex", gap: 6, alignItems: "center", fontSize: "0.85rem", cursor: "pointer" }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                        <label className="flex gap-1.5 items-center text-[0.85rem] cursor-pointer">
                           <input type="checkbox" name="is_active" checked={editFormData.is_active} onChange={handleEditChange} />
-                          {"نشط"}
+                          نشط
                         </label>
                       </td>
-                      <td style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", gap: 6 }}>
+                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                        <div className="flex gap-1.5">
                           <button type="button" onClick={() => handleUpdatePlace(place.id)}
-                            style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.375rem 0.75rem", background: "#10b981", color: "white", border: "none", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+                            className="inline-flex items-center gap-1 py-1.5 px-3 bg-[#10b981] text-white border-none rounded-md text-[0.8rem] font-semibold cursor-pointer"
                           >
-                            <Save size={13} /> {"حفظ"}
+                            <Save size={13} /> حفظ
                           </button>
                           <button type="button" onClick={cancelEdit}
-                            style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.375rem 0.75rem", background: "#64748b", color: "white", border: "none", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}
+                            className="inline-flex items-center gap-1 py-1.5 px-3 bg-[#64748b] text-white border-none rounded-md text-[0.8rem] font-semibold cursor-pointer"
                           >
-                            <X size={13} /> {"إلغاء"}
+                            <X size={13} /> إلغاء
                           </button>
                         </div>
                       </td>
                     </tr>
                   ) : (
-                    <tr key={place.id} style={{ background: idx % 2 === 0 ? "#fff" : "#f8fafc", transition: "background 0.15s" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "#f1f5f9")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? "#fff" : "#f8fafc")}
-                    >
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <div style={{ width: 34, height: 34, borderRadius: "8px", background: "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <tr key={place.id} className={`border-b border-[#e2e8f0] hover:bg-[#f1f5f9] transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}`}>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-[34px] h-[34px] rounded-lg bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] text-[#2563eb] flex items-center justify-center shrink-0">
                             <School size={16} />
                           </div>
-                          <span style={{ fontWeight: 600 }}>{place.name}</span>
+                          <span className="font-semibold">{place.name}</span>
                         </div>
                       </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {place.school_type}
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.school_type}</td>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">
+                        <span className="flex items-center gap-1"><MapPin size={13} />{place.city}</span>
                       </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}><MapPin size={13} />{place.city}</span>
-                      </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {place.phone || "-"}
-                      </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {place.email || "-"}
-                      </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {place.mobile || "-"}
-                      </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", fontWeight: 600, color: "#1e293b" }}>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.phone || "-"}</td>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.email || "-"}</td>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.mobile || "-"}</td>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                        <span className="inline-flex items-center gap-1 font-semibold text-[#1e293b]">
                           <Users size={14} color="#64748b" />{place.capacity}
                         </span>
                       </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
-                        {place.directorate}
-                      </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "9999px", fontSize: "0.8rem", fontWeight: 600, background: place.status === "متاح" ? "#d1fae5" : "#fee2e2", color: place.status === "متاح" ? "#059669" : "#dc2626" }}>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.directorate}</td>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                        <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-[0.8rem] font-semibold" style={{ background: place.status === "متاح" ? "#d1fae5" : "#fee2e2", color: place.status === "متاح" ? "#059669" : "#dc2626" }}>
                           {place.status === "متاح" ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
                           {place.status}
                         </span>
                       </td>
-                      <td style={{ padding: "0.875rem 1rem", borderBottom: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", gap: 6 }}>
+                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                        <div className="flex gap-1.5">
                           <button type="button" onClick={() => startEdit(place)}
-                            style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.375rem 0.625rem", background: "#f1f5f9", color: "#475569", border: "1px solid #e2e8f0", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = "#e2e8f0"; e.currentTarget.style.color = "#1e293b"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
+                            className="inline-flex items-center gap-1 py-1.5 px-2.5 bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0] rounded-md text-[0.8rem] font-semibold cursor-pointer hover:bg-[#e2e8f0] hover:text-[#1e293b] transition-all"
                           >
-                            <Pencil size={13} /> {"تعديل"}
+                            <Pencil size={13} /> تعديل
                           </button>
                           <button type="button" onClick={() => handleDeletePlace(place.id)}
-                            style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "0.375rem 0.625rem", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 6, fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", transition: "all 0.15s" }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = "#fee2e2"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = "#fef2f2"; }}
+                            className="inline-flex items-center gap-1 py-1.5 px-2.5 bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] rounded-md text-[0.8rem] font-semibold cursor-pointer hover:bg-[#fee2e2] transition-all"
                           >
-                            <Trash2 size={13} /> {"حذف"}
+                            <Trash2 size={13} /> حذف
                           </button>
                         </div>
                       </td>
@@ -635,13 +587,13 @@ export default function TrainingPlaces() {
 
                 {filteredPlaces.length === 0 && (
                   <tr>
-                    <td colSpan={10} style={{ padding: "2.5rem", textAlign: "center" }}>
-                      <div style={{ color: "#94a3b8" }}>
-                        <School size={48} style={{ marginBottom: "0.75rem", opacity: 0.4 }} />
-                        <p style={{ margin: 0, fontSize: "1rem", fontWeight: 600 }}>
+                    <td colSpan={10} className="py-10 text-center">
+                      <div className="text-[#94a3b8]">
+                        <School size={48} className="mb-3 opacity-40" />
+                        <p className="m-0 text-[1rem] font-semibold">
                           {searchQuery ? "لا توجد نتائج مطابقة للبحث" : "لا توجد أماكن تدريب مسجلة حاليًا"}
                         </p>
-                        {searchQuery && <p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem" }}>{"جرّب كلمات بحث مختلفة"}</p>}
+                        {searchQuery && <p className="m-0 mt-1 text-[0.85rem]">جرّب كلمات بحث مختلفة</p>}
                       </div>
                     </td>
                   </tr>

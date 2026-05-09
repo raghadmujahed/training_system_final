@@ -125,7 +125,7 @@ export default function MentorEvaluations() {
         subtitle="إضافة ومتابعة تقييمات أداء طلبة التدريب باستخدام قوالب التقييم المعتمدة."
       />
 
-      <div className="table-actions" style={{ marginBottom: 16 }}>
+      <div className="table-actions mb-4">
         <button className="btn-primary-custom" onClick={openCreate}>
           + تقييم جديد
         </button>
@@ -172,7 +172,7 @@ export default function MentorEvaluations() {
       {/* Create Evaluation Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640 }}>
+          <div className="modal-content max-w-[640px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>تقييم جديد</h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
@@ -217,18 +217,17 @@ export default function MentorEvaluations() {
                 </div>
 
                 {templateItems.length > 0 && (
-                  <div className="section-card" style={{ marginTop: 12, padding: 16 }}>
-                    <h5 style={{ marginBottom: 12 }}>بنود التقييم</h5>
+                  <div className="section-card mt-3 p-4">
+                    <h5 className="mb-3">بنود التقييم</h5>
                     {templateItems.map((item) => (
-                      <div key={item.id} className="form-group" style={{ marginBottom: 10 }}>
+                      <div key={item.id} className="form-group mb-[10px]">
                         <label className="form-label">{item.description || item.name || `بند ${item.id}`}</label>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="flex items-center gap-2">
                           <input
                             type="number"
                             min={0}
                             max={item.max_score || 10}
-                            className="form-control-custom"
-                            style={{ width: 80 }}
+                            className="form-control-custom w-20"
                             value={scores[item.id] || ""}
                             onChange={(e) => handleScoreChange(item.id, e.target.value)}
                             placeholder={`من ${item.max_score || 10}`}
@@ -240,7 +239,7 @@ export default function MentorEvaluations() {
                   </div>
                 )}
 
-                <div className="form-group" style={{ marginTop: 12 }}>
+                <div className="form-group mt-3">
                   <label className="form-label">ملاحظات عامة</label>
                   <textarea
                     className="form-control-custom"

@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { getStudentNotifications, itemsFromPagedResponse, markNotificationAsRead } from "../../services/api";
+import { Bell } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import PageHeader from "../../components/common/PageHeader";
+import EmptyState from "../../components/common/EmptyState";
 
 export default function NotificationsUpdates() {
   const [loading, setLoading] = useState(true);
@@ -36,11 +39,8 @@ export default function NotificationsUpdates() {
   };
 
   const messageFor = (n) => {
-    // أولاً: الحقل message المباشر (إذا كان نصاً عربياً سليماً)
     if (n.message && /[\u0600-\u06FF]/.test(n.message)) return n.message;
-    // ثانياً: data.message (Laravel built-in notifications)
     if (n.data?.message) return n.data.message;
-    // ثالثاً: محاولة parse إذا كان message نص JSON
     if (n.message) {
       try {
         const parsed = JSON.parse(n.message);
@@ -69,45 +69,37 @@ export default function NotificationsUpdates() {
 
   return (
     <>
-      <div className="content-header">
-        <h1 className="page-title">الإشعارات والتحديثات</h1>
-        <p className="page-subtitle">متابعة ما يخص طلب التدريب والتكليفات من النظام</p>
-      </div>
+      <PageHeader title="الإشعارات والتحديثات" subtitle="متابعة ما يخص طلب التدريب والتكليفات من النظام" icon={Bell} />
 
       {loading ? (
         <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : error ? (
-        <div className="section-card">
-          <p className="text-danger">{error}</p>
-        </div>
+        <div className="bg-danger/8 border border-danger/20 text-danger rounded-[16px] p-4">{error}</div>
       ) : items.length === 0 ? (
-        <div className="section-card">
-          <p className="text-muted mb-0">لا توجد إشعارات حالياً.</p>
-        </div>
+        <EmptyState title="لا توجد إشعارات" description="لا توجد إشعارات حالياً." />
       ) : (
-        <div className="row g-4">
+        <div className="flex flex-col gap-3">
           {items.map((item) => (
-            <div className="col-12" key={item.id}>
-              <div
-                className={`panel ${item.read_at ? "" : "border-start border-primary border-3"}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => markRead(item)}
-                onKeyDown={(e) => e.key === "Enter" && markRead(item)}
-              >
-                <div className="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                  <div>
-                    <h5 className="mb-2">{titleFor(item)}</h5>
-                    <p className="text-muted mb-2">{messageFor(item)}</p>
-                  </div>
-                  <div className="text-end">
-                    <small className="text-muted d-block">
-                      {item.created_at?.replace("T", " ").slice(0, 16) || ""}
-                    </small>
-                    {!item.read_at ? (
-                      <small className="text-primary">جديد — اضغط لتعليم كمقروء</small>
-                    ) : null}
-                  </div>
+            <div
+              key={item.id}
+              className={`bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[16px] p-4 cursor-pointer transition-all hover:shadow-sm ${!item.read_at ? "border-r-4 border-r-accent" : ""}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => markRead(item)}
+              onKeyDown={(e) => e.key === "Enter" && markRead(item)}
+            >
+              <div className="flex justify-between items-start flex-wrap gap-2">
+                <div>
+                  <h5 className="m-0 mb-2 text-secondary font-bold">{titleFor(item)}</h5>
+                  <p className="m-0 mb-2 text-text-faint">{messageFor(item)}</p>
+                </div>
+                <div className="text-left">
+                  <small className="block text-text-faint">
+                    {item.created_at?.replace("T", " ").slice(0, 16) || ""}
+                  </small>
+                  {!item.read_at ? (
+                    <small className="text-accent font-bold">جديد — اضغط لتعليم كمقروء</small>
+                  ) : null}
                 </div>
               </div>
             </div>

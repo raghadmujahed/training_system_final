@@ -70,41 +70,22 @@ function ToastItem({ toast, onRemove }) {
     <div
       role={toast.type === "error" ? "alert" : "status"}
       dir="rtl"
+      className="relative overflow-hidden min-w-[280px] max-w-[420px] rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.12)] pointer-events-auto text-white font-inherit animate-[toastSlideIn_0.32s_cubic-bezier(0.34,1.56,0.64,1)]"
       style={{
-        position: "relative",
-        overflow: "hidden",
-        minWidth: "280px",
         maxWidth: "min(440px, 92vw)",
         background: cfg.bg,
         border: `1px solid ${cfg.border}`,
-        borderRadius: "12px",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.12)",
-        color: "#fff",
-        fontFamily: "inherit",
-        animation: "toastSlideIn 0.32s cubic-bezier(0.34,1.56,0.64,1)",
-        pointerEvents: "auto",
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "14px 16px 12px" }}>
-        <span style={{ flexShrink: 0, marginTop: "1px", opacity: 0.95 }}>{cfg.icon}</span>
-        <span style={{ flex: 1, fontSize: "0.9rem", fontWeight: 600, lineHeight: 1.5, textAlign: "right" }}>
+      <div className="flex items-start gap-3 p-[14px_16px_12px]">
+        <span className="shrink-0 mt-[1px] opacity-95">{cfg.icon}</span>
+        <span className="flex-1 text-[0.9rem] font-semibold leading-[1.5] text-right">
           {toast.message}
         </span>
         <button
           onClick={() => onRemove(toast.id)}
           aria-label="إغلاق"
-          style={{
-            flexShrink: 0,
-            background: "none",
-            border: "none",
-            color: "rgba(255,255,255,0.75)",
-            cursor: "pointer",
-            padding: "0 0 0 2px",
-            lineHeight: 1,
-            fontSize: "1.1rem",
-            marginTop: "1px",
-            transition: "color 0.15s",
-          }}
+          className="shrink-0 bg-transparent border-none cursor-pointer p-1 rounded-md opacity-60 hover:opacity-100 transition-opacity text-[1.1rem] leading-none"
           onMouseEnter={e => e.currentTarget.style.color = "#fff"}
           onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.75)"}
         >
@@ -112,15 +93,12 @@ function ToastItem({ toast, onRemove }) {
         </button>
       </div>
       {/* Progress bar */}
-      <div style={{
-        position: "absolute",
-        bottom: 0,
-        right: 0,
-        height: "3px",
+      <div
+        className="absolute bottom-0 right-0 h-[3px] rounded-bl-xl"
+        style={{
         width: `${progress}%`,
         background: "rgba(255,255,255,0.45)",
         transition: "width 0.05s linear",
-        borderRadius: "0 0 12px 12px",
       }} />
     </div>
   );
@@ -146,18 +124,7 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={{ addToast }}>
       {children}
-      <div style={{
-        position: "fixed",
-        top: "20px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 99999,
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        pointerEvents: "none",
-        alignItems: "center",
-      }}>
+      <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-[10px] pointer-events-none">
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
         ))}

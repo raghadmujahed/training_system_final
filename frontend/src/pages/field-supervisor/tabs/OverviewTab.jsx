@@ -73,8 +73,8 @@ export default function OverviewTab({ studentId, labels }) {
     <div>
       <FieldSupervisorReferenceCard supervisorType={student?.supervisor_type} />
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card mb-4">
+        <h4 className="mt-0 flex items-center gap-2">
           <Clock size={20} />
           إجراءات سريعة
         </h4>
@@ -93,16 +93,9 @@ export default function OverviewTab({ studentId, labels }) {
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: 16,
-          marginBottom: 16,
-        }}
-      >
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 mb-16">
         <div className="section-card">
-          <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <h4 className="mt-0 flex items-center gap-2">
             <User size={20} />
             معلومات الطالب
           </h4>
@@ -133,22 +126,22 @@ export default function OverviewTab({ studentId, labels }) {
         </div>
 
         <div className="section-card">
-          <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <h4 className="mt-0 flex items-center gap-2">
             <Star size={20} />
             مؤشرات الأداء
           </h4>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontWeight: 700 }}>نسبة الالتزام بالحضور</span>
+          <div className="mb-4">
+            <div className="flex justify-between mb-2">
+              <span className="font-bold">نسبة الالتزام بالحضور</span>
               <span>{rate}%</span>
             </div>
-            <div style={{ background: "#e9ecef", borderRadius: 8, height: 10, overflow: "hidden" }}>
+            <div className="bg-[#e9ecef] rounded-lg h-[10px] overflow-hidden">
               <div
+                className={`h-full rounded-lg ${
+                  rate >= 80 ? "bg-[#198754]" : rate >= 60 ? "bg-[#ffc107]" : "bg-[#dc3545]"
+                }`}
                 style={{
                   width: `${Math.min(100, rate)}%`,
-                  height: "100%",
-                  borderRadius: 8,
-                  background: rate >= 75 ? "var(--success)" : rate >= 60 ? "var(--warning)" : "var(--danger)",
                 }}
               />
             </div>
@@ -199,7 +192,7 @@ export default function OverviewTab({ studentId, labels }) {
                     {evaluation.status_label || evaluation.status || "—"}
                   </span>
                   {evaluation.is_final && (
-                    <span className="badge-custom badge-info" style={{ marginRight: 6 }}>
+                    <span className="badge-custom badge-info mr-[6px]">
                       نهائي
                     </span>
                   )}
@@ -244,7 +237,7 @@ export default function OverviewTab({ studentId, labels }) {
                 <span>
                   <strong>{evaluation.total_score}</strong>
                   {evaluation.grade_label ? (
-                    <span className="text-soft" style={{ marginRight: 8 }}>
+                    <span className="text-soft mr-2">
                       — {evaluation.grade_label}
                     </span>
                   ) : null}
@@ -255,19 +248,13 @@ export default function OverviewTab({ studentId, labels }) {
 
           {student?.last_note && (
             <div
-              className="section-card"
-              style={{
-                marginTop: 12,
-                padding: 12,
-                background: "rgba(255, 193, 7, 0.08)",
-                borderColor: "rgba(255, 193, 7, 0.35)",
-              }}
+              className="section-card mt-3 p-3 bg-[rgba(255,193,7,0.08)] border-[rgba(255,193,7,0.35)]"
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <div className="flex items-center gap-2 mb-2">
                 <AlertCircle size={18} />
                 <strong>آخر ملاحظة</strong>
               </div>
-              <p style={{ margin: 0, fontSize: "0.95rem" }}>{student.last_note}</p>
+              <p className="m-0 text-[0.95rem]">{student.last_note}</p>
             </div>
           )}
 
@@ -276,16 +263,12 @@ export default function OverviewTab({ studentId, labels }) {
 
       {attendance?.total_days > 0 && (
         <div className="section-card">
-          <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <h4 className="mt-0 flex items-center gap-2">
             <CheckCircle size={20} />
             ملخص الحضور
           </h4>
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-              gap: 12,
-            }}
+            className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3"
           >
             <StatBox label="إجمالي الأيام" value={attendance.total_days} tone="neutral" />
             <StatBox label="أيام الحضور" value={attendance.present_days} tone="success" />
@@ -300,13 +283,13 @@ export default function OverviewTab({ studentId, labels }) {
 
 function InfoRow({ icon: Icon, label, value }) {
   return (
-    <div style={{ display: "flex", gap: 12, marginBottom: 14, alignItems: "flex-start" }}>
-      <Icon size={20} style={{ color: "var(--text-faint)", flexShrink: 0, marginTop: 2 }} />
+    <div className="flex gap-3 mb-[14px] items-start">
+      <Icon size={20} className="text-[var(--text-faint)] shrink-0 mt-[2px]" />
       <div>
-        <div className="text-soft" style={{ fontSize: "0.88rem" }}>
+        <div className="text-soft text-[0.88rem]">
           {label}
         </div>
-        <div style={{ fontWeight: 700, marginTop: 2 }}>{value}</div>
+        <div className="font-bold mt-[2px]">{value}</div>
       </div>
     </div>
   );
@@ -323,11 +306,11 @@ function StatBox({ label, value, tone }) {
           : "var(--border)";
   return (
     <div
-      className="section-card"
-      style={{ padding: 14, textAlign: "center", borderTop: `3px solid ${border}` }}
+      className="section-card p-[14px] text-center"
+      style={{ borderTop: `3px solid ${border}` }}
     >
-      <div style={{ fontSize: "1.35rem", fontWeight: 800 }}>{value}</div>
-      <div className="text-soft" style={{ fontSize: "0.88rem", marginTop: 4 }}>
+      <div className="text-[1.35rem] font-extrabold">{value}</div>
+      <div className="text-soft text-[0.88rem] mt-1">
         {label}
       </div>
     </div>

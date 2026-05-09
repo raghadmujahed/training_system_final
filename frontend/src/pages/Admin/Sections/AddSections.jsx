@@ -4,6 +4,8 @@ import { createSection, getUsers } from "../../../services/api";
 import { useCourses } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 
 export default function AddSections() {
   const toast = useAppToast();
@@ -155,76 +157,73 @@ export default function AddSections() {
   };
 
   return (
-    <div className="add-sections-page">
-      <div className="page-header">
-        <h1>إضافة شعب (يدوي / ملف Excel)</h1>
-        <button onClick={() => navigate("/admin/sections")} className="btn-secondary">رجوع</button>
-      </div>
+    <>
+      <PageHeader title="إضافة شعب (يدوي / ملف Excel)" />
 
       {/* إضافة يدوية */}
-      <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem" }}>
-        <legend style={{ fontWeight: "bold" }}>إضافة شعبة يدوي</legend>
-        <div className="form-row">
-          <div className="form-group">
-            <label>اسم الشعبة *</label>
+      <fieldset className="border border-[#ccc] p-4 rounded-lg mb-6">
+        <legend className="font-bold">إضافة شعبة يدوي</legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">اسم الشعبة *</label>
             <input type="text" name="name" value={manualSection.name} onChange={handleManualChange} required />
-            {errors.name && <span className="error">{errors.name[0]}</span>}
+            {errors.name && <span className="text-danger text-[0.8rem]">{errors.name[0]}</span>}
           </div>
-          <div className="form-group">
-            <label>السنة الأكاديمية *</label>
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">السنة الأكاديمية *</label>
             <input type="number" name="academic_year" value={manualSection.academic_year} onChange={handleManualChange} required />
-            {errors.academic_year && <span className="error">{errors.academic_year[0]}</span>}
+            {errors.academic_year && <span className="text-danger text-[0.8rem]">{errors.academic_year[0]}</span>}
           </div>
         </div>
-        <div className="form-row">
-          <div className="form-group">
-            <label>المساق * (اكتب اسم المساق)</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">المساق * (اكتب اسم المساق)</label>
             <input type="text" list="courses-list" name="course_name" value={manualSection.course_name} onChange={handleManualChange} required />
             <datalist id="courses-list">
               {courses.map(c => <option key={c.id} value={c.name} />)}
             </datalist>
-            {errors.course_name && <span className="error">{errors.course_name}</span>}
+            {errors.course_name && <span className="text-danger text-[0.8rem]">{errors.course_name}</span>}
           </div>
-          <div className="form-group">
-            <label>الفصل *</label>
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">الفصل *</label>
             <select name="semester" value={manualSection.semester} onChange={handleManualChange}>
               <option value="first">الفصل الأول</option>
               <option value="second">الفصل الثاني</option>
             </select>
           </div>
         </div>
-        <div className="form-group">
-          <label>المشرف الأكاديمي (اختياري)</label>
+        <div className="mb-4">
+          <label className="block mb-1 text-text-soft text-[0.9rem]">المشرف الأكاديمي (اختياري)</label>
           <input type="text" list="supervisors-list" name="academic_supervisor_name" value={manualSection.academic_supervisor_name} onChange={handleManualChange} />
           <datalist id="supervisors-list">
             {supervisors.map(s => <option key={s.id} value={s.name} />)}
           </datalist>
-          {errors.academic_supervisor_name && <span className="error">{errors.academic_supervisor_name}</span>}
+          {errors.academic_supervisor_name && <span className="text-danger text-[0.8rem]">{errors.academic_supervisor_name}</span>}
         </div>
-        <button onClick={handleManualAdd} disabled={loading} className="btn-primary">
+        <Button onClick={handleManualAdd} disabled={loading}>
           {loading ? "جاري الإضافة..." : "إضافة شعبة"}
-        </button>
+        </Button>
       </fieldset>
 
       {/* رفع Excel */}
-      <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-        <legend style={{ fontWeight: "bold" }}>رفع ملف Excel (عدة شعب)</legend>
-        <p>الأعمدة المطلوبة: <strong>اسم الشعبة، المساق</strong> (يجب أن يكون موجوداً مسبقاً)، السنة الأكاديمية (اختياري)، الفصل (الأول/الثاني)، المشرف الأكاديمي (اختياري - يجب أن يكون موجوداً مسبقاً)</p>
-        <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
-        <button onClick={processExcel} disabled={bulkLoading} style={{ marginTop: "0.5rem" }} className="btn-secondary">
+      <fieldset className="border border-[#ccc] p-4 rounded-lg">
+        <legend className="font-bold">رفع ملف Excel (عدة شعب)</legend>
+        <p className="text-text-soft text-[0.88rem]">الأعمدة المطلوبة: <strong>اسم الشعبة، المساق</strong> (يجب أن يكون موجوداً مسبقاً)، السنة الأكاديمية (اختياري)، الفصل (الأول/الثاني)، المشرف الأكاديمي (اختياري)</p>
+        <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} className="my-2" />
+        <Button variant="outline" onClick={processExcel} disabled={bulkLoading}>
           {bulkLoading ? "جاري الرفع..." : "رفع وإضافة"}
-        </button>
+        </Button>
         {results && (
-          <div style={{ marginTop: "1rem" }}>
-            <div className="success" style={{ color: "green" }}>✅ نجح: {results.success.length} شعبة</div>
+          <div className="mt-4">
+            <div className="text-success font-bold">✅ نجح: {results.success.length} شعبة</div>
             {results.errors.length > 0 && (
-              <div className="error" style={{ color: "red" }}>
+              <div className="text-danger font-bold">
                 ❌ فشل: {results.errors.map(e => `${e.name} (${e.error})`).join("; ")}
               </div>
             )}
           </div>
         )}
       </fieldset>
-    </div>
+    </>
   );
 }

@@ -148,7 +148,7 @@ export default function MentorStudentsView() {
       {/* Detail Modal */}
       {selected && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 700 }}>
+          <div className="modal-content max-w-[700px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>ملف الطالب</h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>
@@ -161,7 +161,7 @@ export default function MentorStudentsView() {
                 const stuNotes = getStudentNotes(selected.id);
                 return (
                   <>
-                    <div style={{ marginBottom: 16 }}>
+                    <div className="mb-4">
                       <h5>{stu?.name || "طالب"}</h5>
                       <p className="text-soft">
                         الرقم الجامعي: {stu?.university_id || "—"} | جهة التدريب: {selected.training_site?.name || "—"}
@@ -169,17 +169,17 @@ export default function MentorStudentsView() {
                     </div>
 
                     {/* Attendance */}
-                    <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                    <div className="section-card p-3 mb-3">
                       <h6>الحضور: {att.present}/{att.total} ({att.percentage}%)</h6>
                     </div>
 
                     {/* Evaluations */}
-                    <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                    <div className="section-card p-3 mb-3">
                       <h6>التقييمات ({evals.length})</h6>
                       {evals.length === 0 ? (
                         <p className="text-soft">لا توجد تقييمات.</p>
                       ) : (
-                        <ul style={{ paddingRight: 18, listStyle: "disc" }}>
+                        <ul className="pr-[18px] list-disc">
                           {evals.map((ev) => (
                             <li key={ev.id}>
                               {ev.template?.name || "قالب"} — المجموع: {ev.total_score ?? "—"} — {ev.created_at || ""}
@@ -190,15 +190,15 @@ export default function MentorStudentsView() {
                     </div>
 
                     {/* Notes */}
-                    <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                    <div className="section-card p-3 mb-3">
                       <h6>الملاحظات ({stuNotes.length})</h6>
                       {stuNotes.length === 0 ? (
                         <p className="text-soft">لا توجد ملاحظات بعد.</p>
                       ) : (
                         <div className="list-clean">
                           {stuNotes.map((n) => (
-                            <div key={n.id} style={{ padding: "6px 0", borderBottom: "1px solid #eee" }}>
-                              <p style={{ margin: 0 }}>{n.content}</p>
+                            <div key={n.id} className="py-[6px] border-b border-[#eee]">
+                              <p className="m-0">{n.content}</p>
                               <small className="text-soft">{n.created_at || ""}</small>
                             </div>
                           ))}
@@ -207,14 +207,13 @@ export default function MentorStudentsView() {
                     </div>
 
                     {/* Quick Note */}
-                    <form onSubmit={handleAddNote} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                    <form onSubmit={handleAddNote} className="flex gap-2 items-start">
                       <textarea
-                        className="form-control-custom"
+                        className="form-control-custom flex-1"
                         rows={2}
                         value={quickNote}
                         onChange={(e) => setQuickNote(e.target.value)}
                         placeholder="أضف ملاحظة سريعة..."
-                        style={{ flex: 1 }}
                       />
                       <button
                         type="submit"

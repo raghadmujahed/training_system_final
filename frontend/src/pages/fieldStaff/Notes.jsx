@@ -108,7 +108,7 @@ export default function FieldStaffNotes() {
         subtitle={`تدوين ملاحظاتك على طلبة التدريب — حسب دورك كـ${label}.`}
       />
 
-      <div className="table-actions" style={{ marginBottom: 16 }}>
+      <div className="table-actions mb-4">
         <button className="btn-primary-custom" onClick={openCreate}>
           + إضافة {noteLabel}
         </button>
@@ -128,7 +128,7 @@ export default function FieldStaffNotes() {
             const stu = note.training_assignment?.enrollment?.user;
             return (
               <div className="list-item-card" key={note.id}>
-                <div className="panel-header" style={{ alignItems: "center" }}>
+                <div className="panel-header items-center">
                   <div>
                     <h4 className="panel-title">{stu?.name || "طالب"}</h4>
                     <p className="panel-subtitle">{note.created_at || "—"}</p>
@@ -142,7 +142,7 @@ export default function FieldStaffNotes() {
                     </button>
                   </div>
                 </div>
-                <p style={{ marginTop: 8 }}>{note.content}</p>
+                <p className="mt-2">{note.content}</p>
               </div>
             );
           })}
@@ -152,7 +152,7 @@ export default function FieldStaffNotes() {
       {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+          <div className="modal-content max-w-[520px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingId ? `تعديل ${noteLabel}` : `إضافة ${noteLabel} جديدة`}</h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>

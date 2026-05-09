@@ -2,8 +2,8 @@ import React from 'react';
 
 export function Table({ children, className = '', ...props }) {
   return (
-    <div className="relative w-full overflow-auto">
-      <table className={`w-full caption-bottom text-sm ${className}`} {...props}>
+    <div className="w-full overflow-x-auto border border-border rounded-[18px] bg-white">
+      <table className={`w-full border-collapse min-w-[760px] ${className}`} {...props}>
         {children}
       </table>
     </div>
@@ -12,7 +12,7 @@ export function Table({ children, className = '', ...props }) {
 
 export function TableHeader({ children, className = '', ...props }) {
   return (
-    <thead className={`border-b border-gray-200 ${className}`} {...props}>
+    <thead className={`bg-[#f7f9fc] ${className}`} {...props}>
       {children}
     </thead>
   );
@@ -20,7 +20,7 @@ export function TableHeader({ children, className = '', ...props }) {
 
 export function TableBody({ children, className = '', ...props }) {
   return (
-    <tbody className={`divide-y divide-gray-200 ${className}`} {...props}>
+    <tbody className={`divide-y divide-border ${className}`} {...props}>
       {children}
     </tbody>
   );
@@ -28,7 +28,7 @@ export function TableBody({ children, className = '', ...props }) {
 
 export function TableRow({ children, className = '', ...props }) {
   return (
-    <tr className={`hover:bg-gray-50 transition-colors ${className}`} {...props}>
+    <tr className={`hover:bg-[#fbfcfe] transition-colors ${className}`} {...props}>
       {children}
     </tr>
   );
@@ -37,7 +37,7 @@ export function TableRow({ children, className = '', ...props }) {
 export function TableHead({ children, className = '', ...props }) {
   return (
     <th
-      className={`h-12 px-4 text-right align-middle font-medium text-gray-500 ${className}`}
+      className={`px-4 py-3.5 text-right align-middle text-[0.96rem] font-extrabold text-secondary whitespace-nowrap ${className}`}
       {...props}
     >
       {children}
@@ -48,7 +48,7 @@ export function TableHead({ children, className = '', ...props }) {
 export function TableCell({ children, className = '', ...props }) {
   return (
     <td
-      className={`p-4 align-middle ${className}`}
+      className={`px-4 py-3.5 text-right align-middle text-[0.96rem] border-b border-[#edf2f7] ${className}`}
       {...props}
     >
       {children}

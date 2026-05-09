@@ -178,7 +178,7 @@ export default function AttendanceApproval() {
                   {/* رأسية النموذج */}
                   <div className="aa-letterhead">
                     <div className="aa-lh-logo">
-                      <img src={huLogo} alt="شعار جامعة الخليل" width="50" height="50" style={{objectFit:"contain"}} />
+                      <img src={huLogo} alt="شعار جامعة الخليل" width="50" height="50" className="object-contain" />
                       <div>
                         <div className="aa-lh-title">جامعة الخليل</div>
                         <div className="aa-lh-sub">كلية العلوم التربوية — قسم التدريب الميداني</div>
@@ -222,14 +222,14 @@ export default function AttendanceApproval() {
                     <table className="aa-table">
                       <thead>
                         <tr>
-                          <th style={{width:70}}>رقم السجل</th>
+                          <th className="w-[70px]">رقم السجل</th>
                           <th>اليوم والتاريخ</th>
                           <th>ساعة الحضور</th>
                           <th>ساعة المغادرة</th>
-                          <th style={{width:70}}>الحصص</th>
+                          <th className="w-[70px]">الحصص</th>
                           <th>ملاحظات</th>
                           <th>الحالة</th>
-                          <th style={{minWidth:155}}>إجراءات</th>
+                          <th className="min-w-[155px]">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -271,7 +271,7 @@ export default function AttendanceApproval() {
                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> رفض
                                   </button>
                                 </div>
-                              ) : <span style={{color:"#94a3b8"}}>—</span>}
+                              ) : <span className="text-[#94a3b8]">—</span>}
                             </td>
                           </tr>
                         ))}

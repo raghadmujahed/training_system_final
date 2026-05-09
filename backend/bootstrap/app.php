@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\CheckFeatureFlag;
@@ -42,13 +43,42 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (\Throwable $e, $request) {
             // Match any API request (paths starting with api/ or containing api/)
             if ($request->is('api/*') || str_starts_with($request->path(), 'api/')) {
-                $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+                // Determine correct HTTP status code
+                if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                    $status = 401;
+                } elseif ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+                    $status = 403;
+                } elseif ($e instanceof \Illuminate\Validation\ValidationException) {
+                    $status = 422;
+                } elseif ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+                    $status = $e->getStatusCode();
+                } elseif (method_exists($e, 'getStatusCode')) {
+                    $status = $e->getStatusCode();
+                } else {
+                    $status = 500;
+                }
+
+                // Log unexpected 500 errors for debugging
+                if ($status >= 500) {
+                    Log::error('API 500 Error', [
+                        'url' => $request->fullUrl(),
+                        'method' => $request->method(),
+                        'exception' => get_class($e),
+                        'message' => $e->getMessage(),
+                        'file' => $e->getFile() . ':' . $e->getLine(),
+                    ]);
+                }
+
                 // For ValidationException, return the validation errors
                 if ($e instanceof \Illuminate\Validation\ValidationException) {
                     $response = response()->json([
                         'message' => $e->getMessage(),
                         'errors' => $e->errors(),
                     ], 422);
+                } elseif ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                    $response = response()->json([
+                        'message' => 'Unauthenticated.',
+                    ], 401);
                 } else {
                     $response = response()->json([
                         'message' => $e->getMessage(),

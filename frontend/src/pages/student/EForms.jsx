@@ -506,20 +506,15 @@ export default function EForms() {
       {loading ? (
         <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : availableForms.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "4rem 2rem", color: "#64748b" }}>
-          <FileText size={52} color="#cbd5e1" style={{ marginBottom: "1rem" }} />
-          <h3 style={{ fontWeight: 700, marginBottom: "0.5rem" }}>لا توجد نماذج متاحة حالياً</h3>
-          <p style={{ margin: 0 }}>النماذج الخاصة بمسار علم النفس ستُضاف قريباً.</p>
+        <div className="text-center py-16 px-8 text-[#64748b]">
+          <FileText size={52} color="#cbd5e1" className="mb-4" />
+          <h3 className="font-bold mb-2">لا توجد نماذج متاحة حالياً</h3>
+          <p className="m-0">النماذج الخاصة بمسار علم النفس ستُضاف قريباً.</p>
         </div>
       ) : (
         <>
           {/* بطاقات النماذج */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "1.25rem",
-            marginBottom: selectedForm ? "2rem" : 0
-          }}>
+          <div className={`grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5 ${selectedForm ? "mb-8" : ""}`}>
             {availableForms.map((f) => {
               const status = getFormStatus(f.key);
               const badge = statusBadge(status.status);
@@ -533,16 +528,10 @@ export default function EForms() {
                     setSelectedForm(f.key);
                     if (f.key) handleFormSelect(f.key);
                   }}
+                  className={`relative overflow-hidden p-6 rounded-2xl cursor-pointer transition-all duration-300 ${isActive ? 'bg-[#f8fafc]' : 'bg-white'}`}
                   style={{
-                    backgroundColor: isActive ? "#f8fafc" : "white",
-                    borderRadius: "16px",
                     border: isActive ? `2px solid ${f.color}` : "2px solid #e9ecef",
-                    padding: "1.5rem",
-                    cursor: "pointer",
-                    transition: "all 0.3s ease",
                     boxShadow: isActive ? `0 8px 24px ${f.color}22` : "0 2px 8px rgba(0,0,0,0.04)",
-                    position: "relative",
-                    overflow: "hidden",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -560,69 +549,30 @@ export default function EForms() {
                   }}
                 >
                   {/* شريط لوني علوي */}
-                  <div style={{
-                    position: "absolute",
-                    top: 0,
-                    right: 0,
-                    left: 0,
-                    height: "4px",
-                    background: f.gradient,
-                    borderRadius: "16px 16px 0 0",
-                  }} />
+                  <div className="absolute top-0 right-0 left-0 h-1 rounded-t-2xl" style={{ background: f.gradient }} />
 
-                  <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <div className="flex items-start gap-4">
                     {/* أيقونة النموذج */}
-                    <div style={{
-                      width: "52px",
-                      height: "52px",
-                      borderRadius: "14px",
-                      background: f.gradient,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      boxShadow: `0 4px 12px ${f.color}33`,
-                    }}>
+                    <div className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center shrink-0" style={{ background: f.gradient, boxShadow: `0 4px 12px ${f.color}33` }}>
                       <FormIcon size={26} color="white" />
                     </div>
 
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
-                        <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "#1e293b", flex: 1 }}>{f.title}</h4>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-[0.35rem]">
+                        <h4 className="m-0 text-[1.05rem] font-bold text-[#1e293b] flex-1">{f.title}</h4>
                         {/* شارة الحالة */}
-                        <span style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "0.3rem",
-                          padding: "0.2rem 0.6rem",
-                          borderRadius: "20px",
-                          fontSize: "0.72rem",
-                          fontWeight: 600,
-                          backgroundColor: badge.bg,
-                          color: badge.color,
-                          whiteSpace: "nowrap",
-                        }}>
+                        <span className="inline-flex items-center gap-[0.3rem] py-[0.2rem] px-[0.6rem] rounded-[20px] text-[0.72rem] font-semibold whitespace-nowrap" style={{ backgroundColor: badge.bg, color: badge.color }}>
                           <BadgeIcon size={12} />
                           {badge.text}
                         </span>
                       </div>
-                      <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b", lineHeight: 1.5 }}>{f.desc}</p>
+                      <p className="m-0 text-[0.85rem] text-[#64748b] leading-[1.5]">{f.desc}</p>
                     </div>
                   </div>
 
                   {/* سهم فتح */}
                   {isActive && (
-                    <div style={{
-                      position: "absolute",
-                      bottom: "1rem",
-                      left: "1rem",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.4rem",
-                      fontSize: "0.8rem",
-                      fontWeight: 600,
-                      color: f.color,
-                    }}>
+                    <div className="absolute bottom-4 left-4 flex items-center gap-[0.4rem] text-[0.8rem] font-semibold" style={{ color: f.color }}>
                       <span>مفتوح الآن</span>
                       <ArrowRight size={14} />
                     </div>
@@ -633,14 +583,9 @@ export default function EForms() {
           </div>
 
           {selectedForm && (
-            <div className="no-print" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <div className="no-print flex justify-between items-center mb-3">
               {editingEntry && (
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "8px 16px", borderRadius: 99,
-                  background: "#fef3c7", border: "1.5px solid #f59e0b",
-                  color: "#92400e", fontSize: "0.85rem", fontWeight: 600,
-                }}>
+                <div className="flex items-center gap-2 py-2 px-4 rounded-full bg-[#fef3c7] border-[1.5px] border-[#f59e0b] text-[#92400e] text-[0.85rem] font-semibold">
                   <Edit3 size={15} />
                   وضع التعديل — يتم تحديث المدخل الموجود في ملف الإنجاز
                 </div>
@@ -648,13 +593,7 @@ export default function EForms() {
               {!editingEntry && <div />}
               <button
                 onClick={() => setSelectedForm("")}
-                style={{
-                  padding: "8px 18px", border: "1.5px solid #e2e8f0", borderRadius: 99,
-                  background: "white", color: "#64748b", fontSize: "0.85rem", fontWeight: 600,
-                  cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.borderColor = "#94a3b8"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "white"; e.currentTarget.style.borderColor = "#e2e8f0"; }}
+                className="py-2 px-[18px] border-[1.5px] border-[#e2e8f0] rounded-full bg-white text-[#64748b] text-[0.85rem] font-semibold cursor-pointer flex items-center gap-[6px] transition-all duration-200 hover:bg-[#f1f5f9] hover:border-[#94a3b8]"
               >
                 ✕ إغلاق النموذج
               </button>
@@ -663,239 +602,56 @@ export default function EForms() {
 
           <div id="printable-area">
             {selectedForm === "classes_count" && (
-              <div style={{
-                marginTop: "2rem",
-                animation: "fadeIn 0.4s ease-out",
-                maxWidth: "100%"
-              }}>
-                <div style={{
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  borderRadius: "16px 16px 0 0",
-                  padding: "1.5rem 2rem",
-                  color: "white"
-                }}>
-                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>عدد الحصص التي درسها الطالب</h4>
-                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-                    تسجيل الحصص النوعية التي قام الطالب بتدريسها خلال فترة التدريب
-                  </p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out] max-w-full">
+                <div className="bg-gradient-to-br from-[#667eea] to-[#764ba2] rounded-t-2xl py-6 px-8 text-white">
+                  <h4 className="m-0 text-[1.25rem] font-semibold">عدد الحصص التي درسها الطالب</h4>
+                  <p className="m-0 mt-2 opacity-90 text-[0.95rem]">تسجيل الحصص النوعية التي قام الطالب بتدريسها خلال فترة التدريب</p>
                 </div>
 
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "0 0 16px 16px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                  padding: "1.5rem",
-                  border: "1px solid #e8e8e8",
-                  borderTop: "none"
-                }}>
-                  <div className="table-wrapper" style={{ overflowX: "auto" }}>
-                    <table
-                      style={{
-                        width: "100%",
-                        borderCollapse: "separate",
-                        borderSpacing: 0,
-                        textAlign: "center",
-                        borderRadius: "12px",
-                        overflow: "hidden"
-                      }}
-                    >
+                <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+                  <div className="table-wrapper overflow-x-auto">
+                    <table className="w-full border-separate border-spacing-0 text-center rounded-xl overflow-hidden">
                       <thead>
                         <tr>
-                          <th style={{
-                            padding: "16px 12px",
-                            fontWeight: 600,
-                            backgroundColor: "#f8f9fa",
-                            color: "#495057",
-                            borderBottom: "2px solid #dee2e6",
-                            fontSize: "0.95rem"
-                          }}>
-                            الصف
-                          </th>
-                          <th style={{
-                            padding: "16px 12px",
-                            fontWeight: 600,
-                            backgroundColor: "#f8f9fa",
-                            color: "#495057",
-                            borderBottom: "2px solid #dee2e6",
-                            fontSize: "0.95rem"
-                          }}>
-                            المقرر الذي قمت بدراسته
-                          </th>
-                          <th style={{
-                            padding: "16px 12px",
-                            fontWeight: 600,
-                            backgroundColor: "#f8f9fa",
-                            color: "#495057",
-                            borderBottom: "2px solid #dee2e6",
-                            fontSize: "0.95rem"
-                          }}>
-                            الموضوع
-                          </th>
-                          <th style={{
-                            padding: "16px 12px",
-                            fontWeight: 600,
-                            backgroundColor: "#f8f9fa",
-                            color: "#495057",
-                            borderBottom: "2px solid #dee2e6",
-                            fontSize: "0.95rem"
-                          }}>
-                            عدد الحصص
-                          </th>
-                          <th style={{
-                            padding: "16px 12px",
-                            fontWeight: 600,
-                            backgroundColor: "#f8f9fa",
-                            color: "#495057",
-                            borderBottom: "2px solid #dee2e6",
-                            fontSize: "0.95rem",
-                            width: "60px"
-                          }}>
-                            حذف
-                          </th>
+                          {["الصف", "المقرر الذي قمت بدراسته", "الموضوع", "عدد الحصص", "حذف"].map((h, i) => (
+                            <th key={i} className={`py-4 px-3 font-semibold bg-[#f8f9fa] text-[#495057] border-b-2 border-[#dee2e6] text-[0.95rem] ${i === 4 ? 'w-[60px]' : ''}`}>{h}</th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
                         {teachingSessions.map((session, index) => (
                           <tr
                             key={session.id}
-                            style={{
-                              backgroundColor: index % 2 === 0 ? "white" : "#fafbfc",
-                              transition: "background-color 0.2s"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = "#f0f4f8";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = index % 2 === 0 ? "white" : "#fafbfc";
-                            }}
+                            className={`${index % 2 === 0 ? 'bg-white' : 'bg-[#fafbfc]'} hover:bg-[#f0f4f8] transition-colors duration-200`
+                            }
                           >
-                            <td style={{ padding: "12px", borderBottom: "1px solid #e9ecef" }}>
-                              <input
-                                type="text"
-                                value={session.grade}
-                                onChange={(e) => updateTeachingSession(session.id, "grade", e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  padding: "10px 12px",
-                                  border: "1.5px solid #e0e0e0",
-                                  borderRadius: "8px",
-                                  textAlign: "center",
-                                  fontSize: "0.9rem",
-                                  transition: "all 0.2s",
-                                  backgroundColor: "white"
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = "var(--primary, #007bff)";
-                                  e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = "#e0e0e0";
-                                  e.target.style.boxShadow = "none";
-                                }}
+                            <td className="py-3 px-3 border-b border-[#e9ecef]">
+                              <input type="text" value={session.grade} onChange={(e) => updateTeachingSession(session.id, "grade", e.target.value)}
+                                className="w-full py-[10px] px-3 border-[1.5px] border-[#e0e0e0] rounded-lg text-center text-[0.9rem] transition-all bg-white focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                                 placeholder="الصف"
                               />
                             </td>
-                            <td style={{ padding: "12px", borderBottom: "1px solid #e9ecef" }}>
-                              <input
-                                type="text"
-                                value={session.subject}
-                                onChange={(e) => updateTeachingSession(session.id, "subject", e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  padding: "10px 12px",
-                                  border: "1.5px solid #e0e0e0",
-                                  borderRadius: "8px",
-                                  textAlign: "center",
-                                  fontSize: "0.9rem",
-                                  transition: "all 0.2s",
-                                  backgroundColor: "white"
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = "var(--primary, #007bff)";
-                                  e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = "#e0e0e0";
-                                  e.target.style.boxShadow = "none";
-                                }}
+                            <td className="py-3 px-3 border-b border-[#e9ecef]">
+                              <input type="text" value={session.subject} onChange={(e) => updateTeachingSession(session.id, "subject", e.target.value)}
+                                className="w-full py-[10px] px-3 border-[1.5px] border-[#e0e0e0] rounded-lg text-center text-[0.9rem] transition-all bg-white focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                                 placeholder="المقرر"
                               />
                             </td>
-                            <td style={{ padding: "12px", borderBottom: "1px solid #e9ecef" }}>
-                              <input
-                                type="text"
-                                value={session.topic}
-                                onChange={(e) => updateTeachingSession(session.id, "topic", e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  padding: "10px 12px",
-                                  border: "1.5px solid #e0e0e0",
-                                  borderRadius: "8px",
-                                  textAlign: "center",
-                                  fontSize: "0.9rem",
-                                  transition: "all 0.2s",
-                                  backgroundColor: "white"
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = "var(--primary, #007bff)";
-                                  e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = "#e0e0e0";
-                                  e.target.style.boxShadow = "none";
-                                }}
+                            <td className="py-3 px-3 border-b border-[#e9ecef]">
+                              <input type="text" value={session.topic} onChange={(e) => updateTeachingSession(session.id, "topic", e.target.value)}
+                                className="w-full py-[10px] px-3 border-[1.5px] border-[#e0e0e0] rounded-lg text-center text-[0.9rem] transition-all bg-white focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                                 placeholder="الموضوع"
                               />
                             </td>
-                            <td style={{ padding: "12px", borderBottom: "1px solid #e9ecef" }}>
-                              <input
-                                type="number"
-                                min="0"
-                                value={session.sessionsCount}
-                                onChange={(e) => updateTeachingSession(session.id, "sessionsCount", e.target.value)}
-                                style={{
-                                  width: "100%",
-                                  padding: "10px 12px",
-                                  border: "1.5px solid #e0e0e0",
-                                  borderRadius: "8px",
-                                  textAlign: "center",
-                                  fontSize: "0.9rem",
-                                  transition: "all 0.2s",
-                                  backgroundColor: "white"
-                                }}
-                                onFocus={(e) => {
-                                  e.target.style.borderColor = "var(--primary, #007bff)";
-                                  e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                                }}
-                                onBlur={(e) => {
-                                  e.target.style.borderColor = "#e0e0e0";
-                                  e.target.style.boxShadow = "none";
-                                }}
+                            <td className="py-3 px-3 border-b border-[#e9ecef]">
+                              <input type="number" min="0" value={session.sessionsCount} onChange={(e) => updateTeachingSession(session.id, "sessionsCount", e.target.value)}
+                                className="w-full py-[10px] px-3 border-[1.5px] border-[#e0e0e0] rounded-lg text-center text-[0.9rem] transition-all bg-white focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                                 placeholder="0"
                               />
                             </td>
-                            <td style={{ padding: "12px", borderBottom: "1px solid #e9ecef" }}>
-                              <button
-                                onClick={() => deleteTeachingSession(session.id)}
-                                disabled={teachingSessions.length <= 1}
-                                style={{
-                                  background: "none",
-                                  border: "none",
-                                  cursor: teachingSessions.length <= 1 ? "not-allowed" : "pointer",
-                                  color: teachingSessions.length <= 1 ? "#ccc" : "#dc3545",
-                                  opacity: teachingSessions.length <= 1 ? 0.5 : 1,
-                                  padding: "8px",
-                                  borderRadius: "6px",
-                                  transition: "all 0.2s"
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (teachingSessions.length > 1) {
-                                    e.currentTarget.style.backgroundColor = "#ffebee";
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                }}
+                            <td className="py-3 px-3 border-b border-[#e9ecef]">
+                              <button onClick={() => deleteTeachingSession(session.id)} disabled={teachingSessions.length <= 1}
+                                className={`bg-transparent border-none p-2 rounded-md transition-all ${teachingSessions.length <= 1 ? 'text-[#ccc] opacity-50 cursor-not-allowed' : 'text-[#dc3545] cursor-pointer hover:bg-[#ffebee]'}`}
                                 title="حذف الصف"
                               >
                                 <Trash2 size={18} />
@@ -907,106 +663,21 @@ export default function EForms() {
                     </table>
                   </div>
 
-                  <div className="no-print" style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "2rem",
-                    paddingTop: "1.5rem",
-                    borderTop: "1px solid #e9ecef"
-                  }}>
-                    <button
-                      onClick={addTeachingSession}
-                      style={{
-                        padding: "0.875rem 1.5rem",
-                        backgroundColor: "#22c55e",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 500,
-                        transition: "all 0.2s",
-                        boxShadow: "0 2px 8px rgba(34,197,94,0.3)"
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#16a34a";
-                        e.currentTarget.style.transform = "translateY(-1px)";
-                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(34,197,94,0.4)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#22c55e";
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(34,197,94,0.3)";
-                      }}
+                  <div className="no-print flex justify-between items-center mt-8 pt-6 border-t border-[#e9ecef]">
+                    <button onClick={addTeachingSession}
+                      className="py-[0.875rem] px-6 bg-[#22c55e] text-white border-none rounded-[10px] cursor-pointer flex items-center gap-2 text-[0.95rem] font-medium transition-all shadow-[0_2px_8px_rgba(34,197,94,0.3)] hover:bg-[#16a34a] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(34,197,94,0.4)]"
                     >
                       <Plus size={18} /> إضافة صف جديد
                     </button>
 
-                    <div style={{ display: "flex", gap: "0.75rem" }}>
-                      <button
-                        onClick={resetTeachingSessions}
-                        disabled={saving}
-                        style={{
-                          padding: "0.875rem 1.5rem",
-                          backgroundColor: "#6b7280",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "10px",
-                          cursor: saving ? "not-allowed" : "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          fontSize: "0.95rem",
-                          fontWeight: 500,
-                          opacity: saving ? 0.6 : 1,
-                          transition: "all 0.2s"
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!saving) {
-                            e.currentTarget.style.backgroundColor = "#4b5563";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "#6b7280";
-                        }}
+                    <div className="flex gap-3">
+                      <button onClick={resetTeachingSessions} disabled={saving}
+                        className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-medium transition-all hover:bg-[#4b5563]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                       >
                         <RotateCcw size={18} /> إعادة تعيين
                       </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={saving}
-                        style={{
-                          padding: "0.875rem 2rem",
-                          backgroundColor: "var(--primary, #007bff)",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "10px",
-                          cursor: saving ? "not-allowed" : "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                          fontSize: "0.95rem",
-                          fontWeight: 600,
-                          opacity: saving ? 0.6 : 1,
-                          transition: "all 0.2s",
-                          boxShadow: "0 2px 8px rgba(0,123,255,0.3)"
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!saving) {
-                            e.currentTarget.style.backgroundColor = "#0056b3";
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                            e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,123,255,0.4)";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "var(--primary, #007bff)";
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
-                        }}
+                      <button onClick={handleSave} disabled={saving}
+                        className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold transition-all shadow-[0_2px_8px_rgba(0,123,255,0.3)] hover:shadow-[0_4px_12px_rgba(0,123,255,0.4)] hover:-translate-y-px" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                       >
                         {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                         {saving ? "جاري الحفظ..." : editingEntry ? "حفظ التعديل" : "حفظ النموذج"}
@@ -1018,36 +689,14 @@ export default function EForms() {
             )}
 
             {selectedForm === "weekly_full_report" && (
-              <div style={{
-                marginTop: "2rem",
-                animation: "fadeIn 0.4s ease-out",
-                maxWidth: "100%"
-              }}>
-                <div style={{
-                  background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                  borderRadius: "16px 16px 0 0",
-                  padding: "1.5rem 2rem",
-                  color: "white"
-                }}>
-                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>التقرير الأسبوعي</h4>
-                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-                    تقرير الطالب الأسبوعي عن الأنشطة والمهام المنفذة
-                  </p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out] max-w-full">
+                <div className="bg-gradient-to-br from-[#f093fb] to-[#f5576c] rounded-t-2xl py-6 px-8 text-white">
+                  <h4 className="m-0 text-[1.25rem] font-semibold">التقرير الأسبوعي</h4>
+                  <p className="m-0 mt-2 opacity-90 text-[0.95rem]">تقرير الطالب الأسبوعي عن الأنشطة والمهام المنفذة</p>
                 </div>
 
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "0 0 16px 16px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                  padding: "1.5rem",
-                  border: "1px solid #e8e8e8",
-                  borderTop: "none"
-                }}>
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-                    gap: "1.25rem"
-                  }}>
+                <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-5">
                     {[
                       { key: "course", label: "المساق" },
                       { key: "morningAssembly", label: "الطابور الصباحي" },
@@ -1057,113 +706,27 @@ export default function EForms() {
                       { key: "activities", label: "الأنشطة التي قام بها" },
                       { key: "meetings", label: "حضور الاجتماعات" }
                     ].map((field) => (
-                      <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                        <label style={{
-                          fontSize: "0.9rem",
-                          fontWeight: 600,
-                          color: "#495057",
-                          marginBottom: "0.5rem"
-                        }}>
-                          {field.label}
-                        </label>
+                      <div key={field.key} className="flex flex-col">
+                        <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">{field.label}</label>
                         <textarea
                           value={weeklyReport[field.key]}
                           onChange={(e) => updateWeeklyReport(field.key, e.target.value)}
                           rows={4}
-                          style={{
-                            width: "100%",
-                            padding: "12px",
-                            border: "1.5px solid #e0e0e0",
-                            borderRadius: "10px",
-                            fontSize: "0.9rem",
-                            resize: "vertical",
-                            transition: "all 0.2s",
-                            backgroundColor: "white",
-                            fontFamily: "inherit"
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = "var(--primary, #007bff)";
-                            e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = "#e0e0e0";
-                            e.target.style.boxShadow = "none";
-                          }}
+                          className="w-full p-3 border-[1.5px] border-[#e0e0e0] rounded-[10px] text-[0.9rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                           placeholder={`اكتب ${field.label}...`}
                         />
                       </div>
                     ))}
                   </div>
 
-                  <div className="no-print" style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginTop: "2rem",
-                    paddingTop: "1.5rem",
-                    borderTop: "1px solid #e9ecef"
-                  }}>
-                    <button
-                      onClick={resetWeeklyReport}
-                      disabled={saving}
-                      style={{
-                        padding: "0.875rem 1.5rem",
-                        backgroundColor: "#6b7280",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: saving ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 500,
-                        opacity: saving ? 0.6 : 1,
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!saving) {
-                          e.currentTarget.style.backgroundColor = "#4b5563";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#6b7280";
-                      }}
+                  <div className="no-print flex justify-end items-center gap-3 mt-8 pt-6 border-t border-[#e9ecef]">
+                    <button onClick={resetWeeklyReport} disabled={saving}
+                      className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-medium transition-all hover:bg-[#4b5563]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                     >
                       <RotateCcw size={18} /> إعادة تعيين
                     </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      style={{
-                        padding: "0.875rem 2rem",
-                        backgroundColor: "var(--primary, #007bff)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: saving ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        opacity: saving ? 0.6 : 1,
-                        transition: "all 0.2s",
-                        boxShadow: "0 2px 8px rgba(0,123,255,0.3)"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!saving) {
-                          e.currentTarget.style.backgroundColor = "#0056b3";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,123,255,0.4)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--primary, #007bff)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
-                      }}
+                    <button onClick={handleSave} disabled={saving}
+                      className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold transition-all shadow-[0_2px_8px_rgba(0,123,255,0.3)] hover:shadow-[0_4px_12px_rgba(0,123,255,0.4)] hover:-translate-y-px" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                     >
                       {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                       {saving ? "جاري الحفظ..." : "حفظ التقرير"}
@@ -1174,88 +737,29 @@ export default function EForms() {
             )}
 
             {selectedForm === "weekly_brief_report" && (
-              <div style={{
-                marginTop: "2rem",
-                animation: "fadeIn 0.4s ease-out",
-                maxWidth: "100%"
-              }}>
-                <div style={{
-                  background: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-                  borderRadius: "16px 16px 0 0",
-                  padding: "1.5rem 2rem",
-                  color: "white"
-                }}>
-                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>التقرير المختصر الأسبوعي</h4>
-                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-                    تقرير شامل عن الأنشطة والمهام والتأمل الذاتي للأسبوع
-                  </p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out] max-w-full">
+                <div className="bg-gradient-to-br from-[#fa709a] to-[#fee140] rounded-t-2xl py-6 px-8 text-white">
+                  <h4 className="m-0 text-[1.25rem] font-semibold">التقرير المختصر الأسبوعي</h4>
+                  <p className="m-0 mt-2 opacity-90 text-[0.95rem]">تقرير شامل عن الأنشطة والمهام والتأمل الذاتي للأسبوع</p>
                 </div>
 
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "0 0 16px 16px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                  padding: "1.5rem",
-                  border: "1px solid #e8e8e8",
-                  borderTop: "none"
-                }}>
-                  {/* القسم الأول: التخطيط والتحضير */}
-                  <div style={{ marginBottom: "2rem" }}>
-                    <h5 className="form-section-header" style={{
-                      fontSize: "1.1rem",
-                      fontWeight: 700,
-                      color: "#495057",
-                      marginBottom: "1rem",
-                      padding: "0.75rem 1rem",
-                      backgroundColor: "#e9ecef",
-                      borderRadius: "8px",
-                      borderRight: "4px solid #fa709a"
-                    }}>
+                <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+                  {/* القسم الأول */}
+                  <div className="mb-8">
+                    <h5 className="form-section-header text-[1.1rem] font-bold text-[#495057] mb-4 py-3 px-4 bg-[#e9ecef] rounded-lg border-r-4 border-[#fa709a]">
                       القسم الأول: العمل والإنجاز اللاصفي (خارج الغرفة الصفية) - التخطيط والتحضير
                     </h5>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                      gap: "1rem"
-                    }}>
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                       {[
                         { key: "lessonsTaught", label: "أسماء المباحث والدروس التي نفذتها خلال هذا الأسبوع" },
                         { key: "worksheetsCount", label: "عدد أوراق العمل التي عملتها هذا الأسبوع وعناوينها" },
                         { key: "teachingMaterials", label: "أسماء أبرز الوسائل التعليمية قمت بإعدادها وتوظيفها" },
                         { key: "otherWorks", label: "أسماء أعمال أخرى أعددتها (مقاطع فيديو، نشرات، اختبارات، خطط علاجية...)" }
                       ].map((field) => (
-                        <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                          <label style={{
-                            fontSize: "0.85rem",
-                            fontWeight: 600,
-                            color: "#495057",
-                            marginBottom: "0.5rem"
-                          }}>
-                            {field.label}
-                          </label>
-                          <textarea
-                            value={weeklyBriefReport[field.key]}
-                            onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)}
-                            rows={3}
-                            style={{
-                              width: "100%",
-                              padding: "10px",
-                              border: "1.5px solid #e0e0e0",
-                              borderRadius: "8px",
-                              fontSize: "0.85rem",
-                              resize: "vertical",
-                              transition: "all 0.2s",
-                              backgroundColor: "white",
-                              fontFamily: "inherit"
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = "var(--primary, #007bff)";
-                              e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = "#e0e0e0";
-                              e.target.style.boxShadow = "none";
-                            }}
+                        <div key={field.key} className="flex flex-col">
+                          <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{field.label}</label>
+                          <textarea value={weeklyBriefReport[field.key]} onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)} rows={3}
+                            className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                             placeholder="..."
                           />
                         </div>
@@ -1263,62 +767,21 @@ export default function EForms() {
                     </div>
                   </div>
 
-                  {/* القسم الثاني: العمل والإنجاز الصفي */}
-                  <div style={{ marginBottom: "2rem" }}>
-                    <h5 className="form-section-header" style={{
-                      fontSize: "1.1rem",
-                      fontWeight: 700,
-                      color: "#495057",
-                      marginBottom: "1rem",
-                      padding: "0.75rem 1rem",
-                      backgroundColor: "#e9ecef",
-                      borderRadius: "8px",
-                      borderRight: "4px solid #fee140"
-                    }}>
+                  {/* القسم الثاني */}
+                  <div className="mb-8">
+                    <h5 className="form-section-header text-[1.1rem] font-bold text-[#495057] mb-4 py-3 px-4 bg-[#e9ecef] rounded-lg border-r-4 border-[#fee140]">
                       القسم الثاني: العمل والإنجاز الصفي (داخل الغرفة الصفية)
                     </h5>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                      gap: "1rem"
-                    }}>
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                       {[
                         { key: "observedStrengths", label: "ما أعجبك من مشاهدتك للمعلم المرشد" },
                         { key: "coTeachingReflection", label: "انعكاس على مشاركتك في إعطاء مواقف تعليمية مع المعلم المرشد" },
                         { key: "selfTeachingReflection", label: "تقييمك الذاتي لحصة صفية كاملة نفذتها" }
                       ].map((field) => (
-                        <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                          <label style={{
-                            fontSize: "0.85rem",
-                            fontWeight: 600,
-                            color: "#495057",
-                            marginBottom: "0.5rem"
-                          }}>
-                            {field.label}
-                          </label>
-                          <textarea
-                            value={weeklyBriefReport[field.key]}
-                            onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)}
-                            rows={3}
-                            style={{
-                              width: "100%",
-                              padding: "10px",
-                              border: "1.5px solid #e0e0e0",
-                              borderRadius: "8px",
-                              fontSize: "0.85rem",
-                              resize: "vertical",
-                              transition: "all 0.2s",
-                              backgroundColor: "white",
-                              fontFamily: "inherit"
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = "var(--primary, #007bff)";
-                              e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = "#e0e0e0";
-                              e.target.style.boxShadow = "none";
-                            }}
+                        <div key={field.key} className="flex flex-col">
+                          <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{field.label}</label>
+                          <textarea value={weeklyBriefReport[field.key]} onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)} rows={3}
+                            className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                             placeholder="..."
                           />
                         </div>
@@ -1326,25 +789,12 @@ export default function EForms() {
                     </div>
                   </div>
 
-                  {/* القسم الثالث: الجوانب السلوكي والمهني */}
-                  <div style={{ marginBottom: "2rem" }}>
-                    <h5 className="form-section-header" style={{
-                      fontSize: "1.1rem",
-                      fontWeight: 700,
-                      color: "#495057",
-                      marginBottom: "1rem",
-                      padding: "0.75rem 1rem",
-                      backgroundColor: "#e9ecef",
-                      borderRadius: "8px",
-                      borderRight: "4px solid #11998e"
-                    }}>
+                  {/* القسم الثالث */}
+                  <div className="mb-8">
+                    <h5 className="form-section-header text-[1.1rem] font-bold text-[#495057] mb-4 py-3 px-4 bg-[#e9ecef] rounded-lg border-r-4 border-[#11998e]">
                       القسم الثالث: الجوانب السلوكي والمهني
                     </h5>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                      gap: "1rem"
-                    }}>
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                       {[
                         { key: "studentAttendance", label: "التزام الطلبة بالدوام والزي المدرسي" },
                         { key: "studentDiscipline", label: "احترام الطلبة للقوانين والأنظمة ولوائح السلوك والانضباط" },
@@ -1352,38 +802,10 @@ export default function EForms() {
                         { key: "schoolSupport", label: "أتاحة المدرسة الفرصة للتدريب بفاعلية والحصول على أقصى فائدة" },
                         { key: "professionalRelations", label: "علاقتك المهنية مع ذوي العلاقة في المدرسة وتقبلهم لك" }
                       ].map((field) => (
-                        <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                          <label style={{
-                            fontSize: "0.85rem",
-                            fontWeight: 600,
-                            color: "#495057",
-                            marginBottom: "0.5rem"
-                          }}>
-                            {field.label}
-                          </label>
-                          <textarea
-                            value={weeklyBriefReport[field.key]}
-                            onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)}
-                            rows={3}
-                            style={{
-                              width: "100%",
-                              padding: "10px",
-                              border: "1.5px solid #e0e0e0",
-                              borderRadius: "8px",
-                              fontSize: "0.85rem",
-                              resize: "vertical",
-                              transition: "all 0.2s",
-                              backgroundColor: "white",
-                              fontFamily: "inherit"
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = "var(--primary, #007bff)";
-                              e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = "#e0e0e0";
-                              e.target.style.boxShadow = "none";
-                            }}
+                        <div key={field.key} className="flex flex-col">
+                          <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{field.label}</label>
+                          <textarea value={weeklyBriefReport[field.key]} onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)} rows={3}
+                            className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                             placeholder="..."
                           />
                         </div>
@@ -1391,62 +813,21 @@ export default function EForms() {
                     </div>
                   </div>
 
-                  {/* القسم الرابع: التقييم والتأمل الذاتي */}
-                  <div style={{ marginBottom: "2rem" }}>
-                    <h5 className="form-section-header" style={{
-                      fontSize: "1.1rem",
-                      fontWeight: 700,
-                      color: "#495057",
-                      marginBottom: "1rem",
-                      padding: "0.75rem 1rem",
-                      backgroundColor: "#e9ecef",
-                      borderRadius: "8px",
-                      borderRight: "4px solid #667eea"
-                    }}>
+                  {/* القسم الرابع */}
+                  <div className="mb-8">
+                    <h5 className="form-section-header text-[1.1rem] font-bold text-[#495057] mb-4 py-3 px-4 bg-[#e9ecef] rounded-lg border-r-4 border-[#667eea]">
                       القسم الرابع: التقييم والتأمل الذاتي
                     </h5>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                      gap: "1rem"
-                    }}>
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                       {[
                         { key: "strengthsThisWeek", label: "أهم جوانب القوة والنجاح التي تميزت بها هذا الأسبوع" },
                         { key: "areasForImprovement", label: "الجوانب التي تحتاج لتحسين وتطوير مستقبلاً" },
                         { key: "supervisorSupportNeeds", label: "ما الذي تريد من مشرفك أن يساعدك فيه ليتطور أداؤك" }
                       ].map((field) => (
-                        <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                          <label style={{
-                            fontSize: "0.85rem",
-                            fontWeight: 600,
-                            color: "#495057",
-                            marginBottom: "0.5rem"
-                          }}>
-                            {field.label}
-                          </label>
-                          <textarea
-                            value={weeklyBriefReport[field.key]}
-                            onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)}
-                            rows={3}
-                            style={{
-                              width: "100%",
-                              padding: "10px",
-                              border: "1.5px solid #e0e0e0",
-                              borderRadius: "8px",
-                              fontSize: "0.85rem",
-                              resize: "vertical",
-                              transition: "all 0.2s",
-                              backgroundColor: "white",
-                              fontFamily: "inherit"
-                            }}
-                            onFocus={(e) => {
-                              e.target.style.borderColor = "var(--primary, #007bff)";
-                              e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                            }}
-                            onBlur={(e) => {
-                              e.target.style.borderColor = "#e0e0e0";
-                              e.target.style.boxShadow = "none";
-                            }}
+                        <div key={field.key} className="flex flex-col">
+                          <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{field.label}</label>
+                          <textarea value={weeklyBriefReport[field.key]} onChange={(e) => updateWeeklyBriefReport(field.key, e.target.value)} rows={3}
+                            className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                             placeholder="..."
                           />
                         </div>
@@ -1454,75 +835,14 @@ export default function EForms() {
                     </div>
                   </div>
 
-                  <div className="no-print" style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginTop: "2rem",
-                    paddingTop: "1.5rem",
-                    borderTop: "1px solid #e9ecef"
-                  }}>
-                    <button
-                      onClick={resetWeeklyBriefReport}
-                      disabled={saving}
-                      style={{
-                        padding: "0.875rem 1.5rem",
-                        backgroundColor: "#6b7280",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: saving ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 500,
-                        opacity: saving ? 0.6 : 1,
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!saving) {
-                          e.currentTarget.style.backgroundColor = "#4b5563";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#6b7280";
-                      }}
+                  <div className="no-print flex justify-end items-center gap-3 mt-8 pt-6 border-t border-[#e9ecef]">
+                    <button onClick={resetWeeklyBriefReport} disabled={saving}
+                      className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-medium transition-all hover:bg-[#4b5563]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                     >
                       <RotateCcw size={18} /> إعادة تعيين
                     </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      style={{
-                        padding: "0.875rem 2rem",
-                        backgroundColor: "var(--primary, #007bff)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: saving ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        opacity: saving ? 0.6 : 1,
-                        transition: "all 0.2s",
-                        boxShadow: "0 2px 8px rgba(0,123,255,0.3)"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!saving) {
-                          e.currentTarget.style.backgroundColor = "#0056b3";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,123,255,0.4)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--primary, #007bff)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
-                      }}
+                    <button onClick={handleSave} disabled={saving}
+                      className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold transition-all shadow-[0_2px_8px_rgba(0,123,255,0.3)] hover:shadow-[0_4px_12px_rgba(0,123,255,0.4)] hover:-translate-y-px" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                     >
                       {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                       {saving ? "جاري الحفظ..." : "حفظ التقرير"}
@@ -1533,36 +853,14 @@ export default function EForms() {
             )}
 
             {selectedForm === "learning_experience_review" && (
-              <div style={{
-                marginTop: "2rem",
-                animation: "fadeIn 0.4s ease-out",
-                maxWidth: "100%"
-              }}>
-                <div style={{
-                  background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-                  borderRadius: "16px 16px 0 0",
-                  padding: "1.5rem 2rem",
-                  color: "white"
-                }}>
-                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>نموذج نقد خبرات التعلم</h4>
-                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-                    تقييم وتقويم الخبرات التعليمية المكتسبة خلال فترة التدريب
-                  </p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out] max-w-full">
+                <div className="bg-gradient-to-br from-[#11998e] to-[#38ef7d] rounded-t-2xl py-6 px-8 text-white">
+                  <h4 className="m-0 text-[1.25rem] font-semibold">نموذج نقد خبرات التعلم</h4>
+                  <p className="m-0 mt-2 opacity-90 text-[0.95rem]">تقييم وتقويم الخبرات التعليمية المكتسبة خلال فترة التدريب</p>
                 </div>
 
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "0 0 16px 16px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                  padding: "1.5rem",
-                  border: "1px solid #e8e8e8",
-                  borderTop: "none"
-                }}>
-                  <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                    gap: "1rem"
-                  }}>
+                <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                     {[
                       { key: "plansAndObjectives", label: "الخطط والأهداف" },
                       { key: "lessonImplementation", label: "تنفيذ الدرس" },
@@ -1576,113 +874,24 @@ export default function EForms() {
                       { key: "evaluationAndTesting", label: "التقييم والاختبارات ومراعاة مبادئ القياس والتقويم" },
                       { key: "teacherRoles", label: "الأدوار التي يقوم بها المعلم إضافة إلى عملية التدريس" }
                     ].map((field) => (
-                      <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                        <label style={{
-                          fontSize: "0.9rem",
-                          fontWeight: 600,
-                          color: "#495057",
-                          marginBottom: "0.5rem"
-                        }}>
-                          {field.label}
-                        </label>
-                        <textarea
-                          value={learningExperience[field.key]}
-                          onChange={(e) => updateLearningExperience(field.key, e.target.value)}
-                          rows={3}
-                          style={{
-                            width: "100%",
-                            padding: "12px",
-                            border: "1.5px solid #e0e0e0",
-                            borderRadius: "10px",
-                            fontSize: "0.9rem",
-                            resize: "vertical",
-                            transition: "all 0.2s",
-                            backgroundColor: "white",
-                            fontFamily: "inherit"
-                          }}
-                          onFocus={(e) => {
-                            e.target.style.borderColor = "var(--primary, #007bff)";
-                            e.target.style.boxShadow = "0 0 0 3px rgba(0,123,255,0.1)";
-                          }}
-                          onBlur={(e) => {
-                            e.target.style.borderColor = "#e0e0e0";
-                            e.target.style.boxShadow = "none";
-                          }}
+                      <div key={field.key} className="flex flex-col">
+                        <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">{field.label}</label>
+                        <textarea value={learningExperience[field.key]} onChange={(e) => updateLearningExperience(field.key, e.target.value)} rows={3}
+                          className="w-full p-3 border-[1.5px] border-[#e0e0e0] rounded-[10px] text-[0.9rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                           placeholder={`اكتب ملاحظاتك عن ${field.label}...`}
                         />
                       </div>
                     ))}
                   </div>
 
-                  <div className="no-print" style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    alignItems: "center",
-                    gap: "0.75rem",
-                    marginTop: "2rem",
-                    paddingTop: "1.5rem",
-                    borderTop: "1px solid #e9ecef"
-                  }}>
-                    <button
-                      onClick={resetLearningExperience}
-                      disabled={saving}
-                      style={{
-                        padding: "0.875rem 1.5rem",
-                        backgroundColor: "#6b7280",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: saving ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 500,
-                        opacity: saving ? 0.6 : 1,
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!saving) {
-                          e.currentTarget.style.backgroundColor = "#4b5563";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#6b7280";
-                      }}
+                  <div className="no-print flex justify-end items-center gap-3 mt-8 pt-6 border-t border-[#e9ecef]">
+                    <button onClick={resetLearningExperience} disabled={saving}
+                      className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-medium transition-all hover:bg-[#4b5563]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                     >
                       <RotateCcw size={18} /> إعادة تعيين
                     </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      style={{
-                        padding: "0.875rem 2rem",
-                        backgroundColor: "var(--primary, #007bff)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10px",
-                        cursor: saving ? "not-allowed" : "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                        fontSize: "0.95rem",
-                        fontWeight: 600,
-                        opacity: saving ? 0.6 : 1,
-                        transition: "all 0.2s",
-                        boxShadow: "0 2px 8px rgba(0,123,255,0.3)"
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!saving) {
-                          e.currentTarget.style.backgroundColor = "#0056b3";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,123,255,0.4)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--primary, #007bff)";
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,123,255,0.3)";
-                      }}
+                    <button onClick={handleSave} disabled={saving}
+                      className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold transition-all shadow-[0_2px_8px_rgba(0,123,255,0.3)] hover:shadow-[0_4px_12px_rgba(0,123,255,0.4)] hover:-translate-y-px" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
                     >
                       {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                       {saving ? "جاري الحفظ..." : "حفظ النموذج"}
@@ -1692,39 +901,38 @@ export default function EForms() {
               </div>
             )}
             {selectedForm === "daily_tasks_report" && (
-              <div style={{ marginTop: "2rem", animation: "fadeIn 0.4s ease-out" }}>
-                <div style={{ background: "white", borderRadius: "16px", padding: "2rem", boxShadow: "0 2px 12px rgba(0,0,0,0.07)" }}>
-                  <h4 style={{ fontWeight: 700, color: "#0e7490", marginBottom: "0.25rem" }}>تقرير المهام والأعمال اليومية</h4>
-                  <p style={{ color: "#64748b", fontSize: "0.9rem", marginBottom: "1.5rem" }}>توثيق المهام والأعمال اليومية وملاحظات المرشد التربوي</p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out]">
+                <div className="bg-white rounded-2xl p-8 shadow-[0_2px_12px_rgba(0,0,0,0.07)]">
+                  <h4 className="font-bold text-[#0e7490] mb-1">تقرير المهام والأعمال اليومية</h4>
+                  <p className="text-[#64748b] text-[0.9rem] mb-6">توثيق المهام والأعمال اليومية وملاحظات المرشد التربوي</p>
 
-                  <div style={{ overflowX: "auto" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem", direction: "rtl" }}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse text-[0.88rem] direction-rtl">
                       <thead>
-                        <tr style={{ background: "#0e7490", color: "white" }}>
-                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 140 }}>المهام والأعمال التي تم تنفيذها</th>
-                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 110 }}>الأهداف</th>
-                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 120 }}>المهارات المكتسبة</th>
-                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 130 }}>الصعوبات والتحديات</th>
-                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 150 }}>المجهود المبذول للتغلب على الصعوبات</th>
-                          <th style={{ padding: "0.75rem 0.6rem", border: "1px solid #0891b2", fontWeight: 600, minWidth: 150 }}>ملاحظات المرشد التربوي</th>
-                          <th className="no-print" style={{ padding: "0.75rem 0.5rem", border: "1px solid #0891b2", width: 44 }}></th>
+                        <tr className="bg-[#0e7490] text-white">
+                          <th className="py-3 px-[0.6rem] border border-[#0891b2] font-semibold min-w-[140px]">المهام والأعمال التي تم تنفيذها</th>
+                          <th className="py-3 px-[0.6rem] border border-[#0891b2] font-semibold min-w-[110px]">الأهداف</th>
+                          <th className="py-3 px-[0.6rem] border border-[#0891b2] font-semibold min-w-[120px]">المهارات المكتسبة</th>
+                          <th className="py-3 px-[0.6rem] border border-[#0891b2] font-semibold min-w-[130px]">الصعوبات والتحديات</th>
+                          <th className="py-3 px-[0.6rem] border border-[#0891b2] font-semibold min-w-[150px]">المجهود المبذول للتغلب على الصعوبات</th>
+                          <th className="py-3 px-[0.6rem] border border-[#0891b2] font-semibold min-w-[150px]">ملاحظات المرشد التربوي</th>
+                          <th className="no-print py-3 px-[0.5rem] border border-[#0891b2] w-[44px]"></th>
                         </tr>
                       </thead>
                       <tbody>
                         {dailyTaskRows.map((row, idx) => (
-                          <tr key={row.id} style={{ background: idx % 2 === 0 ? "#f0f9ff" : "white" }}>
+                          <tr key={row.id} className={idx % 2 === 0 ? "bg-[#f0f9ff]" : "bg-white"}>
                             {["tasksCompleted", "goals", "skills", "challenges", "effortOnChallenges", "supervisorNotes"].map(field => (
-                              <td key={field} style={{ border: "1px solid #bae6fd", padding: "0.3rem" }}>
-                                <textarea
-                                  value={row[field]}
-                                  onChange={e => updateDailyTaskRow(row.id, field, e.target.value)}
-                                  rows={3}
-                                  style={{ width: "100%", border: "none", background: "transparent", resize: "vertical", fontSize: "0.85rem", fontFamily: "inherit", outline: "none", padding: "2px 4px" }}
+                              <td key={field} className="border border-[#bae6fd] py-[0.3rem]">
+                                <textarea value={row[field]} onChange={e => updateDailyTaskRow(row.id, field, e.target.value)} rows={3}
+                                  className="w-full border-none bg-transparent resize-y text-[0.85rem] font-inherit outline-none py-[2px] px-1"
                                 />
                               </td>
                             ))}
-                            <td className="no-print" style={{ border: "1px solid #bae6fd", textAlign: "center", padding: "0.3rem" }}>
-                              <button onClick={() => deleteDailyTaskRow(row.id)} disabled={dailyTaskRows.length <= 1} style={{ background: "none", border: "none", cursor: dailyTaskRows.length <= 1 ? "not-allowed" : "pointer", color: "#ef4444", opacity: dailyTaskRows.length <= 1 ? 0.3 : 1 }}>
+                            <td className="no-print border border-[#bae6fd] text-center py-[0.3rem]">
+                              <button onClick={() => deleteDailyTaskRow(row.id)} disabled={dailyTaskRows.length <= 1}
+                                className={`bg-transparent border-none ${dailyTaskRows.length <= 1 ? 'text-[#ef4444] opacity-30 cursor-not-allowed' : 'text-[#ef4444] cursor-pointer'}`}
+                              >
                                 <Trash2 size={16} />
                               </button>
                             </td>
@@ -1734,16 +942,18 @@ export default function EForms() {
                     </table>
                   </div>
 
-                  <button className="no-print" onClick={addDailyTaskRow} style={{ marginTop: "1rem", display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.5rem 1.2rem", background: "#f0f9ff", border: "1.5px dashed #0891b2", borderRadius: "8px", color: "#0e7490", fontWeight: 600, cursor: "pointer", fontSize: "0.9rem" }}>
+                  <button className="no-print mt-4 flex items-center gap-[0.4rem] py-2 px-[1.2rem] bg-[#f0f9ff] border-[1.5px] border-dashed border-[#0891b2] rounded-lg text-[#0e7490] font-semibold cursor-pointer text-[0.9rem]">
                     <Plus size={16} /> إضافة صف
                   </button>
                 </div>
 
-                <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.5rem" }}>
-                  <button onClick={resetDailyTaskRows} style={{ padding: "0.875rem 1.5rem", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 500 }}>
+                <div className="no-print flex justify-end gap-3 mt-6">
+                  <button onClick={resetDailyTaskRows} className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] cursor-pointer flex items-center gap-2 text-[0.95rem] font-medium">
                     <RotateCcw size={18} /> إعادة تعيين
                   </button>
-                  <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
+                  <button onClick={handleSave} disabled={saving}
+                    className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold shadow-[0_2px_8px_rgba(0,123,255,0.3)]" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
+                  >
                     {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                     {saving ? "جاري الحفظ..." : "حفظ التقرير"}
                   </button>
@@ -1752,52 +962,35 @@ export default function EForms() {
             )}
 
             {selectedForm === "weekly_reflection" && (
-              <div style={{ marginTop: "2rem", animation: "fadeIn 0.4s ease-out" }}>
-                <div style={{
-                  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                  borderRadius: "16px 16px 0 0",
-                  padding: "1.5rem 2rem",
-                  color: "white"
-                }}>
-                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>نموذج التأمل الأسبوعي</h4>
-                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-                    تأمل ذاتي أسبوعي في التجربة التدريبية
-                  </p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out]">
+                <div className="bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-t-2xl py-6 px-8 text-white">
+                  <h4 className="m-0 text-[1.25rem] font-semibold">نموذج التأمل الأسبوعي</h4>
+                  <p className="m-0 mt-2 opacity-90 text-[0.95rem]">تأمل ذاتي أسبوعي في التجربة التدريبية</p>
                 </div>
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "0 0 16px 16px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                  padding: "1.5rem",
-                  border: "1px solid #e8e8e8",
-                  borderTop: "none"
-                }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+                <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                     {[
                       { key: "reflection", label: "التأمل في التجربة التدريبية هذا الأسبوع" },
                       { key: "notes", label: "ملاحظات ونقاط للتحسين" },
                       { key: "summary", label: "ملخص الأسبوع" },
                     ].map((field) => (
-                      <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                        <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#495057", marginBottom: "0.5rem" }}>
-                          {field.label}
-                        </label>
-                        <textarea
-                          value={weeklyReflection[field.key]}
-                          onChange={(e) => updateWeeklyReflection(field.key, e.target.value)}
-                          rows={4}
-                          style={{ width: "100%", padding: "10px", border: "1.5px solid #e0e0e0", borderRadius: "8px", fontSize: "0.85rem", resize: "vertical", backgroundColor: "white", fontFamily: "inherit" }}
+                      <div key={field.key} className="flex flex-col">
+                        <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{field.label}</label>
+                        <textarea value={weeklyReflection[field.key]} onChange={(e) => updateWeeklyReflection(field.key, e.target.value)} rows={4}
+                          className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] resize-y bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
                           placeholder="..."
                         />
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.5rem" }}>
-                  <button onClick={resetWeeklyReflection} style={{ padding: "0.875rem 1.5rem", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 500 }}>
+                <div className="no-print flex justify-end gap-3 mt-6">
+                  <button onClick={resetWeeklyReflection} className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] cursor-pointer flex items-center gap-2 text-[0.95rem] font-medium">
                     <RotateCcw size={18} /> إعادة تعيين
                   </button>
-                  <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
+                  <button onClick={handleSave} disabled={saving}
+                    className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold shadow-[0_2px_8px_rgba(0,123,255,0.3)]" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
+                  >
                     {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                     {saving ? "جاري الحفظ..." : "حفظ النموذج"}
                   </button>
@@ -1806,50 +999,28 @@ export default function EForms() {
             )}
 
             {selectedForm === "field_visit_summary" && (
-              <div style={{ marginTop: "2rem", animation: "fadeIn 0.4s ease-out" }}>
-                <div style={{
-                  background: "linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)",
-                  borderRadius: "16px 16px 0 0",
-                  padding: "1.5rem 2rem",
-                  color: "white"
-                }}>
-                  <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>ملخص الزيارة الميدانية</h4>
-                  <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
-                    توثيق الزيارات الميدانية والملاحظات
-                  </p>
+              <div className="mt-8 animate-[fadeIn_0.4s_ease-out]">
+                <div className="bg-gradient-to-br from-[#0891b2] to-[#06b6d4] rounded-t-2xl py-6 px-8 text-white">
+                  <h4 className="m-0 text-[1.25rem] font-semibold">ملخص الزيارة الميدانية</h4>
+                  <p className="m-0 mt-2 opacity-90 text-[0.95rem]">توثيق الزيارات الميدانية والملاحظات</p>
                 </div>
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "0 0 16px 16px",
-                  boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-                  padding: "1.5rem",
-                  border: "1px solid #e8e8e8",
-                  borderTop: "none"
-                }}>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
+                <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-4">
                     {[
                       { key: "visitDate", label: "تاريخ الزيارة", type: "date" },
                       { key: "visitPurpose", label: "هدف الزيارة" },
                       { key: "observations", label: "الملاحظات" },
                       { key: "recommendations", label: "التوصيات" },
                     ].map((field) => (
-                      <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                        <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "#495057", marginBottom: "0.5rem" }}>
-                          {field.label}
-                        </label>
+                      <div key={field.key} className="flex flex-col">
+                        <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{field.label}</label>
                         {field.type === "date" ? (
-                          <input
-                            type="date"
-                            value={fieldVisitSummary[field.key]}
-                            onChange={(e) => updateFieldVisitSummary(field.key, e.target.value)}
-                            style={{ width: "100%", padding: "10px", border: "1.5px solid #e0e0e0", borderRadius: "8px", fontSize: "0.85rem", backgroundColor: "white" }}
+                          <input type="date" value={fieldVisitSummary[field.key]} onChange={(e) => updateFieldVisitSummary(field.key, e.target.value)}
+                            className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] bg-white"
                           />
                         ) : (
-                          <textarea
-                            value={fieldVisitSummary[field.key]}
-                            onChange={(e) => updateFieldVisitSummary(field.key, e.target.value)}
-                            rows={4}
-                            style={{ width: "100%", padding: "10px", border: "1.5px solid #e0e0e0", borderRadius: "8px", fontSize: "0.85rem", resize: "vertical", backgroundColor: "white", fontFamily: "inherit" }}
+                          <textarea value={fieldVisitSummary[field.key]} onChange={(e) => updateFieldVisitSummary(field.key, e.target.value)} rows={4}
+                            className="w-full p-[10px] border-[1.5px] border-[#e0e0e0] rounded-lg text-[0.85rem] resize-y bg-white font-inherit"
                             placeholder="..."
                           />
                         )}
@@ -1857,11 +1028,13 @@ export default function EForms() {
                     ))}
                   </div>
                 </div>
-                <div className="no-print" style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "1.5rem" }}>
-                  <button onClick={resetFieldVisitSummary} style={{ padding: "0.875rem 1.5rem", backgroundColor: "#6b7280", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 500 }}>
+                <div className="no-print flex justify-end gap-3 mt-6">
+                  <button onClick={resetFieldVisitSummary} className="py-[0.875rem] px-6 bg-[#6b7280] text-white border-none rounded-[10px] cursor-pointer flex items-center gap-2 text-[0.95rem] font-medium">
                     <RotateCcw size={18} /> إعادة تعيين
                   </button>
-                  <button onClick={handleSave} disabled={saving} style={{ padding: "0.875rem 2rem", backgroundColor: "var(--primary, #007bff)", color: "white", border: "none", borderRadius: "10px", cursor: saving ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.95rem", fontWeight: 600, opacity: saving ? 0.6 : 1, boxShadow: "0 2px 8px rgba(0,123,255,0.3)" }}>
+                  <button onClick={handleSave} disabled={saving}
+                    className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[0.95rem] font-semibold shadow-[0_2px_8px_rgba(0,123,255,0.3)]" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
+                  >
                     {saving ? <LoadingSpinner size="button" /> : <Save size={18} />}
                     {saving ? "جاري الحفظ..." : "حفظ النموذج"}
                   </button>

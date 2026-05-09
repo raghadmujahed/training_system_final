@@ -155,10 +155,10 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
       {/* Hero Section */}
       <div className="hero-section mb-4">
         <div className="hero-content">
-          <div className="hero-icon" style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)" }}>
+          <div className="hero-icon bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a]">
             <User size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">{"الملف الشخصي"}</h1>
             <p className="hero-subtitle">
               {"تعديل بيانات "}{labels.managerLabel}{" وبيانات "}{labels.siteName}{" ثم الضغط على حفظ"}
@@ -168,64 +168,61 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
       </div>
 
       {noTrainingSite && (
-        <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.75rem 1rem", background: "#fef3c7", color: "#d97706", borderRadius: 12, fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem" }}>
+        <div className="flex items-center gap-[0.375rem] py-3 px-4 bg-[#fef3c7] text-[#d97706] rounded-xl text-[0.9rem] font-semibold mb-4">
           <AlertTriangle size={18} /> {"لم يُربط حسابك بموقع تدريب بعد؛ يمكنك تعديل بياناتك الشخصية فقط حتى يقوم المسؤول بالربط."}
         </div>
       )}
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(480px, 1fr))", gap: "1.5rem" }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(480px,1fr))] gap-6">
           {/* Personal Info Card */}
-          <div className="section-card" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-              <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+          <div className="section-card p-6 rounded-2xl border border-[#e2e8f0]">
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white bg-gradient-to-br from-[#3b82f6] to-[#2563eb]">
                 <User size={20} />
               </div>
               <div>
-                <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"بيانات "}{labels.managerLabel}</h4>
-                <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"المعلومات الشخصية لـ"}{labels.managerLabel}</p>
+                <h4 className="m-0 mb-1 text-[1.1rem] font-bold">{"بيانات "}{labels.managerLabel}</h4>
+                <p className="m-0 text-[0.8rem] text-[var(--text-faint)]">{"المعلومات الشخصية لـ"}{labels.managerLabel}</p>
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="flex flex-col gap-4">
               {/* Name */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                   {"اسم "}{labels.managerLabel}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <User size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <div className="relative">
+                  <User size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="principalName" value={profileData.principalName} onChange={handleChange} required disabled={saving}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#3b82f6")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
                   />
                 </div>
               </div>
 
               {/* Email */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                   {"البريد الإلكتروني"}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <Mail size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <div className="relative">
+                  <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="email" name="email" value={profileData.email} onChange={handleChange} required disabled={saving}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#3b82f6")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
                   />
                 </div>
               </div>
 
               {/* Phone */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                   {"رقم الهاتف"}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <Phone size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <div className="relative">
+                  <Phone size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="phone" value={profileData.phone} onChange={handleChange} disabled={saving}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                    onFocus={(e) => (e.target.style.borderColor = "#3b82f6")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
                   />
                 </div>
               </div>
@@ -233,58 +230,59 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
           </div>
 
           {/* Site Info Card */}
-          <div className="section-card" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-              <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+          <div className="section-card p-6 rounded-2xl border border-[#e2e8f0]">
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white bg-gradient-to-br from-[#10b981] to-[#059669]">
                 <School size={20} />
               </div>
               <div>
-                <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"بيانات "}{labels.siteName}</h4>
-                <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"معلومات "}{labels.siteName}{" التدريبي"}</p>
+                <h4 className="m-0 mb-1 text-[1.1rem] font-bold">{"بيانات "}{labels.siteName}</h4>
+                <p className="m-0 text-[0.8rem] text-[var(--text-faint)]">{"معلومات "}{labels.siteName}{" التدريبي"}</p>
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div className="flex flex-col gap-4">
               {/* School Name */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                   {"اسم "}{labels.siteName}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <Building2 size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <div className="relative">
+                  <Building2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="schoolName" value={profileData.schoolName} onChange={handleChange}
                     disabled={saving || noTrainingSite} placeholder={noTrainingSite ? "غير متاح بدون ربط موقع" : ""}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: noTrainingSite ? "#f1f5f9" : "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                    onFocus={(e) => !noTrainingSite && (e.target.style.borderColor = "#10b981")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none transition-[border-color] duration-200 focus:border-[#10b981]"
+                    style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                   />
                 </div>
               </div>
 
               {/* Address */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                   {"العنوان / الموقع"}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <MapPin size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <div className="relative">
+                  <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="address" value={profileData.address} onChange={handleChange}
                     disabled={saving || noTrainingSite}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: noTrainingSite ? "#f1f5f9" : "#f8fafc", outline: "none", transition: "border-color 0.2s" }}
-                    onFocus={(e) => !noTrainingSite && (e.target.style.borderColor = "#10b981")} onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none transition-[border-color] duration-200 focus:border-[#10b981]"
+                    style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                   />
                 </div>
               </div>
 
               {/* Directorate */}
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                   {"المديرية (منطقة)"}
                 </label>
-                <div style={{ position: "relative" }}>
-                  <MapPin size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <div className="relative">
+                  <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <select name="directorate" value={profileData.directorate} onChange={handleChange}
                     disabled={saving || noTrainingSite}
-                    style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: noTrainingSite ? "#f1f5f9" : "#f8fafc", outline: "none", appearance: "auto" }}
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none appearance-auto"
+                    style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                   >
                     {DIRECTORATES.map((d) => (
                       <option key={d.value} value={d.value}>{d.label}</option>
@@ -296,14 +294,15 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
               {/* School Type */}
               {siteType === "school" && (
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.375rem" }}>
+                  <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
                     {"نوع المدرسة"}
                   </label>
-                  <div style={{ position: "relative" }}>
-                    <GraduationCap size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                  <div className="relative">
+                    <GraduationCap size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                     <select name="schoolType" value={profileData.schoolType} onChange={handleChange}
                       disabled={saving || noTrainingSite}
-                      style={{ width: "100%", padding: "0.625rem 0.75rem 0.625rem 0.75rem", paddingRight: 36, borderRadius: 10, border: "1px solid #e2e8f0", fontSize: "0.9rem", background: noTrainingSite ? "#f1f5f9" : "#f8fafc", outline: "none", appearance: "auto" }}
+                      className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none appearance-auto"
+                      style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                     >
                       {SCHOOL_TYPES.map((s) => (
                         <option key={s.value} value={s.value}>{s.label}</option>
@@ -317,9 +316,10 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
         </div>
 
         {/* Save Button */}
-        <div style={{ marginTop: "1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+        <div className="mt-6 flex items-center gap-4">
           <button type="submit" disabled={saving || loading}
-            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.75rem 1.5rem", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", color: "white", border: "none", borderRadius: 10, fontSize: "0.95rem", fontWeight: 600, cursor: saving || loading ? "not-allowed" : "pointer", transition: "transform 0.2s, box-shadow 0.2s", opacity: saving ? 0.7 : 1 }}
+            className="inline-flex items-center gap-2 py-3 px-6 text-white border-none rounded-[10px] text-[0.95rem] font-semibold transition-[transform,box-shadow] duration-200"
+            style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", cursor: saving || loading ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
             onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.3)"; } }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
           >

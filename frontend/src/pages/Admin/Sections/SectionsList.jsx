@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getSections, deleteSection } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function SectionsList() {
   const [sections, setSections] = useState([]);
@@ -35,7 +36,7 @@ export default function SectionsList() {
     <div>
       <div className="page-header">
         <h1>إدارة الشعب</h1>
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div className="flex gap-2.5">
           <Link to="/admin/sections/create" className="btn-primary">
             + إضافة شعبة
           </Link>
@@ -71,8 +72,7 @@ export default function SectionsList() {
                 </Link>
                 <Link
                   to={`/admin/sections/add-students-bulk?sectionId=${section.id}`}
-                  className="btn-sm"
-                  style={{ backgroundColor: "#28a745", margin: "0 5px" }}
+                  className="btn-sm bg-[#28a745] mx-1.5"
                 >
                   إضافة طلاب
                 </Link>

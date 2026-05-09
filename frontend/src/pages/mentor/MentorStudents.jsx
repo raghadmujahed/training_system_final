@@ -55,7 +55,7 @@ export default function MentorStudents() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center" }}>
+                  <td colSpan={5} className="text-center">
                     لا يوجد طلبة مرتبطون بحسابك.
                   </td>
                 </tr>

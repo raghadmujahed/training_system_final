@@ -14,36 +14,15 @@ const LIMIT = 6;
 /* ─── KPI Card ─── */
 function KpiCard({ icon: Icon, label, value, sub, gradient, light }) {
   return (
-    <div style={{
-      background: gradient,
-      borderRadius: 16,
-      padding: "20px 22px",
-      color: "#fff",
-      display: "flex",
-      alignItems: "flex-start",
-      gap: 16,
-      position: "relative",
-      overflow: "hidden",
-      boxShadow: "0 6px 24px rgba(0,0,0,0.13)",
-    }}>
-      <div style={{
-        position: "absolute", bottom: "-24px", left: "-20px",
-        width: 120, height: 120, borderRadius: "50%",
-        background: "rgba(255,255,255,0.07)",
-        pointerEvents: "none",
-      }} />
-      <div style={{
-        width: 46, height: 46, borderRadius: 12,
-        background: "rgba(255,255,255,0.18)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0,
-      }}>
+    <div className="relative overflow-hidden shadow-[0_6px_24px_rgba(0,0,0,0.13)] text-white flex items-start gap-4 py-5 px-[22px] rounded-2xl" style={{ background: gradient }}>
+      <div className="absolute -bottom-6 -left-5 w-[120px] h-[120px] rounded-full bg-white/[0.07] pointer-events-none" />
+      <div className="w-[46px] h-[46px] rounded-xl bg-white/[0.18] flex items-center justify-center shrink-0">
         <Icon size={22} color="#fff" />
       </div>
       <div>
-        <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)", fontWeight: 600, marginBottom: 4 }}>{label}</div>
-        <div style={{ fontSize: "2rem", fontWeight: 900, lineHeight: 1, color: "#fff" }}>{value ?? 0}</div>
-        {sub && <div style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.6)", marginTop: 4 }}>{sub}</div>}
+        <div className="text-[0.75rem] text-white/75 font-semibold mb-1">{label}</div>
+        <div className="text-[2rem] font-black leading-none text-white">{value ?? 0}</div>
+        {sub && <div className="text-[0.72rem] text-white/60 mt-1">{sub}</div>}
       </div>
     </div>
   );
@@ -53,26 +32,18 @@ function KpiCard({ icon: Icon, label, value, sub, gradient, light }) {
 function ProgressRow({ label, count, total, barColor, badge }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
-    <div style={{ marginBottom: 2 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="mb-[2px]">
+      <div className="flex justify-between items-center mb-[6px]">
+        <div className="flex items-center gap-2">
           {badge}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text)" }}>{count}</span>
-          <span style={{
-            fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px",
-            borderRadius: 99, background: barColor + "22", color: barColor,
-          }}>{pct}%</span>
+        <div className="flex items-center gap-2">
+          <span className="font-extrabold text-[0.95rem] text-[var(--text)]">{count}</span>
+          <span className="text-[0.7rem] font-bold py-[2px] px-2 rounded-full" style={{ background: barColor + "22", color: barColor }}>{pct}%</span>
         </div>
       </div>
-      <div style={{ height: 7, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-        <div style={{
-          height: "100%", borderRadius: 99,
-          width: `${pct}%`,
-          background: barColor,
-          transition: "width 0.7s cubic-bezier(.4,0,.2,1)",
-        }} />
+      <div className="h-[7px] rounded-full bg-[#f1f5f9] overflow-hidden">
+        <div className="h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(.4,0,.2,1)]" style={{ width: `${pct}%`, background: barColor }} />
       </div>
     </div>
   );
@@ -81,47 +52,24 @@ function ProgressRow({ label, count, total, barColor, badge }) {
 /* ─── Panel Card ─── */
 function Panel({ icon: Icon, title, accent, count, children, showAll, setShowAll, total }) {
   return (
-    <div style={{
-      background: "#fff", borderRadius: 16,
-      border: "1.5px solid #e8edf4",
-      overflow: "hidden",
-      boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-    }}>
-      <div style={{
-        padding: "16px 20px",
-        borderBottom: "1px solid #f0f4f8",
-        display: "flex", alignItems: "center", gap: 12,
-      }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          background: accent + "18",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-        }}>
+    <div className="bg-white rounded-2xl border-[1.5px] border-[#e8edf4] overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+      <div className="py-4 px-5 border-b border-[#f0f4f8] flex items-center gap-3">
+        <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: accent + "18" }}>
           <Icon size={17} color={accent} />
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: "0.92rem", color: "var(--text)" }}>{title}</div>
+        <div className="flex-1">
+          <div className="font-bold text-[0.92rem] text-[var(--text)]">{title}</div>
         </div>
-        <span style={{
-          background: accent + "15", color: accent,
-          fontSize: "0.72rem", fontWeight: 700, padding: "3px 10px", borderRadius: 99,
-        }}>
+        <span className="text-[0.72rem] font-bold py-[3px] px-[10px] rounded-full" style={{ background: accent + "15", color: accent }}>
           {count} عنصر
         </span>
       </div>
-      <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+      <div className="py-4 px-5 flex flex-col gap-[14px]">
         {children}
       </div>
       {total > LIMIT && (
-        <div style={{ padding: "0 20px 14px" }}>
-          <button onClick={() => setShowAll(!showAll)} style={{
-            width: "100%", padding: "8px",
-            background: "transparent", border: "1px dashed #d1d9e0",
-            borderRadius: 10, color: "#94a3b8",
-            fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-          }}>
+        <div className="px-5 pb-[14px]">
+          <button onClick={() => setShowAll(!showAll)} className="w-full py-2 bg-transparent border border-dashed border-[#d1d9e0] rounded-[10px] text-[#94a3b8] text-[0.8rem] font-semibold cursor-pointer flex items-center justify-center gap-[6px]">
             {showAll ? <><ChevronUp size={14} /> إخفاء</> : <><ChevronDown size={14} /> عرض الكل ({total})</>}
           </button>
         </div>
@@ -133,14 +81,9 @@ function Panel({ icon: Icon, title, accent, count, children, showAll, setShowAll
 /* ─── Batch Status Pill ─── */
 function BatchPill({ label, count, bg, text }) {
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center",
-      padding: "16px 10px", borderRadius: 14,
-      background: bg + "30", border: `1.5px solid ${bg}`,
-      gap: 6, textAlign: "center", flex: "1 1 100px",
-    }}>
-      <span style={{ fontSize: "1.8rem", fontWeight: 900, color: text, lineHeight: 1 }}>{count}</span>
-      <span style={{ fontSize: "0.72rem", fontWeight: 700, color: text, opacity: 0.9 }}>{label}</span>
+    <div className="flex flex-col items-center py-4 px-[10px] rounded-[14px] gap-[6px] text-center flex-[1_1_100px]" style={{ background: bg + "30", border: `1.5px solid ${bg}` }}>
+      <span className="text-[1.8rem] font-black leading-none" style={{ color: text }}>{count}</span>
+      <span className="text-[0.72rem] font-bold opacity-90" style={{ color: text }}>{label}</span>
     </div>
   );
 }
@@ -177,65 +120,45 @@ export default function CoordinatorStatistics() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "100px 20px", gap: 16 }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: 18,
-          background: "linear-gradient(135deg, var(--primary), var(--secondary))",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 8px 24px rgba(20,42,66,0.25)",
-        }}>
+      <div className="flex flex-col items-center justify-center py-[100px] px-5 gap-4">
+        <div className="w-16 h-16 rounded-[18px] flex items-center justify-center shadow-[0_8px_24px_rgba(20,42,66,0.25)]" style={{ background: "linear-gradient(135deg, var(--primary), var(--secondary))" }}>
           <Loader2 size={30} color="white" className="spin" />
         </div>
-        <div style={{ textAlign: "center" }}>
-          <p style={{ margin: "0 0 4px", fontWeight: 700, color: "var(--text)", fontSize: "1rem" }}>جاري تحميل الإحصائيات</p>
-          <p style={{ margin: 0, color: "var(--text-faint)", fontSize: "0.85rem" }}>يرجى الانتظار...</p>
+        <div className="text-center">
+          <p className="m-0 mb-1 font-bold text-[var(--text)] text-[1rem]">جاري تحميل الإحصائيات</p>
+          <p className="m-0 text-[var(--text-faint)] text-[0.85rem]">يرجى الانتظار...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+    <div className="flex flex-col gap-6">
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`}</style>
 
       {/* ── Hero ── */}
-      <div style={{
-        background: "linear-gradient(135deg, #0f2a4a 0%, #1a3a5c 50%, #1e4976 100%)",
-        borderRadius: 18, padding: "28px 32px",
-        display: "flex", alignItems: "center", gap: 20,
-        position: "relative", overflow: "hidden",
-        boxShadow: "0 10px 40px rgba(15,42,74,0.3)",
-      }}>
-        <div style={{ position: "absolute", top: "-40px", left: "-40px", width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", right: "15%", width: 260, height: 260, borderRadius: "50%", background: "rgba(255,255,255,0.03)", pointerEvents: "none" }} />
-        <div style={{
-          width: 56, height: 56, borderRadius: 16,
-          background: "rgba(255,255,255,0.12)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          border: "1.5px solid rgba(255,255,255,0.18)", flexShrink: 0,
-        }}>
+      <div className="relative overflow-hidden shadow-[0_10px_40px_rgba(15,42,74,0.3)] flex items-center gap-5 py-7 px-8 rounded-[18px] bg-gradient-to-br from-[#0f2a4a] via-[#1a3a5c] to-[#1e4976]">
+        <div className="absolute -top-10 -left-10 w-[200px] h-[200px] rounded-full bg-white/[0.04] pointer-events-none" />
+        <div className="absolute -bottom-[60px] right-[15%] w-[260px] h-[260px] rounded-full bg-white/[0.03] pointer-events-none" />
+        <div className="w-14 h-14 rounded-2xl bg-white/[0.12] flex items-center justify-center border-[1.5px] border-white/[0.18] shrink-0">
           <BarChart3 size={26} color="white" />
         </div>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ margin: "0 0 6px", fontWeight: 900, fontSize: "1.3rem", color: "#fff" }}>لوحة الإحصائيات</h1>
-          <p style={{ margin: 0, fontSize: "0.85rem", color: "rgba(255,255,255,0.65)" }}>
+        <div className="flex-1">
+          <h1 className="m-0 mb-[6px] font-black text-[1.3rem] text-white">لوحة الإحصائيات</h1>
+          <p className="m-0 text-[0.85rem] text-white/65">
             ملخص شامل لحالات الطلبات، الطلبة، جهات التدريب، والدفعات
           </p>
         </div>
       </div>
 
       {error && (
-        <div style={{
-          background: "#fff1f2", border: "1.5px solid #fecdd3",
-          borderRadius: 12, padding: "12px 18px",
-          display: "flex", alignItems: "center", gap: 10, color: "#be123c",
-        }}>
+        <div className="bg-[#fff1f2] border-[1.5px] border-[#fecdd3] rounded-xl py-3 px-[18px] flex items-center gap-[10px] text-[#be123c]">
           <AlertTriangle size={18} /> {error}
         </div>
       )}
 
       {/* ── KPI Cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 14 }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-[14px]">
         <KpiCard icon={Users} label="إجمالي الطلبة" value={totalStudents}
           gradient="linear-gradient(135deg, #0f2a4a, #1e4976)" />
         <KpiCard icon={FileText} label="إجمالي الطلبات" value={totalRequests}
@@ -251,55 +174,52 @@ export default function CoordinatorStatistics() {
       </div>
 
       {/* ── Quick Overview Bar ── */}
-      <div style={{
-        background: "#fff", borderRadius: 16, padding: "20px 24px",
-        border: "1.5px solid #e8edf4", boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: "#f0f4ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="bg-white rounded-2xl py-5 px-6 border-[1.5px] border-[#e8edf4] shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center gap-[10px] mb-4">
+          <div className="w-[34px] h-[34px] rounded-[9px] bg-[#f0f4ff] flex items-center justify-center">
             <TrendingUp size={16} color="#4f46e5" />
           </div>
-          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--text)" }}>نظرة سريعة على حالة الطلبات</span>
+          <span className="font-bold text-[0.95rem] text-[var(--text)]">نظرة سريعة على حالة الطلبات</span>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.82rem", fontWeight: 600 }}>
-              <span style={{ color: "#059669" }}>معتمد</span>
-              <span style={{ color: "#059669", fontWeight: 800 }}>{approvedCount} ({approvalRate}%)</span>
+            <div className="flex justify-between mb-[6px] text-[0.82rem] font-semibold">
+              <span className="text-[#059669]">معتمد</span>
+              <span className="text-[#059669] font-extrabold">{approvedCount} ({approvalRate}%)</span>
             </div>
-            <div style={{ height: 10, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${approvalRate}%`, background: "linear-gradient(90deg,#34d399,#10b981)", borderRadius: 99, transition: "width 0.8s ease" }} />
+            <div className="h-[10px] rounded-full bg-[#f1f5f9] overflow-hidden">
+              <div className="h-full rounded-full transition-[width] duration-800 ease" style={{ width: `${approvalRate}%`, background: "linear-gradient(90deg,#34d399,#10b981)" }} />
             </div>
           </div>
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.82rem", fontWeight: 600 }}>
-              <span style={{ color: "#f59e0b" }}>قيد المعالجة</span>
-              <span style={{ color: "#f59e0b", fontWeight: 800 }}>{pendingCount} ({totalRequests > 0 ? Math.round((pendingCount / totalRequests) * 100) : 0}%)</span>
+            <div className="flex justify-between mb-[6px] text-[0.82rem] font-semibold">
+              <span className="text-[#f59e0b]">قيد المعالجة</span>
+              <span className="text-[#f59e0b] font-extrabold">{pendingCount} ({totalRequests > 0 ? Math.round((pendingCount / totalRequests) * 100) : 0}%)</span>
             </div>
-            <div style={{ height: 10, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${totalRequests > 0 ? Math.round((pendingCount / totalRequests) * 100) : 0}%`, background: "linear-gradient(90deg,#fcd34d,#f59e0b)", borderRadius: 99, transition: "width 0.8s ease" }} />
+            <div className="h-[10px] rounded-full bg-[#f1f5f9] overflow-hidden">
+              <div className="h-full rounded-full transition-[width] duration-800 ease" style={{ width: `${totalRequests > 0 ? Math.round((pendingCount / totalRequests) * 100) : 0}%`, background: "linear-gradient(90deg,#fcd34d,#f59e0b)" }} />
             </div>
           </div>
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.82rem", fontWeight: 600 }}>
-              <span style={{ color: "#ef4444" }}>مرفوض</span>
-              <span style={{ color: "#ef4444", fontWeight: 800 }}>{rejectedCount} ({totalRequests > 0 ? Math.round((rejectedCount / totalRequests) * 100) : 0}%)</span>
+            <div className="flex justify-between mb-[6px] text-[0.82rem] font-semibold">
+              <span className="text-[#ef4444]">مرفوض</span>
+              <span className="text-[#ef4444] font-extrabold">{rejectedCount} ({totalRequests > 0 ? Math.round((rejectedCount / totalRequests) * 100) : 0}%)</span>
             </div>
-            <div style={{ height: 10, borderRadius: 99, background: "#f1f5f9", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${totalRequests > 0 ? Math.round((rejectedCount / totalRequests) * 100) : 0}%`, background: "linear-gradient(90deg,#fca5a5,#ef4444)", borderRadius: 99, transition: "width 0.8s ease" }} />
+            <div className="h-[10px] rounded-full bg-[#f1f5f9] overflow-hidden">
+              <div className="h-full rounded-full transition-[width] duration-800 ease" style={{ width: `${totalRequests > 0 ? Math.round((rejectedCount / totalRequests) * 100) : 0}%`, background: "linear-gradient(90deg,#fca5a5,#ef4444)" }} />
             </div>
           </div>
         </div>
       </div>
 
       {/* ── Stats Grid 2×2 ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4">
 
         {/* By Status */}
         <Panel icon={Clock} title="توزيع حالات الطلبات" accent="#0891b2"
           count={statusEntries.length} showAll={showAllStatus} setShowAll={setShowAllStatus} total={statusEntries.length}>
           {visibleStatus.length === 0 ? (
-            <p style={{ margin: 0, textAlign: "center", color: "var(--text-faint)", fontSize: "0.85rem" }}>لا توجد بيانات</p>
+            <p className="m-0 text-center text-[var(--text-faint)] text-[0.85rem]">لا توجد بيانات</p>
           ) : visibleStatus.map(([status, count]) => {
             const c = STATUS_COLORS[status] || { bg: "#e9ecef", text: "#495057" };
             return (
@@ -308,7 +228,7 @@ export default function CoordinatorStatistics() {
                 count={count} total={totalRequests}
                 barColor={c.text}
                 badge={
-                  <span style={{ background: c.bg, color: c.text, padding: "3px 10px", borderRadius: 99, fontSize: "0.75rem", fontWeight: 700 }}>
+                  <span className="py-[3px] px-[10px] rounded-full text-[0.75rem] font-bold" style={{ background: c.bg, color: c.text }}>
                     {STATUS_LABELS[status] || status}
                   </span>
                 }
@@ -321,13 +241,13 @@ export default function CoordinatorStatistics() {
         <Panel icon={MapPin} title="توزيع حسب الجهة الرسمية" accent="#4f46e5"
           count={govEntries.length} showAll={showAllGov} setShowAll={setShowAllGov} total={govEntries.length}>
           {visibleGov.length === 0 ? (
-            <p style={{ margin: 0, textAlign: "center", color: "var(--text-faint)", fontSize: "0.85rem" }}>لا توجد بيانات</p>
+            <p className="m-0 text-center text-[var(--text-faint)] text-[0.85rem]">لا توجد بيانات</p>
           ) : visibleGov.map(([gb, count]) => (
             <ProgressRow key={gb}
               label={getGoverningBodyLabel(gb)}
               count={count} total={totalRequests}
               barColor="#4f46e5"
-              badge={<span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151" }}>{getGoverningBodyLabel(gb)}</span>}
+              badge={<span className="text-[0.82rem] font-semibold text-[#374151]">{getGoverningBodyLabel(gb)}</span>}
             />
           ))}
         </Panel>
@@ -336,13 +256,13 @@ export default function CoordinatorStatistics() {
         <Panel icon={GraduationCap} title="توزيع حسب القسم الأكاديمي" accent="#d97706"
           count={deptEntries.length} showAll={showAllDept} setShowAll={setShowAllDept} total={deptEntries.length}>
           {visibleDept.length === 0 ? (
-            <p style={{ margin: 0, textAlign: "center", color: "var(--text-faint)", fontSize: "0.85rem" }}>لا توجد بيانات</p>
+            <p className="m-0 text-center text-[var(--text-faint)] text-[0.85rem]">لا توجد بيانات</p>
           ) : visibleDept.map(([dept, count]) => (
             <ProgressRow key={dept}
               label={dept}
               count={count} total={totalRequests}
               barColor="#d97706"
-              badge={<span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151" }}>{dept}</span>}
+              badge={<span className="text-[0.82rem] font-semibold text-[#374151]">{dept}</span>}
             />
           ))}
         </Panel>
@@ -351,55 +271,40 @@ export default function CoordinatorStatistics() {
         <Panel icon={School} title="توزيع حسب جهة التدريب" accent="#059669"
           count={siteEntries.length} showAll={showAllSite} setShowAll={setShowAllSite} total={siteEntries.length}>
           {visibleSite.length === 0 ? (
-            <p style={{ margin: 0, textAlign: "center", color: "var(--text-faint)", fontSize: "0.85rem" }}>لا توجد بيانات</p>
+            <p className="m-0 text-center text-[var(--text-faint)] text-[0.85rem]">لا توجد بيانات</p>
           ) : visibleSite.map(([site, count]) => (
             <ProgressRow key={site}
               label={site}
               count={count} total={totalRequests}
               barColor="#059669"
-              badge={<span style={{ fontSize: "0.82rem", fontWeight: 600, color: "#374151" }}>{site}</span>}
+              badge={<span className="text-[0.82rem] font-semibold text-[#374151]">{site}</span>}
             />
           ))}
         </Panel>
       </div>
 
       {/* ── Batch Stats ── */}
-      <div style={{
-        background: "#fff", borderRadius: 16,
-        border: "1.5px solid #e8edf4", overflow: "hidden",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.05)",
-      }}>
-        <div style={{
-          padding: "16px 22px", borderBottom: "1px solid #f0f4f8",
-          display: "flex", alignItems: "center", gap: 12,
-          background: "linear-gradient(135deg, #f5f3ff, #ede9fe)",
-        }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: "#7c3aed22",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
+      <div className="bg-white rounded-2xl border-[1.5px] border-[#e8edf4] overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
+        <div className="py-4 px-[22px] border-b border-[#f0f4f8] flex items-center gap-3 bg-gradient-to-br from-[#f5f3ff] to-[#ede9fe]">
+          <div className="w-9 h-9 rounded-[10px] bg-[#7c3aed22] flex items-center justify-center">
             <Layers size={17} color="#7c3aed" />
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: "0.92rem", color: "#3b0764" }}>إحصائيات الدفعات</div>
-            <div style={{ fontSize: "0.75rem", color: "#6d28d9", marginTop: 1 }}>توزيع حالات دفعات الطلبات المُجمّعة</div>
+          <div className="flex-1">
+            <div className="font-bold text-[0.92rem] text-[#3b0764]">إحصائيات الدفعات</div>
+            <div className="text-[0.75rem] text-[#6d28d9] mt-[1px]">توزيع حالات دفعات الطلبات المُجمّعة</div>
           </div>
-          <span style={{
-            background: "#7c3aed20", color: "#7c3aed",
-            fontSize: "0.75rem", fontWeight: 700, padding: "4px 12px", borderRadius: 99,
-          }}>
+          <span className="bg-[#7c3aed20] text-[#7c3aed] text-[0.75rem] font-bold py-1 px-3 rounded-full">
             {batchStats.total} دفعة
           </span>
         </div>
-        <div style={{ padding: "20px 22px" }}>
+        <div className="py-5 px-[22px]">
           {batchStats.total === 0 ? (
-            <div style={{ textAlign: "center", padding: "24px 0", color: "var(--text-faint)" }}>
-              <Layers size={36} style={{ opacity: 0.2, marginBottom: 8 }} />
-              <p style={{ margin: 0, fontSize: "0.88rem" }}>لا توجد دفعات حتى الآن</p>
+            <div className="text-center py-6 text-[var(--text-faint)]">
+              <Layers size={36} className="opacity-20 mb-2" />
+              <p className="m-0 text-[0.88rem]">لا توجد دفعات حتى الآن</p>
             </div>
           ) : (
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <div className="flex gap-[10px] flex-wrap">
               <BatchPill label="إجمالي الدفعات" count={batchStats.total} bg="#7c3aed" text="#5b21b6" />
               {Array.from(batchStats.byStatus.entries()).map(([status, count]) => {
                 const c = BATCH_STATUS_COLORS[status] || { bg: "#e9ecef", text: "#495057" };

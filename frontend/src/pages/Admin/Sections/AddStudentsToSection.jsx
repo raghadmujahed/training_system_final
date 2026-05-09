@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { createEnrollment, getUsers, createUser } from "../../../services/api";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 
 export default function AddStudentsToSection() {
   const toast = useAppToast();
@@ -18,7 +20,6 @@ export default function AddStudentsToSection() {
   const [results, setResults] = useState(null);
   const searchTimeout = useRef(null);
 
-  // البحث عن طالب بالاسم أو الرقم الجامعي
   const handleSearch = (query) => {
     setSearchQuery(query);
     setSelectedStudent(null);
@@ -40,7 +41,6 @@ export default function AddStudentsToSection() {
     }, 300);
   };
 
-  // تسجيل الطالب المختار في الشعبة
   const handleEnrollSelected = async () => {
     if (!selectedStudent) return;
     setLoading(true);
@@ -63,7 +63,6 @@ export default function AddStudentsToSection() {
     }
   };
 
-  // رفع ملف Excel
   const handleFileChange = (e) => setFile(e.target.files[0]);
   const processExcel = async () => {
     if (!file) { toast.warning("اختر ملف Excel أولاً"); return; }
@@ -86,7 +85,6 @@ export default function AddStudentsToSection() {
         const successList = [], errorList = [];
         for (const s of students) {
           try {
-            // البحث عن طالب موجود بالرقم الجامعي أو البريد
             let userId = null;
             const byUnivId = await getUsers({ role: 'student', search: s.university_id, per_page: 5 });
             const existingList = byUnivId.data || [];
@@ -129,34 +127,29 @@ export default function AddStudentsToSection() {
   };
 
   return (
-    <div className="add-students-section">
-      <div className="page-header">
-        <h1>إضافة طلاب إلى الشعبة #{sectionId}</h1>
-        <button onClick={() => navigate("/admin/sections")} className="btn-secondary">رجوع</button>
-      </div>
+    <>
+      <PageHeader title={`إضافة طلاب إلى الشعبة #${sectionId}`} />
 
       {/* البحث عن طالب وتسجيله */}
-      <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px", marginBottom: "1.5rem" }}>
-        <legend style={{ fontWeight: "bold" }}>تسجيل طالب في الشعبة</legend>
-        <div className="form-group">
-          <label>البحث بالاسم أو الرقم الجامعي</label>
+      <fieldset className="border border-[#ccc] p-4 rounded-lg mb-6">
+        <legend className="font-bold">تسجيل طالب في الشعبة</legend>
+        <div className="mb-4">
+          <label className="block mb-1 text-text-soft text-[0.9rem]">البحث بالاسم أو الرقم الجامعي</label>
           <input
             type="text"
             placeholder="اكتب اسم الطالب أو رقمه الجامعي..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            style={{ width: "100%" }}
+            className="w-full"
           />
-          {searching && <p style={{ color: "#666", fontSize: "0.85rem" }}>جاري البحث...</p>}
+          {searching && <p className="text-text-soft text-[0.85rem]">جاري البحث...</p>}
           {searchResults.length > 0 && !selectedStudent && (
-            <div style={{ border: "1px solid #ddd", maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
+            <div className="border border-[#ddd] max-h-[200px] overflow-y-auto mt-1">
               {searchResults.map(student => (
                 <div
                   key={student.id}
                   onClick={() => { setSelectedStudent(student); setSearchQuery(student.name); setSearchResults([]); }}
-                  style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #eee" }}
-                  onMouseEnter={e => e.target.style.background = "#f0f0f0"}
-                  onMouseLeave={e => e.target.style.background = ""}
+                  className="px-3 py-2 cursor-pointer border-b border-[#eee] hover:bg-[#f0f0f0] transition-colors"
                 >
                   <strong>{student.name}</strong> — {student.university_id} {student.department?.name ? `| ${student.department.name}` : ""}
                 </div>
@@ -164,37 +157,39 @@ export default function AddStudentsToSection() {
             </div>
           )}
           {searchQuery && searchResults.length === 0 && !searching && !selectedStudent && (
-            <p style={{ color: "#999", fontSize: "0.85rem" }}>لا توجد نتائج</p>
+            <p className="text-text-faint text-[0.85rem]">لا توجد نتائج</p>
           )}
         </div>
         {selectedStudent && (
-          <div style={{ background: "#f8f9fa", padding: "1rem", borderRadius: "8px", marginTop: "0.5rem" }}>
+          <div className="bg-[#f8f9fa] p-4 rounded-lg mt-2">
             <p><strong>الطالب المختار:</strong> {selectedStudent.name} ({selectedStudent.university_id})</p>
-            <button onClick={handleEnrollSelected} disabled={loading} className="btn-primary">
-              {loading ? "جاري التسجيل..." : "تسجيل في الشعبة"}
-            </button>
-            <button onClick={() => { setSelectedStudent(null); setSearchQuery(""); }} className="btn-secondary" style={{ marginRight: "0.5rem" }}>إلغاء</button>
+            <div className="flex gap-2 mt-2">
+              <Button onClick={handleEnrollSelected} disabled={loading}>
+                {loading ? "جاري التسجيل..." : "تسجيل في الشعبة"}
+              </Button>
+              <Button variant="outline" onClick={() => { setSelectedStudent(null); setSearchQuery(""); }}>إلغاء</Button>
+            </div>
           </div>
         )}
       </fieldset>
 
       {/* رفع Excel */}
-      <fieldset style={{ border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-        <legend style={{ fontWeight: "bold" }}>رفع ملف Excel (عدة طلاب)</legend>
-        <p>الأعمدة المطلوبة: الاسم الكامل، البريد الإلكتروني، الرقم الجامعي</p>
-        <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
-        <button onClick={processExcel} disabled={bulkLoading} style={{ marginTop: "0.5rem" }}>
+      <fieldset className="border border-[#ccc] p-4 rounded-lg">
+        <legend className="font-bold">رفع ملف Excel (عدة طلاب)</legend>
+        <p className="text-text-soft text-[0.88rem]">الأعمدة المطلوبة: الاسم الكامل، البريد الإلكتروني، الرقم الجامعي</p>
+        <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} className="my-2" />
+        <Button onClick={processExcel} disabled={bulkLoading} className="mt-2">
           {bulkLoading ? "جاري الرفع..." : "رفع وإضافة"}
-        </button>
+        </Button>
         {results && (
-          <div>
-            <div className="success">✅ نجح: {results.success.length}</div>
+          <div className="mt-3">
+            <div className="text-success font-bold">✅ نجح: {results.success.length}</div>
             {results.errors.length > 0 && (
-              <div className="error">❌ فشل: {results.errors.map(e => e.email).join(", ")}</div>
+              <div className="text-danger font-bold">❌ فشل: {results.errors.map(e => e.email).join(", ")}</div>
             )}
           </div>
         )}
       </fieldset>
-    </div>
+    </>
   );
 }

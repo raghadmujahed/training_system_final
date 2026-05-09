@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { getSections, getUsers, createUser, createEnrollment } from "../../../services/api";
 import useAppToast from "../../../hooks/useAppToast";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 
 export default function BulkAddStudents() {
   const toast = useAppToast();
@@ -192,93 +194,90 @@ export default function BulkAddStudents() {
 
   if (step === "results" && results) {
     return (
-      <div>
-        <h2>نتيجة إضافة الطلاب</h2>
-        <p>تمت إضافة {results.successCount} من أصل {results.total} طالب بنجاح.</p>
+      <>
+        <PageHeader title="نتيجة إضافة الطلاب" />
+        <p className="text-text">تمت إضافة {results.successCount} من أصل {results.total} طالب بنجاح.</p>
         {results.errors.length > 0 && (
-          <div style={{ color: "red" }}>
-            <h4>الأخطاء:</h4>
-            <ul>
+          <div className="text-danger">
+            <h4 className="font-bold">الأخطاء:</h4>
+            <ul className="list-disc pr-4">
               {results.errors.map((err, i) => <li key={i}>{err}</li>)}
             </ul>
           </div>
         )}
-        <button onClick={resetForm} className="btn-primary">إضافة طلاب آخرين</button>
-        <button onClick={() => navigate("/admin/sections")} className="btn-secondary">العودة إلى القائمة</button>
-      </div>
+        <div className="flex gap-2 mt-4">
+          <Button onClick={resetForm}>إضافة طلاب آخرين</Button>
+          <Button variant="outline" onClick={() => navigate("/admin/sections")}>العودة إلى القائمة</Button>
+        </div>
+      </>
     );
   }
 
   if (step === "preview") {
     return (
-      <div>
-        <div className="page-header">
-          <h1>معاينة بيانات الطلاب ({studentsList.length})</h1>
-          <button onClick={() => setStep("form")} className="btn-secondary">رجوع</button>
+      <>
+        <PageHeader title={`معاينة بيانات الطلاب (${studentsList.length})`} />
+        <div className="rounded-xl overflow-hidden border border-[#e2e8f0] mb-4">
+          <table className="w-full border-collapse text-[0.9rem]">
+            <thead>
+              <tr className="bg-[#f8fafc]"><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الاسم</th><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">البريد</th><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الرقم الجامعي</th><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الشعبة</th></tr>
+            </thead>
+            <tbody>
+              {studentsList.map((s, i) => (
+                <tr key={i} className="border-b border-[#e2e8f0] hover:bg-[#f1f5f9]">
+                  <td className="py-3 px-4">{s.name}</td>
+                  <td className="py-3 px-4">{s.email}</td>
+                  <td className="py-3 px-4">{s.university_id}</td>
+                  <td className="py-3 px-4">{s.section_identifier || s.section_id}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <table className="data-table">
-          <thead>
-            <tr><th>الاسم</th><th>البريد</th><th>الرقم الجامعي</th><th>الشعبة (معرف/اسم)</th></tr>
-          </thead>
-          <tbody>
-            {studentsList.map((s, i) => (
-              <tr key={i}>
-                <td>{s.name}</td>
-                <td>{s.email}</td>
-                <td>{s.university_id}</td>
-                <td>{s.section_identifier || s.section_id}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="form-actions">
-          <button onClick={handleBulkEnroll} disabled={loading} className="btn-primary">
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setStep("form")}>رجوع</Button>
+          <Button onClick={handleBulkEnroll} disabled={loading}>
             {loading ? "جاري الإضافة..." : "تأكيد الإضافة"}
-          </button>
+          </Button>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <h1>إضافة طلاب إلى شعب</h1>
-        <button onClick={() => navigate("/admin/sections")} className="btn-secondary">رجوع</button>
-      </div>
+    <>
+      <PageHeader title="إضافة طلاب إلى شعب" />
 
-      <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+      <div className="flex gap-8 flex-wrap">
         {/* قسم الإضافة اليدوية لشعبة محددة */}
-        <div style={{ flex: 1, border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-          <h3>تسجيل طالب في الشعبة</h3>
-          <div className="form-group">
-            <label>اختر الشعبة</label>
-            <select value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)}>
+        <div className="flex-1 min-w-[300px] border border-[#ccc] p-4 rounded-lg">
+          <h3 className="font-bold text-text mb-3">تسجيل طالب في الشعبة</h3>
+          <div className="mb-4">
+            <label className="block mb-1 text-text-soft text-[0.9rem]">اختر الشعبة</label>
+            <select value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)} className="w-full">
               <option value="">-- اختر الشعبة --</option>
               {sections.map(sec => (
                 <option key={sec.id} value={sec.id}>{sec.name} (ID: {sec.id})</option>
               ))}
             </select>
           </div>
-          <div className="form-group">
-            <label>البحث بالاسم أو الرقم الجامعي</label>
+          <div className="mb-4">
+            <label className="block mb-1 text-text-soft text-[0.9rem]">البحث بالاسم أو الرقم الجامعي</label>
             <input
               type="text"
               placeholder="اكتب اسم الطالب أو رقمه الجامعي..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              style={{ width: "100%" }}
+              className="w-full"
             />
-            {searching && <p style={{ color: "#666", fontSize: "0.85rem" }}>جاري البحث...</p>}
+            {searching && <p className="text-text-soft text-[0.85rem]">جاري البحث...</p>}
             {searchResults.length > 0 && !selectedStudent && (
-              <div style={{ border: "1px solid #ddd", maxHeight: "200px", overflowY: "auto", marginTop: "4px" }}>
+              <div className="border border-[#ddd] max-h-[200px] overflow-y-auto mt-1">
                 {searchResults.map(student => (
                   <div
                     key={student.id}
                     onClick={() => { setSelectedStudent(student); setSearchQuery(student.name); setSearchResults([]); }}
-                    style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #eee" }}
-                    onMouseEnter={e => e.target.style.background = "#f0f0f0"}
-                    onMouseLeave={e => e.target.style.background = ""}
+                    className="px-3 py-2 cursor-pointer border-b border-[#eee] hover:bg-[#f0f0f0] transition-colors"
                   >
                     <strong>{student.name}</strong> — {student.university_id} {student.department?.name ? `| ${student.department.name}` : ""}
                   </div>
@@ -286,54 +285,58 @@ export default function BulkAddStudents() {
               </div>
             )}
             {searchQuery && searchResults.length === 0 && !searching && !selectedStudent && (
-              <p style={{ color: "#999", fontSize: "0.85rem" }}>لا توجد نتائج</p>
+              <p className="text-text-faint text-[0.85rem]">لا توجد نتائج</p>
             )}
           </div>
           {selectedStudent && (
-            <div style={{ background: "#f8f9fa", padding: "0.75rem", borderRadius: "8px", marginTop: "0.5rem" }}>
+            <div className="bg-[#f8f9fa] p-3 rounded-lg mt-2">
               <p><strong>الطالب:</strong> {selectedStudent.name} ({selectedStudent.university_id})</p>
-              <button onClick={handleAddSelectedStudent} className="btn-primary">إضافة إلى القائمة</button>
-              <button onClick={() => { setSelectedStudent(null); setSearchQuery(""); }} className="btn-secondary" style={{ marginRight: "0.5rem" }}>إلغاء</button>
+              <div className="flex gap-2 mt-2">
+                <Button onClick={handleAddSelectedStudent}>إضافة إلى القائمة</Button>
+                <Button variant="outline" onClick={() => { setSelectedStudent(null); setSearchQuery(""); }}>إلغاء</Button>
+              </div>
             </div>
           )}
         </div>
 
         {/* قسم رفع ملف Excel */}
-        <div style={{ flex: 2, border: "1px solid #ccc", padding: "1rem", borderRadius: "8px" }}>
-          <h3>رفع ملف Excel (لإضافة طلاب متعددين إلى شعب مختلفة)</h3>
-          <p>يجب أن يحتوي الملف على الأعمدة التالية:</p>
-          <ul>
+        <div className="flex-[2] min-w-[300px] border border-[#ccc] p-4 rounded-lg">
+          <h3 className="font-bold text-text mb-3">رفع ملف Excel (لإضافة طلاب متعددين إلى شعب مختلفة)</h3>
+          <p className="text-text-soft text-[0.88rem]">يجب أن يحتوي الملف على الأعمدة التالية:</p>
+          <ul className="list-disc pr-5 text-text-soft text-[0.88rem]">
             <li><strong>الاسم الكامل</strong> (name) - إجباري</li>
             <li><strong>البريد الإلكتروني</strong> (email) - إجباري</li>
             <li><strong>الرقم الجامعي</strong> (university_id) - إجباري</li>
-            <li><strong>رقم الشعبة</strong> أو <strong>اسم الشعبة</strong> (section_id أو section_name) - إجباري، يمكن أن يكون رقم ID أو اسم الشعبة كما هو مسجل في النظام</li>
+            <li><strong>رقم الشعبة</strong> أو <strong>اسم الشعبة</strong> (section_id أو section_name) - إجباري</li>
           </ul>
-          <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+          <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="mt-2" />
         </div>
       </div>
 
       {/* عرض قائمة الطلاب المضافة يدوياً */}
       {studentsList.length > 0 && (
-        <div style={{ marginTop: "2rem" }}>
-          <h3>قائمة الطلاب المضافة ({studentsList.length})</h3>
-          <table className="data-table">
-            <thead>
-              <tr><th>الاسم</th><th>الرقم الجامعي</th><th>الشعبة (ID)</th><th></th></tr>
-            </thead>
-            <tbody>
-              {studentsList.map((s, idx) => (
-                <tr key={idx}>
-                  <td>{s.name}</td>
-                  <td>{s.university_id}</td>
-                  <td>{s.section_id || s.section_identifier}</td>
-                  <td><button onClick={() => setStudentsList(studentsList.filter((_, i) => i !== idx))}>حذف</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button onClick={handleBulkEnroll} disabled={loading} className="btn-primary">إضافة جميع الطلاب ({studentsList.length})</button>
+        <div className="mt-8">
+          <h3 className="font-bold text-text mb-3">قائمة الطلاب المضافة ({studentsList.length})</h3>
+          <div className="rounded-xl overflow-hidden border border-[#e2e8f0] mb-4">
+            <table className="w-full border-collapse text-[0.9rem]">
+              <thead>
+                <tr className="bg-[#f8fafc]"><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الاسم</th><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الرقم الجامعي</th><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الشعبة</th><th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]"></th></tr>
+              </thead>
+              <tbody>
+                {studentsList.map((s, idx) => (
+                  <tr key={idx} className="border-b border-[#e2e8f0] hover:bg-[#f1f5f9]">
+                    <td className="py-3 px-4">{s.name}</td>
+                    <td className="py-3 px-4">{s.university_id}</td>
+                    <td className="py-3 px-4">{s.section_id || s.section_identifier}</td>
+                    <td className="py-3 px-4"><button className="text-danger hover:underline" onClick={() => setStudentsList(studentsList.filter((_, i) => i !== idx))}>حذف</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Button onClick={handleBulkEnroll} disabled={loading}>إضافة جميع الطلاب ({studentsList.length})</Button>
         </div>
       )}
-    </div>
+    </>
   );
 }

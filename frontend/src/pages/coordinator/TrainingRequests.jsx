@@ -200,7 +200,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
           <div className="hero-icon">
             <ClipboardList size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">
               {isPsychSupervisor ? "طلبات التدريب والدفعات — علم النفس" : "طلبات التدريب والتوزيع"}
             </h1>
@@ -215,7 +215,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
 
       {error && (
         <div className="alert-custom alert-danger mb-3">
-          <p style={{ margin: 0 }}>{error}</p>
+          <p className="m-0">{error}</p>
         </div>
       )}
 
@@ -223,7 +223,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
 
       {success && (
         <div className="alert-custom alert-success mb-3">
-          <p style={{ margin: 0 }}>{success}</p>
+          <p className="m-0">{success}</p>
         </div>
       )}
 
@@ -239,11 +239,11 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       {/* المرحلة ١: طلبات واردة — غير مستخدمة في مسار علم النفس (المشرف يُنشئ الطلب مباشرة) */}
       {!isPsychSupervisor && (
         <div className="section-card mb-4">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div className="flex items-center gap-[10px] mb-4">
             <div className="section-icon">
               <ClipboardList size={20} />
             </div>
-            <h4 style={{ margin: 0 }}>طلبات واردة ({filteredSearch.length})</h4>
+            <h4 className="m-0">طلبات واردة ({filteredSearch.length})</h4>
           </div>
           {filteredSearch.length === 0 ? (
             <EmptyState title="لا توجد طلبات واردة" description="جميع الطلبات تمت مراجعتها." />
@@ -263,11 +263,11 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       {/* المرحلة ٣: مرفوضة */}
       {coordinatorRejected.length > 0 && (
         <div className="section-card mb-4">
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <div className="flex items-center gap-[10px] mb-4">
             <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--danger) 0%, #bb2d3b 100%)" }}>
               <XCircle size={20} />
             </div>
-            <h4 style={{ margin: 0 }}>مرفوضة ({coordinatorRejected.length})</h4>
+            <h4 className="m-0">مرفوضة ({coordinatorRejected.length})</h4>
           </div>
           <RequestsTable
             requests={coordinatorRejected}
@@ -280,11 +280,11 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
 
       {/* المرحلة ٤: دفعات الإرسال */}
       <div className="section-card mb-4">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <div className="flex items-center gap-[10px] mb-4">
           <div className="section-icon" style={{ background: "linear-gradient(135deg, var(--info) 0%, #0aa2c0 100%)" }}>
             <Layers size={20} />
           </div>
-          <h4 style={{ margin: 0 }}>دفعات الإرسال</h4>
+          <h4 className="m-0">دفعات الإرسال</h4>
         </div>
         {batchesForCoordinatorTable.length === 0 ? (
           <EmptyState title="لا توجد دفعات" description="لم تُنشأ دفعات بعد." />
@@ -324,13 +324,10 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                       <td>{b.items_count ?? "—"}</td>
                       <td>
                         <span
+                          className="py-[3px] px-[10px] rounded-full text-[0.78rem] font-bold"
                           style={{
                             background: statusColors.bg,
                             color: statusColors.text,
-                            padding: "3px 10px",
-                            borderRadius: 99,
-                            fontSize: "0.78rem",
-                            fontWeight: 700,
                           }}
                         >
                           {statusLabel}
@@ -339,79 +336,64 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                       <td>
                         <button
                           type="button"
-                          className="btn-primary-custom"
+                          className="btn-primary-custom inline-flex items-center gap-[6px] py-[6px] px-[10px] text-[0.8rem] rounded-lg"
+                          style={{ opacity: printingBatchId === b.id ? 0.7 : 1 }}
                           onClick={() => handlePrintBatch(b)}
                           disabled={printingBatchId === b.id}
                           title="طباعة كشف أسماء هذه الدفعة فقط"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            padding: "6px 10px",
-                            fontSize: "0.8rem",
-                            borderRadius: 8,
-                            opacity: printingBatchId === b.id ? 0.7 : 1,
-                          }}
                         >
                           <Printer size={14} />
                           {printingBatchId === b.id ? "..." : "طباعة الدفعة"}
                         </button>
                       </td>
-                      <td style={{ minWidth: 340 }}>
+                      <td className="min-w-[340px]">
                         {b.status === "draft" ? (
-                          <div style={{
-                            background: "linear-gradient(135deg, #f8fafc 0%, #f0f4f8 100%)",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: 12,
-                            padding: "14px 16px",
-                            display: "grid",
-                            gap: 12,
-                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                          }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em", display: "flex", alignItems: "center", gap: 6 }}>
+                          <div className="grid gap-3 py-[14px] px-4 rounded-xl border border-[#e2e8f0] shadow-[0_1px_4px_rgba(0,0,0,0.06)] bg-gradient-to-br from-[#f8fafc] to-[#f0f4f8]">
+                            <div className="grid grid-cols-2 gap-[10px]">
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[0.72rem] font-bold text-[var(--primary)] tracking-[0.03em] flex items-center gap-[6px]">
                                   رقم الكتاب
-                                  <span style={{ fontSize: "0.68rem", background: "#e0f2fe", color: "#0369a1", padding: "1px 7px", borderRadius: 99, fontWeight: 700 }}>تلقائي</span>
+                                  <span className="text-[0.68rem] bg-[#e0f2fe] text-[#0369a1] py-[1px] px-[7px] rounded-full font-bold">تلقائي</span>
                                 </label>
                                 <input
-                                  className="form-control-custom"
+                                  className="form-control-custom text-[0.82rem] rounded-lg border-[1.5px] border-[#bae6fd] py-[6px] px-[10px] bg-[#f0f9ff] outline-none font-bold text-[#0c4a6e]"
                                   placeholder={defaultLetterNumber}
                                   value={effectiveLetterNumber}
                                   onChange={(e) =>
                                     setBatchSendField(b.id, "letter_number", e.target.value)
                                   }
-                                  style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #bae6fd", padding: "6px 10px", background: "#f0f9ff", outline: "none", fontWeight: 700, color: "#0c4a6e" }}
                                 />
                               </div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em" }}>تاريخ الكتاب</label>
+                              <div className="flex flex-col gap-1">
+                                <label className="text-[0.72rem] font-bold text-[var(--primary)] tracking-[0.03em]">تاريخ الكتاب</label>
                                 <input
-                                  className="form-control-custom"
+                                  className="form-control-custom text-[0.82rem] rounded-lg border-[1.5px] border-[#cbd5e1] py-[6px] px-[10px] bg-white outline-none"
                                   type="date"
                                   value={effectiveLetterDate}
                                   onChange={(e) =>
                                     setBatchSendField(b.id, "letter_date", e.target.value)
                                   }
-                                  style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #cbd5e1", padding: "6px 10px", background: "#fff", outline: "none" }}
                                 />
                               </div>
                             </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                              <label style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--primary)", letterSpacing: "0.03em" }}>محتوى الكتاب</label>
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[0.72rem] font-bold text-[var(--primary)] tracking-[0.03em]">محتوى الكتاب</label>
                               <textarea
-                                className="form-control-custom"
+                                className="form-control-custom text-[0.82rem] rounded-lg border-[1.5px] border-[#cbd5e1] py-2 px-[10px] bg-white resize-y outline-none leading-[1.6]"
                                 placeholder="اكتب محتوى الكتاب هنا..."
                                 value={batchSendForm[b.id]?.content || ""}
                                 onChange={(e) =>
                                   setBatchSendField(b.id, "content", e.target.value)
                                 }
                                 rows={3}
-                                style={{ fontSize: "0.82rem", borderRadius: 8, border: "1.5px solid #cbd5e1", padding: "8px 10px", background: "#fff", resize: "vertical", outline: "none", lineHeight: 1.6 }}
                               />
                             </div>
                             <button
-                              className="btn-primary-custom"
+                              className="btn-primary-custom flex items-center justify-center gap-2 rounded-lg py-[9px] px-4 text-[0.88rem] font-bold tracking-[0.02em] transition-opacity duration-200"
+                              style={{
+                                opacity: (!saving && isBatchFormComplete) ? 1 : 0.6,
+                                cursor: (!saving && isBatchFormComplete) ? "pointer" : "not-allowed",
+                              }}
                               onClick={() => handleSendBatch(b.id)}
                               disabled={saving || !isBatchFormComplete}
                               title={
@@ -419,27 +401,13 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
                                   ? "إرسال الدفعة"
                                   : "أدخل محتوى الكتاب قبل الإرسال"
                               }
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 8,
-                                borderRadius: 8,
-                                padding: "9px 16px",
-                                fontSize: "0.88rem",
-                                fontWeight: 700,
-                                letterSpacing: "0.02em",
-                                opacity: (!saving && isBatchFormComplete) ? 1 : 0.6,
-                                cursor: (!saving && isBatchFormComplete) ? "pointer" : "not-allowed",
-                                transition: "opacity 0.2s",
-                              }}
                             >
                               <FileText size={15} />
                               {saving ? "جاري الإرسال..." : "إرسال الدفعة"}
                             </button>
                           </div>
                         ) : (
-                          <span style={{ color: "var(--text-faint)" }}>—</span>
+                          <span className="text-[var(--text-faint)]">—</span>
                         )}
                       </td>
                     </tr>
@@ -448,10 +416,10 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
               </tbody>
             </table>
           </div>
-          <div style={{ marginTop: 12, textAlign: "center" }}>
+          <div className="mt-3 text-center">
             <Link
               to={lettersLink}
-              style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.85rem", color: "var(--info)", fontWeight: 700 }}
+              className="inline-flex items-center gap-1 text-[0.85rem] text-[var(--info)] font-bold"
             >
               عرض كل الدفعات <ArrowLeft size={14} />
             </Link>

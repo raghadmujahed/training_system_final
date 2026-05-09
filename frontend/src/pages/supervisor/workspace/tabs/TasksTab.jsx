@@ -246,8 +246,8 @@ export default function TasksTab({ studentId }) {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-        <h4 style={{ margin: 0 }}>✅ المهام</h4>
+      <div className="flex justify-between items-center mb-4">
+        <h4 className="m-0">✅ المهام</h4>
         <button
           type="button"
           className="btn-primary-custom"
@@ -263,19 +263,18 @@ export default function TasksTab({ studentId }) {
       </div>
 
       {error && (
-        <p style={{ color: "#dc3545", fontSize: "0.9rem" }}>{error}</p>
+        <p className="text-[#dc3545] text-[0.9rem]">{error}</p>
       )}
 
       {showForm && (
-        <div className="section-card" style={{ marginBottom: "16px", border: "1px solid #4361ee" }}>
-          <h5 style={{ margin: "0 0 16px" }}>{editingId ? "✏️ تعديل مهمة" : "📝 مهمة جديدة"}</h5>
+        <div className="section-card mb-4 border border-[#4361ee]">
+          <h5 className="m-0 mb-4">{editingId ? "✏️ تعديل مهمة" : "📝 مهمة جديدة"}</h5>
           <form onSubmit={handleSubmit}>
             {!editingId && (
-              <div style={{ marginBottom: "16px", padding: "12px", background: "#f8f9fa", borderRadius: "8px" }}>
+              <div className="mb-4 p-3 bg-[#f8f9fa] rounded-lg">
                 <label className="form-label-custom">نطاق التعيين</label>
                 <select
-                  className="form-select-custom"
-                  style={{ width: "100%", marginTop: "6px" }}
+                  className="form-select-custom w-full mt-[6px]"
                   value={form.assignment_scope}
                   onChange={(e) => setForm((p) => ({ ...p, assignment_scope: e.target.value }))}
                 >
@@ -286,11 +285,10 @@ export default function TasksTab({ studentId }) {
                 </select>
 
                 {form.assignment_scope === "student" && (
-                  <div style={{ marginTop: "12px" }}>
+                  <div className="mt-3">
                     <label className="form-label-custom">الطالب</label>
                     <select
-                      className="form-select-custom"
-                      style={{ width: "100%", marginTop: "6px" }}
+                      className="form-select-custom w-full mt-[6px]"
                       value={[...selectedStudentIds][0] || ""}
                       onChange={(e) => setSelectedStudentIds(new Set([Number(e.target.value)]))}
                       required
@@ -309,11 +307,10 @@ export default function TasksTab({ studentId }) {
                 )}
 
                 {form.assignment_scope === "section" && (
-                  <div style={{ marginTop: "12px" }}>
+                  <div className="mt-3">
                     <label className="form-label-custom">الشعبة</label>
                     <select
-                      className="form-select-custom"
-                      style={{ width: "100%", marginTop: "6px" }}
+                      className="form-select-custom w-full mt-[6px]"
                       value={form.section_id}
                       onChange={(e) => setForm((p) => ({ ...p, section_id: e.target.value }))}
                       required
@@ -329,16 +326,16 @@ export default function TasksTab({ studentId }) {
                 )}
 
                 {form.assignment_scope === "multiple_students" && (
-                  <div style={{ marginTop: "12px", maxHeight: "200px", overflowY: "auto", border: "1px solid #dee2e6", borderRadius: "8px", padding: "8px" }}>
+                  <div className="mt-3 max-h-[200px] overflow-y-auto border border-[#dee2e6] rounded-lg p-2">
                     {supervisedStudents.length === 0 ? (
-                      <span style={{ color: "#888" }}>لا توجد قائمة طلاب (تحقق من التعيينات)</span>
+                      <span className="text-[#888]">لا توجد قائمة طلاب (تحقق من التعيينات)</span>
                     ) : (
                       supervisedStudents.map((row) => {
                         const id = row.student_id ?? row.id;
                         return (
                           <label
                             key={id}
-                            style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px", cursor: "pointer" }}
+                            className="flex items-center gap-2 p-[6px] cursor-pointer"
                           >
                             <input
                               type="checkbox"
@@ -355,7 +352,7 @@ export default function TasksTab({ studentId }) {
               </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="form-label-custom">عنوان المهمة *</label>
                 <input
@@ -374,7 +371,7 @@ export default function TasksTab({ studentId }) {
                   onChange={(e) => setForm((p) => ({ ...p, due_date: e.target.value }))}
                 />
               </div>
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div className="col-span-2">
                 <label className="form-label-custom">الوصف</label>
                 <textarea
                   className="form-textarea-custom"
@@ -383,7 +380,7 @@ export default function TasksTab({ studentId }) {
                   onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                 />
               </div>
-              <div style={{ gridColumn: "1 / -1" }}>
+              <div className="col-span-2">
                 <label className="form-label-custom">تعليمات للطالب</label>
                 <textarea
                   className="form-textarea-custom"
@@ -419,19 +416,13 @@ export default function TasksTab({ studentId }) {
                 />
               </div>
             </div>
-            <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+            <div className="flex gap-2 mt-4">
               <button className="btn-primary-custom" type="submit" disabled={saving}>
                 {saving ? "جاري الحفظ..." : "💾 حفظ"}
               </button>
               <button
                 type="button"
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  border: "1px solid #999",
-                  background: "#fff",
-                  cursor: "pointer",
-                }}
+                className="py-2 px-4 rounded-md border border-[#999] bg-white cursor-pointer"
                 onClick={() => {
                   setShowForm(false);
                   setEditingId(null);
@@ -445,12 +436,12 @@ export default function TasksTab({ studentId }) {
       )}
 
       {!tasks.length ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>📭</div>
+        <div className="text-center p-10 text-[#999]">
+          <div className="text-[2rem] mb-3">📭</div>
           لا توجد مهام بعد
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="flex flex-col gap-3">
           {tasks.map((task) => {
             const sc = statusConfig[task.status] || statusConfig.pending;
             const due = task.due_date ? new Date(task.due_date) : null;
@@ -459,39 +450,24 @@ export default function TasksTab({ studentId }) {
             return (
               <div
                 key={task.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e9ecef",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  borderRight: `4px solid ${isOverdue ? "#dc3545" : sc.color}`,
-                }}
+                className="bg-white border border-[#e9ecef] rounded-[10px] p-4"
+                style={{ borderRight: `4px solid ${isOverdue ? "#dc3545" : sc.color}` }}
               >
                 <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: "8px",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                  }}
+                  className="flex justify-between items-start mb-2 flex-wrap gap-2"
                 >
                   <div>
-                    <h5 style={{ margin: "0 0 4px" }}>{task.title}</h5>
-                    <span style={{ fontSize: "0.78rem", color: "#666" }}>
+                    <h5 className="m-0 mb-1">{task.title}</h5>
+                    <span className="text-[0.78rem] text-[#666]">
                       {TASK_TYPE_LABELS[task.task_type] || task.task_type} | التسليم: {task.due_date || "—"}
                       {isOverdue && (
-                        <span style={{ color: "#dc3545", fontWeight: "600", marginRight: "8px" }}> (متأخرة!)</span>
+                        <span className="text-[#dc3545] font-semibold mr-2"> (متأخرة!)</span>
                       )}
                     </span>
                   </div>
                   <span
+                    className="py-1 px-3 rounded-2xl text-[0.78rem] font-semibold"
                     style={{
-                      padding: "4px 12px",
-                      borderRadius: "16px",
-                      fontSize: "0.78rem",
-                      fontWeight: "600",
                       color: isOverdue ? "#dc3545" : sc.color,
                       backgroundColor: isOverdue ? "#ffebee" : sc.bg,
                     }}
@@ -500,51 +476,29 @@ export default function TasksTab({ studentId }) {
                   </span>
                 </div>
                 {task.description && (
-                  <p style={{ margin: "0 0 8px", fontSize: "0.85rem", color: "#555" }}>{task.description}</p>
+                  <p className="m-0 mb-2 text-[0.85rem] text-[#555]">{task.description}</p>
                 )}
-                <div style={{ fontSize: "0.8rem", color: "#495057", marginBottom: "8px" }}>
+                <div className="text-[0.8rem] text-[#495057] mb-2">
                   👥 <strong>المستلم:</strong> {getAudienceLabel(task)}
                 </div>
                 {task.grading_weight != null && (
                   <span
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "#28a745",
-                      background: "#e8f5e9",
-                      padding: "2px 8px",
-                      borderRadius: "10px",
-                    }}
+                    className="text-[0.75rem] text-[#28a745] bg-[#e8f5e9] py-[2px] px-2 rounded-[10px]"
                   >
                     وزن: {task.grading_weight}
                   </span>
                 )}
-                <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                <div className="flex gap-2 mt-[10px]">
                   <button
                     type="button"
-                    style={{
-                      fontSize: "0.82rem",
-                      padding: "4px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #4361ee",
-                      background: "#fff",
-                      color: "#4361ee",
-                      cursor: "pointer",
-                    }}
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-white text-[#4361ee] cursor-pointer"
                     onClick={() => openEdit(task)}
                   >
                     ✏️ تعديل
                   </button>
                   <button
                     type="button"
-                    style={{
-                      fontSize: "0.82rem",
-                      padding: "4px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #dc3545",
-                      background: "#fff",
-                      color: "#dc3545",
-                      cursor: "pointer",
-                    }}
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#dc3545] bg-white text-[#dc3545] cursor-pointer"
                     onClick={() => handleDelete(task.id)}
                   >
                     🗑️ حذف

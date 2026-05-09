@@ -165,12 +165,12 @@ export default function StudentDetail() {
               {studentData.department ? ` — ${studentData.department}` : ""}
             </span>
             {studentData.section && (
-              <span className="badge-custom badge-primary" style={{ marginInlineStart: 8 }}>
+              <span className="badge-custom badge-primary ms-2">
                 {studentData.section}
               </span>
             )}
             {studentData.training_type && (
-              <span className="badge-custom badge-info" style={{ marginInlineStart: 8 }}>
+              <span className="badge-custom badge-info ms-2">
                 {studentData.training_type}
               </span>
             )}
@@ -178,7 +178,7 @@ export default function StudentDetail() {
         }
       />
 
-      <div className="section-card fs-student-header-summary" style={{ marginBottom: "1rem" }}>
+      <div className="section-card fs-student-header-summary mb-4">
         <div className="fs-student-header-summary__grid">
           <div>
             <span className="text-soft fs-forms-meta">جهة التدريب</span>
@@ -226,7 +226,7 @@ export default function StudentDetail() {
               <div className="fw-bold">
                 {attendance.completed_training_hours ?? 0} / {requiredHours}
                 {attendance.remaining_training_hours != null ? (
-                  <span className="text-soft fs-forms-meta" style={{ marginInlineStart: 6 }}>
+                  <span className="text-soft fs-forms-meta ms-[6px]">
                     (متبقي {attendance.remaining_training_hours})
                   </span>
                 ) : null}
@@ -256,7 +256,7 @@ export default function StudentDetail() {
         })}
       </div>
 
-      <div style={{ marginTop: 8 }}>
+      <div className="mt-2">
         {activeTab === "overview" && <OverviewTab studentId={studentId} labels={labels} />}
         {activeTab === "attendance" && <AttendanceTab studentId={studentId} />}
         {activeTab === "daily-reports" && <DailyReportsTab studentId={studentId} />}

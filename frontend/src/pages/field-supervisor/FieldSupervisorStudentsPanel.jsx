@@ -51,11 +51,11 @@ export default function FieldSupervisorStudentsPanel({
   if (error) {
     return (
       <div className="section-card fs-panel-error">
-        <p className="text-danger" style={{ margin: 0 }}>
+        <p className="text-danger m-0">
           {error}
         </p>
         {onRetry && (
-          <button type="button" className="btn-outline-custom btn-sm-custom" style={{ marginTop: 12 }} onClick={onRetry}>
+          <button type="button" className="btn-outline-custom btn-sm-custom mt-3" onClick={onRetry}>
             إعادة المحاولة
           </button>
         )}
@@ -86,7 +86,7 @@ export default function FieldSupervisorStudentsPanel({
         workQueueMeta && workQueueMeta.totalAssigned > 0 ? (
           <>
             <EmptyState title={workQueueMeta.queueEmptyTitle} description={workQueueMeta.queueEmptyDescription} />
-            <div style={{ marginTop: "1rem" }}>
+            <div className="mt-4">
               <Link to="/field-supervisor/students" className="btn-primary-custom btn-sm-custom">
                 فتح قائمة كل الطلبة
               </Link>
@@ -119,7 +119,7 @@ export default function FieldSupervisorStudentsPanel({
                   </td>
                   <td style={colStyle(1)}>
                     {student.specialization || "—"}
-                    <div className="text-soft" style={{ fontSize: "0.85rem" }}>
+                    <div className="text-soft text-[0.85rem]">
                       {student.department || "—"}
                     </div>
                   </td>

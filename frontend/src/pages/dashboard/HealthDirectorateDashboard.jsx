@@ -7,6 +7,9 @@ import {
 import { useAnnouncements, useTrainingSites } from "../../hooks/useSharedData";
 import { siteLabels } from "../../utils/roles";
 import MinistryHealthSeal from "../../components/branding/MinistryHealthSeal";
+import PageHeader from "../../components/common/PageHeader";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { Heart, Building2, FileText, Activity } from "lucide-react";
 
 const HealthDirectorateDashboard = () => {
   const labels = siteLabels("health_center");
@@ -156,147 +159,132 @@ const HealthDirectorateDashboard = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="alert-custom alert-info">
-        جاري تحميل لوحة {labels.directorateName}...
-      </div>
-    );
+    return <LoadingSpinner size="page" text={`جاري تحميل لوحة ${labels.directorateName}...`} />;
   }
+
+  const statVariantMap = {
+    primary: { border: "border-r-primary", bg: "bg-primary/8" },
+    accent: { border: "border-r-accent", bg: "bg-accent/8" },
+    success: { border: "border-r-success", bg: "bg-success/8" },
+    info: { border: "border-r-info", bg: "bg-info/8" },
+    warning: { border: "border-r-warning", bg: "bg-warning/8" },
+    danger: { border: "border-r-danger", bg: "bg-danger/8" },
+  };
 
   return (
     <>
-      <div className="content-header">
-        <div className="d-flex align-items-center gap-3 flex-wrap" style={{ flexDirection: "row" }}>
-          <MinistryHealthSeal height={56} maxWidth={280} />
-          <div style={{ flex: "1 1 220px" }}>
-            <h1 className="page-title mb-0">لوحة {labels.directorateName}</h1>
-            <p className="page-subtitle mb-0">
-              متابعة طلبات التدريب، المراكز الصحية، والطاقة الاستيعابية داخل {labels.directorateName}.
-            </p>
+      <div className="flex items-center gap-3 flex-wrap mb-4">
+        <MinistryHealthSeal height={56} maxWidth={280} />
+        <div className="flex-[1_1_220px]">
+          <PageHeader title={`لوحة ${labels.directorateName}`} subtitle={`متابعة طلبات التدريب، المراكز الصحية، والطاقة الاستيعابية داخل ${labels.directorateName}.`} icon={Heart} />
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-3">
+        <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">المعلومات الأساسية</h4>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
+            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.name}</strong>
+            <span className="text-text-faint text-[0.8rem]">اسم المديرية</span>
+          </div>
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
+            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.officer}</strong>
+            <span className="text-text-faint text-[0.8rem]">المسؤول</span>
+          </div>
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
+            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.email}</strong>
+            <span className="text-text-faint text-[0.8rem]">البريد الإلكتروني</span>
+          </div>
+          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
+            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.phone}</strong>
+            <span className="text-text-faint text-[0.8rem]">رقم الهاتف</span>
           </div>
         </div>
       </div>
 
-      <div className="section-card mb-3">
-        <h4>المعلومات الأساسية</h4>
-        <div className="summary-grid">
-          <div className="kpi-box">
-            <strong>{directorateInfo.name}</strong>
-            <span>اسم المديرية</span>
-          </div>
-
-          <div className="kpi-box">
-            <strong>{directorateInfo.officer}</strong>
-            <span>المسؤول</span>
-          </div>
-
-          <div className="kpi-box">
-            <strong>{directorateInfo.email}</strong>
-            <span>البريد الإلكتروني</span>
-          </div>
-
-          <div className="kpi-box">
-            <strong>{directorateInfo.phone}</strong>
-            <span>رقم الهاتف</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="dashboard-grid mb-3">
-        {summaryCards.map((card, index) => (
-          <div key={index} className={`stat-card ${card.className}`}>
-            <div>
-              <div className="stat-title">{card.title}</div>
-              <div className="stat-value">{card.value}</div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+        {summaryCards.map((card, index) => {
+          const vs = statVariantMap[card.className] || statVariantMap.info;
+          return (
+            <div key={index} className={`bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[16px] p-4 border-r-4 ${vs.border}`}>
+              <div className="text-text-faint text-[0.85rem] font-bold">{card.title}</div>
+              <div className="text-[1.5rem] font-extrabold text-secondary">{card.value}</div>
+              <div className="text-text-faint text-[0.78rem] mt-1">{card.desc}</div>
             </div>
-            <div className="stat-meta">{card.desc}</div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="section-card mb-3">
-        <h4>طلبات التدريب</h4>
-
-        <div className="table-wrapper">
-          <table className="table-custom">
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-3">
+        <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">طلبات التدريب</h4>
+        <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+          <table className="w-full border-collapse text-[0.9rem]">
             <thead>
-              <tr>
-                <th>عنوان الكتاب</th>
-                <th>الجهة المستلمة</th>
-                <th>التاريخ</th>
-                <th>الحالة</th>
+              <tr className="bg-[#f8fafc]">
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">عنوان الكتاب</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الجهة المستلمة</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">التاريخ</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الحالة</th>
               </tr>
             </thead>
             <tbody>
               {officialLetters.map((letter) => (
-                <tr key={letter.id}>
-                  <td>{letter.title}</td>
-                  <td>{letter.receiver}</td>
-                  <td>{letter.date}</td>
-                  <td>
-                    <span className={letter.badgeClass}>{letter.status}</span>
+                <tr key={letter.id} className="border-b border-[#e2e8f0] hover:bg-[#f1f5f9] transition-colors">
+                  <td className="py-3 px-4">{letter.title}</td>
+                  <td className="py-3 px-4">{letter.receiver}</td>
+                  <td className="py-3 px-4">{letter.date}</td>
+                  <td className="py-3 px-4">
+                    <span className={`text-[0.78rem] font-bold px-2.5 py-0.5 rounded-full ${letter.badgeClass?.includes("success") ? "bg-success/15 text-success" : letter.badgeClass?.includes("danger") ? "bg-danger/15 text-danger" : "bg-info/15 text-info"}`}>{letter.status}</span>
                   </td>
                 </tr>
               ))}
-
               {officialLetters.length === 0 && (
-                <tr>
-                  <td colSpan="4" className="text-center">
-                    لا توجد كتب رسمية مسجلة حاليًا
-                  </td>
-                </tr>
+                <tr><td colSpan="4" className="py-6 px-4 text-center text-text-faint">لا توجد كتب رسمية مسجلة حاليًا</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="section-card mb-3">
-        <h4>المراكز الصحية والطاقة الاستيعابية</h4>
-
-        <div className="table-wrapper">
-          <table className="table-custom">
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-3">
+        <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">المراكز الصحية والطاقة الاستيعابية</h4>
+        <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
+          <table className="w-full border-collapse text-[0.9rem]">
             <thead>
-              <tr>
-                <th>اسم المركز</th>
-                <th>النوع</th>
-                <th>الطاقة الاستيعابية</th>
-                <th>التواصل</th>
-                <th>الحالة</th>
+              <tr className="bg-[#f8fafc]">
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">اسم المركز</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">النوع</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الطاقة الاستيعابية</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">التواصل</th>
+                <th className="py-3 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0]">الحالة</th>
               </tr>
             </thead>
             <tbody>
               {trainingPlaces.map((place) => (
-                <tr key={place.id}>
-                  <td>{place.name}</td>
-                  <td>{place.type}</td>
-                  <td>{place.capacity}</td>
-                  <td>{place.contact}</td>
-                  <td>
-                    <span className={place.badgeClass}>{place.status}</span>
+                <tr key={place.id} className="border-b border-[#e2e8f0] hover:bg-[#f1f5f9] transition-colors">
+                  <td className="py-3 px-4">{place.name}</td>
+                  <td className="py-3 px-4">{place.type}</td>
+                  <td className="py-3 px-4">{place.capacity}</td>
+                  <td className="py-3 px-4">{place.contact}</td>
+                  <td className="py-3 px-4">
+                    <span className={`text-[0.78rem] font-bold px-2.5 py-0.5 rounded-full ${place.badgeClass?.includes("success") ? "bg-success/15 text-success" : place.badgeClass?.includes("danger") ? "bg-danger/15 text-danger" : "bg-info/15 text-info"}`}>{place.status}</span>
                   </td>
                 </tr>
               ))}
-
               {trainingPlaces.length === 0 && (
-                <tr>
-                  <td colSpan="5" className="text-center">
-                    لا توجد مراكز صحية مسجلة حاليًا
-                  </td>
-                </tr>
+                <tr><td colSpan="5" className="py-6 px-4 text-center text-text-faint">لا توجد مراكز صحية مسجلة حاليًا</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="section-card">
-        <h4>آخر الأنشطة والتحديثات</h4>
-
-        <div className="activity-list">
+      <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+        <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">آخر الأنشطة والتحديثات</h4>
+        <div className="flex flex-col gap-3">
           {latestActivities.map((activity, index) => (
-            <div key={index} className="activity-item">
-              <p>{activity}</p>
+            <div key={index} className="border-b border-[#edf2f7] pb-3 last:border-0 last:pb-0">
+              <p className="m-0 text-text-soft text-[0.88rem]">{activity}</p>
             </div>
           ))}
         </div>

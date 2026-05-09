@@ -31,8 +31,8 @@ export default function TimelineTab({ studentId }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
-        <p style={{ margin: 0 }}>{error}</p>
+      <div className="section-card border-r-[4px] border-[var(--danger)]">
+        <p className="m-0">{error}</p>
       </div>
     );
   }
@@ -65,30 +65,23 @@ export default function TimelineTab({ studentId }) {
 
   return (
     <div className="section-card">
-      <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
-        <Activity size={20} style={{ color: "var(--primary)" }} />
+      <h4 className="mt-0 flex items-center gap-2">
+        <Activity size={20} className="text-[var(--primary)]" />
         سجل النشاط
       </h4>
 
       {events.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 16px", color: "var(--text-muted)" }}>
-          <Clock size={48} style={{ opacity: 0.35, marginBottom: 12 }} />
-          <p style={{ margin: 0 }}>لا توجد أحداث مسجلة</p>
+        <div className="text-center py-12 px-4 text-[var(--text-muted)]">
+          <Clock size={48} className="opacity-35 mb-3" />
+          <p className="m-0">لا توجد أحداث مسجلة</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <div className="flex flex-col gap-6">
           {sortedDates.map((date) => (
             <div key={date}>
               <div
-                style={{
-                  position: "sticky",
-                  top: 0,
-                  zIndex: 2,
-                  background: "var(--card-bg, #fff)",
-                  paddingBottom: 8,
-                  marginBottom: 12,
-                  borderBottom: "1px solid var(--border-color, #e5e7eb)",
-                }}
+                className="sticky top-0 z-[2] pb-2 mb-3 border-b border-[var(--border-color,#e5e7eb)]"
+                style={{ background: "var(--card-bg, #fff)" }}
               >
                 <span className="badge-custom badge-info">
                   {new Date(date).toLocaleDateString("ar-SA", {
@@ -100,68 +93,41 @@ export default function TimelineTab({ studentId }) {
               </div>
 
               <div
-                style={{
-                  marginRight: 12,
-                  paddingRight: 16,
-                  borderRight: "2px solid var(--border-color, #e5e7eb)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                }}
+                className="mr-3 pr-4 border-r-2 border-[var(--border-color,#e5e7eb)] flex flex-col gap-3"
               >
                 {groupedEvents[date].map((event, index) => {
                   const Icon = getEventIcon(event.type);
                   const theme = eventTheme(event.color);
                   return (
-                    <div key={`${date}-${index}`} style={{ position: "relative" }}>
+                    <div key={`${date}-${index}`} className="relative">
                       <div
-                        style={{
-                          position: "absolute",
-                          right: -25,
-                          top: 10,
-                          width: 12,
-                          height: 12,
-                          borderRadius: "50%",
-                          background: "#fff",
-                          border: `3px solid ${theme.border}`,
-                          boxSizing: "border-box",
-                        }}
+                        className="absolute -right-[25px] top-[10px] w-3 h-3 rounded-full bg-white box-border"
+                        style={{ border: `3px solid ${theme.border}` }}
                       />
                       <div
+                        className="p-3 rounded-lg"
                         style={{
-                          padding: 12,
-                          borderRadius: 8,
                           border: `1px solid ${theme.border}`,
                           background: theme.bg,
                         }}
                       >
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-                          <div style={{ marginTop: 2 }}>
+                        <div className="flex items-start gap-3">
+                          <div className="mt-[2px]">
                             <Icon size={20} style={{ color: theme.border }} />
                           </div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="flex-1 min-w-0">
                             <div
-                              style={{
-                                display: "flex",
-                                alignItems: "flex-start",
-                                justifyContent: "space-between",
-                                gap: 8,
-                                flexWrap: "wrap",
-                              }}
+                              className="flex items-start justify-between gap-2 flex-wrap"
                             >
-                              <p style={{ margin: 0, fontWeight: 600 }}>{event.title}</p>
+                              <p className="m-0 font-semibold">{event.title}</p>
                               <span
-                                style={{
-                                  fontSize: 12,
-                                  color: "var(--text-muted)",
-                                  whiteSpace: "nowrap",
-                                }}
+                                className="text-xs text-[var(--text-muted)] whitespace-nowrap"
                               >
                                 {event.time}
                               </span>
                             </div>
                             {event.description && (
-                              <p style={{ margin: "8px 0 0", fontSize: 14, opacity: 0.9 }}>
+                              <p className="mt-2 mb-0 text-sm opacity-90">
                                 {event.description}
                               </p>
                             )}
@@ -178,14 +144,10 @@ export default function TimelineTab({ studentId }) {
       )}
 
       <div
-        style={{
-          marginTop: 24,
-          paddingTop: 16,
-          borderTop: "1px solid var(--border-color, #e5e7eb)",
-        }}
+        className="mt-6 pt-4 border-t border-[var(--border-color,#e5e7eb)]"
       >
-        <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>مفتاح الأحداث:</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 14 }}>
+        <p className="text-sm font-semibold mb-3">مفتاح الأحداث:</p>
+        <div className="flex flex-wrap gap-4 text-sm">
           <Legend dot="#22c55e" label="حضور" />
           <Legend dot="#3b82f6" label="تقرير" />
           <Legend dot="#a855f7" label="تقييم" />
@@ -198,15 +160,10 @@ export default function TimelineTab({ studentId }) {
 
 function Legend({ dot, label }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="flex items-center gap-2">
       <div
-        style={{
-          width: 14,
-          height: 14,
-          borderRadius: "50%",
-          background: dot,
-          flexShrink: 0,
-        }}
+        className="w-[14px] h-[14px] rounded-full shrink-0"
+        style={{ background: dot }}
       />
       <span>{label}</span>
     </div>

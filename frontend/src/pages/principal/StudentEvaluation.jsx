@@ -144,10 +144,10 @@ export default function StudentEvaluation() {
       {/* Hero Section */}
       <div className="hero-section mb-4">
         <div className="hero-content">
-          <div className="hero-icon" style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)" }}>
+          <div className="hero-icon bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a]">
             <Users size={44} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">{"تقييم الطلبة"}</h1>
             <p className="hero-subtitle">
               {"اختر الطالب ثم قم بتعبئة نموذج التقييم"}
@@ -157,34 +157,22 @@ export default function StudentEvaluation() {
       </div>
 
       {/* Student Selection */}
-      <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
-          <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+      <div className="section-card mb-4 p-6 rounded-2xl border border-[#e2e8f0]">
+        <div className="flex items-center gap-3 mb-5">
+          <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white bg-gradient-to-br from-[#3b82f6] to-[#2563eb]">
             <Users size={20} />
           </div>
           <div>
-            <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"اختيار الطالب"}</h4>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"اختر الطالب الذي تريد تقييمه"}</p>
+            <h4 className="m-0 mb-1 text-[1.1rem] font-bold">{"اختيار الطالب"}</h4>
+            <p className="m-0 text-[0.8rem] text-[var(--text-faint)]">{"اختر الطالب الذي تريد تقييمه"}</p>
           </div>
         </div>
 
-        <div style={{ position: "relative", maxWidth: 400 }}>
+        <div className="relative max-w-[400px]">
           <select
             value={selectedStudent?.studentRowId || ""}
             onChange={(e) => handleStudentSelect(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "0.75rem 1rem 0.75rem 2.5rem",
-              borderRadius: 10,
-              border: "1px solid #e2e8f0",
-              fontSize: "0.9rem",
-              background: "#f8fafc",
-              outline: "none",
-              appearance: "none",
-              cursor: "pointer",
-            }}
-            onFocus={(e) => (e.target.style.borderColor = "#3b82f6")}
-            onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+            className="w-full py-3 pl-4 pr-10 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none appearance-none cursor-pointer focus:border-[#3b82f6]"
           >
             <option value="">اختر الطالب...</option>
             {students.map((student) => (
@@ -193,64 +181,64 @@ export default function StudentEvaluation() {
               </option>
             ))}
           </select>
-          <ChevronDown size={20} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#94a3b8", pointerEvents: "none" }} />
+          <ChevronDown size={20} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
         </div>
       </div>
 
       {/* Student Info Card */}
       {selectedStudent && (
-        <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-            <div style={{ width: 48, height: 48, borderRadius: "12px", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+        <div className="section-card mb-4 p-6 rounded-2xl border border-[#e2e8f0]">
+          <div className="flex items-center gap-3 mb-5 pb-4 border-b border-[#e2e8f0]">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white bg-gradient-to-br from-[#10b981] to-[#059669]">
               <User size={24} />
             </div>
-            <div style={{ flex: 1 }}>
-              <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.2rem", fontWeight: 700 }}>{selectedStudent.studentName}</h4>
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--text-faint)" }}>{"معلومات الطالب التدريبية"}</p>
+            <div className="flex-1">
+              <h4 className="m-0 mb-1 text-[1.2rem] font-bold">{selectedStudent.studentName}</h4>
+              <p className="m-0 text-[0.9rem] text-[var(--text-faint)]">{"معلومات الطالب التدريبية"}</p>
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <GraduationCap size={16} style={{ color: "#64748b" }} />
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+            <div className="flex items-center gap-2">
+              <GraduationCap size={16} className="text-[#64748b]" />
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>الرقم الجامعي</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedStudent.universityId}</div>
+                <div className="text-[0.75rem] text-[#94a3b8]">الرقم الجامعي</div>
+                <div className="text-[0.9rem] font-semibold">{selectedStudent.universityId}</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <FileText size={16} style={{ color: "#64748b" }} />
+            <div className="flex items-center gap-2">
+              <FileText size={16} className="text-[#64748b]" />
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>المساق</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedStudent.specialization}</div>
+                <div className="text-[0.75rem] text-[#94a3b8]">المساق</div>
+                <div className="text-[0.9rem] font-semibold">{selectedStudent.specialization}</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Building2 size={16} style={{ color: "#64748b" }} />
+            <div className="flex items-center gap-2">
+              <Building2 size={16} className="text-[#64748b]" />
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>موقع التدريب</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedStudent.site}</div>
+                <div className="text-[0.75rem] text-[#94a3b8]">موقع التدريب</div>
+                <div className="text-[0.9rem] font-semibold">{selectedStudent.site}</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <MapPin size={16} style={{ color: "#64748b" }} />
+            <div className="flex items-center gap-2">
+              <MapPin size={16} className="text-[#64748b]" />
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>الموقع</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedStudent.siteLocation}</div>
+                <div className="text-[0.75rem] text-[#94a3b8]">الموقع</div>
+                <div className="text-[0.9rem] font-semibold">{selectedStudent.siteLocation}</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <School size={16} style={{ color: "#64748b" }} />
+            <div className="flex items-center gap-2">
+              <School size={16} className="text-[#64748b]" />
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>المديرية</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedStudent.siteDirectorate}</div>
+                <div className="text-[0.75rem] text-[#94a3b8]">المديرية</div>
+                <div className="text-[0.9rem] font-semibold">{selectedStudent.siteDirectorate}</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <Star size={16} style={{ color: "#64748b" }} />
+            <div className="flex items-center gap-2">
+              <Star size={16} className="text-[#64748b]" />
               <div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>فترة التدريب</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedStudent.period}</div>
+                <div className="text-[0.75rem] text-[#94a3b8]">فترة التدريب</div>
+                <div className="text-[0.9rem] font-semibold">{selectedStudent.period}</div>
               </div>
             </div>
           </div>
@@ -260,54 +248,52 @@ export default function StudentEvaluation() {
       {/* Evaluation Form */}
       {selectedStudent && (
         <form onSubmit={handleSubmit}>
-          <div className="section-card mb-4" style={{ padding: "1.5rem", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem", paddingBottom: "1rem", borderBottom: "1px solid #e2e8f0" }}>
-              <div style={{ width: 40, height: 40, borderRadius: "10px", background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+          <div className="section-card mb-4 p-6 rounded-2xl border border-[#e2e8f0]">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#e2e8f0]">
+              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed]">
                 <FileText size={20} />
               </div>
               <div>
-                <h4 style={{ margin: "0 0 0.25rem", fontSize: "1.1rem", fontWeight: 700 }}>{"نموذج تقييم أداء الطالب"}</h4>
-                <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-faint)" }}>{"يرجى تقييم أداء الطالب في جميع الجوانب"}</p>
+                <h4 className="m-0 mb-1 text-[1.1rem] font-bold">{"نموذج تقييم أداء الطالب"}</h4>
+                <p className="m-0 text-[0.8rem] text-[var(--text-faint)]">{"يرجى تقييم أداء الطالب في جميع الجوانب"}</p>
               </div>
             </div>
 
             {/* Rating Fields */}
             {isPsychCenter ? (
-              <div style={{ overflowX: "auto", marginBottom: "2rem" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", direction: "rtl", fontSize: "0.9rem" }}>
+              <div className="overflow-x-auto mb-8">
+                <table className="w-full border-collapse direction-rtl text-[0.9rem]">
                   <thead>
-                    <tr style={{ background: "#0e7490", color: "white" }}>
-                      <th style={{ padding: "0.75rem 1rem", border: "1px solid #0891b2", fontWeight: 600, width: 40 }}>الرقم</th>
-                      <th style={{ padding: "0.75rem 1rem", border: "1px solid #0891b2", fontWeight: 600 }}>المؤشر</th>
-                      {[1,2,3,4,5].map(n => <th key={n} style={{ padding: "0.75rem 0.5rem", border: "1px solid #0891b2", fontWeight: 600, width: 52, textAlign: "center" }}>{n}</th>)}
+                    <tr className="bg-[#0e7490] text-white">
+                      <th className="py-3 px-4 border border-[#0891b2] font-semibold w-10">الرقم</th>
+                      <th className="py-3 px-4 border border-[#0891b2] font-semibold">المؤشر</th>
+                      {[1,2,3,4,5].map(n => <th key={n} className="py-3 px-2 border border-[#0891b2] font-semibold w-[52px] text-center">{n}</th>)}
                     </tr>
                   </thead>
                   <tbody>
                     {PSYCH_CENTER_EVAL_FIELDS.map((field, idx) => (
-                      <tr key={field.key} style={{ background: idx % 2 === 0 ? "#f0f9ff" : "white" }}>
-                        <td style={{ padding: "0.75rem", border: "1px solid #bae6fd", textAlign: "center", fontWeight: 600, color: "#0e7490" }}>{idx + 1}</td>
-                        <td style={{ padding: "0.75rem 1rem", border: "1px solid #bae6fd" }}>{field.label}</td>
+                      <tr key={field.key} className={idx % 2 === 0 ? "bg-[#f0f9ff]" : "bg-white"}>
+                        <td className="py-3 border border-[#bae6fd] text-center font-semibold text-[#0e7490]">{idx + 1}</td>
+                        <td className="py-3 px-4 border border-[#bae6fd]">{field.label}</td>
                         {[1,2,3,4,5].map(rating => (
-                          <td key={rating} style={{ padding: "0.5rem", border: "1px solid #bae6fd", textAlign: "center" }}>
+                          <td key={rating} className="py-2 border border-[#bae6fd] text-center">
                             <button
                               type="button"
                               onClick={() => handleEvaluationChange(field.key, rating)}
+                              className="w-9 h-9 rounded-full font-bold cursor-pointer transition-all text-[0.85rem]"
                               style={{
-                                width: 36, height: 36, borderRadius: "50%",
                                 border: evaluation[field.key] === rating ? "none" : "1.5px solid #cbd5e1",
                                 background: evaluation[field.key] === rating ? "#0e7490" : "#f8fafc",
                                 color: evaluation[field.key] === rating ? "white" : "#64748b",
-                                fontWeight: 700, cursor: "pointer", transition: "all 0.15s",
-                                fontSize: "0.85rem",
                               }}
                             >{rating}</button>
                           </td>
                         ))}
                       </tr>
                     ))}
-                    <tr style={{ background: "#f0f9ff", fontWeight: 700 }}>
-                      <td colSpan={2} style={{ padding: "0.75rem 1rem", border: "1px solid #bae6fd", textAlign: "center" }}>المجموع</td>
-                      <td colSpan={5} style={{ padding: "0.75rem 1rem", border: "1px solid #bae6fd", textAlign: "center", color: "#0e7490", fontSize: "1.05rem" }}>
+                    <tr className="bg-[#f0f9ff] font-bold">
+                      <td colSpan={2} className="py-3 px-4 border border-[#bae6fd] text-center">المجموع</td>
+                      <td colSpan={5} className="py-3 px-4 border border-[#bae6fd] text-center text-[#0e7490] text-[1.05rem]">
                         {PSYCH_CENTER_EVAL_FIELDS.reduce((sum, f) => sum + (Number(evaluation[f.key]) || 0), 0)} / 25
                       </td>
                     </tr>
@@ -315,28 +301,23 @@ export default function StudentEvaluation() {
                 </table>
               </div>
             ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-5 mb-8">
               {evalFields.map((field) => (
                 <div key={field.key}>
-                  <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.5rem" }}>
+                  <label className="block text-[0.85rem] font-semibold text-[#475569] mb-2">
                     {field.label}
                   </label>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((rating) => (
                       <button
                         key={rating}
                         type="button"
                         onClick={() => handleEvaluationChange(field.key, rating)}
+                        className="flex-1 py-2 rounded-md text-[0.8rem] cursor-pointer transition-all border"
                         style={{
-                          flex: 1,
-                          padding: "0.5rem",
-                          border: "1px solid #e2e8f0",
-                          borderRadius: 6,
+                          borderColor: "#e2e8f0",
                           background: evaluation[field.key] === rating ? "#3b82f6" : "#f8fafc",
                           color: evaluation[field.key] === rating ? "white" : "#64748b",
-                          fontSize: "0.8rem",
-                          cursor: "pointer",
-                          transition: "all 0.2s",
                         }}
                         onMouseEnter={(e) => {
                           if (evaluation[field.key] !== rating) {
@@ -359,8 +340,8 @@ export default function StudentEvaluation() {
             )}
 
             {/* General Notes */}
-            <div style={{ marginTop: "1.5rem" }}>
-              <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "#475569", marginBottom: "0.5rem" }}>
+            <div className="mt-6">
+              <label className="block text-[0.85rem] font-semibold text-[#475569] mb-2">
                 ملاحظات عامة
               </label>
               <textarea
@@ -368,39 +349,15 @@ export default function StudentEvaluation() {
                 onChange={(e) => handleEvaluationChange("general_notes", e.target.value)}
                 placeholder=""
                 rows={5}
-                style={{
-                  width: "100%",
-                  padding: "0.75rem",
-                  borderRadius: 10,
-                  border: "1px solid #e2e8f0",
-                  fontSize: "0.9rem",
-                  background: "#f8fafc",
-                  resize: "vertical",
-                  outline: "none",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "#8b5cf6")}
-                onBlur={(e) => (e.target.style.borderColor = "#e2e8f0")}
+                className="w-full py-3 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] resize-y outline-none focus:border-[#8b5cf6]"
               />
             </div>
 
             {/* Submit Button */}
-            <div style={{ marginTop: "2rem", display: "flex", justifyContent: "flex-end" }}>
+            <div className="mt-8 flex justify-end">
               <button
                 type="submit"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  padding: "0.75rem 2rem",
-                  background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 10,
-                  fontSize: "0.95rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                }}
+                className="inline-flex items-center gap-2 py-3 px-8 text-white border-none rounded-[10px] text-[0.95rem] font-semibold cursor-pointer transition-[transform,box-shadow] duration-200 bg-gradient-to-br from-[#8b5cf6] to-[#7c3aed]"
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-1px)";
                   e.currentTarget.style.boxShadow = "0 4px 12px rgba(139, 92, 246, 0.3)";

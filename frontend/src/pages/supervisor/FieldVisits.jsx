@@ -229,7 +229,7 @@ export default function FieldVisits() {
       />
 
       {error && (
-        <div className="alert-custom alert-danger" style={{ marginBottom: "16px" }}>
+        <div className="alert-custom alert-danger mb-4">
           {error}
         </div>
       )}
@@ -277,13 +277,13 @@ export default function FieldVisits() {
         </div>
 
         {selectedSectionId && !studentsInSection.length && (
-          <p className="text-soft" style={{ margin: 0 }}>
+          <p className="text-soft m-0">
             لا يوجد طلبة مرتبطون بهذه الشعبة ضمن إشرافك الحالي.
           </p>
         )}
 
         {selectedStudent && (
-          <div className="alert-custom alert-info" style={{ marginTop: "12px" }}>
+          <div className="alert-custom alert-info mt-3">
             <strong>{selectedStudent.name}</strong>
             <div>
               جهة التدريب: {selectedStudent.training_site?.name || selectedStudent.training_site || "غير محددة"}
@@ -409,7 +409,7 @@ export default function FieldVisits() {
                 </span>
               </div>
 
-              <div className="page-actions" style={{ marginTop: "12px" }}>
+              <div className="page-actions mt-3">
                 <span className="text-soft">تاريخ الزيارة: {visit.scheduled_date || visit.visit_date || "—"}</span>
 
                 <div className="table-actions">
@@ -425,7 +425,7 @@ export default function FieldVisits() {
               </div>
 
               {reportVisitId === visit.id && (
-                <div className="form-card" style={{ marginTop: "12px" }}>
+                <div className="form-card mt-3">
                   <div className="form-group-custom">
                     <label className="form-label-custom">ملخص الزيارة</label>
                     <textarea name="summary" className="form-textarea-custom" value={reportForm.summary} onChange={handleReportChange} />
@@ -456,7 +456,7 @@ export default function FieldVisits() {
               )}
 
               {visit.general_notes || visit.positive_points || visit.needs_improvement ? (
-                <div className="alert-custom alert-info" style={{ marginTop: "12px" }}>
+                <div className="alert-custom alert-info mt-3">
                   <strong>تقرير الزيارة:</strong>
                   {visit.general_notes && <div>{visit.general_notes}</div>}
                   {visit.positive_points && <div>نقاط القوة: {visit.positive_points}</div>}

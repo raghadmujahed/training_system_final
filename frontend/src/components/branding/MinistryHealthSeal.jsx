@@ -11,44 +11,24 @@ export default function MinistryHealthSeal({ height = 52, maxWidth = 240 }) {
     return (
       <div
         title="وزارة الصحة"
-        style={{
-          height,
-          maxWidth,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "8px 14px",
-          background: "rgba(255,255,255,0.95)",
-          borderRadius: 10,
-          border: "1px solid rgba(0,0,0,0.08)",
-        }}
+        className="shrink-0 flex items-center justify-center py-2 px-[14px] bg-[rgba(255,255,255,0.95)] rounded-[10px] border border-[rgba(0,0,0,0.08)]"
+        style={{ height, maxWidth }}
       >
-        <strong style={{ fontSize: "0.95rem", color: "#0f172a", letterSpacing: "0.02em" }}>وزارة الصحة</strong>
+        <strong className="text-[0.95rem] text-[#0f172a] tracking-[0.02em]">وزارة الصحة</strong>
       </div>
     );
   }
 
   return (
     <div
-      style={{
-        height,
-        maxWidth,
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#fff",
-        borderRadius: 10,
-        padding: "6px 12px",
-        border: "1px solid rgba(0,0,0,0.08)",
-      }}
+      className="shrink-0 flex items-center justify-center bg-white rounded-[10px] py-[6px] px-3 border border-[rgba(0,0,0,0.08)]"
+      style={{ height, maxWidth }}
       title="وزارة الصحة الفلسطينية"
     >
       <img
         src="/branding/ministry-health.jpg"
         alt="وزارة الصحة"
-        style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }}
+        className="max-h-full max-w-full object-contain"
         onError={() => setFailed(true)}
       />
     </div>

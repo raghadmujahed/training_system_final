@@ -137,7 +137,7 @@ export default function HeadOfDepartmentSectionDetails() {
             رجوع
           </button>
         </div>
-        <div style={{ textAlign: "center", padding: 40, color: "#dc3545" }}>
+        <div className="text-center p-10 text-[#dc3545]">
           {error || "لم يتم العثور على الشعبة"}
         </div>
       </div>
@@ -158,38 +158,38 @@ export default function HeadOfDepartmentSectionDetails() {
       </div>
 
       {/* Section Info Card */}
-      <div className="section-card" style={{ marginBottom: 24 }}>
-        <h2 style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card mb-6">
+        <h2 className="mb-4 flex items-center gap-2">
           <BookOpen size={20} />
           معلومات الشعبة
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
           <div>
-            <label style={{ color: "#666", fontSize: 14 }}>المساق</label>
-            <p style={{ fontWeight: 500 }}>{section.course?.name}</p>
-            <p style={{ fontSize: 12, color: "#888" }}>{section.course?.code}</p>
+            <label className="text-[#666] text-sm">المساق</label>
+            <p className="font-medium">{section.course?.name}</p>
+            <p className="text-xs text-[#888]">{section.course?.code}</p>
           </div>
           <div>
-            <label style={{ color: "#666", fontSize: 14 }}>الفصل الدراسي</label>
-            <p style={{ fontWeight: 500 }}>
+            <label className="text-[#666] text-sm">الفصل الدراسي</label>
+            <p className="font-medium">
               {section.semester === "first" ? "الأول" : section.semester === "second" ? "الثاني" : "الصيفي"}
             </p>
           </div>
           <div>
-            <label style={{ color: "#666", fontSize: 14 }}>العام الدراسي</label>
-            <p style={{ fontWeight: 500 }}>{section.academic_year}</p>
+            <label className="text-[#666] text-sm">العام الدراسي</label>
+            <p className="font-medium">{section.academic_year}</p>
           </div>
           <div>
-            <label style={{ color: "#666", fontSize: 14 }}>السعة</label>
-            <p style={{ fontWeight: 500 }}>{section.capacity} طالب</p>
+            <label className="text-[#666] text-sm">السعة</label>
+            <p className="font-medium">{section.capacity} طالب</p>
           </div>
           <div>
-            <label style={{ color: "#666", fontSize: 14 }}>المشرف الأكاديمي</label>
-            <p style={{ fontWeight: 500 }}>{section.academic_supervisor?.name || "غير محدد"}</p>
+            <label className="text-[#666] text-sm">المشرف الأكاديمي</label>
+            <p className="font-medium">{section.academic_supervisor?.name || "غير محدد"}</p>
           </div>
           <div>
-            <label style={{ color: "#666", fontSize: 14 }}>عدد المسجلين</label>
-            <p style={{ fontWeight: 500, color: "#3b82f6" }}>
+            <label className="text-[#666] text-sm">عدد المسجلين</label>
+            <p className="font-medium text-[#3b82f6]">
               {enrollments.length} / {section.capacity}
             </p>
           </div>
@@ -198,27 +198,20 @@ export default function HeadOfDepartmentSectionDetails() {
 
       {/* Enrolled Students */}
       <div className="section-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 style={{ display: "flex", alignItems: "center", gap: 8, margin: 0 }}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="flex items-center gap-2 m-0">
             <Users size={20} />
             الطلاب المسجلون
           </h2>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ 
-              backgroundColor: "#e7f3ff", 
-              color: "#3b82f6",
-              padding: "4px 12px",
-              borderRadius: 12,
-              fontSize: 14 
-            }}>
+          <div className="flex items-center gap-2">
+            <span className="bg-[#e7f3ff] text-[#3b82f6] py-1 px-3 rounded-xl text-sm">
               {enrollments.length} طالب
             </span>
             <button
               onClick={() => setShowAddStudent(!showAddStudent)}
-              className="btn-primary"
-              style={{ padding: "6px 12px", fontSize: 13 }}
+              className="btn-primary py-[6px] px-3 text-[13px]"
             >
-              <Plus size={14} style={{ display: "inline", marginRight: 4 }} />
+              <Plus size={14} className="inline mr-1" />
               إضافة طالب
             </button>
           </div>
@@ -226,10 +219,10 @@ export default function HeadOfDepartmentSectionDetails() {
 
         {/* Add Student Search */}
         {showAddStudent && (
-          <div style={{ marginBottom: 16, padding: 16, backgroundColor: "#f8f9fa", borderRadius: 8, position: "relative" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <label htmlFor="hod-section-add-student-search" style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, margin: 0 }}>
-                <Search size={16} style={{ color: "#666", flexShrink: 0 }} />
+          <div className="mb-4 p-4 bg-[#f8f9fa] rounded-lg relative">
+            <div className="flex items-center gap-2 mb-2">
+              <label htmlFor="hod-section-add-student-search" className="flex items-center gap-2 flex-1 m-0">
+                <Search size={16} className="text-[#666] shrink-0" />
                 <input
                   id="hod-section-add-student-search"
                   name="add_student_search"
@@ -238,35 +231,32 @@ export default function HeadOfDepartmentSectionDetails() {
                   placeholder="ابحث بالاسم أو الرقم الجامعي..."
                   value={studentSearch}
                   onChange={(e) => handleStudentSearch(e.target.value)}
-                  style={{ flex: 1, padding: "8px 12px", borderRadius: 4, border: "1px solid #ddd" }}
+                  className="flex-1 py-2 px-3 rounded border border-[#ddd]"
                 />
               </label>
               <button
                 onClick={() => { setShowAddStudent(false); setStudentSearch(""); setSearchResults([]); }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
+                className="bg-transparent border-none cursor-pointer p-1"
               >
                 <X size={16} />
               </button>
             </div>
-            {searching && <p style={{ fontSize: 13, color: "#666" }}>جاري البحث...</p>}
+            {searching && <p className="text-[13px] text-[#666]">جاري البحث...</p>}
             {searchResults.length > 0 && (
-              <div style={{ border: "1px solid #ddd", borderRadius: 4, maxHeight: 200, overflowY: "auto" }}>
+              <div className="border border-[#ddd] rounded max-h-[200px] overflow-y-auto">
                 {searchResults.map(student => (
                   <div
                     key={student.id}
-                    style={{ padding: "8px 12px", cursor: "pointer", borderBottom: "1px solid #eee", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f0f0f0"}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ""}
+                    className="py-2 px-3 cursor-pointer border-b border-[#eee] flex justify-between items-center hover:bg-[#f0f0f0]"
                   >
                     <div>
                       <strong>{student.name}</strong>
-                      <span style={{ fontSize: 12, color: "#666", marginRight: 8 }}>({student.university_id})</span>
+                      <span className="text-xs text-[#666] mr-2">({student.university_id})</span>
                     </div>
                     <button
                       onClick={() => handleAddStudent(student)}
                       disabled={addingStudent}
-                      className="btn-primary"
-                      style={{ padding: "4px 10px", fontSize: 12 }}
+                      className="btn-primary py-1 px-[10px] text-xs"
                     >
                       {addingStudent ? "..." : "إضافة"}
                     </button>
@@ -275,94 +265,60 @@ export default function HeadOfDepartmentSectionDetails() {
               </div>
             )}
             {!searching && studentSearch.length >= 2 && searchResults.length === 0 && (
-              <p style={{ fontSize: 13, color: "#999" }}>لا توجد نتائج</p>
+              <p className="text-[13px] text-[#999]">لا توجد نتائج</p>
             )}
           </div>
         )}
 
         {enrollments.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 40, color: "#666" }}>
-            <Users size={48} style={{ marginBottom: 16, opacity: 0.3 }} />
+          <div className="text-center p-10 text-[#666]">
+            <Users size={48} className="mb-4 opacity-30" />
             <p>لا يوجد طلاب مسجلون في هذه الشعبة</p>
             <button 
               onClick={() => setShowAddStudent(true)}
-              className="btn-primary"
-              style={{ marginTop: 16 }}
+              className="btn-primary mt-4"
             >
-              <Plus size={16} style={{ display: "inline", marginRight: 4 }} />
+              <Plus size={16} className="inline mr-1" />
               إضافة طالب للشعبة
             </button>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {enrollments.map((enrollment) => (
               <div 
                 key={enrollment.id}
-                style={{ 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "space-between",
-                  padding: 16,
-                  border: "1px solid #e5e7eb",
-                  borderRadius: 8,
-                  backgroundColor: "#fff"
-                }}
+                className="flex items-center justify-between p-4 border border-[#e5e7eb] rounded-lg bg-white"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ 
-                    width: 40, 
-                    height: 40, 
-                    borderRadius: "50%", 
-                    backgroundColor: "#e7f3ff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#3b82f6"
-                  }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#e7f3ff] flex items-center justify-center text-[#3b82f6]">
                     <User size={20} />
                   </div>
                   <div>
-                    <p style={{ fontWeight: 500, margin: 0 }}>{enrollment.user?.name}</p>
-                    <p style={{ fontSize: 12, color: "#666", margin: 0 }}>
+                    <p className="font-medium m-0">{enrollment.user?.name}</p>
+                    <p className="text-xs text-[#666] m-0">
                       {enrollment.user?.university_id}
                     </p>
                   </div>
                 </div>
                 
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <div className="flex items-center gap-4">
                   {enrollment.user?.email && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#666" }}>
+                    <div className="flex items-center gap-1 text-xs text-[#666]">
                       <Mail size={14} />
                       {enrollment.user.email}
                     </div>
                   )}
-                  <span style={{ 
-                    padding: "4px 12px",
-                    borderRadius: 12,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    backgroundColor: getStatusColor(enrollment.status) + "20",
-                    color: getStatusColor(enrollment.status)
-                  }}>
+                  <span className="py-1 px-3 rounded-xl text-xs font-medium" style={{ backgroundColor: getStatusColor(enrollment.status) + "20", color: getStatusColor(enrollment.status) }}>
                     {getStatusLabel(enrollment.status)}
                   </span>
                   <button
                     onClick={() => handleRemoveStudent(enrollment)}
                     disabled={removingId === enrollment.id}
                     title="حذف الطالب من الشعبة"
+                    className="flex items-center gap-[6px] py-[6px] px-3 rounded-lg border border-[#fecaca] text-[#dc2626] text-xs font-medium transition-all"
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      padding: "6px 12px",
-                      borderRadius: 8,
-                      border: "1px solid #fecaca",
                       backgroundColor: removingId === enrollment.id ? "#fee2e2" : "#fff",
-                      color: "#dc2626",
-                      fontSize: 12,
-                      fontWeight: 500,
                       cursor: removingId === enrollment.id ? "not-allowed" : "pointer",
-                      transition: "all 0.2s",
                     }}
                     onMouseEnter={(e) => {
                       if (removingId !== enrollment.id) {

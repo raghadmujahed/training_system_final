@@ -10,14 +10,8 @@ const HealthIndicator = ({ status }) => {
   const c = config[status] || config.healthy;
   return (
     <span
+      className="inline-flex items-center gap-1 py-1 px-[10px] rounded-2xl text-[0.78rem] font-semibold"
       style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "4px",
-        padding: "4px 10px",
-        borderRadius: "16px",
-        fontSize: "0.78rem",
-        fontWeight: "600",
         color: c.color,
         backgroundColor: c.bg,
         border: `1px solid ${c.color}30`,
@@ -30,7 +24,7 @@ const HealthIndicator = ({ status }) => {
 
 // Mini status badge
 const MiniBadge = ({ status, label }) => {
-  if (!status) return <span style={{ color: "#999" }}>—</span>;
+  if (!status) return <span className="text-[#999]">—</span>;
   const colors = {
     complete: "#28a745",
     incomplete: "#dc3545",
@@ -47,16 +41,8 @@ const MiniBadge = ({ status, label }) => {
   const color = colors[status] || "#999";
   return (
     <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: "10px",
-        fontSize: "0.72rem",
-        fontWeight: "600",
-        color,
-        backgroundColor: color + "15",
-        border: `1px solid ${color}30`,
-      }}
+      className="inline-block py-[2px] px-2 rounded-[10px] text-[0.7rem] font-semibold"
+      style={{ color, backgroundColor: `${color}18` }}
     >
       {label}
     </span>
@@ -76,16 +62,8 @@ const AcademicStatusBadge = ({ status, label }) => {
   const color = ACADEMIC_STATUS_COLORS[status] || "#6c757d";
   return (
     <span
-      style={{
-        display: "inline-block",
-        padding: "4px 10px",
-        borderRadius: "16px",
-        fontSize: "0.74rem",
-        fontWeight: "700",
-        color,
-        backgroundColor: color + "15",
-        border: `1px solid ${color}30`,
-      }}
+      className="inline-block py-1 px-[10px] rounded-2xl text-[0.78rem] font-semibold"
+      style={{ color }}
     >
       {label || "لم يباشر"}
     </span>
@@ -162,10 +140,10 @@ export default function StudentsTable({ students, filterStatus, onSelectStudent 
 
   if (!normalized.length) {
     return (
-      <div style={{ textAlign: "center", padding: "60px 20px" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "16px" }}>📭</div>
-        <h4 style={{ color: "#666" }}>لا يوجد طلبة مشرف عليهم</h4>
-        <p style={{ color: "#999", fontSize: "0.9rem" }}>
+      <div className="text-center py-[60px] px-5">
+        <div className="text-[3rem] mb-4">📭</div>
+        <h4 className="text-[#666]">لا يوجد طلبة مشرف عليهم</h4>
+        <p className="text-[#999] text-[0.9rem]">
           سيظهر الطلبة هنا بعد تعيينك كمشرف أكاديمي عليهم
         </p>
       </div>
@@ -174,16 +152,16 @@ export default function StudentsTable({ students, filterStatus, onSelectStudent 
 
   if (!filtered.length) {
     return (
-      <div style={{ textAlign: "center", padding: "40px 20px" }}>
-        <div style={{ fontSize: "2rem", marginBottom: "12px" }}>🔍</div>
-        <p style={{ color: "#666" }}>لا توجد نتائج مطابقة للبحث</p>
+      <div className="text-center py-10 px-5">
+        <div className="text-[2rem] mb-3">🔍</div>
+        <p className="text-[#666]">لا توجد نتائج مطابقة للبحث</p>
       </div>
     );
   }
 
   return (
-    <div style={{ overflowX: "auto" }}>
-      <table className="data-table" style={{ minWidth: "1050px" }}>
+    <div className="overflow-x-auto">
+      <table className="data-table min-w-[1050px]">
         <thead>
           <tr>
             <th>الطالب</th>
@@ -202,20 +180,20 @@ export default function StudentsTable({ students, filterStatus, onSelectStudent 
         </thead>
         <tbody>
           {filtered.map((s) => (
-            <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => onSelectStudent(s.id)}>
+            <tr key={s.id} className="cursor-pointer" onClick={() => onSelectStudent(s.id)}>
               <td>
-                <div style={{ fontWeight: "600" }}>{s.name || "—"}</div>
-                <div style={{ fontSize: "0.75rem", color: "#999" }}>{s.specialization || ""}</div>
+                <div className="font-semibold">{s.name || "—"}</div>
+                <div className="text-[0.75rem] text-[#999]">{s.specialization || ""}</div>
               </td>
               <td>{s.university_id || "—"}</td>
               <td><AcademicStatusBadge status={s.academic_status} label={s.academic_status_label} /></td>
               <td>
-                <div style={{ fontSize: "0.78rem" }}>{formatDateTime(s.academic_status_updated_at)}</div>
+                <div className="text-[0.78rem]">{formatDateTime(s.academic_status_updated_at)}</div>
                 {s.academic_status_updated_by && (
-                  <div style={{ fontSize: "0.72rem", color: "#888" }}>{s.academic_status_updated_by}</div>
+                  <div className="text-[0.72rem] text-[#888]">{s.academic_status_updated_by}</div>
                 )}
               </td>
-              <td style={{ maxWidth: "180px", color: "#666", fontSize: "0.78rem" }}>
+              <td className="max-w-[180px] text-[#666] text-[0.78rem]">
                 {s.academic_status_note || "—"}
               </td>
               <td>{s.section_name || "—"}</td>

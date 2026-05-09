@@ -1,49 +1,28 @@
 import { memo } from "react";
 import { Loader2 } from "lucide-react";
 
-/**
- * مكوّن موحد لمؤشر التحميل في كل النظام
- *
- * @param {'page'|'section'|'inline'|'button'} size - حجم المؤشر
- *   - page: صفحة كاملة (مركزي، كبير)
- *   - section: داخل بطاقة/قسم (متوسط)
- *   - inline: داخل سطر (صغير)
- *   - button: داخل زر (صغير جداً)
- * @param {string} text - نص اختياري يظهر تحت المؤشر
- * @param {string} className - CSS classes إضافية
- */
 const LoadingSpinner = memo(function LoadingSpinner({ size = "section", text, className = "" }) {
   const sizeMap = {
-    page: { icon: 40, gap: 12, padding: "80px 20px", textFontSize: "0.95rem" },
-    section: { icon: 28, gap: 8, padding: "40px 20px", textFontSize: "0.88rem" },
-    inline: { icon: 18, gap: 6, padding: "0", textFontSize: "0.82rem" },
-    button: { icon: 16, gap: 0, padding: "0", textFontSize: "inherit" },
+    page: { icon: 40, gap: 12, padding: "py-20 px-5", textFontSize: "text-[0.95rem]" },
+    section: { icon: 28, gap: 8, padding: "py-10 px-5", textFontSize: "text-[0.88rem]" },
+    inline: { icon: 18, gap: 6, padding: "", textFontSize: "text-[0.82rem]" },
+    button: { icon: 16, gap: 0, padding: "", textFontSize: "text-inherit" },
   };
 
   const cfg = sizeMap[size] || sizeMap.section;
-
   const isPageOrSection = size === "page" || size === "section";
 
   return (
     <div
-      className={`loading-spinner-wrapper ${className}`}
-      style={{
-        display: "flex",
-        flexDirection: isPageOrSection ? "column" : "row",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: cfg.padding,
-        gap: cfg.gap,
-        color: "var(--text-faint, #6b7f92)",
-      }}
+      className={`flex ${isPageOrSection ? "flex-col" : "flex-row"} items-center justify-center ${cfg.padding} gap-[var(--gap)] text-text-faint ${className}`}
+      style={{ gap: cfg.gap }}
     >
       <Loader2
         size={cfg.icon}
-        className="spin"
-        style={{ color: "var(--primary, #142a42)" }}
+        className="animate-spin text-primary"
       />
       {text && (
-        <span style={{ fontSize: cfg.textFontSize, color: "var(--text-faint, #6b7f92)" }}>
+        <span className={`${cfg.textFontSize} text-text-faint`}>
           {text}
         </span>
       )}

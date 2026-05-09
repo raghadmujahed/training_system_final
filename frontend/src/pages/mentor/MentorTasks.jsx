@@ -170,7 +170,7 @@ export default function MentorTasks() {
         subtitle="إضافة ومتابعة المهام التدريبية للطلبة المرتبطين بتعييناتك."
       />
 
-      <div className="table-actions" style={{ marginBottom: 16 }}>
+      <div className="table-actions mb-4">
         <button className="btn-primary-custom" onClick={openCreate}>
           + إضافة مهمة جديدة
         </button>
@@ -200,7 +200,7 @@ export default function MentorTasks() {
                 >
                   {/* Header */}
                   <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="flex-1 min-w-0">
                       <div className="d-flex align-items-center gap-2 mb-2">
                         <h5 className="mb-0">{t.title}</h5>
                         {statusBadge(t.status)}
@@ -212,12 +212,12 @@ export default function MentorTasks() {
                         )}
                       </div>
                       {t.description && (
-                        <p className="text-muted mb-2" style={{ whiteSpace: "pre-line" }}>
+                        <p className="text-muted mb-2 whitespace-pre-line">
                           {t.description.length > 120 ? t.description.slice(0, 120) + "…" : t.description}
                         </p>
                       )}
                     </div>
-                    <div className="d-flex gap-2" style={{ flexShrink: 0 }}>
+                    <div className="d-flex gap-2 shrink-0">
                       <button
                         className="btn-outline-custom btn-sm-custom d-inline-flex align-items-center gap-1"
                         onClick={() => setExpandedTaskId((prev) => (prev === t.id ? null : t.id))}
@@ -234,7 +234,7 @@ export default function MentorTasks() {
                   </div>
 
                   {/* Meta */}
-                  <div className="d-flex flex-wrap gap-3 mt-2" style={{ fontSize: "0.88rem", color: "#6c757d" }}>
+                  <div className="d-flex flex-wrap gap-3 mt-2 text-[0.88rem] text-[#6c757d]">
                     <span className="d-inline-flex align-items-center gap-1">
                       <User size={14} />
                       الطالب: {getStudentName(t)}
@@ -249,7 +249,7 @@ export default function MentorTasks() {
 
                   {/* Expanded: Submission details + grading */}
                   {isExpanded && (
-                    <div className="mt-3 pt-3" style={{ borderTop: "1px solid #e9ecef" }}>
+                    <div className="mt-3 pt-3 border-t border-[#e9ecef]">
                       {submission ? (
                         <div
                           className="p-3 rounded mb-3"
@@ -266,7 +266,7 @@ export default function MentorTasks() {
                             )}
                             <strong>{t.status === "graded" ? "تم التقييم" : "تم التسليم"}</strong>
                             {submission.submitted_at && (
-                              <span className="text-muted" style={{ fontSize: "0.82rem" }}>
+                              <span className="text-muted text-[0.82rem]">
                                 — {submission.submitted_at}
                               </span>
                             )}
@@ -278,8 +278,7 @@ export default function MentorTasks() {
                                 href={submission.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="d-inline-flex align-items-center gap-1"
-                                style={{ color: "var(--primary, #4f46e5)", fontSize: "0.9rem" }}
+                                className="d-inline-flex align-items-center gap-1 text-[var(--primary,#4f46e5)] text-[0.9rem]"
                               >
                                 <Download size={14} />
                                 تحميل ملف الطالب
@@ -289,8 +288,8 @@ export default function MentorTasks() {
 
                           {submission.notes && (
                             <div className="mb-2">
-                              <span className="text-muted" style={{ fontSize: "0.85rem" }}>ملاحظات الطالب:</span>{" "}
-                              <span style={{ fontSize: "0.9rem" }}>{submission.notes}</span>
+                              <span className="text-muted text-[0.85rem]">ملاحظات الطالب:</span>{" "}
+                              <span className="text-[0.9rem]">{submission.notes}</span>
                             </div>
                           )}
 
@@ -306,7 +305,7 @@ export default function MentorTasks() {
                               <MessageSquare size={16} className="text-info mt-1 flex-shrink-0" />
                               <div>
                                 <strong>ملاحظاتك:</strong>
-                                <p className="mb-0 mt-1" style={{ whiteSpace: "pre-line", fontSize: "0.9rem" }}>
+                                <p className="mb-0 mt-1 whitespace-pre-line text-[0.9rem]">
                                   {submission.feedback}
                                 </p>
                               </div>
@@ -322,7 +321,7 @@ export default function MentorTasks() {
 
                       {/* Grading form - show if submitted but not yet graded */}
                       {submission && submission.grade === null && (
-                        <div className="p-3 rounded" style={{ background: "#fefce8", border: "1px solid #fde68a" }}>
+                        <div className="p-3 rounded bg-[#fefce8] border border-[#fde68a]">
                           <h6 className="d-flex align-items-center gap-2 mb-3">
                             <Star size={16} className="text-warning" />
                             تقييم التسليم
@@ -389,7 +388,7 @@ export default function MentorTasks() {
       {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+          <div className="modal-content max-w-[560px]" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingId ? "تعديل مهمة" : "إضافة مهمة جديدة"}</h3>
               <button className="modal-close-btn" onClick={closeModal}>✕</button>

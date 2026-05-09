@@ -260,12 +260,11 @@ export default function HeadOfDepartmentEnrollmentForm() {
         <button onClick={() => navigate("/head-department/reports")} className="btn-secondary">رجوع</button>
       </div>
 
-      <div style={{ marginBottom: 16 }}>
+      <div className="mb-4">
         <button 
           type="button" 
           onClick={() => setShowBulk(!showBulk)}
-          className={showBulk ? "btn-primary" : "btn-secondary"}
-          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+          className={`${showBulk ? "btn-primary" : "btn-secondary"} flex items-center gap-2`}
         >
           <FileSpreadsheet size={16} />
           {showBulk ? "تسجيل فردي" : "تسجيل جماعي (Excel)"}
@@ -275,10 +274,10 @@ export default function HeadOfDepartmentEnrollmentForm() {
       {!showBulk ? (
         <form onSubmit={handleSubmit} className="form">
           <div className="form-row">
-            <div className="form-group" style={{ position: 'relative' }}>
+            <div className="form-group relative">
               <label htmlFor="hod-enroll-student-search">الطالب *</label>
-              <div style={{ position: 'relative' }}>
-                <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
+              <div className="relative">
+                <Search size={16} className="absolute left-[10px] top-1/2 -translate-y-1/2 text-[#666]" />
                 <input
                   id="hod-enroll-student-search"
                   name="student_search"
@@ -294,59 +293,34 @@ export default function HeadOfDepartmentEnrollmentForm() {
                     }
                     setShowStudentDropdown(true);
                   }}
-                  style={{ paddingLeft: 35, paddingRight: form.user_id ? 35 : 10 }}
+                  className="pl-[35px]"
+                  style={{ paddingRight: form.user_id ? 35 : 10 }}
                   required={!form.user_id}
                 />
                 {form.user_id && (
                   <button
                     type="button"
                     onClick={clearStudentSelection}
-                    style={{ 
-                      position: 'absolute', 
-                      right: 10, 
-                      top: '50%', 
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      padding: 0
-                    }}
+                    className="absolute right-[10px] top-1/2 -translate-y-1/2 border-none cursor-pointer p-0 bg-transparent"
                   >
-                    <X size={16} style={{ color: '#666' }} />
+                    <X size={16} className="text-[#666]" />
                   </button>
                 )}
               </div>
               
               {/* Dropdown results */}
               {showStudentDropdown && studentSearch && filteredStudents.length > 0 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #ddd',
-                  borderRadius: 4,
-                  maxHeight: 200,
-                  overflowY: 'auto',
-                  zIndex: 100,
-                  marginTop: 4
-                }}>
+                <div className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded max-h-[200px] overflow-y-auto z-[100] mt-1">
                   {filteredStudents.map(student => (
                     <div
                       key={student.id}
                       onClick={() => selectStudent(student)}
-                      style={{
-                        padding: '8px 12px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f0f0f0',
-                        fontSize: 14
-                      }}
+                      className="py-2 px-3 cursor-pointer border-b border-[#f0f0f0] text-sm"
                       onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
                       onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
                     >
-                      <div style={{ fontWeight: 500 }}>{student.name}</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>الرقم الجامعي: {student.university_id}</div>
+                      <div className="font-medium">{student.name}</div>
+                      <div className="text-xs text-[#666]">الرقم الجامعي: {student.university_id}</div>
                     </div>
                   ))}
                 </div>
@@ -354,41 +328,14 @@ export default function HeadOfDepartmentEnrollmentForm() {
               
               {/* Show loading indicator */}
               {searching && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #ddd',
-                  borderRadius: 4,
-                  padding: 12,
-                  zIndex: 100,
-                  marginTop: 4,
-                  fontSize: 14,
-                  color: '#666',
-                  textAlign: 'center'
-                }}>
+                <div className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded p-3 z-[100] mt-1 text-sm text-[#666] text-center">
                   جاري البحث...
                 </div>
               )}
 
               {/* Show message if no results */}
               {!searching && showStudentDropdown && studentSearch && studentSearch.length >= 2 && filteredStudents.length === 0 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'white',
-                  border: '1px solid #ddd',
-                  borderRadius: 4,
-                  padding: 12,
-                  zIndex: 100,
-                  marginTop: 4,
-                  fontSize: 14,
-                  color: '#666'
-                }}>
+                <div className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded p-3 z-[100] mt-1 text-sm text-[#666]">
                   لا يوجد طلاب مطابقين للبحث
                 </div>
               )}
@@ -447,9 +394,9 @@ export default function HeadOfDepartmentEnrollmentForm() {
         </form>
       ) : (
         <form onSubmit={handleBulkSubmit} className="form">
-          <div className="section-card" style={{ marginBottom: 16 }}>
+          <div className="section-card mb-4">
             <h3>رفع ملف Excel</h3>
-            <p style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+            <p className="text-sm text-[#666] mb-3">
               يجب أن يحتوي الملف على عمود يحتوي على الرقم الجامعي للطلاب
             </p>
             <div className="form-group">
@@ -460,21 +407,21 @@ export default function HeadOfDepartmentEnrollmentForm() {
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileUpload}
-                style={{ display: 'flex', alignItems: 'center', gap: 8 }}
+                className="flex items-center gap-2"
               />
             </div>
             {selectedStudents.length > 0 && (
-              <div style={{ marginTop: 12, padding: 12, backgroundColor: '#e7f3ff', borderRadius: 4 }}>
+              <div className="mt-3 p-3 bg-[#e7f3ff] rounded">
                 <strong>تم اختيار {selectedStudents.length} طالب</strong>
               </div>
             )}
           </div>
 
-          <div className="section-card" style={{ marginBottom: 16 }}>
+          <div className="section-card mb-4">
             <h3>اختيار الطلاب يدوياً</h3>
-            <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 4, padding: 8 }}>
+            <div className="max-h-[200px] overflow-y-auto border border-[#ddd] rounded p-2">
               {students.map(student => (
-                <label key={student.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 4, cursor: 'pointer' }}>
+                <label key={student.id} className="flex items-center gap-2 p-1 cursor-pointer">
                   <input
                     type="checkbox"
                     id={`hod-enroll-bulk-student-${student.id}`}
@@ -517,13 +464,13 @@ export default function HeadOfDepartmentEnrollmentForm() {
           </div>
 
           {bulkSuccess && (
-            <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#d4edda', color: '#155724', borderRadius: 4 }}>
+            <div className="mb-3 p-3 bg-[#d4edda] text-[#155724] rounded">
               {bulkSuccess}
             </div>
           )}
 
           {bulkError && (
-            <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#f8d7da', color: '#721c24', borderRadius: 4 }}>
+            <div className="mb-3 p-3 bg-[#f8d7da] text-[#721c24] rounded">
               {bulkError}
             </div>
           )}

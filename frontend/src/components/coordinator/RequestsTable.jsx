@@ -13,8 +13,8 @@ export default function RequestsTable({
 }) {
   if (requests.length === 0) {
     return (
-      <div className="section-card" style={{ textAlign: "center", padding: 24 }}>
-        <p style={{ color: "var(--text-faint)", margin: 0 }}>لا توجد طلبات</p>
+      <div className="section-card text-center p-6">
+        <p className="text-[var(--text-faint)] m-0">لا توجد طلبات</p>
       </div>
     );
   }
@@ -64,10 +64,9 @@ export default function RequestsTable({
                   <td>
                     {onView && (
                       <button
-                        className="btn-primary-custom"
+                        className="btn-primary-custom flex items-center gap-1 py-1 px-3 text-[0.82rem] rounded-lg"
                         onClick={() => onView(r)}
                         disabled={saving}
-                        style={{ display: "flex", alignItems: "center", gap: 4, padding: "4px 12px", fontSize: "0.82rem", borderRadius: 8 }}
                       >
                         <Eye size={14} />
                         عرض

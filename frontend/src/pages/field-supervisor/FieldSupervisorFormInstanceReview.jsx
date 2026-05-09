@@ -10,13 +10,13 @@ function renderPayload(payload) {
     return <p className="text-soft">لا توجد بيانات معبأة.</p>;
   }
   return (
-    <div style={{ display: "grid", gap: 10 }}>
+    <div className="grid gap-[10px]">
       {Object.entries(payload).map(([k, v]) => (
-        <div key={k} className="section-card" style={{ padding: 12 }}>
-          <div className="text-soft" style={{ fontSize: "0.85rem", marginBottom: 4 }}>
+        <div key={k} className="section-card p-3">
+          <div className="text-soft text-[0.85rem] mb-1">
             {k}
           </div>
-          <div style={{ whiteSpace: "pre-wrap", fontSize: "0.95rem" }}>
+          <div className="whitespace-pre-wrap text-[0.95rem]">
             {typeof v === "object" ? JSON.stringify(v, null, 2) : String(v ?? "—")}
           </div>
         </div>
@@ -90,28 +90,28 @@ export default function FieldSupervisorFormInstanceReview() {
 
       {loading && <div className="section-card">جاري التحميل...</div>}
       {error && (
-        <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
-          <p style={{ margin: 0 }}>{error}</p>
+        <div className="section-card border-r-4 border-r-[var(--danger)]">
+          <p className="m-0">{error}</p>
         </div>
       )}
 
       {!loading && data && (
         <>
-          <div className="section-card" style={{ marginBottom: 16 }}>
-            <p style={{ margin: 0 }} className="text-soft">
+          <div className="section-card mb-4">
+            <p className="m-0 text-soft">
               الحالة: <strong>{data.status_label || data.status}</strong>
               {tpl?.owner_type ? ` — نوع المالك في القالب: ${tpl.owner_type}` : null}
             </p>
           </div>
 
-          <div className="section-card" style={{ marginBottom: 16 }}>
-            <h4 style={{ marginTop: 0 }}>محتوى النموذج (قراءة)</h4>
+          <div className="section-card mb-4">
+            <h4 className="mt-0">محتوى النموذج (قراءة)</h4>
             {renderPayload(data.payload)}
           </div>
 
           {data.status === "pending_review" ? (
             <div className="section-card">
-              <h4 style={{ marginTop: 0 }}>قرار المراجعة</h4>
+              <h4 className="mt-0">قرار المراجعة</h4>
               <div className="form-field">
                 <label className="form-label-custom" htmlFor="review-comment">
                   ملاحظاتك (اختياري عند الموافقة، يُفضّل عند الإعادة)
@@ -125,20 +125,19 @@ export default function FieldSupervisorFormInstanceReview() {
                   placeholder="تعليق للطالب أو للمسجل..."
                 />
               </div>
-              <div className="table-actions" style={{ marginTop: 12 }}>
+              <div className="table-actions mt-3">
                 <button
                   type="button"
-                  className="btn-primary-custom btn-sm-custom"
+                  className="btn-primary-custom btn-sm-custom inline-flex items-center gap-[6px]"
                   disabled={busy}
                   onClick={() => submitReview("approved")}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
                 >
                   <CheckCircle size={16} />
                   موافقة / اعتماد
                 </button>
                 <button
                   type="button"
-                  className="btn-outline-custom btn-sm-custom"
+                  className="btn-outline-custom btn-sm-custom inline-flex items-center gap-[6px]"
                   disabled={busy}
                   onClick={() => {
                     if (!comment.trim()) {
@@ -147,7 +146,6 @@ export default function FieldSupervisorFormInstanceReview() {
                     }
                     submitReview("returned");
                   }}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
                 >
                   <RotateCcw size={16} />
                   إعادة للتعديل

@@ -173,7 +173,7 @@ export default function AnnouncementForm() {
               multiple
               value={form.target_ids.map(String)}
               onChange={handleTargetIdsChange}
-              style={{ minHeight: 120 }}
+              className="min-h-[120px]"
             >
               {targetOptions().map((item) => (
                 <option key={item.id} value={item.id}>

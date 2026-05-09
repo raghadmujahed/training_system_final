@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getEnrollments, deleteEnrollment, getUsers, getSections, createEnrollment } from "../../../services/api";
 import * as XLSX from "xlsx";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import PageHeader from "../../../components/common/PageHeader";
 import useAppToast from "../../../hooks/useAppToast";
 
 export default function EnrollmentsList() {
@@ -171,9 +172,9 @@ export default function EnrollmentsList() {
         <h1>إدارة التسجيلات (الطلاب في الشعب)</h1>
         <div>
           <button onClick={() => setShowModal(true)} className="btn-primary">+ تسجيل طالب جديد</button>
-          <label className="btn-secondary" style={{ marginRight: "10px", cursor: "pointer" }}>
+          <label className="btn-secondary ml-2.5 cursor-pointer">
             رفع تسجيلات من Excel
-            <input type="file" accept=".xlsx, .xls" style={{ display: "none" }} onChange={(e) => setBulkFile(e.target.files[0])} />
+            <input type="file" accept=".xlsx, .xls" className="hidden" onChange={(e) => setBulkFile(e.target.files[0])} />
           </label>
           {bulkFile && (
             <button onClick={handleBulkUpload} disabled={bulkLoading}>

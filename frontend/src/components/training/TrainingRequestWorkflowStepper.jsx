@@ -42,18 +42,13 @@ export default function TrainingRequestWorkflowStepper({ bookStatus, governingBo
   return (
     <div>
       {rejected && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem",
-          padding: "0.65rem 1rem", background: "#fee2e2", color: "#dc2626",
-          borderRadius: 10, marginBottom: "1rem", border: "1px solid #fecaca",
-          fontSize: "0.85rem", fontWeight: 600,
-        }}>
+        <div className="flex items-center gap-2 py-[0.65rem] px-4 bg-[#fee2e2] text-[#dc2626] rounded-[10px] mb-4 border border-[#fecaca] text-[0.85rem] font-semibold">
           <XCircle size={16} /> تم رفض الطلب — راجع التفاصيل أدناه.
         </div>
       )}
 
       {/* Horizontal Stepper */}
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 0, overflowX: "auto", padding: "0.5rem 0" }}>
+      <div className="flex items-start gap-0 overflow-x-auto py-2">
         {steps.map((step, idx) => {
           const floor = stepFloor(step);
           const isDone = !rejected && r >= floor;
@@ -61,35 +56,26 @@ export default function TrainingRequestWorkflowStepper({ bookStatus, governingBo
           const isLast = idx === steps.length - 1;
 
           return (
-            <div key={step.label} style={{ display: "flex", alignItems: "flex-start", flex: isLast ? "0 0 auto" : "1 1 0", minWidth: 0 }}>
+            <div key={step.label} className={"flex items-start " + (isLast ? "flex-none" : "flex-[1_1_0] min-w-0")}>
               {/* Step circle + label */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.4rem", flexShrink: 0 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.82rem", fontWeight: 800,
-                  background: isDone ? "#10b981"
-                    : active ? "#1e3a5f"
-                    : "#e2e8f0",
-                  color: isDone || active ? "white" : "#94a3b8",
-                  boxShadow: active ? "0 0 0 3px rgba(30,58,95,0.15)" : "none",
-                  transition: "all 0.2s",
-                }}>
+              <div className="flex flex-col items-center gap-[0.4rem] shrink-0">
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-[0.82rem] font-extrabold transition-all"
+                  style={{
+                    background: isDone ? "#10b981" : active ? "#1e3a5f" : "#e2e8f0",
+                    color: isDone || active ? "white" : "#94a3b8",
+                    boxShadow: active ? "0 0 0 3px rgba(30,58,95,0.15)" : "none",
+                  }}>
                   {isDone ? <CheckCircle2 size={18} /> : idx + 1}
                 </div>
-                <span style={{
-                  fontSize: "0.72rem", fontWeight: active ? 800 : isDone ? 700 : 500,
-                  color: active ? "#1e3a5f" : isDone ? "#059669" : "#94a3b8",
-                  textAlign: "center", whiteSpace: "nowrap",
-                }}>
+                <span className="text-[0.72rem] text-center whitespace-nowrap"
+                  style={{
+                    fontWeight: active ? 800 : isDone ? 700 : 500,
+                    color: active ? "#1e3a5f" : isDone ? "#059669" : "#94a3b8",
+                  }}>
                   {step.label}
                 </span>
                 {active && (
-                  <span style={{
-                    fontSize: "0.62rem", fontWeight: 700, color: "#1e3a5f",
-                    background: "#dbeafe", padding: "1px 6px", borderRadius: 99,
-                    display: "flex", alignItems: "center", gap: 2,
-                  }}>
+                  <span className="text-[0.62rem] font-bold text-[#1e3a5f] bg-[#dbeafe] py-[1px] px-[6px] rounded-full flex items-center gap-[2px]">
                     <Clock size={9} /> حالياً
                   </span>
                 )}
@@ -97,12 +83,9 @@ export default function TrainingRequestWorkflowStepper({ bookStatus, governingBo
 
               {/* Connector line */}
               {!isLast && (
-                <div style={{
-                  flex: 1, height: 3, marginTop: 17,
-                  background: isDone ? "#10b981" : "#e2e8f0",
-                  borderRadius: 2, minWidth: 20,
-                  transition: "background 0.3s",
-                }} />
+                <div className="flex-1 h-[3px] mt-[17px] rounded-[2px] min-w-[20px] transition-[background] duration-300"
+                  style={{ background: isDone ? "#10b981" : "#e2e8f0" }}
+                />
               )}
             </div>
           );

@@ -176,8 +176,8 @@ export default function SupervisorWorkspace() {
   return (
     <div>
       {error && (
-        <div className="section-card" style={{ borderRight: "4px solid #dc3545", marginBottom: "16px" }}>
-          <p style={{ color: "#dc3545", margin: 0 }}>⚠️ {error}</p>
+        <div className="section-card border-r-4 border-r-[#dc3545] mb-4">
+          <p className="text-[#dc3545] m-0">⚠️ {error}</p>
         </div>
       )}
 
@@ -185,11 +185,11 @@ export default function SupervisorWorkspace() {
 
       {/* Sections Cards */}
       {sections.length > 0 && (
-        <div className="section-card" style={{ marginTop: "24px" }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="section-card mt-6">
+          <h3 className="m-0 mb-4 text-[1.2rem] flex items-center gap-2">
             📚 الشعب المشرف عليها
           </h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
             {sections.map((s) => {
               const isExpanded = expandedSection === s.id;
               const trackLabel = s.training_track === "psychology_clinic"
@@ -205,27 +205,18 @@ export default function SupervisorWorkspace() {
               return (
                 <div
                   key={s.id}
-                  style={{
-                    border: "1px solid #e9ecef",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    backgroundColor: "#fff",
-                    transition: "box-shadow 0.2s",
-                  }}
+                  className="border border-[#e9ecef] rounded-xl p-4 bg-white transition-[box-shadow] duration-200"
                   onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)")}
                   onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "none")}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h4 style={{ margin: 0, fontSize: "1.05rem" }}>{s.section_name || s.name}</h4>
-                      <div style={{ fontSize: "0.82rem", color: "#666", marginTop: 2 }}>{s.course || "—"}</div>
+                      <h4 className="m-0 text-[1.05rem]">{s.section_name || s.name}</h4>
+                      <div className="text-[0.82rem] text-[#666] mt-[2px]">{s.course || "—"}</div>
                     </div>
                     <span
+                      className="py-[3px] px-[10px] rounded-xl text-[0.72rem] font-semibold"
                       style={{
-                        padding: "3px 10px",
-                        borderRadius: "12px",
-                        fontSize: "0.72rem",
-                        fontWeight: 600,
                         color: trackColor,
                         backgroundColor: trackColor + "15",
                         border: `1px solid ${trackColor}30`,
@@ -235,7 +226,7 @@ export default function SupervisorWorkspace() {
                     </span>
                   </div>
 
-                  <div style={{ display: "flex", gap: 16, fontSize: "0.82rem", color: "#555", marginBottom: 12, flexWrap: "wrap" }}>
+                  <div className="flex gap-4 text-[0.82rem] text-[#555] mb-3 flex-wrap">
                     <span>👥 {s.students_count ?? 0} طالب</span>
                     <span>🏛️ {s.department || "—"}</span>
                     <span>🏫 {s.training_sites_count ?? 0} جهة تدريب</span>
@@ -243,42 +234,33 @@ export default function SupervisorWorkspace() {
 
                   <button
                     onClick={() => setExpandedSection(isExpanded ? null : s.id)}
-                    style={{
-                      background: "none",
-                      border: "1px solid #dee2e6",
-                      borderRadius: 6,
-                      padding: "4px 12px",
-                      cursor: "pointer",
-                      fontSize: "0.78rem",
-                      color: "#0d6efd",
-                      width: "100%",
-                    }}
+                    className="bg-none border border-[#dee2e6] rounded-md py-1 px-3 cursor-pointer text-[0.78rem] text-[#0d6efd] w-full"
                   >
                     {isExpanded ? "إخفاء الطلاب ▲" : `عرض الطلاب (${s.students?.length ?? s.students_count ?? 0}) ▼`}
                   </button>
 
                   {isExpanded && s.students && s.students.length > 0 && (
-                    <div style={{ marginTop: 12, borderTop: "1px solid #f0f0f0", paddingTop: 12 }}>
-                      <table style={{ width: "100%", fontSize: "0.78rem", borderCollapse: "collapse" }}>
+                    <div className="mt-3 border-t border-[#f0f0f0] pt-3">
+                      <table className="w-full text-[0.78rem] border-collapse">
                         <thead>
-                          <tr style={{ borderBottom: "1px solid #eee" }}>
-                            <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>الاسم</th>
-                            <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>الرقم الجامعي</th>
-                            <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>القسم</th>
-                            <th style={{ textAlign: "right", padding: "4px 8px", color: "#888" }}>التخصص</th>
+                          <tr className="border-b border-[#eee]">
+                            <th className="text-right py-1 px-2 text-[#888]">الاسم</th>
+                            <th className="text-right py-1 px-2 text-[#888]">الرقم الجامعي</th>
+                            <th className="text-right py-1 px-2 text-[#888]">القسم</th>
+                            <th className="text-right py-1 px-2 text-[#888]">التخصص</th>
                           </tr>
                         </thead>
                         <tbody>
                           {s.students.map((st) => (
                             <tr
                               key={st.id}
-                              style={{ borderBottom: "1px solid #f5f5f5", cursor: "pointer" }}
+                              className="border-b border-[#f5f5f5] cursor-pointer"
                               onClick={() => handleSelectStudent(st.id)}
                             >
-                              <td style={{ padding: "6px 8px", fontWeight: 500 }}>{st.name}</td>
-                              <td style={{ padding: "6px 8px" }}>{st.university_id}</td>
-                              <td style={{ padding: "6px 8px" }}>{st.department || "—"}</td>
-                              <td style={{ padding: "6px 8px" }}>{st.major || "—"}</td>
+                              <td className="py-[6px] px-2 font-medium">{st.name}</td>
+                              <td className="py-[6px] px-2">{st.university_id}</td>
+                              <td className="py-[6px] px-2">{st.department || "—"}</td>
+                              <td className="py-[6px] px-2">{st.major || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -286,7 +268,7 @@ export default function SupervisorWorkspace() {
                     </div>
                   )}
                   {isExpanded && (!s.students || s.students.length === 0) && (
-                    <div style={{ marginTop: 12, textAlign: "center", color: "#999", fontSize: "0.82rem" }}>
+                    <div className="mt-3 text-center text-[#999] text-[0.82rem]">
                       لا يوجد طلاب مسجلون
                     </div>
                   )}
@@ -297,44 +279,35 @@ export default function SupervisorWorkspace() {
         </div>
       )}
 
-      <div className="section-card" style={{ marginTop: "24px" }}>
+      <div className="section-card mt-6">
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "16px",
-            marginBottom: "20px",
-          }}
+          className="flex justify-between items-center flex-wrap gap-4 mb-5"
         >
           <div>
-            <h3 style={{ margin: 0, fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "8px" }}>
+            <h3 className="m-0 text-[1.2rem] flex items-center gap-2">
               👥 الطلبة المشرف عليهم
             </h3>
-            <p style={{ margin: "4px 0 0", color: "#666", fontSize: "0.85rem" }}>متابعة شاملة لحالة كل طالب</p>
+            <p className="m-0 mt-1 text-[#666] text-[0.85rem]">متابعة شاملة لحالة كل طالب</p>
             {studentsLoading && (
-              <p style={{ margin: "8px 0 0", color: "#0d6efd", fontSize: "0.8rem" }}>جاري تحديث القائمة...</p>
+              <p className="m-0 mt-2 text-[#0d6efd] text-[0.8rem]">جاري تحديث القائمة...</p>
             )}
           </div>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
+          <div className="flex gap-3 flex-wrap items-center">
             <input
               id="student-search"
               name="search"
               type="text"
-              className="form-input-custom"
+              className="form-input-custom min-w-[200px]"
               placeholder="🔍 بحث بالاسم أو الرقم..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{ minWidth: "200px" }}
             />
             <select
               id="section-filter"
               name="section"
-              className="form-select-custom"
+              className="form-select-custom min-w-[140px]"
               value={filterSection}
               onChange={(e) => setFilterSection(e.target.value)}
-              style={{ minWidth: "140px" }}
             >
               <option value="">كل الشعب</option>
               {sections.map((s) => (
@@ -346,10 +319,9 @@ export default function SupervisorWorkspace() {
             <select
               id="status-filter"
               name="status"
-              className="form-select-custom"
+              className="form-select-custom min-w-[140px]"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              style={{ minWidth: "140px" }}
             >
               <option value="">كل الحالات</option>
               <option value="healthy">🟢 سليم</option>

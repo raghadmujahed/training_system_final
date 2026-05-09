@@ -105,7 +105,7 @@ export default function ImportSections() {
         <h2>نتيجة الاستيراد</h2>
         <p>تم إضافة {results.successCount} شعبة بنجاح.</p>
         {results.errors.length > 0 && (
-          <div style={{ color: "red" }}>
+          <div className="text-danger">
             <h4>الأخطاء:</h4>
             <ul>
               {results.errors.map((err, i) => <li key={i}>{err}</li>)}

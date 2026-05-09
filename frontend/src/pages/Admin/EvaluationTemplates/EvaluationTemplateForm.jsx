@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 import {
   getEvaluationTemplate,
   createEvaluationTemplate,
@@ -155,16 +157,11 @@ export default function EvaluationTemplateForm() {
 
   return (
     <div className="evaluation-template-form">
-      <div className="page-header">
-        <h1>{id ? "تعديل قالب تقييم" : "إضافة قالب تقييم جديد"}</h1>
-        <button onClick={() => navigate("/admin/evaluation-templates")} className="btn-secondary">
-          رجوع
-        </button>
-      </div>
+      <PageHeader title={id ? "تعديل قالب تقييم" : "إضافة قالب تقييم جديد"} />
 
       <form onSubmit={handleSubmit} className="form">
         {submitError && (
-          <div className="error" style={{ marginBottom: "12px", display: "block" }}>
+          <div className="text-danger mb-3 block">
             {submitError}
           </div>
         )}
@@ -221,29 +218,22 @@ export default function EvaluationTemplateForm() {
           {errors.department_key && <span className="error">{errors.department_key[0]}</span>}
         </div>
 
-        <hr />
-        <h3>بنود التقييم</h3>
-        <button type="button" onClick={addItem} className="btn-sm" style={{ marginBottom: "1rem" }}>
+        <hr className="my-4" />
+        <h3 className="font-bold text-text">بنود التقييم</h3>
+        <Button variant="outline" size="sm" onClick={addItem} className="mb-4 mt-2">
           + إضافة بند جديد
-        </button>
+        </Button>
 
         {items.length === 0 && <p>لا توجد بنود بعد. أضف بنداً باستخدام الزر أعلاه.</p>}
 
         {items.map((item, idx) => (
           <div
             key={idx}
-            className="item-card"
-            style={{
-              border: "1px solid #ccc",
-              padding: "1rem",
-              marginBottom: "1rem",
-              borderRadius: "8px",
-              backgroundColor: "#f9f9f9",
-            }}
+            className="border border-[#ccc] p-4 mb-4 rounded-lg bg-[#f9f9f9]"
           >
-            <div className="form-row">
-              <div className="form-group" style={{ flex: 2 }}>
-                <label>عنوان البند *</label>
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex-[2] min-w-[200px]">
+                <label className="block mb-1 text-text-soft text-[0.9rem]">عنوان البند *</label>
                 <input
                   type="text"
                   value={item.title}
@@ -251,8 +241,8 @@ export default function EvaluationTemplateForm() {
                   required
                 />
               </div>
-              <div className="form-group" style={{ flex: 1 }}>
-                <label>نوع الحقل</label>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block mb-1 text-text-soft text-[0.9rem]">نوع الحقل</label>
                 <select
                   value={item.field_type}
                   onChange={(e) => updateItem(idx, "field_type", e.target.value)}
@@ -280,9 +270,9 @@ export default function EvaluationTemplateForm() {
               </div>
             )}
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>الحد الأقصى للدرجة (إن كان نوع Score)</label>
+            <div className="flex gap-4 flex-wrap">
+              <div className="min-w-[150px]">
+                <label className="block mb-1 text-text-soft text-[0.9rem]">الحد الأقصى للدرجة</label>
                 <input
                   type="number"
                   value={item.max_score || 0}
@@ -290,8 +280,8 @@ export default function EvaluationTemplateForm() {
                   disabled={item.field_type !== "score"}
                 />
               </div>
-              <div className="form-group" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <label>
+              <div className="flex items-center gap-2 min-w-[150px]">
+                <label className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={item.is_required}
@@ -302,16 +292,16 @@ export default function EvaluationTemplateForm() {
               </div>
             </div>
 
-            <button type="button" onClick={() => deleteItem(idx)} className="btn-sm danger">
+            <button type="button" onClick={() => deleteItem(idx)} className="text-danger hover:underline text-[0.85rem] mt-2">
               حذف هذا البند
             </button>
           </div>
         ))}
 
-        <div className="form-actions">
-          <button type="submit" disabled={loading}>
+        <div className="flex gap-2 mt-4">
+          <Button type="submit" disabled={loading}>
             {loading ? "جاري الحفظ..." : id ? "تحديث القالب" : "إنشاء القالب"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

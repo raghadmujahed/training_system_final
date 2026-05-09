@@ -80,9 +80,9 @@ export default function HeadOfDepartmentArchiveDetails() {
 
   if (error) {
     return (
-      <div style={{ padding: 24 }}>
-        <div style={{ background: "#fee", color: "#c00", padding: 16, borderRadius: 8 }}>{error}</div>
-        <button onClick={() => navigate("/head-department/archive")} className="btn-secondary" style={{ marginTop: 16 }}>
+      <div className="p-6">
+        <div className="bg-[#fee] text-[#c00] p-4 rounded-lg">{error}</div>
+        <button onClick={() => navigate("/head-department/archive")} className="btn-secondary mt-4">
           العودة للأرشفة
         </button>
       </div>
@@ -92,23 +92,23 @@ export default function HeadOfDepartmentArchiveDetails() {
   if (!data) return null;
 
   return (
-    <div style={{ padding: 24, maxWidth: 1300, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+    <div className="p-6 max-w-[1300px] mx-auto">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
         <div>
-          <h1 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <h1 className="m-0 flex items-center gap-2">
             <Calendar size={28} /> تفاصيل الفترة المؤرشفة
           </h1>
-          <p style={{ color: "#666", margin: "4px 0 0", fontSize: 16 }}>
+          <p className="text-[#666] m-0 mt-1 text-base">
             {data.period.academic_year} - {data.period.semester_label}
           </p>
         </div>
-        <button onClick={() => navigate("/head-department/archive")} className="btn-secondary" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <button onClick={() => navigate("/head-department/archive")} className="btn-secondary flex items-center gap-2">
           <ArrowRight size={16} /> العودة للأرشفة
         </button>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, borderBottom: "2px solid #e5e7eb" }}>
+      <div className="flex gap-2 mb-4 border-b-2 border-[#e5e7eb]">
         {[
           { id: "overview", label: "نظرة عامة", icon: Database },
           { id: "sections", label: `الشعب (${data.sections?.length || 0})`, icon: BookOpen },
@@ -120,17 +120,10 @@ export default function HeadOfDepartmentArchiveDetails() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
+              className="py-[10px] px-4 border-none rounded-t-lg cursor-pointer font-semibold flex items-center gap-[6px]"
               style={{
-                padding: "10px 16px",
                 background: active ? "#3b82f6" : "transparent",
                 color: active ? "#fff" : "#374151",
-                border: "none",
-                borderRadius: "8px 8px 0 0",
-                cursor: "pointer",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
               }}
             >
               <Icon size={16} /> {tab.label}
@@ -141,18 +134,13 @@ export default function HeadOfDepartmentArchiveDetails() {
 
       {/* Overview tab */}
       {activeTab === "overview" && (
-        <div style={{ background: "#fff", borderRadius: 12, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-          <h3 style={{ marginTop: 0 }}>إحصائيات البيانات المؤرشفة</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 12 }}>
+        <div className="bg-white rounded-xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+          <h3 className="mt-0">إحصائيات البيانات المؤرشفة</h3>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-3">
             {Object.entries(data.stats || {}).map(([key, count]) => (
-              <div key={key} style={{
-                padding: 16,
-                borderRadius: 8,
-                border: "1px solid #e5e7eb",
-                background: count > 0 ? "#f0f9ff" : "#f9fafb",
-              }}>
-                <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 4 }}>{TABLE_LABELS[key] || key}</div>
-                <div style={{ fontSize: 24, fontWeight: 700, color: count > 0 ? "#1e40af" : "#9ca3af" }}>{count}</div>
+              <div key={key} className="p-4 rounded-lg border border-[#e5e7eb]" style={{ background: count > 0 ? "#f0f9ff" : "#f9fafb" }}>
+                <div className="text-[13px] text-[#6b7280] mb-1">{TABLE_LABELS[key] || key}</div>
+                <div className="text-2xl font-bold" style={{ color: count > 0 ? "#1e40af" : "#9ca3af" }}>{count}</div>
               </div>
             ))}
           </div>
@@ -161,40 +149,33 @@ export default function HeadOfDepartmentArchiveDetails() {
 
       {/* Sections tab */}
       {activeTab === "sections" && (
-        <div style={{ background: "#fff", borderRadius: 12, padding: 24, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+        <div className="bg-white rounded-xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
           {(!data.sections || data.sections.length === 0) ? (
-            <p style={{ textAlign: "center", color: "#666", padding: 24 }}>لا توجد شعب مؤرشفة لهذه الفترة.</p>
+            <p className="text-center text-[#666] p-6">لا توجد شعب مؤرشفة لهذه الفترة.</p>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ background: "#f9fafb" }}>
-                    <th style={th}>المساق</th>
-                    <th style={th}>اسم الشعبة</th>
-                    <th style={th}>المشرف الأكاديمي</th>
-                    <th style={th}>السعة</th>
-                    <th style={th}>عدد المسجلين</th>
+                  <tr className="bg-[#f9fafb]">
+                    <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">المساق</th>
+                    <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">اسم الشعبة</th>
+                    <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">المشرف الأكاديمي</th>
+                    <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">السعة</th>
+                    <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">عدد المسجلين</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.sections.map((s) => (
-                    <tr key={s.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                      <td style={td}>
-                        <div style={{ fontWeight: 600 }}>{s.course?.name || "-"}</div>
-                        <div style={{ fontSize: 12, color: "#666" }}>{s.course?.code || ""}</div>
+                    <tr key={s.id} className="border-b border-[#e5e7eb]">
+                      <td className="p-[10px] text-right">
+                        <div className="font-semibold">{s.course?.name || "-"}</div>
+                        <div className="text-xs text-[#666]">{s.course?.code || ""}</div>
                       </td>
-                      <td style={td}>{s.name}</td>
-                      <td style={td}>{s.academic_supervisor?.name || "غير محدد"}</td>
-                      <td style={td}>{s.capacity}</td>
-                      <td style={td}>
-                        <span style={{
-                          background: "#dbeafe",
-                          color: "#1e40af",
-                          padding: "2px 10px",
-                          borderRadius: 999,
-                          fontSize: 13,
-                          fontWeight: 600,
-                        }}>{s.enrollments_count}</span>
+                      <td className="p-[10px] text-right">{s.name}</td>
+                      <td className="p-[10px] text-right">{s.academic_supervisor?.name || "غير محدد"}</td>
+                      <td className="p-[10px] text-right">{s.capacity}</td>
+                      <td className="p-[10px] text-right">
+                        <span className="bg-[#dbeafe] text-[#1e40af] py-[2px] px-[10px] rounded-full text-[13px] font-semibold">{s.enrollments_count}</span>
                       </td>
                     </tr>
                   ))}
@@ -209,56 +190,49 @@ export default function HeadOfDepartmentArchiveDetails() {
       {activeTab === "students" && (
         <div>
           {Object.keys(grouped).length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 12, padding: 24, textAlign: "center", color: "#666", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+            <div className="bg-white rounded-xl p-6 text-center text-[#666] shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
               لا توجد تسجيلات مؤرشفة لهذه الفترة.
             </div>
           ) : (
             Object.entries(grouped).map(([courseKey, sections]) => (
-              <div key={courseKey} style={{ background: "#fff", borderRadius: 12, padding: 20, boxShadow: "0 2px 8px rgba(0,0,0,0.05)", marginBottom: 16 }}>
-                <h3 style={{ marginTop: 0, color: "#1e40af", borderBottom: "2px solid #e5e7eb", paddingBottom: 8 }}>
-                  <BookOpen size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+              <div key={courseKey} className="bg-white rounded-xl p-5 shadow-[0_2px_8px_rgba(0,0,0,0.05)] mb-4">
+                <h3 className="mt-0 text-[#1e40af] border-b-2 border-[#e5e7eb] pb-2">
+                  <BookOpen size={18} className="align-middle ml-[6px]" />
                   {courseKey}
                 </h3>
                 {Object.entries(sections).map(([sectionName, students]) => (
-                  <div key={sectionName} style={{ marginTop: 16 }}>
-                    <h4 style={{ margin: "0 0 8px", color: "#374151", display: "flex", alignItems: "center", gap: 6 }}>
+                  <div key={sectionName} className="mt-4">
+                    <h4 className="m-0 mb-2 text-[#374151] flex items-center gap-[6px]">
                       شعبة: {sectionName}
-                      <span style={{ background: "#e5e7eb", color: "#374151", padding: "1px 8px", borderRadius: 999, fontSize: 12 }}>
+                      <span className="bg-[#e5e7eb] text-[#374151] py-[1px] px-2 rounded-full text-xs">
                         {students.length} طالب
                       </span>
                     </h4>
-                    <div style={{ overflowX: "auto" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse text-sm">
                         <thead>
-                          <tr style={{ background: "#f9fafb" }}>
-                            <th style={th}>#</th>
-                            <th style={th}>الرقم الجامعي</th>
-                            <th style={th}>اسم الطالب</th>
-                            <th style={th}>البريد</th>
-                            <th style={th}>الحالة</th>
-                            <th style={th}>التقدير النهائي</th>
+                          <tr className="bg-[#f9fafb]">
+                            <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">#</th>
+                            <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">الرقم الجامعي</th>
+                            <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">اسم الطالب</th>
+                            <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">البريد</th>
+                            <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">الحالة</th>
+                            <th className="p-3 text-right border-b-2 border-[#e5e7eb] font-semibold text-[13px]">التقدير النهائي</th>
                           </tr>
                         </thead>
                         <tbody>
                           {students.map((e, i) => (
-                            <tr key={e.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                              <td style={td}>{i + 1}</td>
-                              <td style={td}>{e.university_id || "-"}</td>
-                              <td style={td}>{e.user_name || "-"}</td>
-                              <td style={{ ...td, fontSize: 13, color: "#666" }}>{e.email || "-"}</td>
-                              <td style={td}>
-                                <span style={{
-                                  padding: "2px 8px",
-                                  borderRadius: 999,
-                                  fontSize: 12,
-                                  fontWeight: 600,
-                                  background: e.status === "active" ? "#dcfce7" : e.status === "completed" ? "#dbeafe" : "#fee2e2",
-                                  color: e.status === "active" ? "#166534" : e.status === "completed" ? "#1e40af" : "#991b1b",
-                                }}>
+                            <tr key={e.id} className="border-b border-[#f3f4f6]">
+                              <td className="p-[10px] text-right">{i + 1}</td>
+                              <td className="p-[10px] text-right">{e.university_id || "-"}</td>
+                              <td className="p-[10px] text-right">{e.user_name || "-"}</td>
+                              <td className="p-[10px] text-right text-[13px] text-[#666]">{e.email || "-"}</td>
+                              <td className="p-[10px] text-right">
+                                <span className="py-[2px] px-2 rounded-full text-xs font-semibold" style={{ background: e.status === "active" ? "#dcfce7" : e.status === "completed" ? "#dbeafe" : "#fee2e2", color: e.status === "active" ? "#166534" : e.status === "completed" ? "#1e40af" : "#991b1b" }}>
                                   {STATUS_LABELS[e.status] || e.status}
                                 </span>
                               </td>
-                              <td style={td}>{e.final_grade ?? "-"}</td>
+                              <td className="p-[10px] text-right">{e.final_grade ?? "-"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -275,5 +249,3 @@ export default function HeadOfDepartmentArchiveDetails() {
   );
 }
 
-const th = { padding: 12, textAlign: "right", borderBottom: "2px solid #e5e7eb", fontWeight: 600, fontSize: 13 };
-const td = { padding: 10, textAlign: "right" };

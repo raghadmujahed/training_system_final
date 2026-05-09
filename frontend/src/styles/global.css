@@ -1,5 +1,42 @@
-:root {
+@import "tailwindcss";
+
+@theme {
   /* هوية منصة أكاديمية: أزرق حبر، ورق دافئ، لمسة ذهبية معتدلة */
+  --color-primary: #142a42;
+  --color-primary-dark: #0d1f33;
+  --color-secondary: #1c3952;
+  --color-secondary-dark: #122a3d;
+  --color-accent: #9e7346;
+  --color-accent-soft: #d4bc98;
+  --color-success: #1c7a56;
+  --color-warning: #b87712;
+  --color-danger: #a33442;
+  --color-info: #2e6fa3;
+
+  --color-text: #1a2736;
+  --color-text-soft: #4a5f73;
+  --color-text-faint: #6b7f92;
+
+  --color-bg: #f4f6f9;
+  --color-bg-soft: #faf8f5;
+  --color-bg-paper: #fffefb;
+  --color-surface: #ffffff;
+  --color-border: #d5dde8;
+  --color-border-strong: #b9c8d9;
+
+  --shadow-sm: 0 6px 20px rgba(13, 31, 51, 0.06);
+  --shadow-md: 0 12px 32px rgba(13, 31, 51, 0.09);
+  --shadow-lg: 0 18px 44px rgba(13, 31, 51, 0.12);
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --font-family-sans: "Tajawal", "Cairo", "Segoe UI", sans-serif;
+}
+
+:root {
   --primary: #142a42;
   --primary-dark: #0d1f33;
   --secondary: #1c3952;
@@ -37,7 +74,6 @@
   --navbar-height: 78px;
   --content-max: 100%;
 
-  /* بطاقات لوحة التحكم */
   --stat-border-primary: var(--info);
   --stat-border-success: var(--success);
   --stat-border-info: var(--primary);

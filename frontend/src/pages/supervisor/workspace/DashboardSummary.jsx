@@ -19,30 +19,26 @@ export default function DashboardSummary({ stats, loading }) {
 
   return (
     <>
-      <div className="section-card" style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+      <div className="section-card mb-4 flex justify-between gap-4 flex-wrap">
         <div>
-          <div style={{ fontSize: "0.82rem", color: "#666", marginBottom: "4px" }}>المشرف الأكاديمي</div>
-          <h2 style={{ margin: 0, fontSize: "1.35rem" }}>{supervisor.name || "—"}</h2>
-          <div style={{ color: "#666", marginTop: "4px" }}>القسم: {department}</div>
+          <div className="text-[0.82rem] text-[#666] mb-1">المشرف الأكاديمي</div>
+          <h2 className="m-0 text-[1.35rem]">{supervisor.name || "—"}</h2>
+          <div className="text-[#666] mt-1">القسم: {department}</div>
         </div>
-        <div style={{ minWidth: "220px" }}>
-          <div style={{ fontSize: "0.82rem", color: "#666", marginBottom: "8px" }}>توزيع حالات الطلاب</div>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        <div className="min-w-[220px]">
+          <div className="text-[0.82rem] text-[#666] mb-2">توزيع حالات الطلاب</div>
+          <div className="flex gap-2 flex-wrap">
             {statusDistribution.length ? statusDistribution.map((item) => (
-              <span key={item.status} style={{ padding: "4px 10px", borderRadius: "16px", background: "#f8f9fa", border: "1px solid #e9ecef", fontSize: "0.78rem" }}>
+              <span key={item.status} className="py-1 px-[10px] rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-[0.78rem]">
                 {item.label}: {item.count}
               </span>
-            )) : <span style={{ color: "#999" }}>لا توجد حالات بعد</span>}
+            )) : <span className="text-[#999]">لا توجد حالات بعد</span>}
           </div>
         </div>
       </div>
 
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-          gap: "16px",
-        }}
+        className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4"
       >
         {CARDS.map((card) => {
           const value = stats[card.key] ?? 0;
@@ -50,62 +46,25 @@ export default function DashboardSummary({ stats, loading }) {
           return (
             <div
               key={card.key}
-              style={{
-                background: "#fff",
-                borderRadius: "12px",
-                padding: "20px",
-                border: `1px solid ${isUrgent ? card.color + "40" : "#e9ecef"}`,
-                borderRight: isUrgent ? `4px solid ${card.color}` : undefined,
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                cursor: "default",
-                position: "relative",
-                overflow: "hidden",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "none";
-                e.currentTarget.style.boxShadow = "none";
-              }}
+              className="bg-white rounded-xl p-5 relative overflow-hidden border border-[#f0f0f0] shadow-[0_2px_8px_rgba(0,0,0,0.04)]"
+              style={{ borderLeft: `4px solid ${card.color}` }}
             >
               <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "12px",
-                  background: card.bg,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "1.4rem",
-                  flexShrink: 0,
-                }}
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: card.bg, color: card.color }}
               >
                 {card.icon}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.8rem", color: "#666", marginBottom: "4px" }}>{card.label}</div>
-                <div style={{ fontSize: "1.6rem", fontWeight: "700", color: card.color }}>
+              <div className="flex-1">
+                <div className="text-[0.8rem] text-[#666] mb-1">{card.label}</div>
+                <div className="text-[1.6rem] font-bold" style={{ color: card.color }}>
                   {loading ? "—" : value}
                 </div>
               </div>
               {isUrgent && (
                 <div
-                  style={{
-                    position: "absolute",
-                    top: "8px",
-                    left: "8px",
-                    width: "8px",
-                    height: "8px",
-                    borderRadius: "50%",
-                    background: card.color,
-                    animation: "pulse 2s infinite",
-                  }}
+                  className="absolute top-2 left-2 w-2 h-2 rounded-full animate-pulse"
+                  style={{ background: card.color }}
                 />
               )}
             </div>

@@ -144,27 +144,11 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
     <div>
       {/* Header */}
       <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-          marginBottom: "20px",
-          flexWrap: "wrap",
-        }}
+        className="flex items-center gap-4 mb-4"
       >
         <button
           onClick={onBack}
-          style={{
-            background: "#f0f0f0",
-            border: "none",
-            borderRadius: "8px",
-            padding: "8px 16px",
-            cursor: "pointer",
-            fontSize: "0.9rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
+          className="bg-[#f0f0f0] border-none rounded-lg p-2 cursor-pointer hover:bg-[#e0e0e0] transition-colors text-[0.9rem] flex items-center gap-2"
         >
           → العودة للقائمة
         </button>
@@ -172,21 +156,21 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
         {loading ? (
           <LoadingSpinner size="inline" text="جاري التحميل..." />
         ) : student ? (
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: 0, fontSize: "1.3rem", display: "flex", alignItems: "center", gap: "8px" }}>
+          <div className="flex-1">
+            <h2 className="m-0 text-[1.3rem] flex items-center gap-2">
               🎓 {student.name || "الطالب"}
-              <span style={{ fontSize: "0.85rem", color: "#666", fontWeight: "400" }}>
+              <span className="text-[0.85rem] text-[#666] font-normal">
                 ({student.university_id || ""})
               </span>
             </h2>
-            <p style={{ margin: "4px 0 0", color: "#888", fontSize: "0.85rem" }}>
+            <p className="mt-1 mb-0 text-[#888] text-[0.85rem]">
               {student.specialization || ""} — {student.section_name || ""} — {student.site_name || ""}
             </p>
-            <div style={{ marginTop: "8px", display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center" }}>
-              <span style={{ padding: "4px 10px", borderRadius: "16px", background: "#f8f9fa", border: "1px solid #e9ecef", fontSize: "0.78rem", fontWeight: "700" }}>
+            <div className="mt-2 flex gap-2 flex-wrap items-center">
+              <span className="py-1 px-[10px] rounded-2xl bg-[#f8f9fa] border border-[#e9ecef] text-[0.78rem] font-bold">
                 الحالة: {academicSupervision?.status_label || "لم يباشر"}
               </span>
-              <span style={{ color: "#777", fontSize: "0.78rem" }}>
+              <span className="text-[#777] text-[0.78rem]">
                 آخر تحديث: {formatDateTime(academicSupervision?.updated_at)}
                 {academicSupervision?.updated_by ? ` بواسطة ${academicSupervision.updated_by}` : ""}
               </span>
@@ -196,10 +180,10 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
       </div>
 
       {student && (
-        <form className="section-card" onSubmit={handleStatusSubmit} style={{ marginBottom: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(180px, 240px) 1fr auto", gap: "12px", alignItems: "end" }}>
+        <form className="section-card mb-4" onSubmit={handleStatusSubmit}>
+          <div className="grid grid-cols-[minmax(180px,240px)_1fr_auto] gap-3 items-end">
             <label>
-              <span style={{ display: "block", marginBottom: "6px", color: "#555", fontSize: "0.82rem" }}>حالة الإشراف الأكاديمي</span>
+              <span className="block mb-[6px] text-[#555] text-[0.82rem]">حالة الإشراف الأكاديمي</span>
               <select
                 id="academic-status"
                 name="academic_status"
@@ -213,7 +197,7 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
               </select>
             </label>
             <label>
-              <span style={{ display: "block", marginBottom: "6px", color: "#555", fontSize: "0.82rem" }}>ملاحظات الحالة</span>
+              <span className="block mb-[6px] text-[#555] text-[0.82rem]">ملاحظات الحالة</span>
               <input
                 id="academic-status-note"
                 name="academic_status_note"
@@ -231,42 +215,20 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
       )}
 
       {error && (
-        <div className="section-card" style={{ borderRight: "4px solid #dc3545", marginBottom: "16px" }}>
-          <p style={{ color: "#dc3545", margin: 0 }}>⚠️ {error}</p>
+        <div className="section-card border-r-4 border-[#dc3545] mb-4">
+          <p className="text-[#dc3545] m-0">⚠️ {error}</p>
         </div>
       )}
 
       {/* Tabs Navigation */}
       <div
-        style={{
-          display: "flex",
-          gap: "4px",
-          overflowX: "auto",
-          paddingBottom: "8px",
-          marginBottom: "20px",
-          borderBottom: "1px solid #e9ecef",
-        }}
+        className="flex gap-1 overflow-x-auto mb-4 pb-1"
       >
         {visibleTabs.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            style={{
-              background: activeTab === tab.key ? "var(--primary, #4361ee)" : "transparent",
-              color: activeTab === tab.key ? "#fff" : "#555",
-              border: "1px solid",
-              borderColor: activeTab === tab.key ? "var(--primary, #4361ee)" : "#dee2e6",
-              borderRadius: "8px",
-              padding: "8px 14px",
-              cursor: "pointer",
-              fontSize: "0.82rem",
-              fontWeight: activeTab === tab.key ? "600" : "400",
-              whiteSpace: "nowrap",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              transition: "all 0.2s",
-            }}
+            className={`py-2 px-4 rounded-lg text-[0.85rem] font-medium cursor-pointer transition-colors whitespace-nowrap ${activeTab === tab.key ? "bg-[#4361ee] text-white border-[#4361ee]" : "bg-transparent border-[#dee2e6]"}`}
           >
             <span>{tab.icon}</span> {tab.label}
           </button>

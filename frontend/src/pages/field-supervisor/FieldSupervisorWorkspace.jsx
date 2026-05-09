@@ -82,8 +82,8 @@ export default function FieldSupervisorWorkspace() {
 
       {dashError && (
         <div className="fs-dash-alert">
-          <p style={{ margin: 0, color: "var(--danger)" }}>{dashError}</p>
-          <button type="button" className="btn-outline-custom btn-sm-custom" style={{ marginTop: 10 }} onClick={refreshDash}>
+          <p className="m-0 text-[var(--danger)]">{dashError}</p>
+          <button type="button" className="btn-outline-custom btn-sm-custom mt-[10px]" onClick={refreshDash}>
             إعادة التحميل
           </button>
         </div>
@@ -107,10 +107,9 @@ export default function FieldSupervisorWorkspace() {
           </div>
 
           <div
-            className="section-card fs-announcements-panel"
-            style={{ marginBottom: "1.25rem", borderRight: "4px solid var(--primary)" }}
+            className="section-card fs-announcements-panel mb-[1.25rem] border-r-4 border-r-[var(--primary)]"
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <div className="flex items-center gap-[10px] mb-[14px]">
               <div
                 className="section-icon"
                 style={{
@@ -121,19 +120,19 @@ export default function FieldSupervisorWorkspace() {
               >
                 <Megaphone size={20} aria-hidden />
               </div>
-              <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "var(--primary)" }}>
+              <h4 className="m-0 text-[1.05rem] font-extrabold text-[var(--primary)]">
                 الإعلانات
               </h4>
             </div>
 
             {announcementsLoading ? (
-              <p className="text-soft" style={{ margin: 0 }}>
+              <p className="text-soft m-0">
                 جاري تحميل الإعلانات…
               </p>
             ) : announcementsError ? (
-              <p style={{ margin: 0, color: "var(--danger)", fontSize: "0.92rem" }}>{announcementsError}</p>
+              <p className="m-0 text-[var(--danger)] text-[0.92rem]">{announcementsError}</p>
             ) : announcements.length === 0 ? (
-              <p className="text-soft" style={{ margin: 0, fontSize: "0.92rem" }}>
+              <p className="text-soft m-0 text-[0.92rem]">
                 لا توجد إعلانات موجّهة إليك حالياً. تظهر هنا الإعلانات النشطة التي يحددها المنسّق أو الإدارة
                 (حسب الدور أو القسم أو المستخدم).
               </p>

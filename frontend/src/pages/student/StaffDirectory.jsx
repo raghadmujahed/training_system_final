@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { getStaffDirectory } from "../../services/api";
 import { Mail, Phone, Building2, GraduationCap, Users } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import PageHeader from "../../components/common/PageHeader";
+import EmptyState from "../../components/common/EmptyState";
 import { useStudentTrack } from "../../hooks/useStudentTrack";
 
 export default function StaffDirectory() {
@@ -68,11 +70,8 @@ export default function StaffDirectory() {
 
   if (loading) {
     return (
-      <div className="enrollments-list">
-        <div className="page-header">
-          <h1>دليل الموظفين</h1>
-          <p>عرض بيانات الموظفين في القسم ومكان التدريب</p>
-        </div>
+      <div>
+        <PageHeader title="دليل الموظفين" subtitle="عرض بيانات الموظفين في القسم ومكان التدريب" icon={Users} />
         <LoadingSpinner size="section" text="جاري التحميل..." />
       </div>
     );
@@ -80,74 +79,52 @@ export default function StaffDirectory() {
 
   if (error) {
     return (
-      <div className="enrollments-list">
-        <div className="page-header">
-          <h1>دليل الموظفين</h1>
-          <p>عرض بيانات الموظفين في القسم ومكان التدريب</p>
-        </div>
-        <div style={{ textAlign: "center", padding: 40, color: "#dc3545" }}>{error}</div>
+      <div>
+        <PageHeader title="دليل الموظفين" subtitle="عرض بيانات الموظفين في القسم ومكان التدريب" icon={Users} />
+        <div className="text-center py-10 text-danger">{error}</div>
       </div>
     );
   }
 
   return (
-    <div className="enrollments-list">
-      <div className="page-header">
-        <h1>دليل الموظفين</h1>
-        <p>عرض بيانات الموظفين في القسم ومكان التدريب</p>
-      </div>
+    <div>
+      <PageHeader title="دليل الموظفين" subtitle="عرض بيانات الموظفين في القسم ومكان التدريب" icon={Users} />
 
       {staff.length === 0 ? (
-        <div className="section-card" style={{ textAlign: "center", padding: 40 }}>
-          <p style={{ color: "#666" }}>لا توجد بيانات موظفين متاحة</p>
-        </div>
+        <EmptyState title="لا توجد بيانات" description="لا توجد بيانات موظفين متاحة" />
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {staff.map((person) => (
             <div
               key={person.id}
-              className="section-card"
-              style={{
-                padding: 20,
-                borderLeft: `4px solid ${getRoleColor(person.role)}`,
-              }}
+              className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[var(--radius-lg)] shadow-sm p-5"
+              style={{ borderRight: `4px solid ${getRoleColor(person.role)}` }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+              <div className="flex items-center gap-3 mb-3">
                 <div
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "50%",
-                    backgroundColor: getRoleColor(person.role),
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "white",
-                  }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-white shrink-0"
+                  style={{ backgroundColor: getRoleColor(person.role) }}
                 >
                   {getRoleIcon(person.role)}
                 </div>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: 16 }}>{person.name}</h4>
+                  <h4 className="m-0 text-base font-bold text-text">{person.name}</h4>
                   <span
-                    style={{
-                      fontSize: 13,
-                      color: getRoleColor(person.role),
-                      fontWeight: 500,
-                    }}
+                    className="text-[0.8rem] font-medium"
+                    style={{ color: getRoleColor(person.role) }}
                   >
                     {person.role}
                   </span>
                 </div>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex flex-col gap-2">
                 {person.email && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                    <Mail size={16} style={{ color: "#666" }} />
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail size={16} className="text-text-faint" />
                     <a
                       href={`mailto:${person.email}`}
-                      style={{ color: "#3b82f6", textDecoration: "none" }}
+                      className="text-info no-underline hover:underline"
                     >
                       {person.email}
                     </a>
@@ -155,11 +132,11 @@ export default function StaffDirectory() {
                 )}
 
                 {person.phone && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                    <Phone size={16} style={{ color: "#666" }} />
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone size={16} className="text-text-faint" />
                     <a
                       href={`tel:${person.phone}`}
-                      style={{ color: "#3b82f6", textDecoration: "none" }}
+                      className="text-info no-underline hover:underline"
                     >
                       {person.phone}
                     </a>
@@ -167,16 +144,16 @@ export default function StaffDirectory() {
                 )}
 
                 {person.department && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                    <Building2 size={16} style={{ color: "#666" }} />
-                    <span style={{ color: "#666" }}>{person.department}</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Building2 size={16} className="text-text-faint" />
+                    <span className="text-text-faint">{person.department}</span>
                   </div>
                 )}
 
                 {person.training_site && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                    <GraduationCap size={16} style={{ color: "#666" }} />
-                    <span style={{ color: "#666" }}>{person.training_site}</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <GraduationCap size={16} className="text-text-faint" />
+                    <span className="text-text-faint">{person.training_site}</span>
                   </div>
                 )}
               </div>

@@ -378,15 +378,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {(showMinistryEducationSeal || showMinistryHealthSeal) && (
         <div
-          className="sidebar-ministry-strip"
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "10px 14px 12px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
-            background: "rgba(255, 255, 255, 0.04)",
-          }}
+          className="sidebar-ministry-strip flex justify-center items-center py-[10px] px-[14px] pb-3 border-b border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)]"
         >
           {showMinistryEducationSeal ? <MinistryEducationSeal size={46} /> : <MinistryHealthSeal height={42} maxWidth={190} />}
         </div>
@@ -416,9 +408,8 @@ export default function Sidebar({ isOpen, onClose }) {
           to="/profile"
           onClick={handleLinkClick}
           className={({ isActive }) =>
-            `sidebar-user-box ${isActive ? "active" : ""}`
+            `sidebar-user-box no-underline cursor-pointer ${isActive ? "active" : ""}`
           }
-          style={{ textDecoration: 'none', cursor: 'pointer' }}
         >
           <div className="sidebar-user-avatar">{getInitials(userName)}</div>
 
@@ -428,7 +419,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </div>
         </NavLink>
 
-        <button className="sidebar-logout-btn" onClick={handleLogout} style={{ marginTop: '12px' }}>
+        <button className="sidebar-logout-btn mt-3" onClick={handleLogout}>
           تسجيل الخروج
         </button>
 

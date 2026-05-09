@@ -28,36 +28,24 @@ export default function CoordinatorFilters({
   const hasActiveFilters = Object.values(filters).some((v) => v && v.trim && v.trim() !== "");
 
   return (
-    <div className="filters-bar" style={{
-      display: "flex",
-      gap: 10,
-      flexWrap: "wrap",
-      alignItems: "center",
-      padding: "14px 18px",
-      background: "#fff",
-      border: "1px solid var(--border)",
-      borderRadius: 12,
-      marginBottom: 16,
-    }}>
+    <div className="filters-bar flex gap-[10px] flex-wrap items-center p-[14px_18px] bg-white border border-[var(--border)] rounded-xl mb-4">
       {showSearch && (
-        <div style={{ position: "relative", flex: "1 1 220px", minWidth: 200 }}>
-          <Search size={16} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--text-faint)", pointerEvents: "none" }} />
+        <div className="relative flex-[1_1_220px] min-w-[200px]">
+          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] pointer-events-none" />
           <input
-            className="form-control-custom"
+            className="form-control-custom pr-9 w-full"
             placeholder="بحث بالاسم أو الرقم الجامعي..."
             value={filters.search || ""}
             onChange={(e) => update("search", e.target.value)}
-            style={{ paddingRight: 36, width: "100%" }}
           />
         </div>
       )}
 
       {showStatus && (
         <select
-          className="form-control-custom"
+          className="form-control-custom flex-[0_1_180px] min-w-[140px]"
           value={filters.status || ""}
           onChange={(e) => update("status", e.target.value)}
-          style={{ flex: "0 1 180px", minWidth: 140 }}
         >
           <option value="">كل الحالات</option>
           {effectiveStatusOptions.map((opt) => (
@@ -70,10 +58,9 @@ export default function CoordinatorFilters({
 
       {showDepartment && departments.length > 0 && (
         <select
-          className="form-control-custom"
+          className="form-control-custom flex-[0_1_180px] min-w-[140px]"
           value={filters.department || ""}
           onChange={(e) => update("department", e.target.value)}
-          style={{ flex: "0 1 180px", minWidth: 140 }}
         >
           <option value="">كل الأقسام</option>
           {departments.map((d) => (
@@ -86,10 +73,9 @@ export default function CoordinatorFilters({
 
       {showPeriod && periods.length > 0 && (
         <select
-          className="form-control-custom"
+          className="form-control-custom flex-[0_1_180px] min-w-[140px]"
           value={filters.period || ""}
           onChange={(e) => update("period", e.target.value)}
-          style={{ flex: "0 1 180px", minWidth: 140 }}
         >
           <option value="">كل الفترات</option>
           {periods.map((p) => (
@@ -102,10 +88,9 @@ export default function CoordinatorFilters({
 
       {showGoverningBody && (
         <select
-          className="form-control-custom"
+          className="form-control-custom flex-[0_1_180px] min-w-[140px]"
           value={filters.governing_body || ""}
           onChange={(e) => update("governing_body", e.target.value)}
-          style={{ flex: "0 1 180px", minWidth: 140 }}
         >
           <option value="">كل الجهات</option>
           {GOVERNING_BODIES.map((b) => (
@@ -118,10 +103,9 @@ export default function CoordinatorFilters({
 
       {showTrack && (
         <select
-          className="form-control-custom"
+          className="form-control-custom flex-[0_1_180px] min-w-[140px]"
           value={filters.track || ""}
           onChange={(e) => update("track", e.target.value)}
-          style={{ flex: "0 1 180px", minWidth: 140 }}
         >
           <option value="">كل المسارات</option>
           {TRACKS.map((t) => (
@@ -134,10 +118,9 @@ export default function CoordinatorFilters({
 
       {showSiteType && (
         <select
-          className="form-control-custom"
+          className="form-control-custom flex-[0_1_180px] min-w-[140px]"
           value={filters.site_type || ""}
           onChange={(e) => update("site_type", e.target.value)}
-          style={{ flex: "0 1 180px", minWidth: 140 }}
         >
           <option value="">كل الأنواع</option>
           {SITE_TYPES.map((s) => (
@@ -150,7 +133,7 @@ export default function CoordinatorFilters({
 
       {hasActiveFilters && (
         <button
-          className="btn-secondary-custom"
+          className="btn-secondary-custom flex items-center gap-1 py-[6px] px-[14px] rounded-[10px] text-[0.82rem] font-bold bg-[rgba(176,58,72,0.08)] text-[var(--danger)] border border-[rgba(176,58,72,0.2)] cursor-pointer transition-all duration-200"
           onClick={() =>
             setFilters({
               status: "",
@@ -162,20 +145,6 @@ export default function CoordinatorFilters({
               search: "",
             })
           }
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "6px 14px",
-            borderRadius: 10,
-            fontSize: "0.82rem",
-            fontWeight: 700,
-            background: "rgba(176, 58, 72, 0.08)",
-            color: "var(--danger)",
-            border: "1px solid rgba(176, 58, 72, 0.2)",
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
         >
           <X size={14} />
           مسح الفلاتر

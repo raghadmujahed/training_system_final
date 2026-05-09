@@ -77,20 +77,16 @@ const TraineeStudentsList = ({ siteType = "school" }) => {
   return (
     <>
       <style>{fadeIn}{spin}</style>
-      <div style={{ animation: "fadeIn 0.4s ease" }}>
+      <div className="animate-[fadeIn_0.4s_ease]">
         {/* Hero */}
-        <div style={{
-          background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-          borderRadius: 20, padding: "2rem 2.5rem", color: "white", marginBottom: "1.5rem",
-          boxShadow: "0 8px 32px rgba(30,58,95,0.3)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="text-white mb-6 py-8 px-10 rounded-[20px] bg-gradient-to-br from-[#1e3a5f] via-[#2d5f8a] to-[#3b82f6] shadow-[0_8px_32px_rgba(30,58,95,0.3)]">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
               <Users size={28} />
             </div>
             <div>
-              <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 800 }}>الطلبة المتدربون</h1>
-              <p style={{ margin: "0.25rem 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
+              <h1 className="m-0 text-[1.5rem] font-extrabold">الطلبة المتدربون</h1>
+              <p className="m-0 mt-1 opacity-90 text-[0.95rem]">
                 عرض بيانات جميع الطلبة المتدربين في {labels.siteName}
               </p>
             </div>
@@ -100,13 +96,13 @@ const TraineeStudentsList = ({ siteType = "school" }) => {
         {loading ? (
           <LoadingSpinner size="section" text="جاري تحميل البيانات..." />
         ) : error && !students.length ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem 1.25rem", background: "#fef3c7", color: "#92400e", borderRadius: 14, fontSize: "0.9rem", fontWeight: 600 }}>
+          <div className="flex items-center gap-2 py-4 px-5 bg-[#fef3c7] text-[#92400e] rounded-[14px] text-[0.9rem] font-semibold">
             <AlertCircle size={20} /> {error}
           </div>
         ) : (
           <>
             {/* Stats */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-4 mb-6">
               {[
                 { title: "إجمالي الطلبة", value: students.length, icon: Users, color: "#1e3a5f", bg: "#dbeafe" },
                 { title: "أصول التربية", value: educCount, icon: BookOpen, color: "#0284c7", bg: "#e0f2fe" },
@@ -115,17 +111,13 @@ const TraineeStudentsList = ({ siteType = "school" }) => {
               ].map((card, i) => {
                 const Icon = card.icon;
                 return (
-                  <div key={i} style={{
-                    background: "#fff", borderRadius: 16, padding: "1.25rem",
-                    border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "1rem",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-                  }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 14, background: card.bg, color: card.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div key={i} className="bg-white rounded-2xl p-5 border border-[#e2e8f0] flex items-center gap-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                    <div className="w-12 h-12 rounded-[14px] flex items-center justify-center shrink-0" style={{ background: card.bg, color: card.color }}>
                       <Icon size={22} />
                     </div>
                     <div>
-                      <div style={{ fontSize: "0.78rem", color: "#94a3b8", fontWeight: 500 }}>{card.title}</div>
-                      <div style={{ fontSize: "1.5rem", fontWeight: 800, color: "#1e293b" }}>{card.value}</div>
+                      <div className="text-[0.78rem] text-[#94a3b8] font-medium">{card.title}</div>
+                      <div className="text-[1.5rem] font-extrabold text-[#1e293b]">{card.value}</div>
                     </div>
                   </div>
                 );
@@ -133,35 +125,30 @@ const TraineeStudentsList = ({ siteType = "school" }) => {
             </div>
 
             {/* Search */}
-            <div style={{
-              background: "#fff", borderRadius: 16, padding: "1rem 1.5rem",
-              border: "1px solid #e2e8f0", marginBottom: "1.25rem",
-              display: "flex", alignItems: "center", gap: "0.75rem",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            }}>
+            <div className="bg-white rounded-2xl py-4 px-6 border border-[#e2e8f0] mb-5 flex items-center gap-3 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
               <Search size={20} color="#94a3b8" />
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
                 placeholder="ابحث بالاسم أو الرقم الجامعي أو المعلم المرشد..."
-                style={{ flex: 1, border: "none", outline: "none", fontSize: "0.9rem", color: "#1e293b", background: "transparent" }}
+                className="flex-1 border-none outline-none text-[0.9rem] text-[#1e293b] bg-transparent"
               />
             </div>
 
             {/* Table */}
-            <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,0.06)" }}>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", direction: "rtl", fontSize: "0.88rem" }}>
+            <div className="bg-white rounded-2xl overflow-hidden border border-[#e2e8f0] shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse direction-rtl text-[0.88rem]">
                   <thead>
-                    <tr style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 100%)", color: "white" }}>
+                    <tr className="text-white bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a]">
                       {["#", "اسم الطالب", "الرقم الجامعي", "القسم", "التخصص", "العام / الفصل", labels.mentorLabel, "المشرف الأكاديمي", "الحالة"].map((h) => (
-                        <th key={h} style={{ padding: "0.85rem 0.75rem", whiteSpace: "nowrap", textAlign: "center", fontWeight: 700, fontSize: "0.82rem" }}>{h}</th>
+                        <th key={h} className="py-[0.85rem] px-3 whitespace-nowrap text-center font-bold text-[0.82rem]">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filtered.length === 0 ? (
                       <tr>
-                        <td colSpan={9} style={{ textAlign: "center", padding: "3rem", color: "#94a3b8" }}>
-                          <Search size={40} style={{ marginBottom: "0.75rem", opacity: 0.3 }} />
+                        <td colSpan={9} className="text-center p-12 text-[#94a3b8]">
+                          <Search size={40} className="mb-3 opacity-30" />
                           <div>لا توجد نتائج مطابقة للبحث</div>
                         </td>
                       </tr>
@@ -169,29 +156,29 @@ const TraineeStudentsList = ({ siteType = "school" }) => {
                       filtered.map((s, idx) => {
                         const st = getStatus(s.status);
                         return (
-                          <tr key={s.id} style={{ background: idx % 2 === 0 ? "#f8fafc" : "white", transition: "background 0.15s" }}
+                          <tr key={s.id} className={idx % 2 === 0 ? "bg-[#f8fafc]" : "bg-white"} style={{ transition: "background 0.15s" }}
                             onMouseEnter={(e) => e.currentTarget.style.background = "#eff6ff"}
                             onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? "#f8fafc" : "white"}
                           >
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center", color: "#94a3b8", fontWeight: 700 }}>{idx + 1}</td>
-                            <td style={{ padding: "0.75rem", fontWeight: 700, color: "#1e293b" }}>
-                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #dbeafe, #bfdbfe)", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                            <td className="py-3 px-2 text-center text-[#94a3b8] font-bold">{idx + 1}</td>
+                            <td className="py-3 px-3 font-bold text-[#1e293b]">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] text-[#2563eb]">
                                   <User size={14} />
                                 </div>
                                 {s.name}
                               </div>
                             </td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center", color: "#475569", fontFamily: "monospace" }}>{s.universityId}</td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center" }}>
-                              <span style={{ background: s.track === "علم النفس" ? "#f5f3ff" : "#eff6ff", color: s.track === "علم النفس" ? "#7c3aed" : "#1d4ed8", padding: "0.25rem 0.75rem", borderRadius: 99, fontSize: "0.78rem", fontWeight: 700 }}>{s.track}</span>
+                            <td className="py-3 px-2 text-center text-[#475569] font-mono">{s.universityId}</td>
+                            <td className="py-3 px-2 text-center">
+                              <span className="py-1 px-3 rounded-full text-[0.78rem] font-bold" style={{ background: s.track === "علم النفس" ? "#f5f3ff" : "#eff6ff", color: s.track === "علم النفس" ? "#7c3aed" : "#1d4ed8" }}>{s.track}</span>
                             </td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center", color: "#475569" }}>{s.specialization}</td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center", color: "#475569" }}>{s.academicYear} / {s.semester}</td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center", color: "#475569" }}>{s.mentorName}</td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center", color: "#475569" }}>{s.supervisorName}</td>
-                            <td style={{ padding: "0.75rem 0.5rem", textAlign: "center" }}>
-                              <span style={{ background: st.bg, color: st.color, padding: "0.25rem 0.75rem", borderRadius: 99, fontSize: "0.78rem", fontWeight: 700 }}>{st.label}</span>
+                            <td className="py-3 px-2 text-center text-[#475569]">{s.specialization}</td>
+                            <td className="py-3 px-2 text-center text-[#475569]">{s.academicYear} / {s.semester}</td>
+                            <td className="py-3 px-2 text-center text-[#475569]">{s.mentorName}</td>
+                            <td className="py-3 px-2 text-center text-[#475569]">{s.supervisorName}</td>
+                            <td className="py-3 px-2 text-center">
+                              <span className="py-1 px-3 rounded-full text-[0.78rem] font-bold" style={{ background: st.bg, color: st.color }}>{st.label}</span>
                             </td>
                           </tr>
                         );

@@ -115,8 +115,8 @@ export default function EvaluationTab({ studentId, labels }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
-        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card border-r-4 border-r-[var(--danger)]">
+        <p className="m-0 flex items-center gap-2">
           <AlertTriangle size={20} />
           {error}
         </p>
@@ -161,48 +161,47 @@ export default function EvaluationTab({ studentId, labels }) {
     <div>
       <p className="fs-eval-ref-note">{refEval.evaluationNote}</p>
       {success === "draft" && (
-        <div className="section-card" style={{ marginBottom: 16, background: "rgba(13, 110, 253, 0.08)" }}>
-          <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+        <div className="section-card mb-4 bg-[rgba(13,110,253,0.08)]">
+          <Check size={18} className="align-middle ml-[6px]" />
           تم حفظ المسودة بنجاح
         </div>
       )}
       {success === "submitted" && (
-        <div className="section-card" style={{ marginBottom: 16, background: "rgba(25, 135, 84, 0.08)" }}>
-          <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+        <div className="section-card mb-4 bg-[rgba(25,135,84,0.08)]">
+          <Check size={18} className="align-middle ml-[6px]" />
           تم إرسال التقييم النهائي بنجاح
         </div>
       )}
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card mb-4">
+        <h4 className="mt-0 flex items-center gap-2">
           <FileText size={20} />
           {labels.evaluation}
         </h4>
-        <div className="section-card" style={{ padding: 14, background: "#f7f9fc" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+        <div className="section-card py-[14px] px-[14px] bg-[#f7f9fc]">
+          <div className="flex justify-between flex-wrap gap-3">
             <div>
-              <div className="text-soft" style={{ fontSize: "0.9rem" }}>
+              <div className="text-soft text-[0.9rem]">
                 حالة التقييم
               </div>
               <span className={`badge-custom ${evaluation?.status === "draft" ? "badge-warning" : "badge-primary"}`}>
                 {evaluation?.status_label || "لم يبدأ"}
               </span>
             </div>
-            <div style={{ textAlign: "left" }}>
-              <div className="text-soft" style={{ fontSize: "0.9rem" }}>
+            <div className="text-left">
+              <div className="text-soft text-[0.9rem]">
                 الدرجة التقديرية (مرجّحة من 100)
               </div>
-              <strong style={{ fontSize: "1.35rem" }}>
+              <strong className="text-[1.35rem]">
                 {currentTotal != null ? `${currentTotal} / ${maxScore}` : "—"}
               </strong>
             </div>
           </div>
-          <div style={{ background: "#e9ecef", borderRadius: 8, height: 10, marginTop: 12, overflow: "hidden" }}>
+          <div className="bg-[#e9ecef] rounded-lg h-[10px] mt-3 overflow-hidden">
             <div
+              className="h-full rounded-lg"
               style={{
                 width: `${progressPercentage}%`,
-                height: "100%",
-                borderRadius: 8,
                 background: "var(--primary)",
               }}
             />
@@ -210,45 +209,42 @@ export default function EvaluationTab({ studentId, labels }) {
         </div>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>بنود التقييم</h4>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">بنود التقييم</h4>
         {criteria.length === 0 ? (
-          <p className="text-soft" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <p className="text-soft flex items-center gap-2">
             <AlertCircle size={18} />
             لا يوجد قالب تقييم مفعّل. يرجى التواصل مع الإدارة.
           </p>
         ) : (
           criteria.map((criterion) => (
-            <div key={criterion.id} style={{ marginBottom: 20, paddingBottom: 20, borderBottom: "1px solid var(--border)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <div key={criterion.id} className="mb-5 pb-5 border-b border-[var(--border)]">
+              <div className="flex justify-between items-start gap-3">
                 <div>
                   <strong>{criterion.label}</strong>
                   {criterion.weight && (
-                    <span className="text-soft" style={{ fontSize: "0.9rem", marginRight: 8 }}>
+                    <span className="text-soft text-[0.9rem] mr-2">
                       ({criterion.weight}%)
                     </span>
                   )}
                 </div>
-                <strong style={{ color: "var(--primary)", fontSize: "1.1rem" }}>
+                <strong className="text-[var(--primary)] text-[1.1rem]">
                   {scores[criterion.id] ?? 0}
                 </strong>
               </div>
               {criterion.description && (
-                <p className="text-soft" style={{ fontSize: "0.92rem", marginTop: 6 }}>
+                <p className="text-soft text-[0.92rem] mt-[6px]">
                   {criterion.description}
                 </p>
               )}
-              <div className="table-actions" style={{ marginTop: 10 }}>
+              <div className="table-actions mt-[10px]">
                 {(criterion.scale || [1, 2, 3, 4, 5]).map((value) => (
                   <button
                     key={value}
                     type="button"
                     disabled={!isEditable}
                     onClick={() => handleScoreChange(criterion.id, value)}
-                    className={
-                      scores[criterion.id] === value ? "btn-primary-custom btn-sm-custom" : "btn-outline-custom btn-sm-custom"
-                    }
-                    style={{ minWidth: 42, padding: "0 12px" }}
+                    className={`min-w-[42px] px-3 ${scores[criterion.id] === value ? "btn-primary-custom btn-sm-custom" : "btn-outline-custom btn-sm-custom"}`}
                   >
                     {value}
                   </button>
@@ -259,8 +255,8 @@ export default function EvaluationTab({ studentId, labels }) {
         )}
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>ملاحظات عامة</h4>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">ملاحظات عامة</h4>
         <div className="form-field">
           <label className="form-label-custom" htmlFor="eval-strengths">
             نقاط القوة
@@ -326,8 +322,8 @@ export default function EvaluationTab({ studentId, labels }) {
       )}
 
       {!isEditable && (
-        <div className="section-card" style={{ background: "rgba(255, 193, 7, 0.08)", borderColor: "rgba(255, 193, 7, 0.3)" }}>
-          <AlertCircle size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+        <div className="section-card bg-[rgba(255,193,7,0.08)] border-[rgba(255,193,7,0.3)]">
+          <AlertCircle size={18} className="align-middle ml-[6px]" />
           لا يمكن تعديل التقييم بعد إرساله نهائياً
         </div>
       )}
@@ -586,8 +582,8 @@ function MentorClassroomVisitFormSix({ studentId, labels }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
-        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card border-r-4 border-r-[var(--danger)]">
+        <p className="m-0 flex items-center gap-2">
           <AlertTriangle size={20} />
           {error}
         </p>
@@ -605,19 +601,19 @@ function MentorClassroomVisitFormSix({ studentId, labels }) {
     <div className="fs-form6-wrap">
       {success === "draft" && (
         <div className="section-card fs-form6-flash fs-form6-flash--info">
-          <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+          <Check size={18} className="align-middle ml-[6px]" />
           تم حفظ المسودة بنجاح
         </div>
       )}
       {success === "submitted" && (
         <div className="section-card fs-form6-flash fs-form6-flash--ok">
-          <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+          <Check size={18} className="align-middle ml-[6px]" />
           تم إرسال التقرير بنجاح
         </div>
       )}
       {submitError ? (
         <div className="section-card fs-form6-flash fs-form6-flash--err">
-          <AlertCircle size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+          <AlertCircle size={18} className="align-middle ml-[6px]" />
           {submitError}
         </div>
       ) : null}
@@ -818,7 +814,7 @@ function MentorClassroomVisitFormSix({ studentId, labels }) {
         </div>
       ) : (
         <div className="section-card fs-form6-flash fs-form6-flash--warn">
-          <AlertCircle size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+          <AlertCircle size={18} className="align-middle ml-[6px]" />
           لا يمكن تعديل التقرير بعد إرساله نهائياً
         </div>
       )}
@@ -836,41 +832,43 @@ function EvaluationResult({ evaluation, template, criteria }) {
 
   return (
     <div>
-      <div className="section-card" style={{ marginBottom: 16, textAlign: "center", borderTop: "4px solid var(--success)" }}>
-        <CheckCircle size={40} color="var(--success)" style={{ marginBottom: 12 }} />
-        <h3 style={{ margin: "0 0 8px" }}>تم إرسال التقييم النهائي</h3>
+      <div className="section-card mb-4 text-center border-t-4 border-t-[var(--success)]">
+        <CheckCircle size={40} color="var(--success)" className="mb-3" />
+        <h3 className="m-0 mb-2">تم إرسال التقييم النهائي</h3>
         <p className="text-soft">تم إرسال التقييم الميداني بنجاح ولا يمكن التعديل.</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 32, marginTop: 20, flexWrap: "wrap" }}>
+        <div className="flex justify-center gap-8 mt-5 flex-wrap">
           <div>
             <div className="text-soft">الدرجة الإجمالية</div>
-            <div style={{ fontSize: "2rem", fontWeight: 800 }}>{totalScore}</div>
+            <div className="text-[2rem] font-extrabold">{totalScore}</div>
             <div className="text-soft">من {maxScore}</div>
           </div>
-          <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+          <div className="w-px bg-[var(--border)] self-stretch" />
           <div>
             <div className="text-soft">التقدير</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{evaluation.grade_label || evaluation.grade}</div>
+            <div className="text-[1.5rem] font-extrabold">{evaluation.grade_label || evaluation.grade}</div>
           </div>
         </div>
-        <div style={{ background: "#e9ecef", borderRadius: 8, height: 10, marginTop: 20, maxWidth: 400, marginInline: "auto", overflow: "hidden" }}>
-          <div style={{ width: `${Math.min(100, percentage)}%`, height: "100%", background: "var(--success)", borderRadius: 8 }} />
+        <div className="bg-[#e9ecef] rounded-lg h-[10px] mt-5 max-w-[400px] mx-auto overflow-hidden">
+          <div
+            className="h-full rounded-lg"
+            style={{ width: `${Math.min(100, percentage)}%`, background: "var(--success)" }}
+          />
         </div>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>تفاصيل البنود</h4>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">تفاصيل البنود</h4>
         {criteria.map((criterion) => (
           <div
             key={criterion.id}
-            className="section-card"
-            style={{ padding: 12, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}
+            className="section-card py-3 px-3 mb-[10px] flex justify-between items-center"
           >
             <div>
               <strong>{criterion.label}</strong>
               {criterion.weight && <div className="text-soft">({criterion.weight}%)</div>}
             </div>
             <div>
-              <strong style={{ color: "var(--primary)" }}>{scores[criterion.id] ?? 0}</strong>
+              <strong className="text-[var(--primary)]">{scores[criterion.id] ?? 0}</strong>
               <span className="text-soft"> / {scaleMax(criterion)}</span>
             </div>
           </div>
@@ -879,23 +877,23 @@ function EvaluationResult({ evaluation, template, criteria }) {
 
       {(evaluation.strengths || evaluation.areas_for_improvement || evaluation.general_notes) && (
         <div className="section-card">
-          <h4 style={{ marginTop: 0 }}>ملاحظات التقييم</h4>
+          <h4 className="mt-0">ملاحظات التقييم</h4>
           {evaluation.strengths && (
-            <div className="section-card" style={{ background: "rgba(25, 135, 84, 0.06)", marginBottom: 12 }}>
+            <div className="section-card bg-[rgba(25,135,84,0.06)] mb-3">
               <strong>نقاط القوة</strong>
-              <p style={{ margin: "8px 0 0" }}>{evaluation.strengths}</p>
+              <p className="m-0 mt-2">{evaluation.strengths}</p>
             </div>
           )}
           {evaluation.areas_for_improvement && (
-            <div className="section-card" style={{ background: "rgba(255, 193, 7, 0.08)", marginBottom: 12 }}>
+            <div className="section-card bg-[rgba(255,193,7,0.08)] mb-3">
               <strong>مجالات التحسين</strong>
-              <p style={{ margin: "8px 0 0" }}>{evaluation.areas_for_improvement}</p>
+              <p className="m-0 mt-2">{evaluation.areas_for_improvement}</p>
             </div>
           )}
           {evaluation.general_notes && (
-            <div className="section-card" style={{ background: "#f7f9fc" }}>
+            <div className="section-card bg-[#f7f9fc]">
               <strong>ملاحظات عامة</strong>
-              <p style={{ margin: "8px 0 0" }}>{evaluation.general_notes}</p>
+              <p className="m-0 mt-2">{evaluation.general_notes}</p>
             </div>
           )}
         </div>
@@ -921,41 +919,41 @@ function PsychologistEvaluationResult({ evaluation, template }) {
 
   return (
     <div className="fs-counselor-eval fs-psych-eval">
-      <div className="section-card" style={{ marginBottom: 16, textAlign: "center", borderTop: "4px solid var(--success)" }}>
-        <CheckCircle size={40} color="var(--success)" style={{ marginBottom: 12 }} />
-        <h3 style={{ margin: "0 0 8px" }}>تم إرسال التقييم النهائي</h3>
+      <div className="section-card mb-4 text-center border-t-4 border-t-[var(--success)]">
+        <CheckCircle size={40} color="var(--success)" className="mb-3" />
+        <h3 className="m-0 mb-2">تم إرسال التقييم النهائي</h3>
         <p className="text-soft">سيظهر النموذج في ملف إنجاز الطالب المتدرب.</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 32, marginTop: 20, flexWrap: "wrap" }}>
+        <div className="flex justify-center gap-8 mt-5 flex-wrap">
           <div>
             <div className="text-soft">الدرجة الإجمالية (مرجّحة)</div>
-            <div style={{ fontSize: "2rem", fontWeight: 800 }}>{totalScore}</div>
+            <div className="text-[2rem] font-extrabold">{totalScore}</div>
             <div className="text-soft">من {maxScore}</div>
           </div>
-          <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+          <div className="w-px bg-[var(--border)] self-stretch" />
           <div>
             <div className="text-soft">التقدير</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{gradeLabel}</div>
+            <div className="text-[1.5rem] font-extrabold">{gradeLabel}</div>
           </div>
         </div>
       </div>
 
-      <div className="section-card fs-counselor-eval__table-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>معايير التقويم</h4>
+      <div className="section-card fs-counselor-eval__table-card mb-4">
+        <h4 className="mt-0">معايير التقويم</h4>
         <div className="fs-counselor-eval__table-wrap">
           <table className="data-table fs-counselor-eval__table">
             <thead>
               <tr>
-                <th style={{ width: 56 }}>#</th>
+                <th className="w-14">#</th>
                 <th>المعيار</th>
-                <th style={{ width: 100 }}>الدرجة (1–5)</th>
+                <th className="w-[100px]">الدرجة (1–5)</th>
               </tr>
             </thead>
             <tbody>
               {criteria.map((criterion, idx) => (
                 <tr key={criterion.id || idx}>
-                  <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                  <td className="text-center">{idx + 1}</td>
                   <td>{criterion.label}</td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="text-center">
                     <strong>{scores[criterion.id] ?? "—"}</strong>
                     <span className="text-soft"> / 5</span>
                   </td>
@@ -971,26 +969,26 @@ function PsychologistEvaluationResult({ evaluation, template }) {
         evaluation?.supervisor_name ||
         evaluation?.evaluation_date) && (
         <div className="section-card">
-          <h4 style={{ marginTop: 0 }}>ملاحظات نصية ومشرف التدريب</h4>
+          <h4 className="mt-0">ملاحظات نصية ومشرف التدريب</h4>
           {evaluation.areas_for_improvement && (
-            <div className="section-card" style={{ background: "rgba(255, 193, 7, 0.08)", marginBottom: 12 }}>
+            <div className="section-card bg-[rgba(255,193,7,0.08)] mb-3">
               <strong>جوانب الضعف التي تحتاج إلى تحسين (مع أمثلة)</strong>
-              <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap" }}>{evaluation.areas_for_improvement}</p>
+              <p className="m-0 mt-2 whitespace-pre-wrap">{evaluation.areas_for_improvement}</p>
             </div>
           )}
           {evaluation.strengths && (
-            <div className="section-card" style={{ background: "rgba(13, 110, 253, 0.06)", marginBottom: 12 }}>
+            <div className="section-card bg-[rgba(13,110,253,0.06)] mb-3">
               <strong>الإجراءات المقترحة لتنمية جوانب الضعف</strong>
-              <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap" }}>{evaluation.strengths}</p>
+              <p className="m-0 mt-2 whitespace-pre-wrap">{evaluation.strengths}</p>
             </div>
           )}
           {evaluation.supervisor_name && (
-            <p style={{ margin: "8px 0" }}>
+            <p className="m-0 my-2">
               <strong>اسم مشرف التدريب:</strong> {evaluation.supervisor_name}
             </p>
           )}
           {evaluation.evaluation_date && (
-            <p style={{ margin: "8px 0" }}>
+            <p className="m-0 my-2">
               <strong>التاريخ:</strong> {String(evaluation.evaluation_date).slice(0, 10)}
             </p>
           )}
@@ -1162,8 +1160,8 @@ export function PsychologistEvaluationForm({ studentId }) {
 
   if (loading) {
     return (
-      <div className="section-card" style={{ textAlign: "center", padding: 40 }}>
-        <Loader2 size={40} style={{ animation: "spin 1s linear infinite", marginBottom: 12 }} />
+      <div className="section-card text-center p-10">
+        <Loader2 size={40} className="animate-[spin_1s_linear_infinite] mb-3" />
         <p>جاري تحميل نموذج التقييم...</p>
       </div>
     );
@@ -1171,8 +1169,8 @@ export function PsychologistEvaluationForm({ studentId }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)", padding: 16 }}>
-        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card border-r-4 border-r-[var(--danger)] p-4">
+        <p className="m-0 flex items-center gap-2">
           <AlertTriangle size={20} />
           {error}
         </p>
@@ -1191,7 +1189,7 @@ export function PsychologistEvaluationForm({ studentId }) {
   if (criteria.length === 0) {
     return (
       <div className="section-card">
-        <p className="text-soft" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <p className="text-soft flex items-center gap-2">
           <AlertCircle size={18} />
           لا يوجد قالب تقييم مشرف المؤسسة مفعّل. يرجى تشغيل الترحيل/البذور أو التواصل مع الإدارة.
         </p>
@@ -1204,19 +1202,19 @@ export function PsychologistEvaluationForm({ studentId }) {
       <div ref={feedbackRef} className="fs-counselor-eval__feedback" aria-live="polite">
         {submitError ? (
           <div className="fs-counselor-eval__feedback-banner fs-counselor-eval__feedback-banner--error" role="alert">
-            <AlertTriangle size={22} style={{ flexShrink: 0 }} />
+            <AlertTriangle size={22} className="shrink-0" />
             <span>{submitError}</span>
           </div>
         ) : null}
         {success === "draft" ? (
           <div className="fs-counselor-eval__feedback-banner fs-counselor-eval__feedback-banner--info">
-            <Check size={22} style={{ flexShrink: 0 }} />
+            <Check size={22} className="shrink-0" />
             <span>تم حفظ المسودة بنجاح.</span>
           </div>
         ) : null}
         {success === "submitted" ? (
           <div className="fs-counselor-eval__feedback-banner fs-counselor-eval__feedback-banner--success">
-            <CheckCircle size={22} style={{ flexShrink: 0 }} />
+            <CheckCircle size={22} className="shrink-0" />
             <span>تم إرسال التقييم النهائي بنجاح. سيظهر في ملف إنجاز الطالب.</span>
           </div>
         ) : null}
@@ -1269,9 +1267,9 @@ export function PsychologistEvaluationForm({ studentId }) {
           <table className="data-table fs-counselor-eval__table">
             <thead>
               <tr>
-                <th style={{ width: 60 }}>الرقم</th>
+                <th className="w-[60px]">الرقم</th>
                 <th>معايير التقويم</th>
-                <th style={{ width: 250 }}>درجة التقييم (1 – 5)</th>
+                <th className="w-[250px]">درجة التقييم (1 – 5)</th>
               </tr>
             </thead>
             <tbody>
@@ -1281,7 +1279,7 @@ export function PsychologistEvaluationForm({ studentId }) {
                   data-psych-criterion={criterion.id}
                   className={attentionRowIds.includes(criterion.id) ? "fs-counselor-eval__row--needs-attention" : undefined}
                 >
-                  <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                  <td className="text-center">{idx + 1}</td>
                   <td>{criterion.label}</td>
                   <td>
                     <div className="fs-counselor-eval__score-group">
@@ -1297,7 +1295,7 @@ export function PsychologistEvaluationForm({ studentId }) {
                             checked={scores[criterion.id] === value}
                             onChange={() => handlePsychScoreChange(criterion.id, value)}
                             disabled={!isEditable}
-                            style={{ display: "none" }}
+                            className="hidden"
                           />
                           <span>{value}</span>
                         </label>
@@ -1312,32 +1310,30 @@ export function PsychologistEvaluationForm({ studentId }) {
 
         <div className="section-card fs-counselor-eval__score-summary">
           <div>
-            <strong style={{ fontSize: "1.1rem" }}>المجموع المرجّح من (100)</strong>
-            <div className="text-soft" style={{ fontSize: "0.85rem" }}>
+            <strong className="text-[1.1rem]">المجموع المرجّح من (100)</strong>
+            <div className="text-soft text-[0.85rem]">
               يُحتسب تلقائياً وفق أوزان المعايير (5 نقاط لكل معيار على السلم 1–5)
             </div>
           </div>
-          <div style={{ textAlign: "left" }}>
-            <strong style={{ fontSize: "1.8rem", color: "var(--primary)" }}>{currentTotal}</strong>
-            <span className="text-soft" style={{ fontSize: "1rem" }}> / {maxScore}</span>
+          <div className="text-left">
+            <strong className="text-[1.8rem] text-[var(--primary)]">{currentTotal}</strong>
+            <span className="text-soft text-[1rem]"> / {maxScore}</span>
           </div>
         </div>
 
-        <div style={{ background: "#e9ecef", borderRadius: 8, height: 10, marginTop: 12, overflow: "hidden" }}>
+        <div className="bg-[#e9ecef] rounded-lg h-[10px] mt-3 overflow-hidden">
           <div
+            className="h-full rounded-lg transition-[width] duration-300 ease"
             style={{
               width: `${progressPercentage}%`,
-              height: "100%",
-              borderRadius: 8,
               background: currentTotal >= 80 ? "var(--success)" : currentTotal >= 60 ? "var(--warning)" : "var(--danger)",
-              transition: "width 0.3s ease",
             }}
           />
         </div>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>جوانب الضعف التي تحتاج إلى تحسين مع تقديم أمثلة :</h4>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">جوانب الضعف التي تحتاج إلى تحسين مع تقديم أمثلة :</h4>
         <textarea
           className="form-textarea-custom"
           rows={4}
@@ -1348,8 +1344,8 @@ export function PsychologistEvaluationForm({ studentId }) {
         />
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>الإجراءات المقترحة لتنمية جوانب الضعف:</h4>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">الإجراءات المقترحة لتنمية جوانب الضعف:</h4>
         <textarea
           className="form-textarea-custom"
           rows={4}
@@ -1360,9 +1356,9 @@ export function PsychologistEvaluationForm({ studentId }) {
         />
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>التوقيع والتاريخ</h4>
-        <div style={{ display: "grid", gap: 16 }}>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">التوقيع والتاريخ</h4>
+        <div className="grid gap-4">
           <div className="form-field">
             <label className="form-label-custom">اسم مشرف التدريب:</label>
             <input
@@ -1388,25 +1384,23 @@ export function PsychologistEvaluationForm({ studentId }) {
       </div>
 
       {isEditable && (
-        <div className="table-actions" style={{ marginTop: 20 }}>
+        <div className="table-actions mt-5">
           <button
             type="button"
-            className="btn-outline-custom btn-sm-custom"
+            className="btn-outline-custom btn-sm-custom inline-flex items-center gap-[6px]"
             onClick={handleSaveDraft}
             disabled={saving}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            {saving ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <Save size={16} />}
+            {saving ? <Loader2 size={16} className="animate-[spin_1s_linear_infinite]" /> : <Save size={16} />}
             {saving ? "جاري الحفظ..." : "حفظ مسودة"}
           </button>
           <button
             type="button"
-            className="btn-success-custom btn-sm-custom"
+            className="btn-success-custom btn-sm-custom inline-flex items-center gap-[6px]"
             onClick={handleSubmit}
             disabled={submitting}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            {submitting ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <Send size={16} />}
+            {submitting ? <Loader2 size={16} className="animate-[spin_1s_linear_infinite]" /> : <Send size={16} />}
             {submitting ? "جاري الإرسال..." : "إرسال التقييم النهائي"}
           </button>
         </div>
@@ -1576,8 +1570,8 @@ export function CounselorEvaluationForm({ studentId }) {
 
   if (loading) {
     return (
-      <div className="section-card" style={{ textAlign: "center", padding: 40 }}>
-        <Loader2 size={40} style={{ animation: "spin 1s linear infinite", marginBottom: 12 }} />
+      <div className="section-card text-center p-10">
+        <Loader2 size={40} className="animate-[spin_1s_linear_infinite] mb-3" />
         <p>جاري تحميل نموذج التقييم...</p>
       </div>
     );
@@ -1585,8 +1579,8 @@ export function CounselorEvaluationForm({ studentId }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)", padding: 16 }}>
-        <p style={{ margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div className="section-card border-r-4 border-r-[var(--danger)] p-4">
+        <p className="m-0 flex items-center gap-2">
           <AlertTriangle size={20} />
           {error}
         </p>
@@ -1605,7 +1599,7 @@ export function CounselorEvaluationForm({ studentId }) {
   if (criteria.length === 0) {
     return (
       <div className="section-card">
-        <p className="text-soft" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <p className="text-soft flex items-center gap-2">
           <AlertCircle size={18} />
           لا يوجد قالب تقييم مرشد تربوي مفعّل. يرجى تشغيل البذور أو التواصل مع الإدارة.
         </p>
@@ -1618,19 +1612,19 @@ export function CounselorEvaluationForm({ studentId }) {
       <div ref={feedbackRef} className="fs-counselor-eval__feedback" aria-live="polite">
         {submitError ? (
           <div className="fs-counselor-eval__feedback-banner fs-counselor-eval__feedback-banner--error" role="alert">
-            <AlertTriangle size={22} style={{ flexShrink: 0 }} />
+            <AlertTriangle size={22} className="shrink-0" />
             <span>{submitError}</span>
           </div>
         ) : null}
         {success === "draft" ? (
           <div className="fs-counselor-eval__feedback-banner fs-counselor-eval__feedback-banner--info">
-            <Check size={22} style={{ flexShrink: 0 }} />
+            <Check size={22} className="shrink-0" />
             <span>تم حفظ المسودة بنجاح.</span>
           </div>
         ) : null}
         {success === "submitted" ? (
           <div className="fs-counselor-eval__feedback-banner fs-counselor-eval__feedback-banner--success">
-            <CheckCircle size={22} style={{ flexShrink: 0 }} />
+            <CheckCircle size={22} className="shrink-0" />
             <span>تم إرسال التقييم النهائي بنجاح. سيظهر في ملف إنجاز الطالب.</span>
           </div>
         ) : null}
@@ -1671,9 +1665,9 @@ export function CounselorEvaluationForm({ studentId }) {
           <table className="data-table fs-counselor-eval__table">
             <thead>
               <tr>
-                <th style={{ width: 60 }}>الرقم</th>
+                <th className="w-[60px]">الرقم</th>
                 <th>المؤشر</th>
-                <th style={{ width: 250 }}>درجات التقييم (1 - 5)</th>
+                <th className="w-[250px]">درجات التقييم (1 - 5)</th>
               </tr>
             </thead>
             <tbody>
@@ -1683,7 +1677,7 @@ export function CounselorEvaluationForm({ studentId }) {
                   data-counselor-criterion={criterion.id}
                   className={attentionRowIds.includes(criterion.id) ? "fs-counselor-eval__row--needs-attention" : undefined}
                 >
-                  <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                  <td className="text-center">{idx + 1}</td>
                   <td>{criterion.label}</td>
                   <td>
                     <div className="fs-counselor-eval__score-group">
@@ -1699,7 +1693,7 @@ export function CounselorEvaluationForm({ studentId }) {
                             checked={scores[criterion.id] === value}
                             onChange={() => handleCounselorScoreChange(criterion.id, value)}
                             disabled={!isEditable}
-                            style={{ display: "none" }}
+                            className="hidden"
                           />
                           <span>{value}</span>
                         </label>
@@ -1714,32 +1708,30 @@ export function CounselorEvaluationForm({ studentId }) {
 
         <div className="section-card fs-counselor-eval__score-summary">
           <div>
-            <strong style={{ fontSize: "1.1rem" }}>مجموع العلامات الكلي من (100)</strong>
-            <div className="text-soft" style={{ fontSize: "0.85rem" }}>
+            <strong className="text-[1.1rem]">مجموع العلامات الكلي من (100)</strong>
+            <div className="text-soft text-[0.85rem]">
               الدرجة المعروضة مرجّحة من 100 وفق أوزان المؤشرات في النظام
             </div>
           </div>
-          <div style={{ textAlign: "left" }}>
-            <strong style={{ fontSize: "1.8rem", color: "var(--primary)" }}>{currentTotal}</strong>
-            <span className="text-soft" style={{ fontSize: "1rem" }}> / {maxScore}</span>
+          <div className="text-left">
+            <strong className="text-[1.8rem] text-[var(--primary)]">{currentTotal}</strong>
+            <span className="text-soft text-[1rem]"> / {maxScore}</span>
           </div>
         </div>
 
-        <div style={{ background: "#e9ecef", borderRadius: 8, height: 10, marginTop: 12, overflow: "hidden" }}>
+        <div className="bg-[#e9ecef] rounded-lg h-[10px] mt-3 overflow-hidden">
           <div
+            className="h-full rounded-lg transition-[width] duration-300 ease"
             style={{
               width: `${progressPercentage}%`,
-              height: "100%",
-              borderRadius: 8,
               background: currentTotal >= 80 ? "var(--success)" : currentTotal >= 60 ? "var(--warning)" : "var(--danger)",
-              transition: "width 0.3s ease",
             }}
           />
         </div>
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>ملاحظات عامة ومقترحات لتطوير أداء الطالب المتدرب/ة:</h4>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">ملاحظات عامة ومقترحات لتطوير أداء الطالب المتدرب/ة:</h4>
         <textarea
           className="form-textarea-custom"
           rows={5}
@@ -1750,9 +1742,9 @@ export function CounselorEvaluationForm({ studentId }) {
         />
       </div>
 
-      <div className="section-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>التوقيع والتاريخ</h4>
-        <div style={{ display: "grid", gap: 16 }}>
+      <div className="section-card mb-4">
+        <h4 className="mt-0">التوقيع والتاريخ</h4>
+        <div className="grid gap-4">
           <div className="form-field">
             <label className="form-label-custom">اسم وتوقيع المرشد/المدرب:</label>
             <input
@@ -1780,25 +1772,23 @@ export function CounselorEvaluationForm({ studentId }) {
       </div>
 
       {isEditable && (
-        <div className="table-actions" style={{ marginTop: 20 }}>
+        <div className="table-actions mt-5">
           <button
             type="button"
-            className="btn-outline-custom btn-sm-custom"
+            className="btn-outline-custom btn-sm-custom inline-flex items-center gap-[6px]"
             onClick={handleSaveDraft}
             disabled={saving}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            {saving ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <Save size={16} />}
+            {saving ? <Loader2 size={16} className="animate-[spin_1s_linear_infinite]" /> : <Save size={16} />}
             {saving ? "جاري الحفظ..." : "حفظ مسودة"}
           </button>
           <button
             type="button"
-            className="btn-success-custom btn-sm-custom"
+            className="btn-success-custom btn-sm-custom inline-flex items-center gap-[6px]"
             onClick={handleSubmit}
             disabled={submitting}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
           >
-            {submitting ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <Send size={16} />}
+            {submitting ? <Loader2 size={16} className="animate-[spin_1s_linear_infinite]" /> : <Send size={16} />}
             {submitting ? "جاري الإرسال..." : "إرسال التقييم النهائي"}
           </button>
         </div>
@@ -1816,41 +1806,41 @@ function CounselorEvaluationResult({ evaluation, template }) {
 
   return (
     <div className="fs-counselor-eval">
-      <div className="section-card" style={{ marginBottom: 16, textAlign: "center", borderTop: "4px solid var(--success)" }}>
-        <CheckCircle size={40} color="var(--success)" style={{ marginBottom: 12 }} />
-        <h3 style={{ margin: "0 0 8px" }}>تم إرسال التقييم النهائي</h3>
+      <div className="section-card mb-4 text-center border-t-4 border-t-[var(--success)]">
+        <CheckCircle size={40} color="var(--success)" className="mb-3" />
+        <h3 className="m-0 mb-2">تم إرسال التقييم النهائي</h3>
         <p className="text-soft">سيظهر هذا النموذج في ملف إنجاز الطالب/ة.</p>
-        <div style={{ display: "flex", justifyContent: "center", gap: 32, marginTop: 20, flexWrap: "wrap" }}>
+        <div className="flex justify-center gap-8 mt-5 flex-wrap">
           <div>
             <div className="text-soft">الدرجة الإجمالية (مرجّحة)</div>
-            <div style={{ fontSize: "2rem", fontWeight: 800 }}>{totalScore}</div>
+            <div className="text-[2rem] font-extrabold">{totalScore}</div>
             <div className="text-soft">من {maxScore}</div>
           </div>
-          <div style={{ width: 1, background: "var(--border)", alignSelf: "stretch" }} />
+          <div className="w-px bg-[var(--border)] self-stretch" />
           <div>
             <div className="text-soft">التقدير</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800 }}>{gradeLabel}</div>
+            <div className="text-[1.5rem] font-extrabold">{gradeLabel}</div>
           </div>
         </div>
       </div>
 
-      <div className="section-card fs-counselor-eval__table-card" style={{ marginBottom: 16 }}>
-        <h4 style={{ marginTop: 0 }}>تفاصيل المؤشرات</h4>
+      <div className="section-card fs-counselor-eval__table-card mb-4">
+        <h4 className="mt-0">تفاصيل المؤشرات</h4>
         <div className="fs-counselor-eval__table-wrap">
           <table className="data-table fs-counselor-eval__table">
             <thead>
               <tr>
-                <th style={{ width: 56 }}>#</th>
+                <th className="w-14">#</th>
                 <th>المؤشر</th>
-                <th style={{ width: 100 }}>الدرجة</th>
+                <th className="w-[100px]">الدرجة</th>
               </tr>
             </thead>
             <tbody>
               {criteria.map((criterion, idx) => (
                 <tr key={criterion.id || idx}>
-                  <td style={{ textAlign: "center" }}>{idx + 1}</td>
+                  <td className="text-center">{idx + 1}</td>
                   <td>{criterion.label}</td>
-                  <td style={{ textAlign: "center" }}>
+                  <td className="text-center">
                     <strong>{scores[criterion.id] ?? "—"}</strong> / 5
                   </td>
                 </tr>
@@ -1862,20 +1852,20 @@ function CounselorEvaluationResult({ evaluation, template }) {
 
       {(evaluation?.general_notes || evaluation?.supervisor_name || evaluation?.evaluation_date) && (
         <div className="section-card">
-          <h4 style={{ marginTop: 0 }}>ملاحظات وبيانات المرشد</h4>
+          <h4 className="mt-0">ملاحظات وبيانات المرشد</h4>
           {evaluation.general_notes && (
-            <div className="section-card" style={{ background: "#f7f9fc", marginBottom: 12 }}>
+            <div className="section-card bg-[#f7f9fc] mb-3">
               <strong>ملاحظات عامة ومقترحات</strong>
-              <p style={{ margin: "8px 0 0", whiteSpace: "pre-wrap" }}>{evaluation.general_notes}</p>
+              <p className="m-0 mt-2 whitespace-pre-wrap">{evaluation.general_notes}</p>
             </div>
           )}
           {evaluation.supervisor_name && (
-            <p style={{ margin: "8px 0" }}>
+            <p className="m-0 my-2">
               <strong>اسم المرشد/المدرب:</strong> {evaluation.supervisor_name}
             </p>
           )}
           {evaluation.evaluation_date && (
-            <p style={{ margin: "8px 0" }}>
+            <p className="m-0 my-2">
               <strong>التاريخ:</strong> {String(evaluation.evaluation_date).slice(0, 10)}
             </p>
           )}

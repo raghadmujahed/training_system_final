@@ -1,9 +1,13 @@
+import { LayoutDashboard, Layers, ListChecks, MapPin, CheckCircle2 } from "lucide-react";
+import PageHeader from "../../components/common/PageHeader";
+import Button from "../../components/ui/Button";
+
 export default function SupervisorDashboard() {
   const stats = [
-    { title: "عدد الشعب", value: 4, type: "primary", meta: "الشعب المسندة إليك" },
-    { title: "المهام النشطة", value: 7, type: "accent", meta: "مهام قيد المتابعة" },
-    { title: "الزيارات الميدانية", value: 5, type: "success", meta: "خلال هذا الشهر" },
-    { title: "التقييمات المكتملة", value: 18, type: "info", meta: "تم إدخالها بنجاح" },
+    { title: "عدد الشعب", value: 4, icon: Layers, color: "border-r-info", bg: "bg-info/8" },
+    { title: "المهام النشطة", value: 7, icon: ListChecks, color: "border-r-accent", bg: "bg-accent/8" },
+    { title: "الزيارات الميدانية", value: 5, icon: MapPin, color: "border-r-success", bg: "bg-success/8" },
+    { title: "التقييمات المكتملة", value: 18, icon: CheckCircle2, color: "border-r-primary", bg: "bg-primary/8" },
   ];
 
   const recentActivities = [
@@ -41,69 +45,63 @@ export default function SupervisorDashboard() {
 
   return (
     <>
-      <div className="content-header">
-        <h1 className="page-title">لوحة تحكم المشرف الأكاديمي</h1>
-        <p className="page-subtitle">
-          متابعة المهام، الزيارات الميدانية، تقييم الطلبة، والشعب المسندة إليك.
-        </p>
-      </div>
+      <PageHeader title="لوحة تحكم المشرف الأكاديمي" subtitle="متابعة المهام، الزيارات الميدانية، تقييم الطلبة، والشعب المسندة إليك." icon={LayoutDashboard} />
 
-      <div className="dashboard-grid">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {stats.map((item, index) => (
-          <div key={index} className={`stat-card ${item.type}`}>
-            <div>
-              <div className="stat-title">{item.title}</div>
-              <div className="stat-value">{item.value}</div>
+          <div key={index} className={`bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 border-r-4 ${item.color}`}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className={`w-10 h-10 rounded-[10px] ${item.bg} flex items-center justify-center`}>
+                <item.icon size={20} className="text-secondary" />
+              </div>
+              <div className="text-text-faint text-[0.85rem] font-bold">{item.title}</div>
             </div>
-            <div className="stat-meta">{item.meta}</div>
+            <div className="text-[1.8rem] font-extrabold text-secondary">{item.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="dashboard-row">
-        <div className="section-card">
-          <h4>أحدث الأنشطة</h4>
-
-          <div className="activity-list">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+          <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">أحدث الأنشطة</h4>
+          <div className="flex flex-col gap-3">
             {recentActivities.map((activity, index) => (
-              <div key={index} className="activity-item">
-                <h6>{activity.title}</h6>
-                <p>{activity.description}</p>
-                <div className="activity-meta">{activity.meta}</div>
+              <div key={index} className="border-b border-[#edf2f7] pb-3 last:border-0 last:pb-0">
+                <h6 className="m-0 mb-1 text-text font-bold text-[0.95rem]">{activity.title}</h6>
+                <p className="m-0 text-text-soft text-[0.88rem]">{activity.description}</p>
+                <div className="text-accent text-[0.8rem] font-bold mt-1">{activity.meta}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="announcement-box">
-          <h5>تنبيه</h5>
-          <p>
+        <div className="bg-accent/8 border border-accent/20 rounded-[18px] p-5">
+          <h5 className="m-0 mb-3 text-secondary font-extrabold text-[1.05rem]">تنبيه</h5>
+          <p className="text-text-soft text-[0.92rem] m-0">
             يرجى مراجعة المهام غير المسلّمة والتأكد من استكمال التقييمات قبل
             نهاية الأسبوع.
           </p>
         </div>
       </div>
 
-      <div className="dashboard-row">
-        <div className="section-card">
-          <h4>المهام السريعة</h4>
-
-          <div className="quick-actions-grid">
-            <button className="quick-action-btn">إضافة مهمة جديدة</button>
-            <button className="quick-action-btn">عرض حلول الطلبة</button>
-            <button className="quick-action-btn">إدخال تقييم</button>
-            <button className="quick-action-btn">جدولة زيارة ميدانية</button>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+          <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">المهام السريعة</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="default" size="sm">إضافة مهمة جديدة</Button>
+            <Button variant="outline" size="sm">عرض حلول الطلبة</Button>
+            <Button variant="outline" size="sm">إدخال تقييم</Button>
+            <Button variant="light" size="sm">جدولة زيارة ميدانية</Button>
           </div>
         </div>
 
-        <div className="section-card">
-          <h4>الجدول القادم</h4>
-
-          <div className="timeline-list">
+        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+          <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">الجدول القادم</h4>
+          <div className="flex flex-col gap-3">
             {timeline.map((item, index) => (
-              <div key={index} className="timeline-item">
-                <h6>{item.title}</h6>
-                <p>{item.description}</p>
+              <div key={index} className="border-b border-[#edf2f7] pb-3 last:border-0 last:pb-0">
+                <h6 className="m-0 mb-1 text-text font-bold text-[0.95rem]">{item.title}</h6>
+                <p className="m-0 text-text-soft text-[0.88rem]">{item.description}</p>
               </div>
             ))}
           </div>

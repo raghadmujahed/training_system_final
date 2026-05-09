@@ -50,8 +50,8 @@ export default function DailyReportsTab({ studentId }) {
 
   if (error) {
     return (
-      <div className="section-card" style={{ borderRight: "4px solid var(--danger)" }}>
-        <p style={{ margin: 0 }}>{error}</p>
+      <div className="section-card border-r-4 border-r-[var(--danger)]">
+        <p className="m-0">{error}</p>
       </div>
     );
   }
@@ -60,32 +60,23 @@ export default function DailyReportsTab({ studentId }) {
     <div>
       {pendingReports.length > 0 && (
         <div
-          className="section-card"
-          style={{ marginBottom: 16, background: "rgba(255, 193, 7, 0.06)", borderColor: "rgba(255, 193, 7, 0.35)" }}
+          className="section-card mb-4 bg-[rgba(255,193,7,0.06)] border-[rgba(255,193,7,0.35)]"
         >
-          <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+          <h4 className="mt-0 flex items-center gap-2">
             <Clock size={20} />
             تقارير بحاجة للمراجعة ({pendingReports.length})
           </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="flex flex-col gap-[10px]">
             {pendingReports.map((report) => (
               <div
                 key={report.id}
-                className="section-card"
-                style={{
-                  padding: 12,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  flexWrap: "wrap",
-                }}
+                className="section-card p-3 flex items-center justify-between gap-3 flex-wrap"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="flex items-center gap-3">
                   <FileText size={22} color="var(--warning)" />
                   <div>
                     <strong>{report.template_name}</strong>
-                    <div className="text-soft" style={{ fontSize: "0.9rem" }}>
+                    <div className="text-soft text-[0.9rem]">
                       {report.date}
                     </div>
                   </div>
@@ -108,43 +99,36 @@ export default function DailyReportsTab({ studentId }) {
       )}
 
       <div className="section-card">
-        <h4 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 8 }}>
+        <h4 className="mt-0 flex items-center gap-2">
           <FileText size={20} />
           سجل التقارير اليومية
         </h4>
 
         {success && (
           <div
-            className="section-card"
-            style={{ padding: 12, marginBottom: 12, background: "rgba(25, 135, 84, 0.08)", borderColor: "rgba(25, 135, 84, 0.25)" }}
+            className="section-card p-3 mb-3 bg-[rgba(25,135,84,0.08)] border-[rgba(25,135,84,0.25)]"
           >
-            <Check size={18} style={{ verticalAlign: "middle", marginLeft: 6 }} />
+            <Check size={18} className="align-middle ml-[6px]" />
             تمت العملية بنجاح
           </div>
         )}
 
         {list.length === 0 ? (
-          <div style={{ textAlign: "center", padding: 40 }} className="text-soft">
-            <FileText size={44} style={{ margin: "0 auto 12px", opacity: 0.3 }} />
+          <div className="text-center p-10 text-soft">
+            <FileText size={44} className="mx-auto mb-3 opacity-30" />
             لا يوجد تقارير مسجلة
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {list.map((report) => (
               <div
                 key={report.id}
-                className="section-card"
-                style={{ padding: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}
+                className="section-card p-[14px] flex items-center justify-between gap-3 flex-wrap"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                <div className="flex items-center gap-[14px]">
                   <div
+                    className="w-11 h-11 rounded-full flex items-center justify-center"
                     style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
                       background:
                         report.status === "confirmed"
                           ? "rgba(25, 135, 84, 0.15)"
@@ -162,8 +146,8 @@ export default function DailyReportsTab({ studentId }) {
                   </div>
                   <div>
                     <strong>{report.template_name}</strong>
-                    <div style={{ marginTop: 6 }} className="table-actions">
-                      <span className="text-soft" style={{ fontSize: "0.9rem" }}>
+                    <div className="mt-[6px] table-actions">
+                      <span className="text-soft text-[0.9rem]">
                         {report.date}
                       </span>
                       <span className={`badge-custom ${reportStatusBadge(report.status)}`}>{report.status_label}</span>
@@ -190,7 +174,7 @@ export default function DailyReportsTab({ studentId }) {
 
       {showReviewDialog && selectedReportId && (
         <div className="modal-overlay" onClick={closeDialog}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 720, maxHeight: "90vh", overflowY: "auto" }}>
+          <div className="modal-content max-w-[720px] max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>مراجعة التقرير اليومي</h3>
               <button type="button" className="modal-close-btn" onClick={closeDialog}>
@@ -249,14 +233,14 @@ function ReportReviewBody({ reportId, comment, setComment, processing, setProces
 
   return (
     <div>
-      <div className="section-card" style={{ padding: 14, marginBottom: 16, background: "#f7f9fc" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+      <div className="section-card p-[14px] mb-4 bg-[#f7f9fc]">
+        <div className="flex items-center gap-2 mb-2">
           <Calendar size={18} />
           <strong>التاريخ:</strong> {report.date}
         </div>
         <span className={`badge-custom ${reportStatusBadge(report.status)}`}>{report.status_label}</span>
         {report.reviewed_at && (
-          <div className="text-soft" style={{ marginTop: 8, fontSize: "0.9rem" }}>
+          <div className="text-soft mt-2 text-[0.9rem]">
             تمت المراجعة: {report.reviewed_at}
           </div>
         )}
@@ -267,9 +251,9 @@ function ReportReviewBody({ reportId, comment, setComment, processing, setProces
         <p className="text-soft">لا يوجد محتوى مفصل</p>
       ) : (
         fields.map((field) => (
-          <div key={field.name} style={{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid var(--border)" }}>
+          <div key={field.name} className="mb-[14px] pb-[14px] border-b border-[var(--border)]">
             <div className="form-label-custom">{field.label}</div>
-            <div className="section-card" style={{ padding: 12, marginTop: 6 }}>
+            <div className="section-card p-3 mt-[6px]">
               {content[field.name] ?? "—"}
             </div>
           </div>
@@ -277,13 +261,13 @@ function ReportReviewBody({ reportId, comment, setComment, processing, setProces
       )}
 
       {report.attachments?.length > 0 && (
-        <div style={{ marginTop: 16 }}>
-          <h4 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="mt-4">
+          <h4 className="flex items-center gap-2">
             <Paperclip size={18} />
             المرفقات
           </h4>
           {report.attachments.map((attachment) => (
-            <div key={attachment.id} className="section-card" style={{ padding: 10, marginTop: 8 }}>
+            <div key={attachment.id} className="section-card p-[10px] mt-2">
               {attachment.name}
             </div>
           ))}
@@ -292,19 +276,18 @@ function ReportReviewBody({ reportId, comment, setComment, processing, setProces
 
       {report.supervisor_comment && (
         <div
-          className="section-card"
-          style={{ marginTop: 16, background: "rgba(255, 193, 7, 0.08)", borderColor: "rgba(255, 193, 7, 0.3)" }}
+          className="section-card mt-4 bg-amber-100 border-amber-200"
         >
-          <h4 style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 0 }}>
+          <h4 className="flex items-center gap-2 mt-0">
             <MessageSquare size={18} />
             ملاحظات المشرف
           </h4>
-          <p style={{ margin: 0 }}>{report.supervisor_comment}</p>
+          <p className="m-0">{report.supervisor_comment}</p>
         </div>
       )}
 
       {canReview && (
-        <div style={{ marginTop: 20, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+        <div className="mt-5 pt-5 border-t border-[var(--border)]">
           <div className="form-field">
             <label className="form-label-custom" htmlFor="review-comment">
               ملاحظات المراجعة
@@ -318,7 +301,7 @@ function ReportReviewBody({ reportId, comment, setComment, processing, setProces
               placeholder="أضف ملاحظاتك هنا..."
             />
           </div>
-          <div className="table-actions" style={{ marginTop: 12 }}>
+          <div className="table-actions mt-3">
             <button type="button" className="btn-success-custom btn-sm-custom" onClick={handleConfirm} disabled={processing}>
               <CheckCircle size={16} />
               {processing ? "جاري الحفظ..." : "تأكيد التقرير"}
@@ -334,7 +317,7 @@ function ReportReviewBody({ reportId, comment, setComment, processing, setProces
             </button>
           </div>
           {!comment.trim() && (
-            <p className="form-error-text" style={{ marginTop: 8 }}>
+            <p className="form-error-text mt-2">
               يجب إضافة ملاحظة قبل إعادة التقرير للتعديل
             </p>
           )}

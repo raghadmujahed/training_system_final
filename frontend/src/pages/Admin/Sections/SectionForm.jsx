@@ -133,9 +133,9 @@ export default function SectionForm() {
         <div className="form-group">
           <label>المشرف الأكاديمي</label>
           {!form.course_id ? (
-            <p className="text-muted" style={{ fontSize: "0.9rem", margin: "4px 0" }}>اختر المساق أولاً لعرض المشرفين التابعين لقسمه</p>
+            <p className="text-text-soft text-[0.9rem] my-1">اختر المساق أولاً لعرض المشرفين التابعين لقسمه</p>
           ) : supervisors.length === 0 ? (
-            <p className="text-muted" style={{ fontSize: "0.9rem", margin: "4px 0" }}>لا يوجد مشرفين أكاديميين في هذا القسم</p>
+            <p className="text-text-soft text-[0.9rem] my-1">لا يوجد مشرفين أكاديميين في هذا القسم</p>
           ) : (
             <select name="academic_supervisor_id" value={form.academic_supervisor_id} onChange={handleChange}>
               <option value="">اختر المشرف</option>

@@ -203,115 +203,56 @@ export default function Assignments() {
   };
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 16px" }}>
+    <div className="max-w-[1200px] mx-auto px-4">
       {/* Header */}
-      <div style={{
-        background: "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-        borderRadius: 20,
-        padding: "1.75rem 2.5rem",
-        marginBottom: "1.5rem",
-        color: "white",
-        boxShadow: "0 8px 32px rgba(30,58,95,0.3)",
-        display: "flex",
-        alignItems: "center",
-        gap: "1rem",
-      }}>
-        <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div className="bg-gradient-to-br from-[#1e3a5f] via-[#2d5f8a] to-[#3b82f6] rounded-[20px] py-7 px-10 mb-6 text-white shadow-[0_8px_32px_rgba(30,58,95,0.3)] flex items-center gap-4">
+        <div className="w-[52px] h-[52px] rounded-[14px] bg-white/20 flex items-center justify-center shrink-0">
           <BookOpen size={26} />
         </div>
-        <div style={{ flex: 1 }}>
-          <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 800 }}>التكليفات الدراسية</h1>
-          <p style={{ margin: "0.25rem 0 0", opacity: 0.9, fontSize: "0.92rem" }}>متابعة المهام ورفع الحلول</p>
-          <div style={{ display: "flex", gap: "1.25rem", marginTop: "0.6rem", flexWrap: "wrap", fontSize: "0.85rem", opacity: 0.9 }}>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><ClipboardList size={14} /> {tasks.length} تكليف إجمالي</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Clock size={14} /> {tasks.filter((t) => !["submitted","graded"].includes(t.status)).length} قيد الانتظار</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><CheckCircle2 size={14} /> {tasks.filter((t) => t.status === "submitted").length} مُسلَّم</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Award size={14} /> {tasks.filter((t) => t.status === "graded").length} مُقيَّم</span>
+        <div className="flex-1">
+          <h1 className="m-0 text-[1.4rem] font-extrabold">التكليفات الدراسية</h1>
+          <p className="m-0 mt-1 opacity-90 text-[0.92rem]">متابعة المهام ورفع الحلول</p>
+          <div className="flex gap-5 mt-[0.6rem] flex-wrap text-[0.85rem] opacity-90">
+            <span className="flex items-center gap-[5px]"><ClipboardList size={14} /> {tasks.length} تكليف إجمالي</span>
+            <span className="flex items-center gap-[5px]"><Clock size={14} /> {tasks.filter((t) => !["submitted","graded"].includes(t.status)).length} قيد الانتظار</span>
+            <span className="flex items-center gap-[5px]"><CheckCircle2 size={14} /> {tasks.filter((t) => t.status === "submitted").length} مُسلَّم</span>
+            <span className="flex items-center gap-[5px]"><Award size={14} /> {tasks.filter((t) => t.status === "graded").length} مُقيَّم</span>
           </div>
         </div>
       </div>
 
       {/* Alerts */}
       {success && (
-        <div
-          className="mb-4 d-flex align-items-center gap-2"
-          style={{
-            background: "#ecfdf5",
-            border: "1px solid #6ee7b7",
-            borderRadius: 12,
-            padding: "16px 20px",
-            color: "#065f46",
-          }}
-        >
-          <div
-            style={{
-              background: "#10b981",
-              borderRadius: "50%",
-              padding: 4,
-              color: "white",
-            }}
-          >
+        <div className="mb-4 flex items-center gap-2 bg-[#ecfdf5] border border-[#6ee7b7] rounded-xl py-4 px-5 text-[#065f46]">
+          <div className="bg-[#10b981] rounded-full p-1 text-white">
             <CheckCircle2 size={16} />
           </div>
-          <span style={{ fontWeight: 500 }}>{success}</span>
+          <span className="font-medium">{success}</span>
         </div>
       )}
       {error && (
-        <div
-          className="mb-4 d-flex align-items-center gap-2"
-          style={{
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            borderRadius: 12,
-            padding: "16px 20px",
-            color: "#991b1b",
-          }}
-        >
-          <div
-            style={{
-              background: "#ef4444",
-              borderRadius: "50%",
-              padding: 4,
-              color: "white",
-            }}
-          >
+        <div className="mb-4 flex items-center gap-2 bg-[#fef2f2] border border-[#fecaca] rounded-xl py-4 px-5 text-[#991b1b]">
+          <div className="bg-[#ef4444] rounded-full p-1 text-white">
             <AlertCircle size={16} />
           </div>
-          <span style={{ fontWeight: 500 }}>{error}</span>
+          <span className="font-medium">{error}</span>
         </div>
       )}
 
       {/* Filter Tabs */}
       {!loading && tasks.length > 0 && (
-        <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        <div className="flex gap-2 mb-5 flex-wrap">
           {[
             { key: "all", label: "الكل", count: tasks.length },
             { key: "pending", label: "قيد الانتظار", count: tasks.filter(t => !["submitted","graded"].includes(t.status)).length },
             { key: "submitted", label: "تم التسليم", count: tasks.filter(t => t.status === "submitted").length },
             { key: "graded", label: "تم التقييم", count: tasks.filter(t => t.status === "graded").length },
           ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key)}
-              style={{
-                padding: "8px 18px",
-                borderRadius: 99,
-                border: filter === tab.key ? "2px solid #4f46e5" : "1px solid #e5e7eb",
-                background: filter === tab.key ? "#4f46e5" : "white",
-                color: filter === tab.key ? "white" : "#6b7280",
-                fontWeight: filter === tab.key ? 700 : 500,
-                fontSize: "0.85rem",
-                cursor: "pointer",
-                transition: "all 0.2s",
-                display: "flex", alignItems: "center", gap: 6,
-              }}
+            <button key={tab.key} onClick={() => setFilter(tab.key)}
+              className={`py-2 px-[18px] rounded-full text-[0.85rem] cursor-pointer transition-all flex items-center gap-[6px] ${filter === tab.key ? 'border-2 border-[#4f46e5] bg-[#4f46e5] text-white font-bold' : 'border border-[#e5e7eb] bg-white text-[#6b7280] font-medium hover:bg-[#f9fafb]'}`}
             >
               {tab.label}
-              <span style={{
-                background: filter === tab.key ? "rgba(255,255,255,0.25)" : "#f3f4f6",
-                color: filter === tab.key ? "white" : "#374151",
-                borderRadius: 99, padding: "1px 7px", fontSize: "0.78rem", fontWeight: 700,
-              }}>{tab.count}</span>
+              <span className={`rounded-full py-[1px] px-[7px] text-[0.78rem] font-bold ${filter === tab.key ? 'bg-white/25 text-white' : 'bg-[#f3f4f6] text-[#374151]'}`}>{tab.count}</span>
             </button>
           ))}
         </div>
@@ -321,39 +262,20 @@ export default function Assignments() {
       {loading ? (
         <LoadingSpinner size="section" text="جاري تحميل التكليفات..." />
       ) : tasks.length === 0 ? (
-        <div
-          style={{
-            background: "white",
-            borderRadius: 16,
-            padding: 60,
-            textAlign: "center",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          }}
-        >
-          <div
-            style={{
-              background: "#f3f4f6",
-              borderRadius: "50%",
-              width: 80,
-              height: 80,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-            }}
-          >
-            <ClipboardList size={40} style={{ color: "#9ca3af" }} />
+        <div className="bg-white rounded-2xl p-[60px] text-center shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <div className="bg-[#f3f4f6] rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-5">
+            <ClipboardList size={40} className="text-[#9ca3af]" />
           </div>
-          <h5 style={{ color: "#374151", marginBottom: 8 }}>لا توجد تكليفات</h5>
-          <p style={{ color: "#9ca3af", margin: 0 }}>لم يتم إرسال تكليفات مرتبطة بتدريبك حاليًا.</p>
+          <h5 className="text-[#374151] mb-2">لا توجد تكليفات</h5>
+          <p className="text-[#9ca3af] m-0">لم يتم إرسال تكليفات مرتبطة بتدريبك حاليًا.</p>
         </div>
       ) : filteredTasks.length === 0 ? (
-        <div style={{ background: "white", borderRadius: 16, padding: 48, textAlign: "center", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-          <ClipboardList size={44} style={{ color: "#d1d5db", marginBottom: 12 }} />
-          <p style={{ color: "#9ca3af", margin: 0, fontSize: "0.95rem" }}>لا توجد تكليفات في هذه الفئة.</p>
+        <div className="bg-white rounded-2xl p-12 text-center shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+          <ClipboardList size={44} className="text-[#d1d5db] mb-3" />
+          <p className="text-[#9ca3af] m-0 text-[0.95rem]">لا توجد تكليفات في هذه الفئة.</p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="flex flex-col gap-5">
           {filteredTasks.map((task) => {
             const statusConf = STATUS_CONFIG[task.status] || STATUS_CONFIG.pending;
             const StatusIcon = statusConf.icon;
@@ -363,22 +285,13 @@ export default function Assignments() {
             const overdue = isOverdue(task);
 
             return (
-              <div
-                key={task.id}
-                style={{
-                  background: "white",
-                  borderRadius: 16,
-                  boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-                  border: "1px solid #e5e7eb",
-                  overflow: "hidden",
-                  transition: "all 0.3s ease",
-                }}
+              <div key={task.id}
+                className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.08)] border border-[#e5e7eb] overflow-hidden transition-all duration-300"
               >
                 {/* Card Header */}
                 <div
+                  className={`py-6 px-7 ${isExpanded ? 'border-b border-[#e5e7eb]' : 'border-b-0'}`}
                   style={{
-                    padding: "24px 28px",
-                    borderBottom: isExpanded ? "1px solid #e5e7eb" : "none",
                     background: overdue
                       ? "linear-gradient(to right, #fef2f2, white)"
                       : submission?.grade !== null
@@ -395,53 +308,22 @@ export default function Assignments() {
                       : "4px solid #f59e0b",
                   }}
                 >
-                  <div className="d-flex justify-content-between align-items-start gap-3">
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
                       {/* Title & Status */}
-                      <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
-                        <h5
-                          style={{
-                            fontSize: "1.25rem",
-                            fontWeight: 700,
-                            color: "#111827",
-                            margin: 0,
-                            lineHeight: 1.4,
-                          }}
-                        >
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
+                        <h5 className="m-0 text-[1.25rem] font-bold text-[#111827] leading-[1.4]">
                           {task.title}
                         </h5>
                         <span
-                          style={{
-                            background: statusConf.bg,
-                            color: statusConf.color,
-                            border: `1px solid ${statusConf.border}`,
-                            borderRadius: 20,
-                            padding: "4px 12px",
-                            fontSize: "0.8rem",
-                            fontWeight: 600,
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                          }}
+                          className="rounded-[20px] py-1 px-3 text-[0.8rem] font-semibold inline-flex items-center gap-1"
+                          style={{ background: statusConf.bg, color: statusConf.color, border: `1px solid ${statusConf.border}` }}
                         >
                           <StatusIcon size={12} />
                           {statusConf.label}
                         </span>
                         {overdue && (
-                          <span
-                            style={{
-                              background: "#fee2e2",
-                              color: "#991b1b",
-                              border: "1px solid #fecaca",
-                              borderRadius: 20,
-                              padding: "4px 12px",
-                              fontSize: "0.8rem",
-                              fontWeight: 600,
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}
-                          >
+                          <span className="bg-[#fee2e2] text-[#991b1b] border border-[#fecaca] rounded-[20px] py-1 px-3 text-[0.8rem] font-semibold inline-flex items-center gap-1">
                             <AlertCircle size={12} />
                             متأخر
                           </span>
@@ -450,15 +332,7 @@ export default function Assignments() {
 
                       {/* Description */}
                       {task.description && (
-                        <p
-                          style={{
-                            color: "#4b5563",
-                            fontSize: "0.95rem",
-                            lineHeight: 1.7,
-                            marginBottom: 16,
-                            whiteSpace: "pre-line",
-                          }}
-                        >
+                        <p className="text-[#4b5563] text-[0.95rem] leading-[1.7] mb-4 whitespace-pre-line m-0">
                           {task.description.length > 200 && !isExpanded
                             ? task.description.slice(0, 200) + "..."
                             : task.description}
@@ -466,21 +340,14 @@ export default function Assignments() {
                       )}
 
                       {/* Meta Info */}
-                      <div className="d-flex flex-wrap gap-4" style={{ fontSize: "0.875rem" }}>
+                      <div className="flex flex-wrap gap-4 text-[0.875rem]">
                         {assigner && (
-                          <div className="d-flex align-items-center gap-2" style={{ color: "#6b7280" }}>
-                            <div
-                              style={{
-                                background: "#e0e7ff",
-                                borderRadius: 8,
-                                padding: 6,
-                                color: "#4f46e5",
-                              }}
-                            >
+                          <div className="flex items-center gap-2 text-[#6b7280]">
+                            <div className="bg-[#e0e7ff] rounded-lg p-[6px] text-[#4f46e5]">
                               <User size={14} />
                             </div>
                             <span>
-                              <strong style={{ color: "#374151" }}>
+                              <strong className="text-[#374151]">
                                 {getAssignerRoleLabel(assigner.role?.name, config.mentorLabel)}:
                               </strong>{" "}
                               {assigner.name}
@@ -488,19 +355,12 @@ export default function Assignments() {
                           </div>
                         )}
                         {task.due_date && (
-                          <div className="d-flex align-items-center gap-2" style={{ color: "#6b7280" }}>
-                            <div
-                              style={{
-                                background: overdue ? "#fee2e2" : "#dbeafe",
-                                borderRadius: 8,
-                                padding: 6,
-                                color: overdue ? "#dc2626" : "#2563eb",
-                              }}
-                            >
+                          <div className="flex items-center gap-2 text-[#6b7280]">
+                            <div className="rounded-lg p-[6px]" style={{ background: overdue ? "#fee2e2" : "#dbeafe", color: overdue ? "#dc2626" : "#2563eb" }}>
                               <Calendar size={14} />
                             </div>
                             <span>
-                              <strong style={{ color: "#374151" }}>موعد التسليم:</strong>{" "}
+                              <strong className="text-[#374151]">موعد التسليم:</strong>{" "}
                               <span style={{ color: overdue ? "#dc2626" : "inherit" }}>
                                 {formatDate(task.due_date)}
                               </span>
@@ -508,19 +368,12 @@ export default function Assignments() {
                           </div>
                         )}
                         {task.created_at && (
-                          <div className="d-flex align-items-center gap-2" style={{ color: "#6b7280" }}>
-                            <div
-                              style={{
-                                background: "#f3f4f6",
-                                borderRadius: 8,
-                                padding: 6,
-                                color: "#6b7280",
-                              }}
-                            >
+                          <div className="flex items-center gap-2 text-[#6b7280]">
+                            <div className="bg-[#f3f4f6] rounded-lg p-[6px] text-[#6b7280]">
                               <Clock size={14} />
                             </div>
                             <span>
-                              <strong style={{ color: "#374151" }}>تاريخ النشر:</strong>{" "}
+                              <strong className="text-[#374151]">تاريخ النشر:</strong>{" "}
                               {formatDate(task.created_at)}
                             </span>
                           </div>
@@ -529,31 +382,8 @@ export default function Assignments() {
                     </div>
 
                     {/* Actions */}
-                    <button
-                      onClick={() => toggleExpand(task.id)}
-                      style={{
-                        background: isExpanded ? "#f3f4f6" : "white",
-                        border: "1px solid #d1d5db",
-                        borderRadius: 10,
-                        padding: "8px 16px",
-                        fontSize: "0.875rem",
-                        fontWeight: 500,
-                        color: "#374151",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        transition: "all 0.2s",
-                        flexShrink: 0,
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f3f4f6";
-                        e.currentTarget.style.borderColor = "#9ca3af";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = isExpanded ? "#f3f4f6" : "white";
-                        e.currentTarget.style.borderColor = "#d1d5db";
-                      }}
+                    <button onClick={() => toggleExpand(task.id)}
+                      className={`rounded-[10px] py-2 px-4 text-[0.875rem] font-medium text-[#374151] cursor-pointer flex items-center gap-[6px] transition-all shrink-0 border ${isExpanded ? 'bg-[#f3f4f6] border-[#d1d5db]' : 'bg-white border-[#d1d5db] hover:bg-[#f3f4f6] hover:border-[#9ca3af]'}`}
                     >
                       {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                       {isExpanded ? "إخفاء" : "عرض التفاصيل"}
@@ -564,133 +394,59 @@ export default function Assignments() {
                 {/* Submission Info */}
                 {submission && (
                   <div
-                    style={{
-                      padding: "20px 28px",
-                      background:
-                        task.status === "graded"
-                          ? "#f0fdf4"
-                          : "#f8fafc",
-                      borderBottom: isExpanded ? "1px solid #e5e7eb" : "none",
-                    }}
+                    className={`py-5 px-7 ${isExpanded ? 'border-b border-[#e5e7eb]' : ''}`}
+                    style={{ background: task.status === "graded" ? "#f0fdf4" : "#f8fafc" }}
                   >
-                    <div className="d-flex align-items-center gap-2 mb-4">
-                      <div
-                        style={{
-                          background: task.status === "graded" ? "#22c55e" : "#3b82f6",
-                          borderRadius: "50%",
-                          padding: 6,
-                          color: "white",
-                        }}
-                      >
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="rounded-full p-[6px] text-white" style={{ background: task.status === "graded" ? "#22c55e" : "#3b82f6" }}>
                         {task.status === "graded" ? <Award size={16} /> : <FileCheck size={16} />}
                       </div>
-                      <h6 style={{ margin: 0, fontWeight: 600, color: "#374151" }}>
+                      <h6 className="m-0 font-semibold text-[#374151]">
                         {task.status === "graded" ? "التسليم والتقييم" : "تفاصيل التسليم"}
                       </h6>
                       {submission.submitted_at && (
-                        <span style={{ color: "#9ca3af", fontSize: "0.8rem", marginRight: "auto" }}>
+                        <span className="text-[#9ca3af] text-[0.8rem] mr-auto">
                           تم التسليم بتاريخ {formatDate(submission.submitted_at)}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div className="flex flex-col gap-3">
                       {submission.file_url && (
-                        <a
-                          href={submission.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 8,
-                            background: "white",
-                            border: "1px solid #d1d5db",
-                            borderRadius: 8,
-                            padding: "10px 16px",
-                            color: "#374151",
-                            textDecoration: "none",
-                            fontSize: "0.9rem",
-                            fontWeight: 500,
-                            width: "fit-content",
-                            transition: "all 0.2s",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "#f9fafb";
-                            e.currentTarget.style.borderColor = "#9ca3af";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "white";
-                            e.currentTarget.style.borderColor = "#d1d5db";
-                          }}
+                        <a href={submission.file_url} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 bg-white border border-[#d1d5db] rounded-lg py-[10px] px-4 text-[#374151] no-underline text-[0.9rem] font-medium w-fit transition-all hover:bg-[#f9fafb] hover:border-[#9ca3af]"
                         >
-                          <Paperclip size={16} style={{ color: "#6b7280" }} />
+                          <Paperclip size={16} className="text-[#6b7280]" />
                           تحميل الملف المُسلَّم
                         </a>
                       )}
 
                       {submission.notes && (
-                        <div
-                          style={{
-                            background: "white",
-                            borderRadius: 8,
-                            padding: "12px 16px",
-                            border: "1px solid #e5e7eb",
-                          }}
-                        >
-                          <span style={{ color: "#6b7280", fontSize: "0.8rem", fontWeight: 600 }}>
+                        <div className="bg-white rounded-lg py-3 px-4 border border-[#e5e7eb]">
+                          <span className="text-[#6b7280] text-[0.8rem] font-semibold">
                             ملاحظاتك:
                           </span>
-                          <p style={{ margin: "8px 0 0", color: "#374151", fontSize: "0.9rem", lineHeight: 1.6 }}>
+                          <p className="m-0 mt-2 text-[#374151] text-[0.9rem] leading-[1.6]">
                             {submission.notes}
                           </p>
                         </div>
                       )}
 
                       {task.status === "graded" && (
-                        <div
-                          style={{
-                            background: "white",
-                            borderRadius: 12,
-                            padding: "20px",
-                            border: "2px solid #22c55e",
-                          }}
-                        >
-                          <div className="d-flex align-items-center gap-3 mb-3">
-                            <div
-                              style={{
-                                background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
-                                borderRadius: 12,
-                                padding: "10px 16px",
-                                color: "white",
-                                fontWeight: 700,
-                                fontSize: "1.1rem",
-                              }}
-                            >
-                              <TrendingUp size={20} style={{ marginLeft: 6 }} />
+                        <div className="bg-white rounded-xl py-5 px-5 border-2 border-[#22c55e]">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] rounded-xl py-[10px] px-4 text-white font-bold text-[1.1rem]">
+                              <TrendingUp size={20} className="ml-[6px] inline" />
                               {submission.grade !== null ? `${submission.grade}/100` : "—"}
                             </div>
-                            <span style={{ color: "#22c55e", fontWeight: 600 }}>تم التقييم بنجاح</span>
+                            <span className="text-[#22c55e] font-semibold">تم التقييم بنجاح</span>
                           </div>
                           {submission.feedback && (
                             <div>
-                              <span
-                                style={{ color: "#6b7280", fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 8 }}
-                              >
+                              <span className="text-[#6b7280] text-[0.8rem] font-semibold block mb-2">
                                 ملاحظات المُقيِّم:
                               </span>
-                              <p
-                                style={{
-                                  margin: 0,
-                                  color: "#374151",
-                                  fontSize: "0.95rem",
-                                  lineHeight: 1.8,
-                                  whiteSpace: "pre-line",
-                                  background: "#f9fafb",
-                                  padding: "12px 16px",
-                                  borderRadius: 8,
-                                }}
-                              >
+                              <p className="m-0 text-[#374151] text-[0.95rem] leading-[1.8] whitespace-pre-line bg-[#f9fafb] py-3 px-4 rounded-lg">
                                 {submission.feedback}
                               </p>
                             </div>
@@ -703,162 +459,52 @@ export default function Assignments() {
 
                 {/* Expanded Form */}
                 {isExpanded && (
-                  <div style={{ padding: "24px 28px", background: "#fafafa" }}>
+                  <div className="py-6 px-7 bg-[#fafafa]">
                     {canSubmit(task) && (
                       <div>
-                        <h6
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            marginBottom: 20,
-                            color: "#111827",
-                            fontWeight: 600,
-                          }}
-                        >
-                          <div
-                            style={{
-                              background: "#4f46e5",
-                              borderRadius: 8,
-                              padding: 6,
-                              color: "white",
-                            }}
-                          >
+                        <h6 className="flex items-center gap-2 mb-5 text-[#111827] font-semibold m-0">
+                          <div className="bg-[#4f46e5] rounded-lg p-[6px] text-white">
                             <Upload size={16} />
                           </div>
                           تسليم التكليف
                         </h6>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div className="flex flex-col gap-4">
                           <div>
-                            <label
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                                marginBottom: 8,
-                                fontSize: "0.875rem",
-                                fontWeight: 500,
-                                color: "#374151",
-                              }}
-                            >
-                              <FileText size={14} style={{ color: "#6b7280" }} />
+                            <label className="flex items-center gap-[6px] mb-2 text-[0.875rem] font-medium text-[#374151]">
+                              <FileText size={14} className="text-[#6b7280]" />
                               رفع ملف
                             </label>
-                            <input
-                              type="file"
-                              onChange={(e) =>
-                                setFiles((prev) => ({
-                                  ...prev,
-                                  [task.id]: e.target.files?.[0] || null,
-                                }))
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "12px 16px",
-                                border: "2px dashed #d1d5db",
-                                borderRadius: 10,
-                                background: "white",
-                                cursor: "pointer",
-                                fontSize: "0.9rem",
-                              }}
+                            <input type="file"
+                              onChange={(e) => setFiles((prev) => ({ ...prev, [task.id]: e.target.files?.[0] || null }))}
+                              className="w-full py-3 px-4 border-2 border-dashed border-[#d1d5db] rounded-[10px] bg-white cursor-pointer text-[0.9rem]"
                             />
                             {files[task.id] && (
-                              <div
-                                style={{
-                                  marginTop: 8,
-                                  padding: "8px 12px",
-                                  background: "#ecfdf5",
-                                  borderRadius: 6,
-                                  color: "#065f46",
-                                  fontSize: "0.85rem",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                }}
-                              >
+                              <div className="mt-2 py-2 px-3 bg-[#ecfdf5] rounded-md text-[#065f46] text-[0.85rem] flex items-center gap-[6px]">
                                 <Paperclip size={14} />
                                 {files[task.id].name}
                               </div>
                             )}
                           </div>
                           <div>
-                            <label
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                                marginBottom: 8,
-                                fontSize: "0.875rem",
-                                fontWeight: 500,
-                                color: "#374151",
-                              }}
-                            >
-                              <MessageSquare size={14} style={{ color: "#6b7280" }} />
+                            <label className="flex items-center gap-[6px] mb-2 text-[0.875rem] font-medium text-[#374151]">
+                              <MessageSquare size={14} className="text-[#6b7280]" />
                               ملاحظات (اختياري)
                             </label>
-                            <textarea
-                              value={notes[task.id] || ""}
-                              onChange={(e) =>
-                                setNotes((prev) => ({
-                                  ...prev,
-                                  [task.id]: e.target.value,
-                                }))
-                              }
+                            <textarea value={notes[task.id] || ""}
+                              onChange={(e) => setNotes((prev) => ({ ...prev, [task.id]: e.target.value }))}
                               placeholder="أضف ملاحظاتك أو شرحاً للحل..."
-                              style={{
-                                width: "100%",
-                                padding: "14px 16px",
-                                border: "1px solid #d1d5db",
-                                borderRadius: 10,
-                                background: "white",
-                                fontSize: "0.9rem",
-                                minHeight: 100,
-                                resize: "vertical",
-                                lineHeight: 1.6,
-                              }}
+                              className="w-full py-[14px] px-4 border border-[#d1d5db] rounded-[10px] bg-white text-[0.9rem] min-h-[100px] resize-y leading-[1.6]"
                             />
                           </div>
-                          <button
-                            onClick={() => handleSubmit(task)}
-                            disabled={savingId === task.id}
-                            style={{
-                              background: savingId === task.id ? "#9ca3af" : "#4f46e5",
-                              color: "white",
-                              border: "none",
-                              borderRadius: 10,
-                              padding: "14px 28px",
-                              fontSize: "0.95rem",
-                              fontWeight: 600,
-                              cursor: savingId === task.id ? "not-allowed" : "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 8,
-                              width: "fit-content",
-                              transition: "all 0.2s",
-                              boxShadow: savingId === task.id ? "none" : "0 4px 14px rgba(79, 70, 229, 0.4)",
-                            }}
-                            onMouseEnter={(e) => {
-                              if (savingId !== task.id) {
-                                e.currentTarget.style.background = "#4338ca";
-                                e.currentTarget.style.transform = "translateY(-1px)";
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = savingId === task.id ? "#9ca3af" : "#4f46e5";
-                              e.currentTarget.style.transform = "translateY(0)";
-                            }}
+                          <button onClick={() => handleSubmit(task)} disabled={savingId === task.id}
+                            className="text-white border-none rounded-[10px] py-[14px] px-7 text-[0.95rem] font-semibold inline-flex items-center justify-center gap-2 w-fit transition-all" style={{ background: savingId === task.id ? "#9ca3af" : "#4f46e5", cursor: savingId === task.id ? "not-allowed" : "pointer", boxShadow: savingId === task.id ? "none" : "0 4px 14px rgba(79, 70, 229, 0.4)" }}
+                            onMouseEnter={(e) => { if (savingId !== task.id) { e.currentTarget.style.background = "#4338ca"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = savingId === task.id ? "#9ca3af" : "#4f46e5"; e.currentTarget.style.transform = "translateY(0)"; }}
                           >
                             {savingId === task.id ? (
-                              <>
-                                <LoadingSpinner size="button" />
-                                جاري الإرسال...
-                              </>
+                              <><LoadingSpinner size="button" /> جاري الإرسال...</>
                             ) : (
-                              <>
-                                <Send size={18} />
-                                تسليم التكليف
-                              </>
+                              <><Send size={18} /> تسليم التكليف</>
                             )}
                           </button>
                         </div>
@@ -867,176 +513,53 @@ export default function Assignments() {
 
                     {canResubmit(task) && (
                       <div>
-                        <div
-                          style={{
-                            background: "#eff6ff",
-                            border: "1px solid #bfdbfe",
-                            borderRadius: 10,
-                            padding: "14px 18px",
-                            marginBottom: 20,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                            color: "#1e40af",
-                            fontSize: "0.9rem",
-                          }}
-                        >
+                        <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-[10px] py-[14px] px-[18px] mb-5 flex items-center gap-[10px] text-[#1e40af] text-[0.9rem]">
                           <RefreshCw size={18} />
                           <span>يمكنك إعادة تسليم هذا التكليف قبل تقييمه</span>
                         </div>
-                        <h6
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            marginBottom: 20,
-                            color: "#111827",
-                            fontWeight: 600,
-                          }}
-                        >
-                          <div
-                            style={{
-                              background: "#f59e0b",
-                              borderRadius: 8,
-                              padding: 6,
-                              color: "white",
-                            }}
-                          >
+                        <h6 className="flex items-center gap-2 mb-5 text-[#111827] font-semibold m-0">
+                          <div className="bg-[#f59e0b] rounded-lg p-[6px] text-white">
                             <RefreshCw size={16} />
                           </div>
                           إعادة تسليم التكليف
                         </h6>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        <div className="flex flex-col gap-4">
                           <div>
-                            <label
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                                marginBottom: 8,
-                                fontSize: "0.875rem",
-                                fontWeight: 500,
-                                color: "#374151",
-                              }}
-                            >
-                              <FileText size={14} style={{ color: "#6b7280" }} />
+                            <label className="flex items-center gap-[6px] mb-2 text-[0.875rem] font-medium text-[#374151]">
+                              <FileText size={14} className="text-[#6b7280]" />
                               رفع ملف جديد
                             </label>
-                            <input
-                              type="file"
-                              onChange={(e) =>
-                                setFiles((prev) => ({
-                                  ...prev,
-                                  [task.id]: e.target.files?.[0] || null,
-                                }))
-                              }
-                              style={{
-                                width: "100%",
-                                padding: "12px 16px",
-                                border: "2px dashed #d1d5db",
-                                borderRadius: 10,
-                                background: "white",
-                                cursor: "pointer",
-                                fontSize: "0.9rem",
-                              }}
+                            <input type="file"
+                              onChange={(e) => setFiles((prev) => ({ ...prev, [task.id]: e.target.files?.[0] || null }))}
+                              className="w-full py-3 px-4 border-2 border-dashed border-[#d1d5db] rounded-[10px] bg-white cursor-pointer text-[0.9rem]"
                             />
                             {files[task.id] && (
-                              <div
-                                style={{
-                                  marginTop: 8,
-                                  padding: "8px 12px",
-                                  background: "#fef3c7",
-                                  borderRadius: 6,
-                                  color: "#92400e",
-                                  fontSize: "0.85rem",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                }}
-                              >
+                              <div className="mt-2 py-2 px-3 bg-[#fef3c7] rounded-md text-[#92400e] text-[0.85rem] flex items-center gap-[6px]">
                                 <Paperclip size={14} />
                                 {files[task.id].name}
                               </div>
                             )}
                           </div>
                           <div>
-                            <label
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                                marginBottom: 8,
-                                fontSize: "0.875rem",
-                                fontWeight: 500,
-                                color: "#374151",
-                              }}
-                            >
-                              <MessageSquare size={14} style={{ color: "#6b7280" }} />
+                            <label className="flex items-center gap-[6px] mb-2 text-[0.875rem] font-medium text-[#374151]">
+                              <MessageSquare size={14} className="text-[#6b7280]" />
                               ملاحظات مُحدَّثة
                             </label>
-                            <textarea
-                              value={notes[task.id] || submission?.notes || ""}
-                              onChange={(e) =>
-                                setNotes((prev) => ({
-                                  ...prev,
-                                  [task.id]: e.target.value,
-                                }))
-                              }
+                            <textarea value={notes[task.id] || submission?.notes || ""}
+                              onChange={(e) => setNotes((prev) => ({ ...prev, [task.id]: e.target.value }))}
                               placeholder="أضف ملاحظاتك أو شرحاً للحل..."
-                              style={{
-                                width: "100%",
-                                padding: "14px 16px",
-                                border: "1px solid #d1d5db",
-                                borderRadius: 10,
-                                background: "white",
-                                fontSize: "0.9rem",
-                                minHeight: 100,
-                                resize: "vertical",
-                                lineHeight: 1.6,
-                              }}
+                              className="w-full py-[14px] px-4 border border-[#d1d5db] rounded-[10px] bg-white text-[0.9rem] min-h-[100px] resize-y leading-[1.6]"
                             />
                           </div>
-                          <button
-                            onClick={() => handleResubmit(task)}
-                            disabled={savingId === task.id}
-                            style={{
-                              background: savingId === task.id ? "#9ca3af" : "#f59e0b",
-                              color: "white",
-                              border: "none",
-                              borderRadius: 10,
-                              padding: "14px 28px",
-                              fontSize: "0.95rem",
-                              fontWeight: 600,
-                              cursor: savingId === task.id ? "not-allowed" : "pointer",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 8,
-                              width: "fit-content",
-                              transition: "all 0.2s",
-                              boxShadow: savingId === task.id ? "none" : "0 4px 14px rgba(245, 158, 11, 0.4)",
-                            }}
-                            onMouseEnter={(e) => {
-                              if (savingId !== task.id) {
-                                e.currentTarget.style.background = "#d97706";
-                                e.currentTarget.style.transform = "translateY(-1px)";
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = savingId === task.id ? "#9ca3af" : "#f59e0b";
-                              e.currentTarget.style.transform = "translateY(0)";
-                            }}
+                          <button onClick={() => handleResubmit(task)} disabled={savingId === task.id}
+                            className="text-white border-none rounded-[10px] py-[14px] px-7 text-[0.95rem] font-semibold inline-flex items-center justify-center gap-2 w-fit transition-all" style={{ background: savingId === task.id ? "#9ca3af" : "#f59e0b", cursor: savingId === task.id ? "not-allowed" : "pointer", boxShadow: savingId === task.id ? "none" : "0 4px 14px rgba(245, 158, 11, 0.4)" }}
+                            onMouseEnter={(e) => { if (savingId !== task.id) { e.currentTarget.style.background = "#d97706"; e.currentTarget.style.transform = "translateY(-1px)"; } }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = savingId === task.id ? "#9ca3af" : "#f59e0b"; e.currentTarget.style.transform = "translateY(0)"; }}
                           >
                             {savingId === task.id ? (
-                              <>
-                                <LoadingSpinner size="button" />
-                                جاري الإرسال...
-                              </>
+                              <><LoadingSpinner size="button" /> جاري الإرسال...</>
                             ) : (
-                              <>
-                                <RefreshCw size={18} />
-                                إعادة تسليم
-                              </>
+                              <><RefreshCw size={18} /> إعادة تسليم</>
                             )}
                           </button>
                         </div>
@@ -1044,28 +567,11 @@ export default function Assignments() {
                     )}
 
                     {task.status === "graded" && (
-                      <div
-                        style={{
-                          background: "#f0fdf4",
-                          borderRadius: 10,
-                          padding: "16px 20px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                          color: "#166534",
-                        }}
-                      >
-                        <div
-                          style={{
-                            background: "#22c55e",
-                            borderRadius: "50%",
-                            padding: 6,
-                            color: "white",
-                          }}
-                        >
+                      <div className="bg-[#f0fdf4] rounded-[10px] py-4 px-5 flex items-center gap-3 text-[#166534]">
+                        <div className="bg-[#22c55e] rounded-full p-[6px] text-white">
                           <CheckCircle2 size={18} />
                         </div>
-                        <span style={{ fontWeight: 500 }}>
+                        <span className="font-medium">
                           تم تقييم هذا التكليف ولا يمكن إعادة تسليمه.
                         </span>
                       </div>

@@ -66,123 +66,96 @@ export default function RequestReviewDrawer({
     <>
       {open && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            zIndex: 1000,
-          }}
+          className="fixed inset-0 bg-[rgba(0,0,0,0.4)] z-[1000]"
           onClick={handleClose}
         />
       )}
       <div
-        style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: "min(560px, 95vw)",
-          background: "#fff",
-          zIndex: 1001,
-          overflowY: "auto",
-          boxShadow: "-4px 0 24px rgba(0,0,0,0.12)",
-          transform: open ? "translateX(0)" : "translateX(100%)",
-          transition: "transform 0.25s ease",
-          padding: "24px",
-        }}
+        className="fixed top-0 right-0 bottom-0 w-[min(560px,95vw)] bg-white z-[1001] overflow-y-auto shadow-[-4px_0_24px_rgba(0,0,0,0.12)] p-6 transition-transform duration-250 ease-in-out"
+        style={{ transform: open ? "translateX(0)" : "translateX(100%)" }}
       >
         <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "20px",
-          }}
+          className="flex justify-between items-center mb-5"
         >
-          <h3 style={{ margin: 0 }}>
+          <h3 className="m-0">
             مراجعة طلب #{request.id}
           </h3>
           <button
             onClick={handleClose}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "1.2rem",
-            }}
+            className="bg-transparent border-none cursor-pointer text-[1.2rem]"
           >
             <X size={22} />
           </button>
         </div>
 
-        <div className="info-grid" style={{ marginBottom: 20 }}>
+        <div className="info-grid mb-5">
           <div className="info-card">
             <div className="info-icon-wrapper primary">
-              <span style={{ color: "#fff", fontWeight: 800 }}>{studentName?.[0] || "؟"}</span>
+              <span className="text-white font-extrabold">{studentName?.[0] || "؟"}</span>
             </div>
             <div className="info-content">
-              <div className="info-label">الطالب</div>
-              <div className="info-value">{studentName}</div>
+              <div className="info-label text-sm font-bold">الطالب</div>
+              <div className="info-value text-lg">{studentName}</div>
             </div>
           </div>
           <div className="info-card">
             <div className="info-icon-wrapper accent">
-              <span style={{ color: "#fff", fontWeight: 800 }}>#</span>
+              <span className="text-white font-extrabold">#</span>
             </div>
             <div className="info-content">
-              <div className="info-label">الرقم الجامعي</div>
-              <div className="info-value">{universityId}</div>
+              <div className="info-label text-sm font-bold">الرقم الجامعي</div>
+              <div className="info-value text-lg">{universityId}</div>
             </div>
           </div>
           <div className="info-card">
             <div className="info-icon-wrapper success">
-              <span style={{ color: "#fff", fontWeight: 800 }}>📚</span>
+              <span className="text-white font-extrabold">📚</span>
             </div>
             <div className="info-content">
-              <div className="info-label">المساق</div>
-              <div className="info-value">{courseName}</div>
+              <div className="info-label text-sm font-bold">المساق</div>
+              <div className="info-value text-lg">{courseName}</div>
             </div>
           </div>
           <div className="info-card">
             <div className="info-icon-wrapper info">
-              <span style={{ color: "#fff", fontWeight: 800 }}>📅</span>
+              <span className="text-white font-extrabold">📅</span>
             </div>
             <div className="info-content">
-              <div className="info-label">الفترة التدريبية</div>
-              <div className="info-value">{periodName}</div>
+              <div className="info-label text-sm font-bold">الفترة التدريبية</div>
+              <div className="info-value text-lg">{periodName}</div>
             </div>
           </div>
           <div className="info-card">
             <div className="info-icon-wrapper warning">
-              <span style={{ color: "#fff", fontWeight: 800 }}>🏫</span>
+              <span className="text-white font-extrabold">🏫</span>
             </div>
             <div className="info-content">
-              <div className="info-label">جهة التدريب</div>
-              <div className="info-value">{siteName}</div>
+              <div className="info-label text-sm font-bold">جهة التدريب</div>
+              <div className="info-value text-lg">{siteName}</div>
             </div>
           </div>
           <div className="info-card">
             <div className="info-icon-wrapper primary">
-              <span style={{ color: "#fff", fontWeight: 800 }}>🏛</span>
+              <span className="text-white font-extrabold">🏛</span>
             </div>
             <div className="info-content">
-              <div className="info-label">الجهة الرسمية</div>
-              <div className="info-value">
+              <div className="info-label text-sm font-bold">الجهة الرسمية</div>
+              <div className="info-value text-lg">
                 {GOVERNING_BODIES.find((b) => b.value === governingBody)?.label || governingBody}
               </div>
             </div>
           </div>
         </div>
 
-        <div style={{ marginBottom: 16 }}>
+        <div className="mb-4">
           <strong>الحالة:</strong>{" "}
           <StatusBadge status={request.book_status} size="lg" />
         </div>
 
         {attachments.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <strong>المرفقات:</strong>
-            <ul style={{ marginTop: 6, paddingRight: 18 }}>
+            <ul className="mt-[6px] pr-[18px]">
               {attachments.map((a, i) => (
                 <li key={i}>
                   <a href={a.url || "#"} target="_blank" rel="noreferrer">
@@ -195,18 +168,13 @@ export default function RequestReviewDrawer({
         )}
 
         {notes.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
+          <div className="mb-4">
             <strong>ملاحظات سابقة:</strong>
             <div
-              style={{
-                background: "#f8f9fa",
-                borderRadius: 8,
-                padding: 12,
-                marginTop: 6,
-              }}
+              className="bg-[#f8f9fa] rounded-lg p-3 mt-[6px]"
             >
               {notes.map((n, i) => (
-                <p key={i} style={{ margin: "4px 0", fontSize: "0.9rem" }}>
+                <p key={i} className="my-1 text-[0.9rem]">
                   {n.content || n}
                 </p>
               ))}
@@ -214,34 +182,23 @@ export default function RequestReviewDrawer({
           </div>
         )}
 
-        <hr style={{ margin: "20px 0" }} />
+        <hr className="my-5" />
 
-        <div style={{ marginBottom: 16 }}>
-          <label className="form-label" style={{ fontWeight: 700 }}>
+        <div className="mb-4">
+          <label className="form-label font-bold">
             القرار
           </label>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="flex gap-2 flex-wrap">
             {COORDINATOR_DECISIONS.map((d) => (
               <button
                 key={d.value}
                 type="button"
                 onClick={() => setDecision(d.value)}
-                style={{
-                  padding: "8px 16px",
-                  borderRadius: 8,
-                  border:
-                    decision === d.value
-                      ? "2px solid var(--primary)"
-                      : "1px solid var(--border)",
-                  background:
-                    decision === d.value ? "var(--primary)" : "#fff",
-                  color: decision === d.value ? "#fff" : "var(--secondary)",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                }}
+                className={`py-2 px-4 rounded-lg font-bold cursor-pointer flex items-center gap-[6px] ${
+                  decision === d.value
+                    ? "border-2 border-primary bg-primary text-white"
+                    : "border border-gray-300 bg-white text-gray-600"
+                }`}
               >
                 {decisionIcons[d.value]}
                 {d.label}
@@ -251,8 +208,8 @@ export default function RequestReviewDrawer({
         </div>
 
         {decision && decision !== "prelim_approved" && (
-          <div style={{ marginBottom: 16 }}>
-            <label className="form-label" style={{ fontWeight: 700 }}>
+          <div className="mb-4">
+            <label className="form-label font-bold">
               {decision === "rejected" ? "سبب الرفض (اختياري)" : "سبب طلب التعديل"}
             </label>
             <textarea
@@ -270,8 +227,8 @@ export default function RequestReviewDrawer({
         )}
 
         {decision === "prelim_approved" && (
-          <div style={{ marginBottom: 16 }}>
-            <label className="form-label" style={{ fontWeight: 700 }}>
+          <div className="mb-4">
+            <label className="form-label font-bold">
               اقتراح/اختيار جهة تدريب (اختياري)
             </label>
             <select
@@ -289,19 +246,20 @@ export default function RequestReviewDrawer({
           </div>
         )}
 
-        <div className="form-actions" style={{ marginTop: 20 }}>
+        <div className="form-actions mt-5">
           <button
-            className="btn-secondary"
+            className="bg-transparent border-none cursor-pointer text-[1.2rem]"
             onClick={handleClose}
             disabled={saving}
           >
             إلغاء
           </button>
           <button
-            className="btn-primary"
+            className={`bg-primary text-white py-2 px-4 rounded-lg font-bold cursor-pointer flex items-center gap-[6px] ${
+              saving ? "opacity-50" : ""
+            }`}
             onClick={handleSubmit}
             disabled={!decision || saving}
-            style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             {saving && <LoadingSpinner size="button" />}
             تأكيد القرار

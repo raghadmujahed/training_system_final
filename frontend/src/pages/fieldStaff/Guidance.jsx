@@ -82,9 +82,9 @@ export default function FieldStaffGuidance() {
       />
 
       {/* Quick Reference */}
-      <div className="section-card" style={{ marginBottom: 16, padding: 16 }}>
-        <h5 style={{ marginBottom: 8 }}>مجالات الدعم</h5>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div className="section-card mb-4 p-4">
+        <h5 className="mb-2">مجالات الدعم</h5>
+        <div className="flex gap-2 flex-wrap">
           {GUIDANCE_TYPES.map((g) => (
             <button
               key={g.value}
@@ -97,7 +97,7 @@ export default function FieldStaffGuidance() {
         </div>
       </div>
 
-      <div className="table-actions" style={{ marginBottom: 16 }}>
+      <div className="table-actions mb-4">
         <button className="btn-primary-custom" onClick={() => setShowForm(true)}>
           + تسجيل جلسة إرشادية
         </button>
@@ -105,7 +105,7 @@ export default function FieldStaffGuidance() {
 
       {/* Add Form */}
       {showForm && (
-        <div className="section-card" style={{ padding: 16, marginBottom: 16 }}>
+        <div className="section-card p-4 mb-4">
           <h5>تسجيل جلسة إرشادية جديدة</h5>
           {formError && <p className="text-danger">{formError}</p>}
           <form onSubmit={handleSubmit}>
@@ -194,7 +194,7 @@ export default function FieldStaffGuidance() {
                     <p className="panel-subtitle">{note.created_at || "—"}</p>
                   </div>
                 </div>
-                <p style={{ marginTop: 8 }}>{note.content}</p>
+                <p className="mt-2">{note.content}</p>
               </div>
             );
           })}
@@ -202,7 +202,7 @@ export default function FieldStaffGuidance() {
       )}
 
       {/* Disclaimer */}
-      <div className="alert-info alert-custom" style={{ marginTop: 16 }}>
+      <div className="alert-info alert-custom mt-4">
         <strong>تنبيه مهني:</strong> الملاحظات الحساسة يجب أن تُسجَّل وفق سياسة السرية المهنية
         للجامعة. هذه الواجهة تدعم الملاحظات العامة فقط.
       </div>

@@ -204,7 +204,7 @@ export default function UsersList() {
           <option value="suspended">موقوف</option>
         </select>
 
-        <div style={{ color: "#666", fontSize: "12px" }}>
+        <div className="text-[#666] text-xs">
           عرض {STATIC_PAGE_SIZE} مستخدم لكل صفحة (ثابت)
         </div>
       </div>

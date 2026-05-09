@@ -115,7 +115,7 @@ export default function CoordinatorAnnouncements() {
           <div className="hero-icon">
             <Megaphone size={24} />
           </div>
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">إعلان عام للطلبة</h1>
             <p className="hero-subtitle">
               أنشئ إعلانات تظهر لجميع الطلبة النشطين. يمكن أرشفتها أو حفظها كمسودة.
@@ -126,11 +126,11 @@ export default function CoordinatorAnnouncements() {
 
       {error && (
         <div className="alert-custom alert-danger mb-3">
-          <p style={{ margin: 0 }}>{error}</p>
+          <p className="m-0">{error}</p>
         </div>
       )}
 
-      <div className="section-card mb-4" style={{ padding: "1.25rem 1.5rem" }}>
+      <div className="section-card mb-4 p-[1.25rem_1.5rem]">
         <h5 className="mb-3 d-flex align-items-center gap-2">
           <Plus size={20} className="text-primary" />
           إنشاء إعلان جديد
@@ -157,7 +157,7 @@ export default function CoordinatorAnnouncements() {
             </select>
           </div>
           <div className="col-md-3 d-flex align-items-end">
-            <label className="d-flex align-items-center gap-2" style={{ cursor: "pointer", userSelect: "none" }}>
+            <label className="d-flex align-items-center gap-2 cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={form.all_students}
@@ -184,15 +184,13 @@ export default function CoordinatorAnnouncements() {
         </form>
       </div>
 
-      <div className="section-card" style={{ padding: "1.25rem 1.5rem" }}>
+      <div className="section-card p-[1.25rem_1.5rem]">
         <div className="d-flex flex-wrap gap-2 mb-3">
           {Object.entries(STATUS_TAB).map(([key, { label, icon: Icon }]) => (
             <button
               key={key}
               type="button"
-              className={tab === key ? "btn-primary-custom" : "btn-outline-custom"}
-              onClick={() => setTab(key)}
-              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              className={`${tab === key ? "btn-primary-custom" : "btn-outline-custom"} inline-flex items-center gap-[6px]`}
             >
               <Icon size={16} />
               {label}
@@ -207,21 +205,16 @@ export default function CoordinatorAnnouncements() {
         ) : items.length === 0 ? (
           <p className="text-muted mb-0">لا توجد إعلانات في هذا القسم.</p>
         ) : (
-          <ul className="list-unstyled mb-0" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <ul className="list-unstyled mb-0 flex flex-col gap-3">
             {items.map((a) => (
               <li
                 key={a.id}
-                style={{
-                  border: "1px solid var(--border)",
-                  borderRadius: 10,
-                  padding: "14px 16px",
-                  background: "#fff",
-                }}
+                className="border border-[var(--border)] rounded-[10px] p-[14px_16px] bg-white"
               >
                 <div className="d-flex justify-content-between align-items-start gap-2 flex-wrap">
                   <div>
-                    <strong style={{ fontSize: "1.05rem" }}>{a.title}</strong>
-                    <div style={{ fontSize: "0.82rem", color: "var(--text-soft)", marginTop: 6 }} className="d-flex flex-wrap gap-3">
+                    <strong className="text-[1.05rem]">{a.title}</strong>
+                    <div className="text-[0.82rem] text-[var(--text-soft)] mt-[6px] d-flex flex-wrap gap-3">
                       <span className="d-inline-flex align-items-center gap-1">
                         <Calendar size={14} />
                         {a.published_at
@@ -267,8 +260,7 @@ export default function CoordinatorAnnouncements() {
                     )}
                     <button
                       type="button"
-                      className="btn-sm"
-                      style={{ color: "#b91c1c", border: "1px solid #fecaca", background: "#fff" }}
+                      className="btn-sm text-[#b91c1c] border border-[#fecaca] bg-white"
                       disabled={saving}
                       onClick={() => handleDelete(a.id)}
                     >
@@ -276,7 +268,7 @@ export default function CoordinatorAnnouncements() {
                     </button>
                   </div>
                 </div>
-                <p style={{ margin: "10px 0 0", whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{a.content}</p>
+                <p className="mt-[10px] mb-0 whitespace-pre-wrap leading-[1.6]">{a.content}</p>
               </li>
             ))}
           </ul>

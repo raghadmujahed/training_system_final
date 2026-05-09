@@ -79,10 +79,10 @@ export default function Submissions() {
                 </span>
               </div>
 
-              <div className="list-clean" style={{ marginTop: "12px", gap: "8px" }}>
+              <div className="list-clean mt-3 gap-2">
                 <span className="text-soft">تاريخ التسليم: {item.submittedAt}</span>
 
-                <div className="form-group-custom" style={{ marginBottom: 0 }}>
+                <div className="form-group-custom mb-0">
                   <label className="form-label-custom">ملاحظات المشرف</label>
                   <textarea
                     className="form-textarea-custom"

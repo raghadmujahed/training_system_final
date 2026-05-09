@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getUsers, itemsFromPagedResponse } from "../../services/api";
 import { useAnnouncements } from "../../hooks/useSharedData";
+import PageHeader from "../../components/common/PageHeader";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import Button from "../../components/ui/Button";
+import { Heart, Megaphone, Shield, MessageCircle } from "lucide-react";
 
 export default function PsychologistDashboard() {
   const [loading, setLoading] = useState(true);
@@ -31,73 +35,62 @@ export default function PsychologistDashboard() {
     return () => { m = false; };
   }, []);
 
+  const statCards = [
+    { title: "الطلبة (قائمة مرجعية)", value: studentsCount, icon: Heart, color: "border-r-info", bg: "bg-info/8" },
+    { title: "إعلانات حديثة", value: announcements.length, icon: Megaphone, color: "border-r-accent", bg: "bg-accent/8" },
+    { title: "خدمات الإرشاد", value: "دليل", icon: Shield, color: "border-r-success", bg: "bg-success/8" },
+    { title: "التواصل", value: "داخلي", icon: MessageCircle, color: "border-r-primary", bg: "bg-primary/8" },
+  ];
+
   return (
     <>
-      <div className="content-header">
-        <h1 className="page-title">لوحة الأخصائي النفسي</h1>
-        <p className="page-subtitle">
-          منصة دعم نفسي وإرشاد للطلبة ضمن إطار التدريب الميداني والأكاديمي.
-        </p>
-      </div>
+      <PageHeader title="لوحة الأخصائي النفسي" subtitle="منصة دعم نفسي وإرشاد للطلبة ضمن إطار التدريب الميداني والأكاديمي." icon={Heart} />
 
       {loading ? (
-        <div className="section-card">جاري التحميل...</div>
+        <LoadingSpinner size="section" text="جاري التحميل..." />
       ) : error ? (
-        <div className="section-card">
-          <p className="text-danger">{error}</p>
-        </div>
+        <div className="bg-danger/8 border border-danger/20 text-danger rounded-[16px] p-4">{error}</div>
       ) : (
         <>
-          <div className="dashboard-grid">
-            <div className="stat-card primary">
-              <div className="stat-title">الطلبة (قائمة مرجعية)</div>
-              <div className="stat-value">{studentsCount}</div>
-            </div>
-            <div className="stat-card accent">
-              <div className="stat-title">إعلانات حديثة</div>
-              <div className="stat-value">{announcements.length}</div>
-            </div>
-            <div className="stat-card success">
-              <div className="stat-title">خدمات الإرشاد</div>
-              <div className="stat-value">دليل</div>
-            </div>
-            <div className="stat-card info">
-              <div className="stat-title">التواصل</div>
-              <div className="stat-value">داخلي</div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {statCards.map((card, i) => (
+              <div key={i} className={`bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 border-r-4 ${card.color}`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-10 h-10 rounded-[10px] ${card.bg} flex items-center justify-center`}>
+                    <card.icon size={20} className="text-secondary" />
+                  </div>
+                  <div className="text-text-faint text-[0.85rem] font-bold">{card.title}</div>
+                </div>
+                <div className="text-[1.8rem] font-extrabold text-secondary">{card.value}</div>
+              </div>
+            ))}
           </div>
 
-          <div className="dashboard-row">
-            <div className="section-card">
-              <h4>أحدث الإعلانات الموجهة لك</h4>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
+              <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">أحدث الإعلانات الموجهة لك</h4>
               {announcements.length === 0 ? (
-                <p className="text-soft">لا توجد إعلانات حالياً.</p>
+                <p className="text-text-faint">لا توجد إعلانات حالياً.</p>
               ) : (
-                <div className="activity-list">
+                <div className="flex flex-col gap-3">
                   {announcements.map((a) => (
-                    <div className="activity-item" key={a.id}>
-                      <h6>{a.title || "إعلان"}</h6>
-                      <p>{a.content || "—"}</p>
+                    <div key={a.id} className="border-b border-[#edf2f7] pb-3 last:border-0 last:pb-0">
+                      <h6 className="m-0 mb-1 text-text font-bold text-[0.95rem]">{a.title || "إعلان"}</h6>
+                      <p className="m-0 text-text-soft text-[0.88rem]">{a.content || "—"}</p>
                     </div>
                   ))}
                 </div>
               )}
-              <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <Link className="btn-primary-custom btn-sm-custom" to="/psychologist/students">
-                  قائمة الطلبة
-                </Link>
-                <Link className="btn-outline-custom btn-sm-custom" to="/psychologist/guidance">
-                  الإرشاد والدعم
-                </Link>
-                <Link className="btn-outline-custom btn-sm-custom" to="/notifications">
-                  الإشعارات
-                </Link>
+              <div className="flex gap-3 flex-wrap mt-4">
+                <Link to="/psychologist/students"><Button variant="default" size="sm">قائمة الطلبة</Button></Link>
+                <Link to="/psychologist/guidance"><Button variant="outline" size="sm">الإرشاد والدعم</Button></Link>
+                <Link to="/notifications"><Button variant="outline" size="sm">الإشعارات</Button></Link>
               </div>
             </div>
 
-            <div className="announcement-box">
-              <h5>تنويه</h5>
-              <p>
+            <div className="bg-accent/8 border border-accent/20 rounded-[18px] p-5">
+              <h5 className="m-0 mb-3 text-secondary font-extrabold text-[1.05rem]">تنويه</h5>
+              <p className="text-text-soft text-[0.92rem] m-0">
                 تُعرض هنا بيانات عامة وإعلانات فقط. أي جلسات أو تقارير سرية يجب أن تُدار وفق
                 سياسة الجامعة والسرية المهنية، ولا تُخزَّن في هذا النموذج الأولي إلا بعد
                 إضافة وحدة خلفية مخصصة.

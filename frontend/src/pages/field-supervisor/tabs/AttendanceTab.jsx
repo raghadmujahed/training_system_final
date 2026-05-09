@@ -28,13 +28,13 @@ export default function AttendanceTab({ studentId }) {
     return () => { active = false; };
   }, [studentId]);
 
-  if (loading) return <div style={{ padding: 20, color: "#888" }}>جاري التحميل...</div>;
-  if (error) return <div style={{ padding: 20, color: "#c0392b" }}>{error}</div>;
-  if (!records.length) return <div style={{ padding: 20, color: "#aaa", textAlign: "center" }}>لا توجد سجلات حضور</div>;
+  if (loading) return <div className="p-5 text-[#888]">جاري التحميل...</div>;
+  if (error) return <div className="p-5 text-[#c0392b]">{error}</div>;
+  if (!records.length) return <div className="p-5 text-[#aaa] text-center">لا توجد سجلات حضور</div>;
 
   return (
-    <div style={{ direction: "rtl" }}>
-      <table className="data-table" style={{ width: "100%", fontSize: 13 }}>
+    <div className="direction-rtl">
+      <table className="data-table w-full text-[13px]">
         <thead>
           <tr>
             <th>#</th>
@@ -52,7 +52,7 @@ export default function AttendanceTab({ studentId }) {
               <td>{idx + 1}</td>
               <td>
                 {fmtDate(r.date)}
-                <span style={{ fontSize: 10, color: "#6C3CE1", marginRight: 6, background: "#ede9ff", padding: "1px 6px", borderRadius: 10 }}>
+                <span className="text-[10px] text-[#6C3CE1] mr-[6px] bg-[#ede9ff] py-[1px] px-[6px] rounded-[10px]">
                   {dayName(fmtDate(r.date))}
                 </span>
               </td>
@@ -62,11 +62,11 @@ export default function AttendanceTab({ studentId }) {
               <td>{r.notes || "—"}</td>
               <td>
                 {r.approved_at ? (
-                  <span style={{ background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>معتمد ✓</span>
+                  <span className="bg-[#dcfce7] text-[#15803d] py-[2px] px-2 rounded-[20px] text-[11px] font-bold">معتمد ✓</span>
                 ) : r.status === "rejected" ? (
-                  <span style={{ background: "#fee2e2", color: "#b91c1c", padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>مرفوض ✗</span>
+                  <span className="bg-[#fee2e2] text-[#b91c1c] py-[2px] px-2 rounded-[20px] text-[11px] font-bold">مرفوض ✗</span>
                 ) : (
-                  <span style={{ background: "#fef9c3", color: "#a16207", padding: "2px 8px", borderRadius: 20, fontSize: 11, fontWeight: 700 }}>بانتظار</span>
+                  <span className="bg-[#fef9c3] text-[#a16207] py-[2px] px-2 rounded-[20px] text-[11px] font-bold">بانتظار</span>
                 )}
               </td>
             </tr>

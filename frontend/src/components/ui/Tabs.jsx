@@ -22,7 +22,7 @@ export function Tabs({ children, value, onValueChange, className = '', ...props 
 export function TabsList({ children, className = '', ...props }) {
   return (
     <div
-      className={`inline-flex h-10 items-center justify-start rounded-md bg-gray-100 p-1 text-gray-600 ${className}`}
+      className={`flex items-center gap-2.5 flex-wrap mb-4 ${className}`}
       {...props}
     >
       {children}
@@ -38,7 +38,7 @@ export function TabsTrigger({ children, value, className = '', ...props }) {
     <button
       type="button"
       onClick={() => setActiveTab(value)}
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${isActive ? 'bg-white text-gray-900 shadow-sm' : 'hover:bg-gray-200 hover:text-gray-900'} ${className}`}
+      className={`inline-flex items-center justify-center min-h-[42px] px-4 rounded-[12px] border font-bold text-[0.95rem] transition-all duration-200 ${isActive ? 'bg-accent/12 text-secondary border-accent/30' : 'bg-white border-border text-text-soft hover:bg-[#f7fafc] hover:border-border-strong'} ${className}`}
       {...props}
     >
       {children}
@@ -53,7 +53,7 @@ export function TabsContent({ children, value, className = '', ...props }) {
 
   return (
     <div
-      className={`mt-2 focus-visible:outline-none ${className}`}
+      className={`focus-visible:outline-none ${className}`}
       {...props}
     >
       {children}

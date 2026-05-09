@@ -331,7 +331,7 @@ export default function MentorAttendance() {
                 <div className="att-form-letterhead">
                   <div className="att-lh-logo">
                     <div className="att-lh-emblem">
-                      <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" style={{objectFit:"contain"}} />
+                      <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" className="object-contain" />
                     </div>
                     <div className="att-lh-text">
                       <div className="att-lh-title">جامعة الخليل</div>

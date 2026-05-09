@@ -53,11 +53,11 @@ export default function StudentAttendance() {
         subtitle="عرض السجلات المعتمدة من جهة التدريب — التسجيل يقوم به المرشد الميداني."
       />
 
-      <div className="alert-custom alert-info mb-3" style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-        <CalendarCheck size={22} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div className="bg-info/8 border border-info/18 text-[#205b82] rounded-[16px] p-4 mb-3 flex items-start gap-3">
+        <CalendarCheck size={22} className="shrink-0 mt-0.5" />
         <div>
           <strong>تنبيه</strong>
-          <p style={{ margin: "6px 0 0", lineHeight: 1.6 }}>
+          <p className="m-0 mt-1.5 leading-relaxed">
             لا يمكنك إضافة أو تعديل الحضور بنفسك. يسجّل المعلّم المرشد أو المشرف الميداني حضورك وغيابك في
             جهة التدريب. تظهر هنا السجلات المرتبطة بحسابك بعد اعتمادها في النظام.
           </p>
@@ -78,7 +78,7 @@ export default function StudentAttendance() {
           {/* رأسية */}
           <div className="sa-letterhead">
             <div className="sa-lh-logo">
-              <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" style={{objectFit:"contain"}} />
+              <img src={huLogo} alt="شعار جامعة الخليل" width="52" height="52" className="object-contain" />
               <div>
                 <div className="sa-lh-title">جامعة الخليل</div>
                 <div className="sa-lh-sub">كلية العلوم التربوية — قسم التدريب الميداني</div>

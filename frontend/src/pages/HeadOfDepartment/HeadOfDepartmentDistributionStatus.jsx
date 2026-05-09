@@ -55,16 +55,15 @@ export default function HeadOfDepartmentDistributionStatus() {
   return (
     <div className="enrollments-list">
       <div className="page-header">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="flex justify-between items-start">
           <div>
             <h1>حالة التوزيع</h1>
             <p>تتبع حالة توزيع الطلاب على الشعب وأماكن التدريب</p>
           </div>
           <button
-            className="btn-secondary"
+            className="btn-secondary flex items-center gap-[6px]"
             onClick={fetchDistribution}
             disabled={loading}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
             {loading ? <LoadingSpinner size="button" /> : <RefreshCw size={16} />}
             تحديث
@@ -73,17 +72,16 @@ export default function HeadOfDepartmentDistributionStatus() {
       </div>
 
       {error && (
-        <div className="section-card" style={{ marginBottom: 12 }}>
+        <div className="section-card mb-3">
           <p className="text-danger">{error}</p>
         </div>
       )}
 
       <div className="section-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <div className="flex justify-between items-center mb-4">
           <button
-            className="btn-secondary"
+            className="btn-secondary flex items-center gap-[6px]"
             onClick={() => setShowFilters(!showFilters)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
           >
             <Filter size={16} />
             الفلاتر
@@ -99,7 +97,7 @@ export default function HeadOfDepartmentDistributionStatus() {
         </div>
 
         {showFilters && (
-          <div className="filters-grid" style={{ marginBottom: 16 }}>
+          <div className="filters-grid mb-4">
             <div className="form-group">
               <label htmlFor="hod-dist-filter-course">المساق</label>
               <select
@@ -142,12 +140,12 @@ export default function HeadOfDepartmentDistributionStatus() {
           description="لا يوجد طلاب موزعين على الشعب"
         />
       ) : (
-        <div className="activity-list" style={{ marginTop: 16 }}>
+        <div className="activity-list mt-4">
           {distribution.map((item) => (
             <div className="activity-item" key={item.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h6 style={{ margin: 0 }}>
+                  <h6 className="m-0">
                     {item.student?.name || 'غير محدد'}
                   </h6>
                   <div className="activity-meta">
@@ -164,7 +162,7 @@ export default function HeadOfDepartmentDistributionStatus() {
                 {getStatusBadge(item.status)}
               </div>
               {item.notes && (
-                <div style={{ marginTop: 8, fontSize: 14, color: '#666' }}>
+                <div className="mt-2 text-[14px] text-[#666]">
                   ملاحظات: {item.notes}
                 </div>
               )}

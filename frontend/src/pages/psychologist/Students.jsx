@@ -125,7 +125,7 @@ export default function PsychologistStudents() {
         subtitle="قائمة الطلبة النشطين — يمكنك عرض ملف الطالب وإضافة ملاحظات إرشادية."
       />
 
-      <div className="filters-bar" style={{ marginBottom: 16 }}>
+      <div className="filters-bar mb-4">
         <input
           className="form-control-custom search-input"
           placeholder="بحث بالاسم أو البريد أو الرقم الجامعي"
@@ -195,7 +195,7 @@ export default function PsychologistStudents() {
                 <LoadingSpinner size="inline" text="جاري تحميل البيانات..." />
               ) : (
                 <>
-                  <div style={{ marginBottom: 16 }}>
+                  <div className="mb-4">
                     <h5>{selected.name}</h5>
                     <p className="text-soft">
                       الرقم الجامعي: {selected.university_id || "—"} | البريد: {selected.email} | الهاتف: {selected.phone || "—"}
@@ -209,7 +209,7 @@ export default function PsychologistStudents() {
                   ) : (
                     <>
                       {/* Training Info */}
-                      <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                      <div className="section-card p-3 mb-3">
                         <h6>معلومات التدريب</h6>
                         <p>جهة التدريب: {studentAssignment.training_site?.name || "—"}</p>
                         <p>من {studentAssignment.start_date || "—"} إلى {studentAssignment.end_date || "—"}</p>
@@ -218,36 +218,32 @@ export default function PsychologistStudents() {
 
                       {/* Attendance */}
                       {studentAttendance && (
-                        <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                        <div className="section-card p-3 mb-3">
                           <h6>الحضور: {studentAttendance.present}/{studentAttendance.total} ({studentAttendance.percentage}%)</h6>
-                          <div style={{ marginTop: 4 }}>
-                            <div style={{
-                              background: "#e9ecef",
-                              borderRadius: 8,
-                              height: 12,
-                              overflow: "hidden",
-                            }}>
-                              <div style={{
-                                width: `${studentAttendance.percentage}%`,
-                                background: studentAttendance.percentage >= 80 ? "#198754" : studentAttendance.percentage >= 60 ? "#ffc107" : "#dc3545",
-                                height: "100%",
-                                borderRadius: 8,
-                              }} />
+                          <div className="mt-1">
+                            <div className="bg-[#e9ecef] rounded-lg h-3 overflow-hidden">
+                              <div
+                                className="h-full rounded-lg"
+                                style={{
+                                  width: `${studentAttendance.percentage}%`,
+                                  background: studentAttendance.percentage >= 80 ? "#198754" : studentAttendance.percentage >= 60 ? "#ffc107" : "#dc3545",
+                                }}
+                              />
                             </div>
                           </div>
                         </div>
                       )}
 
                       {/* Notes */}
-                      <div className="section-card" style={{ padding: 12, marginBottom: 12 }}>
+                      <div className="section-card p-3 mb-3">
                         <h6>الملاحظات الإرشادية ({studentNotes.length})</h6>
                         {studentNotes.length === 0 ? (
                           <p className="text-soft">لا توجد ملاحظات بعد.</p>
                         ) : (
                           <div className="list-clean">
                             {studentNotes.map((n) => (
-                              <div key={n.id} style={{ padding: "6px 0", borderBottom: "1px solid #eee" }}>
-                                <p style={{ margin: 0 }}>{n.content}</p>
+                              <div key={n.id} className="py-[6px] border-b border-[#eee]">
+                                <p className="m-0">{n.content}</p>
                                 <small className="text-soft">{n.created_at || ""}</small>
                               </div>
                             ))}
@@ -256,17 +252,15 @@ export default function PsychologistStudents() {
                       </div>
 
                       {/* Quick Note */}
-                      <form onSubmit={handleAddNote} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <form onSubmit={handleAddNote} className="flex gap-2 items-start">
                         <textarea
-                          className="form-control-custom"
+                          className="form-control-custom flex-1"
                           rows={2}
                           value={quickNote}
                           onChange={(e) => setQuickNote(e.target.value)}
                           placeholder="أضف ملاحظة إرشادية..."
-                          style={{ flex: 1 }}
                         />
                         <button
-                          type="submit"
                           className="btn-primary-custom btn-sm-custom"
                           disabled={savingNote || !quickNote.trim()}
                         >

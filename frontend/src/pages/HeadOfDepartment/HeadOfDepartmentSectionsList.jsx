@@ -113,7 +113,7 @@ export default function HeadOfDepartmentSectionsList() {
           <h1>إدارة الشعب</h1>
           <p>عرض وإدارة الشعب الدراسية</p>
         </div>
-        <div style={{ textAlign: "center", padding: 40, color: "#dc3545" }}>{error}</div>
+        <div className="text-center p-10 text-[#dc3545]">{error}</div>
       </div>
     );
   }
@@ -125,154 +125,105 @@ export default function HeadOfDepartmentSectionsList() {
           <h1>إدارة الشعب</h1>
           <p>عرض وإدارة الشعب الدراسية حسب الفصل الدراسي</p>
         </div>
-        <button onClick={handleAdd} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
           <Plus size={16} />
           إضافة شعبة جديدة
         </button>
       </div>
 
       {sections.length === 0 ? (
-        <div className="section-card" style={{ textAlign: "center", padding: 40 }}>
-          <p style={{ color: "#666", marginBottom: 16 }}>لا توجد شعب مسجلة</p>
+        <div className="section-card text-center p-10">
+          <p className="text-[#666] mb-4">لا توجد شعب مسجلة</p>
           <button onClick={handleAdd} className="btn-primary">
             إضافة شعبة جديدة
           </button>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <div className="flex flex-col gap-6">
           {sections.map((period) => (
             <div key={`${period.academic_year}-${period.semester}`} className="section-card">
-              <div style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 12, 
-                marginBottom: 16,
-                paddingBottom: 12,
-                borderBottom: "2px solid #e5e7eb"
-              }}>
-                <Calendar size={20} style={{ color: "#3b82f6" }} />
-                <h3 style={{ margin: 0, fontSize: 18 }}>
+              <div className="flex items-center gap-3 mb-4 pb-3 border-b-2 border-[#e5e7eb]">
+                <Calendar size={20} className="text-[#3b82f6]" />
+                <h3 className="m-0 text-lg">
                   {period.semester_label} - العام الدراسي {period.academic_year}
                 </h3>
-                <span style={{ 
-                  backgroundColor: "#e7f3ff", 
-                  color: "#3b82f6",
-                  padding: "4px 12px",
-                  borderRadius: 12,
-                  fontSize: 13
-                }}>
+                <span className="bg-[#e7f3ff] text-[#3b82f6] py-1 px-3 rounded-xl text-[13px]">
                   {period.sections.length} شعبة
                 </span>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
                 {period.sections.map((section) => (
                   <div 
                     key={section.id} 
-                    style={{ 
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 8,
-                      padding: 16,
-                      backgroundColor: "#f9fafb"
-                    }}
+                    className="border border-[#e5e7eb] rounded-lg p-4 bg-[#f9fafb]"
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h4 style={{ margin: 0, fontSize: 16 }}>{section.name}</h4>
-                        <span style={{ fontSize: 13, color: "#666" }}>
+                        <h4 className="m-0 text-base">{section.name}</h4>
+                        <span className="text-[13px] text-[#666]">
                           {section.course?.name || "—"}
                         </span>
                       </div>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleView(section.id)}
-                          style={{ 
-                            padding: 6, 
-                            border: "none", 
-                            background: "#f0fdf4", 
-                            borderRadius: 4,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center"
-                          }}
+                          className="p-[6px] border-none bg-[#f0fdf4] rounded cursor-pointer flex items-center"
                           title="عرض التفاصيل"
                         >
-                          <Eye size={14} style={{ color: "#16a34a" }} />
+                          <Eye size={14} className="text-[#16a34a]" />
                         </button>
                         <button
                           onClick={() => handleEdit(section.id)}
-                          style={{ 
-                            padding: 6, 
-                            border: "none", 
-                            background: "#e7f3ff", 
-                            borderRadius: 4,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center"
-                          }}
+                          className="p-[6px] border-none bg-[#e7f3ff] rounded cursor-pointer flex items-center"
                           title="تعديل"
                         >
-                          <Edit size={14} style={{ color: "#3b82f6" }} />
+                          <Edit size={14} className="text-[#3b82f6]" />
                         </button>
                         <button
                           onClick={() => handleDelete(section.id)}
-                          style={{ 
-                            padding: 6, 
-                            border: "none", 
-                            background: "#fee2e2", 
-                            borderRadius: 4,
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center"
-                          }}
+                          className="p-[6px] border-none bg-[#fee2e2] rounded cursor-pointer flex items-center"
                           title="حذف"
                           disabled={deleteLoading === section.id}
                         >
                           {deleteLoading === section.id ? (
-                            <span style={{ fontSize: 12 }}>...</span>
+                            <span className="text-xs">...</span>
                           ) : (
-                            <Trash2 size={14} style={{ color: "#dc2626" }} />
+                            <Trash2 size={14} className="text-[#dc2626]" />
                           )}
                         </button>
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                        <GraduationCap size={14} style={{ color: "#666" }} />
-                        <span style={{ color: "#666" }}>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <GraduationCap size={14} className="text-[#666]" />
+                        <span className="text-[#666]">
                           المشرف: {section.academic_supervisor?.name || "غير محدد"}
                         </span>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                        <Users size={14} style={{ color: "#666" }} />
-                        <span style={{ color: "#666" }}>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users size={14} className="text-[#666]" />
+                        <span className="text-[#666]">
                           الطلاب: {section.active_students_count || 0} / {section.capacity || 30}
                         </span>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-                        <BookOpen size={14} style={{ color: "#666" }} />
-                        <span style={{ color: "#666" }}>
+                      <div className="flex items-center gap-2 text-sm">
+                        <BookOpen size={14} className="text-[#666]" />
+                        <span className="text-[#666]">
                           السعة المتاحة: {section.available_capacity || (section.capacity || 30) - (section.active_students_count || 0)}
                         </span>
                       </div>
                     </div>
 
                     {/* Progress bar for capacity */}
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ 
-                        height: 6, 
-                        backgroundColor: "#e5e7eb", 
-                        borderRadius: 3,
-                        overflow: "hidden"
-                      }}>
-                        <div style={{ 
-                          height: "100%", 
+                    <div className="mt-3">
+                      <div className="h-[6px] bg-[#e5e7eb] rounded-[3px] overflow-hidden">
+                        <div className="h-full transition-[width] duration-300 ease" style={{
                           width: `${Math.min(100, ((section.active_students_count || 0) / (section.capacity || 30)) * 100)}%`,
                           backgroundColor: ((section.active_students_count || 0) / (section.capacity || 30)) > 0.9 ? "#dc2626" : "#10b981",
-                          transition: "width 0.3s ease"
                         }} />
                       </div>
                     </div>

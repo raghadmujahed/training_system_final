@@ -221,9 +221,9 @@ export default function HealthTrainingSites() {
   return (
     <>
       <div className="content-header">
-        <div className="d-flex align-items-center gap-3 flex-wrap" style={{ flexDirection: "row" }}>
+        <div className="d-flex align-items-center gap-3 flex-wrap flex-row">
           <MinistryHealthSeal height={54} maxWidth={260} />
-          <div style={{ flex: "1 1 220px" }}>
+          <div className="flex-[1_1_220px]">
             <h1 className="page-title mb-0">أماكن التدريب الصحي</h1>
             <p className="page-subtitle mb-0">
               إدارة وعرض المراكز الصحية والمصحات المعتمدة التابعة لـ {labels.directorateName}.
@@ -426,7 +426,7 @@ export default function HealthTrainingSites() {
                         </select>
                       </td>
                       <td>
-                        <label style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             name="is_active"

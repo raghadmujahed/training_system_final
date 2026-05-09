@@ -39,7 +39,8 @@ export default function ChatWindow({ chat, messages, loadingMessages, sending, o
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ opacity: 0.3, marginBottom: 12 }}
+            style={{ opacity: 0.3 }}
+            className="mb-3"
           >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
@@ -79,7 +80,8 @@ export default function ChatWindow({ chat, messages, loadingMessages, sending, o
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ opacity: 0.4, marginRight: "auto", flexShrink: 0 }}
+            style={{ opacity: 0.4 }}
+            className="mr-auto shrink-0"
           >
             <circle cx="12" cy="12" r="10" />
             <line x1="12" y1="8" x2="12" y2="12" />

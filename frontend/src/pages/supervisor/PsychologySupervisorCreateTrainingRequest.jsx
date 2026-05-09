@@ -120,7 +120,7 @@ export default function PsychologySupervisorCreateTrainingRequest() {
     <div>
       <div className="hero-section mb-4">
         <div className="hero-content">
-          <div style={{ flex: 1 }}>
+          <div className="flex-1">
             <h1 className="hero-title">إنشاء طلب تدريب — علم النفس</h1>
             <p className="hero-subtitle">
               يُنشأ الطلب باسمك كمشرف أكاديمي للقسم؛ بعد الاعتماد المبدئي يمكن تجميعه وإرساله للجهة الرسمية (مديرية التربية أو وزارة الصحة حسب نوع الجهة).
@@ -131,22 +131,22 @@ export default function PsychologySupervisorCreateTrainingRequest() {
 
       {error && (
         <div className="alert-custom alert-danger mb-3">
-          <p style={{ margin: 0 }}>{error}</p>
+          <p className="m-0">{error}</p>
         </div>
       )}
       {success && (
         <div className="alert-custom alert-success mb-3">
-          <p style={{ margin: 0 }}>{success}</p>
-          <Link to="/supervisor/psychology/training-requests" style={{ display: "inline-block", marginTop: 8, fontWeight: 700 }}>
+          <p className="m-0">{success}</p>
+          <Link to="/supervisor/psychology/training-requests" className="inline-block mt-2 font-bold">
             الانتقال إلى طلبات التدريب والدفعات →
           </Link>
         </div>
       )}
 
       <div className="section-card">
-        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16, maxWidth: 560 }}>
+        <form onSubmit={handleSubmit} className="grid gap-4 max-w-[560px]">
           <label>
-            <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>الطالب</span>
+            <span className="block font-bold mb-[6px]">الطالب</span>
             <select
               className="form-control-custom"
               value={studentId}
@@ -163,8 +163,8 @@ export default function PsychologySupervisorCreateTrainingRequest() {
           </label>
 
           <div>
-            <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>مسار التدريب</span>
-            <div style={{ display: "flex", gap: 16 }}>
+            <span className="block font-bold mb-[6px]">مسار التدريب</span>
+            <div className="flex gap-4">
               <label>
                 <input
                   type="radio"
@@ -193,7 +193,7 @@ export default function PsychologySupervisorCreateTrainingRequest() {
           </div>
 
           <label>
-            <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>جهة التدريب</span>
+            <span className="block font-bold mb-[6px]">جهة التدريب</span>
             <select
               className="form-control-custom"
               value={siteId}
@@ -211,7 +211,7 @@ export default function PsychologySupervisorCreateTrainingRequest() {
 
           {trackMode === "school" && (
             <label>
-              <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>المديرية</span>
+              <span className="block font-bold mb-[6px]">المديرية</span>
               <select className="form-control-custom" value={directorate} onChange={(e) => setDirectorate(e.target.value)} required>
                 <option value="">— اختر —</option>
                 {["وسط", "شمال", "جنوب", "يطا"].map((d) => (
@@ -224,7 +224,7 @@ export default function PsychologySupervisorCreateTrainingRequest() {
           )}
 
           <label>
-            <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>فترة التدريب</span>
+            <span className="block font-bold mb-[6px]">فترة التدريب</span>
             <select
               className="form-control-custom"
               value={periodId}
@@ -240,18 +240,18 @@ export default function PsychologySupervisorCreateTrainingRequest() {
             </select>
           </label>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3">
             <label>
-              <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>بداية التدريب</span>
+              <span className="block font-bold mb-[6px]">بداية التدريب</span>
               <input className="form-control-custom" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
             </label>
             <label>
-              <span style={{ display: "block", fontWeight: 700, marginBottom: 6 }}>نهاية التدريب</span>
+              <span className="block font-bold mb-[6px]">نهاية التدريب</span>
               <input className="form-control-custom" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
             </label>
           </div>
 
-          <button type="submit" className="btn-primary-custom" disabled={saving} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <button type="submit" className="btn-primary-custom inline-flex items-center gap-2" disabled={saving}>
             {saving ? <LoadingSpinner size="button" /> : <ArrowRight size={18} />}
             حفظ وإنشاء الطلب
           </button>

@@ -65,7 +65,7 @@ export default function MentorSchedule() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center" }}>
+                  <td colSpan={4} className="text-center">
                     لا توجد حصص في الجدول. يمكن لإدارة النظام أو المدرسة إضافة الحصص.
                   </td>
                 </tr>

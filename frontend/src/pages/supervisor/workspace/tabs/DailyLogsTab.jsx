@@ -176,57 +176,25 @@ export default function DailyLogsTab({ studentId }) {
     const payload = log.payload || {};
 
     return (
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-        <div style={{
-          background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-          borderRadius: "16px 16px 0 0",
-          padding: "1.5rem 2rem",
-          color: "white"
-        }}>
-          <h4 style={{ margin: 0, fontSize: "1.25rem", fontWeight: 600 }}>{formKeyLabels[log.form_key] || log.title}</h4>
-          <p style={{ margin: "0.5rem 0 0 0", opacity: 0.9, fontSize: "0.95rem" }}>
+      <div className="max-w-[800px] mx-auto">
+        <div className="text-white rounded-t-2xl py-6 px-8 bg-gradient-to-br from-[#f093fb] to-[#f5576c]">
+          <h4 className="m-0 text-[1.25rem] font-semibold">{formKeyLabels[log.form_key] || log.title}</h4>
+          <p className="m-0 mt-2 opacity-90 text-[0.95rem]">
             تقرير الطالب الأسبوعي عن الأنشطة والمهام المنفذة
           </p>
         </div>
 
-        <div style={{
-          backgroundColor: "white",
-          borderRadius: "0 0 16px 16px",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          padding: "1.5rem",
-          border: "1px solid #e8e8e8",
-          borderTop: "none"
-        }}>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(350px, 1fr))",
-            gap: "1.25rem"
-          }}>
+        <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] border-t-0">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-5">
             {fields.map((field) => {
               const value = payload[field.key];
               if (!value || !String(value).trim()) return null;
               return (
-                <div key={field.key} style={{ display: "flex", flexDirection: "column" }}>
-                  <label style={{
-                    fontSize: "0.9rem",
-                    fontWeight: 600,
-                    color: "#495057",
-                    marginBottom: "0.5rem"
-                  }}>
+                <div key={field.key} className="flex flex-col">
+                  <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">
                     {field.label}
                   </label>
-                  <div style={{
-                    width: "100%",
-                    padding: "12px",
-                    border: "1.5px solid #e0e0e0",
-                    borderRadius: "10px",
-                    fontSize: "0.9rem",
-                    backgroundColor: "#f8f9fa",
-                    minHeight: "80px",
-                    whiteSpace: "pre-wrap",
-                    lineHeight: 1.6,
-                    color: "#333"
-                  }}>
+                  <div className="w-full p-3 border-[1.5px] border-[#e0e0e0] rounded-[10px] text-[0.9rem] bg-[#f8f9fa] min-h-[80px] whitespace-pre-wrap leading-[1.6] text-[#333]">
                     {value}
                   </div>
                 </div>
@@ -234,21 +202,13 @@ export default function DailyLogsTab({ studentId }) {
             })}
           </div>
 
-          <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid #e9ecef", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.85rem", color: "#666" }}>
+          <div className="mt-6 pt-4 border-t border-[#e9ecef] flex justify-between items-center">
+            <span className="text-[0.85rem] text-[#666]">
               تاريخ التقديم: {log.submitted_at || log.date}
             </span>
             <button
               onClick={() => setViewingEform(null)}
-              style={{
-                padding: "0.75rem 1.5rem",
-                backgroundColor: "#6b7280",
-                color: "white",
-                border: "none",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontSize: "0.9rem"
-              }}
+              className="py-3 px-6 bg-[#6b7280] text-white border-none rounded-lg cursor-pointer text-[0.9rem]"
             >
               إغلاق
             </button>
@@ -261,14 +221,14 @@ export default function DailyLogsTab({ studentId }) {
   const filtered = filterStatus ? logs.filter((l) => l.status === filterStatus) : logs;
 
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
-  if (error) return <div style={{ color: "#dc3545", padding: "20px" }}>⚠️ {error}</div>;
+  if (error) return <div className="text-[#dc3545] p-5">⚠️ {error}</div>;
 
   return (
     <div>
       {/* Quick Review Mode */}
       {logs.filter((l) => l.status === "pending_review" || l.status === "new").length > 0 && (
-        <div style={{ background: "#fff8e1", border: "1px solid #ffc107", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: "0.85rem", color: "#856404", fontWeight: "600" }}>
+        <div className="bg-[#fff8e1] border border-[#ffc107] rounded-lg py-3 px-4 mb-4 flex justify-between items-center">
+          <span className="text-[0.85rem] text-[#856404] font-semibold">
             📝 {logs.filter((l) => l.status === "pending_review" || l.status === "new").length} سجل بانتظار المراجعة
           </span>
         </div>
@@ -276,38 +236,20 @@ export default function DailyLogsTab({ studentId }) {
 
       {/* E-Form Detail Modal */}
       {viewingEform && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: "rgba(0,0,0,0.6)",
-          zIndex: 1000,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-          overflow: "auto"
-        }}>
-          <div style={{
-            width: "100%",
-            maxWidth: "900px",
-            maxHeight: "90vh",
-            overflow: "auto"
-          }}>
+        <div className="fixed inset-0 bg-black/60 z-[1000] flex items-center justify-center p-5 overflow-auto">
+          <div className="w-full max-w-[900px] max-h-[90vh] overflow-auto">
             {renderFullFormView(viewingEform)}
           </div>
         </div>
       )}
 
       {!filtered.length ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "#999" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "12px" }}>📭</div>
+        <div className="text-center p-10 text-[#999]">
+          <div className="text-[2rem] mb-3">📭</div>
           لا توجد سجلات يومية
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="flex flex-col gap-3">
           {filtered.map((log) => {
             const sc = statusConfig[log.status] || statusConfig.draft;
             const src = sourceLabels[log.source] || sourceLabels.training_log;
@@ -335,30 +277,25 @@ export default function DailyLogsTab({ studentId }) {
             return (
               <div
                 key={log.id}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #e9ecef",
-                  borderRadius: "10px",
-                  padding: "16px",
-                  borderRight: `4px solid ${isEform ? src.color : sc.color}`,
-                }}
+                className="bg-white border border-[#e9ecef] rounded-[10px] p-4"
+                style={{ borderRight: `4px solid ${isEform ? src.color : sc.color}` }}
               >
                 {/* Card header - hidden for e-forms */}
                 {!isEform && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+                  <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                     <div>
-                      <h5 style={{ margin: "0 0 4px", fontSize: "1rem" }}>
+                      <h5 className="m-0 mb-1 text-[1rem]">
                         {log.description || log.title || `سجل يوم ${log.date}`}
                       </h5>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ fontSize: "0.82rem", color: "#666" }}>{log.date || "—"}</span>
+                      <div className="flex gap-2 items-center flex-wrap">
+                        <span className="text-[0.82rem] text-[#666]">{log.date || "—"}</span>
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                      <span style={{ padding: "3px 8px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: "600", color: src.color, backgroundColor: src.color + "18" }}>
+                    <div className="flex gap-[6px] items-center">
+                      <span className="py-[3px] px-2 rounded-xl text-[0.72rem] font-semibold" style={{ color: src.color, backgroundColor: src.color + "18" }}>
                         {src.icon} {src.label}
                       </span>
-                      <span style={{ padding: "4px 12px", borderRadius: "16px", fontSize: "0.78rem", fontWeight: "600", color: sc.color, backgroundColor: sc.bg }}>
+                      <span className="py-1 px-3 rounded-2xl text-[0.78rem] font-semibold" style={{ color: sc.color, backgroundColor: sc.bg }}>
                         {sc.label}
                       </span>
                     </div>
@@ -367,96 +304,65 @@ export default function DailyLogsTab({ studentId }) {
 
                 {/* Show status badge for e-forms in corner */}
                 {isEform && (
-                  <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "8px" }}>
-                    <span style={{ padding: "4px 12px", borderRadius: "16px", fontSize: "0.78rem", fontWeight: "600", color: sc.color, backgroundColor: sc.bg }}>
+                  <div className="flex justify-end mb-2">
+                    <span className="py-1 px-3 rounded-2xl text-[0.78rem] font-semibold" style={{ color: sc.color, backgroundColor: sc.bg }}>
                       {sc.label}
                     </span>
                   </div>
                 )}
 
                 {contentParts.length > 0 && !isEform && (
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "12px 16px", marginBottom: "12px" }}>
-                    <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#475569", marginBottom: "8px" }}>📄 محتوى التقرير:</div>
+                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg py-3 px-4 mb-3">
+                    <div className="text-[0.78rem] font-bold text-[#475569] mb-2">📄 محتوى التقرير:</div>
                     {contentParts.map(({ key, value }) => (
-                      <div key={key} style={{ marginBottom: "6px", fontSize: "0.85rem", lineHeight: 1.6 }}>
-                        {key && <span style={{ fontWeight: 600, color: "#334155" }}>{payloadFieldLabels[key] || key}: </span>}
-                        <span style={{ color: "#444" }}>{value}</span>
+                      <div key={key} className="mb-[6px] text-[0.85rem] leading-[1.6]">
+                        {key && <span className="font-semibold text-[#334155]">{payloadFieldLabels[key] || key}: </span>}
+                        <span className="text-[#444]">{value}</span>
                       </div>
                     ))}
                   </div>
                 )}
 
                 {log.mentor_comment && (
-                  <div style={{ background: "#f0f7ff", borderRadius: "6px", padding: "10px", marginBottom: "12px", fontSize: "0.85rem" }}>
-                    <span style={{ fontWeight: "600", color: "#0d6efd" }}>👨‍🏫 ملاحظة المشرف الميداني:</span>
-                    <span style={{ color: "#444", marginRight: "8px" }}>{log.mentor_comment}</span>
+                  <div className="bg-[#f0f7ff] rounded-md p-[10px] mb-3 text-[0.85rem]">
+                    <span className="font-semibold text-[#0d6efd]">👨‍🏫 ملاحظة المشرف الميداني:</span>
+                    <span className="text-[#444] mr-2">{log.mentor_comment}</span>
                   </div>
                 )}
 
                 {log.attachment_path && (
-                  <div style={{ fontSize: "0.82rem", color: "#666", marginBottom: "12px" }}>
+                  <div className="text-[0.82rem] text-[#666] mb-3">
                     📎 مرفق: {log.attachment_path}
                   </div>
                 )}
 
                 {/* E-Form Summary Card with View Button */}
                 {isEform ? (
-                  <div style={{
-                    backgroundColor: "#fff5f7",
-                    border: "1px solid #ffcdd2",
-                    borderRadius: "12px",
-                    padding: "16px",
-                    marginTop: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "12px"
-                  }}>
-                    <div style={{
-                      width: "48px",
-                      height: "48px",
-                      background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                      borderRadius: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                      fontSize: "1.5rem"
-                    }}>
+                  <div className="bg-[#fff5f7] border border-[#ffcdd2] rounded-xl p-4 mt-3 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white text-[1.5rem] bg-gradient-to-br from-[#f093fb] to-[#f5576c]">
                       📋
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: 600, color: "#333" }}>
+                    <div className="flex-1">
+                      <h4 className="m-0 text-[1rem] font-semibold text-[#333]">
                         {formKeyLabels[log.form_key] || log.title}
                       </h4>
-                      <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem", color: "#666" }}>
+                      <p className="m-0 mt-1 text-[0.8rem] text-[#666]">
                         📅 {log.date} • 📝 نموذج إلكتروني مُقدم
                       </p>
                     </div>
                     <button
                       onClick={() => setViewingEform(log)}
-                      style={{
-                        padding: "10px 20px",
-                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "8px",
-                        cursor: "pointer",
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px"
-                      }}
+                      className="py-[10px] px-5 text-white border-none rounded-lg cursor-pointer text-[0.9rem] font-semibold flex items-center gap-[6px] bg-gradient-to-br from-[#f093fb] to-[#f5576c]"
                     >
                       👁️ عرض النموذج
                     </button>
                   </div>
                 ) : log.source === "daily_report" ? (
-                  <div style={{ background: "#e8f5e9", borderRadius: "6px", padding: "8px 12px", fontSize: "0.82rem", color: "#2e7d32" }}>
+                  <div className="bg-[#e8f5e9] rounded-md py-2 px-3 text-[0.82rem] text-[#2e7d32]">
                     هذا تقرير يومي راجعه المشرف الميداني ويظهر هنا للاطلاع الأكاديمي.
                   </div>
                 ) : commentingLogId === log.id ? (
-                  <div style={{ background: "#f8f9fa", borderRadius: "8px", padding: "12px" }}>
+                  <div className="bg-[#f8f9fa] rounded-lg p-3">
                     <textarea
                       id="daily-log-comment"
                       name="supervisor_comment"
@@ -466,28 +372,28 @@ export default function DailyLogsTab({ studentId }) {
                       onChange={(e) => setCommentText(e.target.value)}
                       placeholder="أضف ملاحظتك الأكاديمية..."
                     />
-                    <div style={{ display: "flex", gap: "8px", marginTop: "8px" }}>
-                      <button className="btn-primary-custom" style={{ fontSize: "0.82rem", padding: "6px 14px" }} onClick={() => handleAddComment(log.id)}>
+                    <div className="flex gap-2 mt-2">
+                      <button className="btn-primary-custom text-[0.82rem] py-[6px] px-[14px]" onClick={() => handleAddComment(log.id)}>
                         ✅ اعتماد مع ملاحظة
                       </button>
-                      <button style={{ fontSize: "0.82rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid #fd7e14", background: "#fff", color: "#fd7e14", cursor: "pointer" }} onClick={() => handleSendNote(log.id)}>
+                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#fd7e14] bg-white text-[#fd7e14] cursor-pointer" onClick={() => handleSendNote(log.id)}>
                         📤 إرسال للطالب (يحتاج تعديل)
                       </button>
-                      <button style={{ fontSize: "0.82rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid #999", background: "#fff", color: "#666", cursor: "pointer" }} onClick={() => { setCommentingLogId(null); setCommentText(""); }}>
+                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#999] bg-white text-[#666] cursor-pointer" onClick={() => { setCommentingLogId(null); setCommentText(""); }}>
                         إلغاء
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div style={{ display: "flex", gap: "8px" }}>
+                  <div className="flex gap-2">
                     {log.supervisor_comment ? (
-                      <div style={{ background: "#e8f5e9", borderRadius: "6px", padding: "8px 12px", fontSize: "0.85rem", flex: 1 }}>
-                        <span style={{ fontWeight: "600", color: "#28a745" }}>🎓 ملاحظتك:</span>
-                        <span style={{ color: "#444", marginRight: "8px" }}>{log.supervisor_comment}</span>
+                      <div className="bg-[#e8f5e9] rounded-md py-2 px-3 text-[0.85rem] flex-1">
+                        <span className="font-semibold text-[#28a745]">🎓 ملاحظتك:</span>
+                        <span className="text-[#444] mr-2">{log.supervisor_comment}</span>
                       </div>
                     ) : null}
                     <button
-                      style={{ fontSize: "0.82rem", padding: "6px 14px", borderRadius: "6px", border: "1px solid #4361ee", background: "#fff", color: "#4361ee", cursor: "pointer" }}
+                      className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#4361ee] bg-white text-[#4361ee] cursor-pointer"
                       onClick={() => setCommentingLogId(log.id)}
                     >
                       💬 إضافة ملاحظة

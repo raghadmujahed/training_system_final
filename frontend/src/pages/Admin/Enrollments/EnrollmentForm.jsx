@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getEnrollment, createEnrollment, updateEnrollment, getSections, getUsers } from "../../../services/api";
 import useAppToast from "../../../hooks/useAppToast";
+import PageHeader from "../../../components/common/PageHeader";
+import Button from "../../../components/ui/Button";
 
 export default function EnrollmentForm() {
   const toast = useAppToast();
@@ -121,15 +123,12 @@ export default function EnrollmentForm() {
 
   return (
     <div className="enrollment-form">
-      <div className="page-header">
-        <h1>{id ? "تعديل تسجيل" : "تسجيل طالب في شعبة"}</h1>
-        <button onClick={() => navigate("/admin/enrollments")} className="btn-secondary">رجوع</button>
-      </div>
+      <PageHeader title={id ? "تعديل تسجيل" : "تسجيل طالب في شعبة"} />
 
-      <form onSubmit={handleSubmit} className="form">
-        <div className="form-row">
-          <div className="form-group" style={{ position: 'relative' }}>
-            <label>الطالب *</label>
+      <form onSubmit={handleSubmit} className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <label className="block mb-1 text-text-soft text-[0.9rem]">الطالب *</label>
             <input
               type="text"
               placeholder={selectedStudentDisplay ? "" : "ابحث بالاسم أو الرقم الجامعي..."}
@@ -142,32 +141,33 @@ export default function EnrollmentForm() {
                 }
                 setShowDropdown(true);
               }}
-              style={{ width: "100%", paddingRight: form.user_id ? 35 : 10 }}
+              className="w-full"
+              style={{ paddingRight: form.user_id ? 35 : 10 }}
               required={!form.user_id}
             />
             {form.user_id && (
-              <button type="button" onClick={clearStudentSelection} style={{ position: 'absolute', left: 10, top: '32px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>✕</button>
+              <button type="button" onClick={clearStudentSelection} className="absolute left-2.5 top-[34px] bg-transparent border-none cursor-pointer p-0">✕</button>
             )}
-            {searching && <p style={{ color: '#666', fontSize: '0.85rem' }}>جاري البحث...</p>}
+            {searching && <p className="text-text-soft text-[0.85rem]">جاري البحث...</p>}
             {showDropdown && studentSearch && searchResults.length > 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: 'white', border: '1px solid #ddd', borderRadius: 4, maxHeight: 200, overflowY: 'auto', zIndex: 100, marginTop: 4 }}>
+              <div className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded z-[100] mt-1 max-h-[200px] overflow-y-auto">
                 {searchResults.map(student => (
-                  <div key={student.id} onClick={() => selectStudent(student)} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #f0f0f0' }} onMouseEnter={e => e.target.style.backgroundColor = '#f5f5f5'} onMouseLeave={e => e.target.style.backgroundColor = 'white'}>
-                    <div style={{ fontWeight: 500 }}>{student.name}</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>الرقم الجامعي: {student.university_id}</div>
+                  <div key={student.id} onClick={() => selectStudent(student)} className="px-3 py-2 cursor-pointer border-b border-[#f0f0f0] hover:bg-[#f5f5f5]">
+                    <div className="font-medium">{student.name}</div>
+                    <div className="text-xs text-text-soft">الرقم الجامعي: {student.university_id}</div>
                   </div>
                 ))}
               </div>
             )}
             {!searching && showDropdown && studentSearch && searchResults.length === 0 && (
-              <p style={{ color: '#999', fontSize: '0.85rem' }}>لا توجد نتائج</p>
+              <p className="text-text-faint text-[0.85rem]">لا توجد نتائج</p>
             )}
             <input type="hidden" name="user_id" value={form.user_id} />
-            {errors.user_id && <span className="error">{errors.user_id[0]}</span>}
+            {errors.user_id && <span className="text-danger text-[0.8rem]">{errors.user_id[0]}</span>}
           </div>
 
-          <div className="form-group">
-            <label>الشعبة *</label>
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">الشعبة *</label>
             <select name="section_id" value={form.section_id} onChange={handleChange} required>
               <option value="">اختر الشعبة</option>
               {sections.map(section => (
@@ -176,19 +176,19 @@ export default function EnrollmentForm() {
                 </option>
               ))}
             </select>
-            {errors.section_id && <span className="error">{errors.section_id[0]}</span>}
+            {errors.section_id && <span className="text-danger text-[0.8rem]">{errors.section_id[0]}</span>}
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>السنة الأكاديمية *</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">السنة الأكاديمية *</label>
             <input type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
-            {errors.academic_year && <span className="error">{errors.academic_year[0]}</span>}
+            {errors.academic_year && <span className="text-danger text-[0.8rem]">{errors.academic_year[0]}</span>}
           </div>
 
-          <div className="form-group">
-            <label>الفصل الدراسي *</label>
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">الفصل الدراسي *</label>
             <select name="semester" value={form.semester} onChange={handleChange}>
               <option value="first">الفصل الأول</option>
               <option value="second">الفصل الثاني</option>
@@ -197,9 +197,9 @@ export default function EnrollmentForm() {
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>الحالة</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">الحالة</label>
             <select name="status" value={form.status} onChange={handleChange}>
               <option value="active">نشط</option>
               <option value="dropped">منسحب</option>
@@ -207,17 +207,17 @@ export default function EnrollmentForm() {
             </select>
           </div>
 
-          <div className="form-group">
-            <label>الدرجة النهائية</label>
+          <div>
+            <label className="block mb-1 text-text-soft text-[0.9rem]">الدرجة النهائية</label>
             <input type="number" step="0.01" name="final_grade" value={form.final_grade} onChange={handleChange} placeholder="0-100" />
           </div>
         </div>
 
-        <div className="form-actions">
-          <button type="submit" className="btn-primary" disabled={loading}>
+        <div className="flex gap-2 mt-2">
+          <Button type="submit" disabled={loading}>
             {loading ? "جاري الحفظ..." : (id ? "تحديث" : "تسجيل")}
-          </button>
-          <button type="button" onClick={() => navigate("/admin/enrollments")} className="btn-secondary">إلغاء</button>
+          </Button>
+          <Button variant="outline" type="button" onClick={() => navigate("/admin/enrollments")}>إلغاء</Button>
         </div>
       </form>
     </div>
