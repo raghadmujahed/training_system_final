@@ -139,31 +139,15 @@ export default function AnnouncementForm() {
   const targetOptions = () => {
     switch (form.target_type) {
       case "role":
-        return roles;b4
-      case "user className="block text-sm font-medium mb-1"":
-        return u
-           sers;
-           
-           
-           e={handlChange}
-            onBlure}
-            className={`w-full border rounded px-3 py-2 ${errors.title ? 'border-rd-500' : ''}`
-           
-         
-      case "department":divtxt-ed-500 text-sm mt-1">{Aray.isArray(errs.title) ?  : errors.titlediv
-        return      default:
-        return [];b4
-    } className="block text-sm font-medium mb-1"
+        return roles;
+      case "user":
+        return users;
+      case "department":
+        return departments;
+      default:
+        return [];
+    }
   };
-           
-          
-           nChage={handle}
-            onBlure}
-            className={`w-full border rounded px-3 py-2 ${rrors.content ? 'border-red-500' : ''`}
-            rows="5"
-           
-         
-divtext-red-500 text-sm mt-1">{Array.isArray(s.contnt) ? e : errors.contentdiv
   return (
     <div className="announcement-form">
       <div className="page-header">

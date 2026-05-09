@@ -397,6 +397,4 @@ export default function TrainingSiteForm() {
       </fieldset>
     </div>
   );
-}   </div>
-  );
 }

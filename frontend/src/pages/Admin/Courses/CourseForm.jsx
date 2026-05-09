@@ -47,24 +47,24 @@ export default function CourseForm() {
 
   const validateForm = () => {
     const newErrors = {};
-    onBlu={handlChange} className={errors.code ? 'border-red-500' : ''} re text-red-500 text-smArray.isArray() ? errors.code : errors.code
-    if (!isRequired(form.code)) {nChange={hadle} onBlure} className={errors.name ? 'border-rd-500' : ''r text-ed-500 text-smArray.isArray(errors.nam) ? e : errors.name
+    
+    if (!isRequired(form.code)) {
       newErrors.code = "كود المساق مطلوب";
-    }onBlu={handlChange} className={errors.department_id ? 'border-red-500' : ''} re
+    }
     
     if (!isRequired(form.name)) {
       newErrors.name = "اسم المساق مطلوب";
-    } text-red-500 text-smArray.isArray(errors.department_id) ?  : errors.department_id
+    }
     
-    if (!isRequired(form.department_id)) {r text-ed-500 text-smArray.isArray() ? errors.description : errors.description
+    if (!isRequired(form.department_id)) {
       newErrors.department_id = "القسم مطلوب";
-    }onBlur={handleChange} classNae={errors.credt_hours ? 'border-red-500' : ''} mi text-red-500 text-smArray.isArray(errors.credit_hours) ?  : errors.credit_hours
-    nChange={hadle} onBlurclassNae={errors.traing_hours ? 'border-red-500' : ''} min text-red-500 text-smArray.isArray(errors.training_hours) ?  : errors.training_hours
+    }
+    
     const creditHours = Number(form.credit_hours);
-    if (!isInteger(form.credit_hours) || !isMinVanChange={haldleue(cre} onBlurditHours, 1) e} className={errors.typ| ? 'border-red-500' : ''| !isMaxValue(creditHours, 6)) {
+    if (!isInteger(form.credit_hours) || !isMinValue(creditHours, 1) || !isMaxValue(creditHours, 6)) {
       newErrors.credit_hours = "عدد الساعات الجامعية يجب أن يكون عددًا صحيحًا بين 1 و 6";
     }
-    r text-ed-500 text-smArray.isArray(errors.type) ?  : errors.type
+    
     const trainingHours = Number(form.training_hours);
     if (!isInteger(form.training_hours) || !isMinValue(trainingHours, 0) || !isMaxValue(trainingHours, 500)) {
       newErrors.training_hours = "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا بين 0 و 500";

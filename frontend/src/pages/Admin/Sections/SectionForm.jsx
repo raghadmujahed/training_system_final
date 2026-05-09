@@ -99,8 +99,8 @@ export default function SectionForm() {
     }
     
     setErrors({});
-    try {onBlu={handlChange} className={errors.name ? 'border-red-500' : ''} re
-            {errors.name && <div className="text-red-500 text-sm mt-1">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</div>}
+    setLoading(true);
+    try {
       if (id) {
         await updateSection(id, form);
       } else {

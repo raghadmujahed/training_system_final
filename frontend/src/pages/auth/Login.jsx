@@ -89,31 +89,26 @@ export default function Login() {
       }
 
       if (userRole === ROLES.STUDENT) {
-        navigate(getStuden{`DashboardPath(use ${fieldErrors.email ? 'border-red-500' : ''}`}));
+        navigate(getStudentDashboardPath(user));
       } else {
-        navigate(getDashbohandlrole(uChone)}
-                onBr={handlEmailChange
+        navigate(getDashboardPathByRole(userRole));
       }
 
     } catch (err) {
       setError(err.response?.data?.message || err.message || "فشل تسجيل الدخول");
     } finally {
-      setLoa  {fieldErrors.email && (
-                ddiv className="text-red-500 text-sm mt-1">{fieldErrors.email}<ing(false);
-              )}    }
-  };/>
-
-           <div 
+      setLoading(false);
+    }
+  }; 
 
   return (
     <div className="auth-page">
       <div className="auth-shell">
         <div className="auth-side">
           <div>
-            <h1>جامعة الخليل{`/h1> ${fieldErrors.password ? 'border-red-500' : ''}`}
+            <h1>جامعة الخليل</h1>
             <p>
-              نظام إلكتروني handlePasswordChangت}
-                 اonBlurم{handlإارة التدChاnعتبوي، يسهّل
+              نظام إلكتروني لإدارة التدريب الميداني، يسهّل
               المتابعة، التقييم، والتواصل بين جميع الأطراف داخل بيئة أكاديمية
               منظمة.
             </p>
@@ -128,11 +123,7 @@ export default function Login() {
         <div className="auth-card">
           <div className="auth-logo">
             <img src={myLogo} alt="شعار جامعة الخليل" className="auth-logo-img" />
-          </div>>
-              </div
-              {fieldErrors.password && (
-     <divclassName="text-red-500text-smmt-1">{fieldErrors.password}
-              )}
+          </div>
           <h2>تسجيل الدخول</h2>
           <p>أدخل بريدك الإلكتروني وكلمة المرور للدخول إلى النظام.</p>
 

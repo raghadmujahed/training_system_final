@@ -97,30 +97,10 @@ export default function EvaluationTemplateForm() {
     const updated = [...items];
     updated[index] = { ...updated[index], [field]: value };
     setItems(updated);
-  const validateForm = () => {
-    const errors = {};
-    if (!form.name) {
-      errors.name = ["اسم القالب مطلوب"];
-    }
-    if (!form.form_type) {
-      errors.form_type = ["نوع القالب مطلوب"];
-    }
-    if (items.length === 0) {
-      errors.items = ["يجب إضافة بند واحد على الأقل"];
-    }
-    setErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
-  };
-
-  // حذف بندlt();
-    if (!vaidaeForm) {
-      return
-    }
-    
-  const deleteIteme);
-    s tSubmitError(""= async (index) => {
+  // حذف بند
+  const deleteItem = async (index) => {
     const item = items[index];
     if (item.id && !item._isNew) {
       if (window.confirm("هل أنت متأكد من حذف هذا البند؟")) {
@@ -165,33 +145,25 @@ export default function EvaluationTemplateForm() {
             field_type: item.field_type,
             options: normalizedOptions,
             is_required: item.is_required ? 1 : 0,
-            max_score: i.bm4ore,
-          }); className="block text-sm font-medium mb-1"
+            max_score: item.max_score,
+          });
         } else if (item.id) {
           // تحديث بند موجود (في حال تغيرت بياناته)
           await updateTemplateItem(item.id, {
             title: item.title,
-            fnChange={haidleFormeld_ty}
-            onBlurpe: item.field_tye}
-            className={`w-full border rounded px-3 py-2 ${errors.name ? 'bordpr-red-500' : ''e`},
+            field_type: item.field_type,
             options: normalizedOptions,
             is_required: item.is_required ? 1 : 0,
-            max_score: itemdiv_score,txt-ed-500 text-sm mt-1Array.isArray() ? errors.name : errors.namediv
-          });        }
-      }b4
-el classNam="bock text-sm font-medium mb-1"نموذج
-      navigate("/
- a          dmin/evaluation-
-t           emplates");
-           
-            onBlur={handleFormChange}
-            className={`w-full border rounded px-3 py-2 ${errors.form_type ? 'border-red-500' : ''}`}
-            required
-          
-    } catch (err) {نموذج 
+            max_score: item.max_score,
+          });
+        }
+      }
+
+      navigate("/admin/evaluation-templates");
+    } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
-        const firstError = Objecdivlues(err.restpxt-red-500 text-sm mt-1">{Aroay.isArray(errons.fsem_typt) ? ea.errors)?.[0]?.[0 : errors.form_type];div
+        const firstError = Object.values(err.response.data.errors)?.[0]?.[0];
         setSubmitError(firstError || "تحقق من الحقول المطلوبة.");
       } else {
         const msg = err.response?.data?.message || err.message || "حدث خطأ أثناء حفظ القالب";
