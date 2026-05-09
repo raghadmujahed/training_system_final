@@ -14,8 +14,17 @@ import {
 } from "../../services/api";
 
 export default function FieldStaffEvaluations() {
-  const { targetRole, label, isSupervisor, isPsychologist, isFieldSupervisor, supervisorSubtype, terms } =
-    useFieldStaffRole();
+  const {
+    targetRole,
+    label,
+    isSupervisor,
+    isPsychologist,
+    isMentor,
+    isAdviser,
+    isFieldSupervisor,
+    supervisorSubtype,
+    terms,
+  } = useFieldStaffRole();
   const { students: fsStudents, loading: fsStudentsLoading, error: fsStudentsError } = useFieldSupervisorStudents();
   const counselorStudentOptions = useMemo(() => {
     const byId = new Map();
@@ -61,17 +70,22 @@ export default function FieldStaffEvaluations() {
 
   useEffect(() => { load(); }, []);
 
-  useEffect(() => {
-    if (!isFieldSupervisor || supervisorSubtype !== "school_counselor") return;
-    if (counselorStudentId || !counselorStudentOptions.length) return;
-    setCounselorStudentId(String(counselorStudentOptions[0].id));
-  }, [isFieldSupervisor, supervisorSubtype, counselorStudentOptions, counselorStudentId]);
+  const showCounselorFieldEval =
+    (isFieldSupervisor && supervisorSubtype === "school_counselor") || isAdviser;
+  const showMentorFieldEval =
+    (isFieldSupervisor && supervisorSubtype === "mentor_teacher") || isMentor;
 
   useEffect(() => {
-    if (!isFieldSupervisor || supervisorSubtype !== "mentor_teacher") return;
+    if (!showCounselorFieldEval) return;
+    if (counselorStudentId || !counselorStudentOptions.length) return;
+    setCounselorStudentId(String(counselorStudentOptions[0].id));
+  }, [showCounselorFieldEval, counselorStudentOptions, counselorStudentId]);
+
+  useEffect(() => {
+    if (!showMentorFieldEval) return;
     if (mentorStudentId || !counselorStudentOptions.length) return;
     setMentorStudentId(String(counselorStudentOptions[0].id));
-  }, [isFieldSupervisor, supervisorSubtype, counselorStudentOptions, mentorStudentId]);
+  }, [showMentorFieldEval, counselorStudentOptions, mentorStudentId]);
 
   const showPsychologistInstitutionEvaluation =
     (isFieldSupervisor && supervisorSubtype === "psychologist") || isPsychologist;
@@ -90,7 +104,7 @@ export default function FieldStaffEvaluations() {
     return <Navigate to="/supervisor/workspace" replace />;
   }
 
-  if (isFieldSupervisor && supervisorSubtype === "school_counselor") {
+  if (showCounselorFieldEval) {
     return (
       <>
         <PageHeader
@@ -132,7 +146,7 @@ export default function FieldStaffEvaluations() {
     );
   }
 
-  if (isFieldSupervisor && supervisorSubtype === "mentor_teacher") {
+  if (showMentorFieldEval) {
     return (
       <>
         <PageHeader

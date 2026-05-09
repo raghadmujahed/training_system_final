@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             UpdateSchoolsClassificationSeeder::class, // تحديث تصنيف المدارس (ذكور/إناث/مختلطة ودنيا/عليا)
             RolePermissionSeeder::class,
             UsersSeeder::class,
+            FieldSupervisorTemplatesSeeder::class,
             StudentsSeeder::class,
             Students2Seeder::class,
             SectionsSeeder::class,

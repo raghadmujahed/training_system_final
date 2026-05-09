@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Department;
+use App\Models\TrainingAssignment;
 use App\Models\TrainingSite;
 use App\Models\User;
 use App\Models\Role;
@@ -169,6 +170,19 @@ class UsersSeeder extends Seeder
                     'status' => 'active',
                 ]
             );
+            $teacherIndex++;
+        }
+
+        // ربط تعيينات التدريب النشطة بمعلم المرشد الرسمي لكل مدرسة (مثل assigned_teacher_id عند الموافقة)
+        $teacherIndex = 1;
+        foreach ($allSchools as $school) {
+            $schoolTeacher = User::where('email', 'teacher.' . $teacherIndex . '@hebron.edu')->first();
+            if ($schoolTeacher) {
+                TrainingAssignment::query()
+                    ->where('training_site_id', $school->id)
+                    ->whereIn('status', ['assigned', 'ongoing'])
+                    ->update(['teacher_id' => $schoolTeacher->id]);
+            }
             $teacherIndex++;
         }
 

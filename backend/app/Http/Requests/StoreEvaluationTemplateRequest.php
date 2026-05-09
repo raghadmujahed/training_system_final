@@ -34,7 +34,7 @@ class StoreEvaluationTemplateRequest extends FormRequest
             ],
             'description' => 'nullable|string',
             'form_type' => 'required|in:evaluation,student_form',
-            'target_role' => 'nullable|in:teacher,academic_supervisor,psychologist,school_manager',
+            'target_role' => 'nullable|in:teacher,academic_supervisor,psychologist,school_manager,adviser,field_supervisor,supervisor',
             'department_key' => ($hasDepartmentKey ? 'nullable|in:psychology,usool_tarbiah' : 'nullable'),
         ];
     }

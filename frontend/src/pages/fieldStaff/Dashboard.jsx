@@ -15,8 +15,9 @@ export default function FieldStaffDashboard() {
   const [stats, setStats] = useState({ students: 0, evals: 0, attendance: 0, notes: 0, tasks: 0 });
   const [loading, setLoading] = useState(true);
 
+  // المعلم المرشد (teacher) يُوازى مسار mentor_teacher — بدون بطاقة المهام في الرئيسية
   const showTasksOnDashboard =
-    (isMentor || isAdviser || isSupervisor) && !isFieldSupervisor && !isPsychologist;
+    (isAdviser || isSupervisor) && !isFieldSupervisor && !isPsychologist;
 
   useEffect(() => {
     async function load() {
@@ -86,13 +87,6 @@ export default function FieldStaffDashboard() {
       {/* Role-specific tips */}
       <div className="section-card mt-6 p-5">
         <h5>إرشادات حسب دورك</h5>
-        {isMentor && (
-          <ul className="pr-5">
-            <li>راجع السجلات اليومية المقدمة من الطلبة وقم بقبولها أو رفضها.</li>
-            <li>استخدم نماذج التقييم الخاصة بك (المعلم المرشد) لتقييم أداء الطلبة.</li>
-            <li>أضف ملاحظات سريعة على ملفات الطلبة لمتابعة تقدمهم.</li>
-          </ul>
-        )}
         {isAdviser && (
           <ul className="pr-5">
             <li>راجع السجلات الإرشادية المقدمة من الطلبة وقم بقبولها أو إعادتها.</li>
@@ -121,7 +115,7 @@ export default function FieldStaffDashboard() {
             <li>تابع دفعات طلبات التدريب والطلبة المتدربين.</li>
           </ul>
         )}
-        {isFieldSupervisor && supervisorSubtype === "mentor_teacher" && (
+        {(isMentor || (isFieldSupervisor && supervisorSubtype === "mentor_teacher")) && (
           <ul className="pr-5">
             <li>راجع {terms.dailyReport || "التقارير اليومية"} المقدمة من الطلبة وقم بتأكيدها أو إعادتها.</li>
             <li>استخدم نماذج {terms.evaluation || "التقييم"} لتقييم أداء الطلبة في {terms.lesson || "الحصة"}.</li>

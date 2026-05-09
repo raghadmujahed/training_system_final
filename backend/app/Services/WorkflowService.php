@@ -25,6 +25,7 @@ class WorkflowService
                 'workflow_template_id' => $template->id,
                 'model_type' => get_class($model),
                 'model_id' => $model->id,
+                'initiated_by' => auth()->id(),
                 'status' => 'in_progress',
             ]);
 

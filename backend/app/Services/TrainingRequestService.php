@@ -118,6 +118,7 @@ class TrainingRequestService
                     'workflow_template_id' => $workflowTemplateId,
                     'model_type' => TrainingRequest::class,
                     'model_id' => $trainingRequest->id,
+                    'initiated_by' => $coordinatorId,
                     'status' => 'in_progress',
                 ]);
 

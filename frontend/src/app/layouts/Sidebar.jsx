@@ -258,8 +258,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const roleName = getRoleLabel(rawRole);
 
   const menu = useMemo(() => {
-    // نفس قائمة المشرف الميداني الموحّدة لأخصائي المؤسسة (دور psychologist) حتى لا يُعامل كمسار منفصل
-    if (role === "field_supervisor" || role === "psychologist") {
+    // المعلم المرشد (دور teacher) بنفس هيكل قائمة «معلم مرشد ميداني» (mentor_teacher) — وليس بقائمة المهام/التقييم النهائي القديمة
+    if (role === "mentor" || role === "field_supervisor" || role === "psychologist") {
       const unified = buildFieldSupervisorUnifiedMenu(savedUser);
       if (role === "psychologist") {
         const guidance = { name: "الإرشاد والدعم", path: "/field-staff/guidance" };

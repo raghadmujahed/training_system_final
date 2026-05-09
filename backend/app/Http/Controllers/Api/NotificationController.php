@@ -11,7 +11,8 @@ class NotificationController extends Controller
 {
     public function index(Request $request)
     {
-        $notifications = Notification::where('user_id', $request->user()->id)
+        $notifications = Notification::query()
+            ->forRecipient($request->user())
             ->latest()
             ->paginate($request->per_page ?? 15);
         return NotificationResource::collection($notifications);
@@ -19,7 +20,8 @@ class NotificationController extends Controller
 
     public function unreadCount(Request $request)
     {
-        $count = Notification::where('user_id', $request->user()->id)
+        $count = Notification::query()
+            ->forRecipient($request->user())
             ->whereNull('read_at')
             ->count();
         return response()->json(['unread_count' => $count]);
@@ -34,7 +36,8 @@ class NotificationController extends Controller
 
     public function markAllAsRead(Request $request)
     {
-        Notification::where('user_id', $request->user()->id)
+        Notification::query()
+            ->forRecipient($request->user())
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
         return response()->json(['message' => 'تم تحديث جميع الإشعارات كمقروءة']);

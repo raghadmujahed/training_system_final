@@ -100,7 +100,8 @@ class DashboardController extends Controller
 
         $program = TrainingProgram::where('user_id', $user->id)->first();
         $assignment = $user->currentTrainingAssignment();
-        $notifications = Notification::where('user_id', $user->id)
+        $notifications = Notification::query()
+            ->forRecipient($user)
             ->latest()
             ->limit(3)
             ->get();

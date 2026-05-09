@@ -16,6 +16,7 @@ class EvaluationTemplatePolicy
             'teacher',
             'field_supervisor',
             'psychologist',
+            'adviser',
             'school_manager',
             'psychology_center_manager',
         ]);

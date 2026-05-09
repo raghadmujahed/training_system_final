@@ -116,12 +116,18 @@ export default function useFieldStaffRole() {
   }
 
   const supervisorSubtype = savedUser?.field_supervisor_profile?.supervisor_type || null;
-  const subtypeLabel = SUBTYPE_LABELS[supervisorSubtype] || "";
   let terms = SUBTYPE_TERMS[supervisorSubtype] || {};
+  // معلم مرشد بدور teacher (بلا سجل field_supervisor_profiles): نفس مصطلحات mentor_teacher
+  if (mapped.roleKey === "mentor" && !supervisorSubtype) {
+    terms = SUBTYPE_TERMS.mentor_teacher || {};
+  }
   // أخصائي بموقع تدريب (دور psychologist) بلا سجل مشرف ميداني: نفس مصطلحات مسار المؤسسة
   if (mapped.roleKey === "psychologist" && !supervisorSubtype) {
     terms = SUBTYPE_TERMS.psychologist || {};
   }
+  const subtypeLabel =
+    SUBTYPE_LABELS[supervisorSubtype] ||
+    (mapped.roleKey === "mentor" && !supervisorSubtype ? SUBTYPE_LABELS.mentor_teacher : "");
   const label = rawRole === "field_supervisor" ? subtypeLabel || mapped.label : mapped.label;
 
   return {

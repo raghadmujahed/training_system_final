@@ -14,12 +14,21 @@ class NotificationPolicy
 
     public function view(User $user, Notification $notification): bool
     {
-        return (int) $notification->user_id === (int) $user->id;
+        if ((int) $notification->user_id === (int) $user->id) {
+            return true;
+        }
+
+        $types = [User::class, 'App\Models\User'];
+
+        return $notification->notifiable_id
+            && (int) $notification->notifiable_id === (int) $user->id
+            && $notification->notifiable_type
+            && in_array($notification->notifiable_type, $types, true);
     }
 
     public function update(User $user, Notification $notification): bool
     {
-        return (int) $notification->user_id === (int) $user->id;
+        return $this->view($user, $notification);
     }
 
     public function delete(User $user, Notification $notification): bool
