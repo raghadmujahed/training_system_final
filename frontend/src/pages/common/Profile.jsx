@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { updateUserProfile, changePassword } from "../../services/api";
 import { readStoredUser, writeStoredUser } from "../../utils/session";
+import { PageHeader, AppInput, PasswordInput, AppButton, AppAlert, AppCard } from "../../components/common";
+import { User, Mail, Phone, Lock, Shield, ChevronLeft } from "lucide-react";
 
 export default function Profile() {
   const savedUser = readStoredUser();
@@ -23,19 +25,48 @@ export default function Profile() {
   const [passwordError, setPasswordError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+  
+  const [profileFieldErrors, setProfileFieldErrors] = useState({});
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState({});
 
   const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Clear field error when user types
+    if (profileFieldErrors[name]) {
+      setProfileFieldErrors((prev) => ({ ...prev, [name]: null }));
+    }
   };
 
   const handlePasswordChange = (e) => {
-    setPasswordForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+    // Clear field error when user types
+    if (passwordFieldErrors[name]) {
+      setPasswordFieldErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
+  const validateProfileForm = () => {
+    const errors = {};
+    
+    if (!form.name.trim()) {
+      errors.name = "الاسم مطلوب";
+    }
+    
+    if (!form.email.trim()) {
+      errors.email = "البريد الإلكتروني مطلوب";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      errors.email = "البريد الإلكتروني غير صالح";
+    }
+    
+    if (form.phone && !/^(056|059)\d{7}$/.test(form.phone)) {
+      errors.phone = "رقم الهاتف يجب أن يكون مكون من 10 أرقام ويبدأ بـ 056 أو 059";
+    }
+    
+    setProfileFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -44,9 +75,7 @@ export default function Profile() {
     setError(null);
     setSuccess(false);
 
-    // Validate phone number
-    if (form.phone && !/^(056|059)\d{7}$/.test(form.phone)) {
-      setError('رقم الهاتف يجب أن يكون مكون من 10 أرقام ويبدأ بـ 056 أو 059');
+    if (!validateProfileForm()) {
       setLoading(false);
       return;
     }
@@ -65,10 +94,46 @@ export default function Profile() {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || "فشل في تحديث البيانات");
+      const errorMessage = err.response?.data?.message || "فشل في تحديث البيانات";
+      setError(errorMessage);
+      
+      // Handle validation errors from backend
+      if (err.response?.data?.errors) {
+        const backendErrors = err.response.data.errors;
+        const mappedErrors = {};
+        
+        if (backendErrors.name) mappedErrors.name = backendErrors.name[0];
+        if (backendErrors.email) mappedErrors.email = backendErrors.email[0];
+        if (backendErrors.phone) mappedErrors.phone = backendErrors.phone[0];
+        
+        setProfileFieldErrors(mappedErrors);
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const validatePasswordForm = () => {
+    const errors = {};
+    
+    if (!passwordForm.current_password) {
+      errors.current_password = "كلمة المرور الحالية مطلوبة";
+    }
+    
+    if (!passwordForm.new_password) {
+      errors.new_password = "كلمة المرور الجديدة مطلوبة";
+    } else if (passwordForm.new_password.length < 8) {
+      errors.new_password = "كلمة المرور يجب أن تكون 8 أحرف على الأقل";
+    }
+    
+    if (!passwordForm.new_password_confirmation) {
+      errors.new_password_confirmation = "تأكيد كلمة المرور مطلوب";
+    } else if (passwordForm.new_password !== passwordForm.new_password_confirmation) {
+      errors.new_password_confirmation = "كلمتا المرور غير متطابقتين";
+    }
+    
+    setPasswordFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handlePasswordSubmit = async (e) => {
@@ -77,13 +142,12 @@ export default function Profile() {
     setPasswordError(null);
     setPasswordSuccess(false);
 
-    try {
-      if (passwordForm.new_password !== passwordForm.new_password_confirmation) {
-        setPasswordError("كلمة المرور الجديدة غير متطابقة");
-        setPasswordLoading(false);
-        return;
-      }
+    if (!validatePasswordForm()) {
+      setPasswordLoading(false);
+      return;
+    }
 
+    try {
       await changePassword(passwordForm);
       
       setPasswordSuccess(true);
@@ -94,128 +158,298 @@ export default function Profile() {
       });
       setTimeout(() => setPasswordSuccess(false), 3000);
     } catch (err) {
-      setPasswordError(err.response?.data?.message || "فشل في تغيير كلمة المرور");
+      const errorMessage = err.response?.data?.message || "فشل في تغيير كلمة المرور";
+      setPasswordError(errorMessage);
+      
+      // Handle validation errors from backend
+      if (err.response?.data?.errors) {
+        const backendErrors = err.response.data.errors;
+        const mappedErrors = {};
+        
+        if (backendErrors.current_password) {
+          mappedErrors.current_password = backendErrors.current_password[0];
+        }
+        if (backendErrors.new_password) {
+          mappedErrors.new_password = backendErrors.new_password[0];
+        }
+        if (backendErrors.new_password_confirmation) {
+          mappedErrors.new_password_confirmation = backendErrors.new_password_confirmation[0];
+        }
+        
+        setPasswordFieldErrors(mappedErrors);
+      }
     } finally {
       setPasswordLoading(false);
     }
   };
 
-  return (
-    <div className="enrollments-list">
-      <div className="page-header">
-        <h1>الملف الشخصي</h1>
-        <p>يمكنك من هنا تعديل بياناتك الأساسية وتغيير كلمة المرور</p>
+  const TabButton = ({ id, label, icon: Icon, isActive, onClick }) => (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-lg font-semibold transition-all duration-200 text-sm sm:text-base ${
+        isActive
+          ? "bg-gradient-to-r from-[#142a42] to-[#1e3a5f] text-white shadow-lg"
+          : "bg-white text-[#142a42] hover:bg-gray-50 border border-gray-200"
+      }`}
+    >
+      <Icon size={16} className="sm:w-[18px] sm:h-[18px]" />
+      <span className="hidden sm:inline">{label}</span>
+      <span className="sm:hidden">{id === "profile" ? "البيانات" : "الأمان"}</span>
+    </button>
+  );
+
+  const ProfileInfoItem = ({ icon: Icon, label, value }) => (
+    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#142a42]/10 flex items-center justify-center flex-shrink-0">
+        <Icon size={18} className="sm:w-5 sm:h-5 text-[#142a42]" />
       </div>
-
-      {success && (
-        <div className="section-card" style={{ marginBottom: 12, padding: 12, backgroundColor: '#d4edda', color: '#155724' }}>
-          تم تحديث البيانات بنجاح
-        </div>
-      )}
-
-      {error && (
-        <div className="section-card" style={{ marginBottom: 12, padding: 12, backgroundColor: '#f8d7da', color: '#721c24' }}>
-          {error}
-        </div>
-      )}
-
-      <div className="section-card">
-        <h3>البيانات الشخصية</h3>
-        <form onSubmit={handleSubmit} className="form">
-          <div className="form-group">
-            <label>الاسم *</label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>البريد الإلكتروني *</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>رقم الهاتف</label>
-            <input
-              type="text"
-              name="phone"
-              value={form.phone}
-              onChange={handleChange}
-            />
-          </div>
-
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "جاري الحفظ..." : "حفظ التعديلات"}
-          </button>
-        </form>
-      </div>
-
-      <div className="section-card" style={{ marginTop: 16 }}>
-        <h3>تغيير كلمة المرور</h3>
-
-        {passwordSuccess && (
-          <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#d4edda', color: '#155724' }}>
-            تم تغيير كلمة المرور بنجاح
-          </div>
-        )}
-
-        {passwordError && (
-          <div style={{ marginBottom: 12, padding: 12, backgroundColor: '#f8d7da', color: '#721c24' }}>
-            {passwordError}
-          </div>
-        )}
-
-        <form onSubmit={handlePasswordSubmit} className="form">
-          <div className="form-group">
-            <label>كلمة المرور الحالية *</label>
-            <input
-              type="password"
-              name="current_password"
-              value={passwordForm.current_password}
-              onChange={handlePasswordChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>كلمة المرور الجديدة *</label>
-            <input
-              type="password"
-              name="new_password"
-              value={passwordForm.new_password}
-              onChange={handlePasswordChange}
-              required
-              minLength={8}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>تأكيد كلمة المرور الجديدة *</label>
-            <input
-              type="password"
-              name="new_password_confirmation"
-              value={passwordForm.new_password_confirmation}
-              onChange={handlePasswordChange}
-              required
-              minLength={8}
-            />
-          </div>
-
-          <button type="submit" className="btn-primary" disabled={passwordLoading}>
-            {passwordLoading ? "جاري التغيير..." : "تغيير كلمة المرور"}
-          </button>
-        </form>
+      <div className="min-w-0">
+        <p className="text-xs sm:text-sm text-gray-500">{label}</p>
+        <p className="font-semibold text-[#142a42] text-sm sm:text-base truncate">{value || "—"}</p>
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <PageHeader
+        title="الملف الشخصي"
+        subtitle="إدارة بياناتك الشخصية وإعدادات الأمان"
+      />
+
+      <div className="max-w-4xl">
+        {/* Tabs Navigation */}
+        <div className="flex gap-3 mb-6">
+          <TabButton
+            id="profile"
+            label="البيانات الشخصية"
+            icon={User}
+            isActive={activeTab === "profile"}
+            onClick={() => setActiveTab("profile")}
+          />
+          <TabButton
+            id="password"
+            label="تغيير كلمة المرور"
+            icon={Shield}
+            isActive={activeTab === "password"}
+            onClick={() => setActiveTab("password")}
+          />
+        </div>
+
+        {/* Profile Tab */}
+        {activeTab === "profile" && (
+          <AppCard>
+            {/* User Info Summary */}
+            <div className="mb-6 pb-6 border-b border-gray-100">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#142a42] to-[#1e3a5f] flex items-center justify-center text-white text-xl font-bold">
+                  {savedUser.name?.charAt(0) || "U"}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#142a42]">{savedUser.name}</h3>
+                  <p className="text-sm text-gray-500">{savedUser.role?.name || "مستخدم"}</p>
+                </div>
+              </div>
+              
+              <div className="grid md:grid-cols-3 gap-4">
+                <ProfileInfoItem icon={Mail} label="البريد الإلكتروني" value={savedUser.email} />
+                <ProfileInfoItem icon={Phone} label="رقم الهاتف" value={savedUser.phone} />
+                <ProfileInfoItem icon={User} label="الدور" value={savedUser.role?.name} />
+              </div>
+            </div>
+
+            {/* Edit Form */}
+            <h4 className="text-md font-bold text-[#142a42] mb-4 flex items-center gap-2">
+              <ChevronLeft size={18} />
+              تعديل البيانات
+            </h4>
+
+            {success && (
+              <div className="mb-4">
+                <AppAlert variant="success">
+                  تم تحديث البيانات بنجاح
+                </AppAlert>
+              </div>
+            )}
+
+            {error && !profileFieldErrors.name && !profileFieldErrors.email && (
+              <div className="mb-4">
+                <AppAlert variant="error" dismissible onDismiss={() => setError(null)}>
+                  {error}
+                </AppAlert>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid md:grid-cols-2 gap-4">
+                <AppInput
+                  label="الاسم الكامل"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="أدخل اسمك الكامل"
+                  error={profileFieldErrors.name}
+                  required
+                  disabled={loading}
+                  leftIcon={<User size={18} />}
+                />
+
+                <AppInput
+                  label="البريد الإلكتروني"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange}
+                  placeholder="أدخل بريدك الإلكتروني"
+                  error={profileFieldErrors.email}
+                  required
+                  disabled={loading}
+                  leftIcon={<Mail size={18} />}
+                />
+              </div>
+
+              <AppInput
+                label="رقم الهاتف المحمول"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="مثال: 0561234567"
+                error={profileFieldErrors.phone}
+                disabled={loading}
+                leftIcon={<Phone size={18} />}
+              />
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mt-6">
+                <AppButton
+                  type="submit"
+                  variant="primary"
+                  loading={loading}
+                  disabled={loading}
+                  className="w-full sm:w-auto"
+                >
+                  حفظ التعديلات
+                </AppButton>
+                
+                <AppButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setForm({
+                      name: savedUser.name || "",
+                      email: savedUser.email || "",
+                      phone: savedUser.phone || "",
+                    });
+                    setProfileFieldErrors({});
+                    setError(null);
+                  }}
+                  disabled={loading}
+                  className="w-full sm:w-auto"
+                >
+                  إلغاء
+                </AppButton>
+              </div>
+            </form>
+          </AppCard>
+        )}
+
+        {/* Password Tab */}
+        {activeTab === "password" && (
+          <AppCard>
+            <div className="mb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center">
+                  <Lock size={24} className="text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#142a42]">تغيير كلمة المرور</h3>
+                  <p className="text-sm text-gray-500">قم بتحديث كلمة المرور الخاصة بك للحفاظ على أمان حسابك</p>
+                </div>
+              </div>
+            </div>
+
+            {passwordSuccess && (
+              <div className="mb-4">
+                <AppAlert variant="success">
+                  تم تغيير كلمة المرور بنجاح
+                </AppAlert>
+              </div>
+            )}
+
+            {passwordError && !passwordFieldErrors.current_password && !passwordFieldErrors.new_password && (
+              <div className="mb-4">
+                <AppAlert variant="error" dismissible onDismiss={() => setPasswordError(null)}>
+                  {passwordError}
+                </AppAlert>
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordSubmit} className="max-w-md">
+              <PasswordInput
+                label="كلمة المرور الحالية"
+                name="current_password"
+                value={passwordForm.current_password}
+                onChange={handlePasswordChange}
+                placeholder="أدخل كلمة المرور الحالية"
+                error={passwordFieldErrors.current_password}
+                required
+                disabled={passwordLoading}
+              />
+
+              <PasswordInput
+                label="كلمة المرور الجديدة"
+                name="new_password"
+                value={passwordForm.new_password}
+                onChange={handlePasswordChange}
+                placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
+                error={passwordFieldErrors.new_password}
+                required
+                disabled={passwordLoading}
+              />
+
+              <PasswordInput
+                label="تأكيد كلمة المرور الجديدة"
+                name="new_password_confirmation"
+                value={passwordForm.new_password_confirmation}
+                onChange={handlePasswordChange}
+                placeholder="أعد إدخال كلمة المرور الجديدة"
+                error={passwordFieldErrors.new_password_confirmation}
+                required
+                disabled={passwordLoading}
+              />
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 mt-6">
+                <AppButton
+                  type="submit"
+                  variant="primary"
+                  loading={passwordLoading}
+                  disabled={passwordLoading}
+                  className="w-full sm:w-auto"
+                >
+                  تغيير كلمة المرور
+                </AppButton>
+                
+                <AppButton
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPasswordForm({
+                      current_password: "",
+                      new_password: "",
+                      new_password_confirmation: "",
+                    });
+                    setPasswordFieldErrors({});
+                    setPasswordError(null);
+                  }}
+                  disabled={passwordLoading}
+                  className="w-full sm:w-auto"
+                >
+                  إلغاء
+                </AppButton>
+              </div>
+            </form>
+          </AppCard>
+        )}
+      </div>
+    </>
   );
 }

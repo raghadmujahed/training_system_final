@@ -3,7 +3,30 @@ import axios from "axios";
 import { apiCache } from "./apiCache";
 import { resetNotificationsState } from "../hooks/useNotifications";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:8000/api").replace(/\/+$/, "");
+// Validate environment variables
+const validateEnvironment = () => {
+  const apiUrl = import.meta.env.VITE_API_URL;
+  
+  if (!apiUrl) {
+    console.warn(
+      "%c[API Warning] VITE_API_URL is not set!",
+      "color: orange; font-weight: bold;"
+    );
+    console.warn("Using fallback: http://localhost:8000/api");
+    console.warn("Please set VITE_API_URL in your .env file for production");
+  }
+  
+  if (apiUrl?.includes("localhost") && !import.meta.env.DEV) {
+    console.error(
+      "%c[API Error] Using localhost in production!",
+      "color: red; font-weight: bold;"
+    );
+  }
+  
+  return apiUrl || "http://localhost:8000/api";
+};
+
+const API_BASE_URL = validateEnvironment().replace(/\/+$/, "");
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -12,6 +35,7 @@ export const apiClient = axios.create({
     Accept: "application/json",
   },
   withCredentials: false,
+  timeout: 30000, // 30 second timeout
 });
 
 /** أصل الخادم بدون ‎/api (لروابط التخزين /storage/...) */
@@ -20,6 +44,68 @@ export const apiOrigin = String(apiClient.defaults.baseURL || "").replace(/\/api
 // Laravel API Resources often return payload as { data: ... }.
 // Normalize responses to keep frontend forms and lists stable.
 const unwrapResource = (payload) => payload?.data ?? payload;
+
+// Helper to get user-friendly error message
+export const getErrorMessage = (error) => {
+  // Network errors
+  if (!error.response) {
+    if (error.code === "ECONNABORTED") {
+      return "انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.";
+    }
+    if (error.code === "ERR_NETWORK") {
+      return "لا يمكن الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة لاحقاً.";
+    }
+    return "حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.";
+  }
+
+  const status = error.response?.status;
+  const data = error.response?.data;
+
+  // Handle specific status codes
+  switch (status) {
+    case 400:
+      return data?.message || "طلب غير صالح. يرجى التحقق من البيانات المدخلة.";
+    
+    case 401:
+      return "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.";
+    
+    case 403:
+      return data?.message || "ليس لديك صلاحية للوصول إلى هذا المورد.";
+    
+    case 404:
+      return data?.message || "المورد المطلوب غير موجود.";
+    
+    case 422:
+      // Laravel validation errors
+      if (data?.errors) {
+        const firstError = Object.values(data.errors)[0];
+        if (Array.isArray(firstError) && firstError.length > 0) {
+          return firstError[0];
+        }
+      }
+      return data?.message || "البيانات المدخلة غير صالحة. يرجى التحقق والمحاولة مرة أخرى.";
+    
+    case 429:
+      return "تم إرسال عدد كبير من الطلبات. يرجى الانتظار قليلاً والمحاولة مرة أخرى.";
+    
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return "خطأ في الخادم. يرجى المحاولة لاحقاً.";
+    
+    default:
+      return data?.message || "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.";
+  }
+};
+
+// Helper to extract validation errors from Laravel response
+export const getValidationErrors = (error) => {
+  if (error.response?.status === 422 && error.response?.data?.errors) {
+    return error.response.data.errors;
+  }
+  return null;
+};
 
 // Inject token automatically
 apiClient.interceptors.request.use(
@@ -36,6 +122,7 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Enhanced response interceptor with comprehensive error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -46,13 +133,34 @@ apiClient.interceptors.response.use(
       isOptionalNotificationsRequest ||
       isOptionalActivityRequest;
 
+    // Handle 401 Unauthorized
     if (error?.response?.status === 401 && !shouldPreserveSession) {
+      // Clear invalid auth data
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
+      apiCache.clear();
+      resetNotificationsState();
+      
+      // Redirect to login if not already there
       if (window.location.pathname !== "/") {
         window.location.href = "/";
       }
     }
+
+    // Log errors in development
+    if (import.meta.env.DEV) {
+      console.error("[API Error]", {
+        url: requestUrl,
+        status: error.response?.status,
+        message: getErrorMessage(error),
+        data: error.response?.data,
+      });
+    }
+
+    // Enhance error object with user-friendly message
+    error.userMessage = getErrorMessage(error);
+    error.validationErrors = getValidationErrors(error);
+
     return Promise.reject(error);
   }
 );

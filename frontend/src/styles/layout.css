@@ -227,32 +227,71 @@
 
   .top-navbar {
     position: relative;
-    padding: 14px 16px;
-    align-items: flex-start;
-    flex-direction: column;
+    padding: 12px 14px;
+    min-height: 60px;
+    gap: 12px;
+  }
+
+  .top-navbar .navbar-title {
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .top-navbar .navbar-subtitle {
+    font-size: 0.8rem;
   }
 
   .navbar-left,
-  .navbar-right,
+  .navbar-right {
+    gap: 8px;
+  }
+
+  .navbar-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .navbar-right {
+    flex-shrink: 0;
+  }
+
+  .navbar-chip {
+    display: none;
+  }
+
   .navbar-actions,
   .page-actions {
     width: 100%;
   }
 
   .page-content {
-    padding: 16px 14px 24px;
+    padding: 14px 12px 20px;
   }
 
   .sticky-box {
     position: static;
   }
 
-
   .mobile-menu-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 1.25rem;
+    color: var(--text);
+    cursor: pointer;
+    flex-shrink: 0;
   }
+
+  .mobile-menu-btn:hover {
+    background: var(--bg);
+  }
+
   .sidebar-overlay {
     display: block;
     position: fixed;
@@ -267,5 +306,61 @@
   .sidebar-overlay.show {
     opacity: 1;
     visibility: visible;
+  }
+}
+
+/* Small phones (480px and below) */
+@media (max-width: 480px) {
+  .top-navbar {
+    padding: 10px 12px;
+    min-height: 56px;
+  }
+
+  .top-navbar .navbar-title {
+    font-size: 0.95rem;
+  }
+
+  .top-navbar .navbar-subtitle {
+    font-size: 0.75rem;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .navbar-left,
+  .navbar-right {
+    gap: 6px;
+  }
+
+  .page-content {
+    padding: 12px 10px 16px;
+  }
+
+  .page-grid {
+    gap: 12px;
+  }
+
+  .filter-box .form-control-custom,
+  .filter-box .form-select-custom {
+    min-width: 100%;
+  }
+}
+
+/* Extra small phones (360px and below) */
+@media (max-width: 360px) {
+  .top-navbar {
+    padding: 8px 10px;
+  }
+
+  .mobile-menu-btn {
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    font-size: 1.1rem;
+  }
+
+  .page-content {
+    padding: 10px 8px 14px;
   }
 }

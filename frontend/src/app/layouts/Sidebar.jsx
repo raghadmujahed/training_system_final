@@ -164,7 +164,6 @@ const menus = {
 
     // صفحات مشتركة
     { name: "الملف الشخصي", path: "/profile" },
-    { name: "تغيير كلمة المرور", path: "/change-password" },
   ],
   
 
@@ -413,16 +412,23 @@ export default function Sidebar({ isOpen, onClose }) {
       </div>
 
       <div className="sidebar-footer">
-        <div className="sidebar-user-box">
+        <NavLink
+          to="/profile"
+          onClick={handleLinkClick}
+          className={({ isActive }) =>
+            `sidebar-user-box ${isActive ? "active" : ""}`
+          }
+          style={{ textDecoration: 'none', cursor: 'pointer' }}
+        >
           <div className="sidebar-user-avatar">{getInitials(userName)}</div>
 
           <div>
             <strong>{userName}</strong>
             <span>{roleName}</span>
           </div>
-        </div>
+        </NavLink>
 
-        <button className="sidebar-logout-btn" onClick={handleLogout}>
+        <button className="sidebar-logout-btn" onClick={handleLogout} style={{ marginTop: '12px' }}>
           تسجيل الخروج
         </button>
 

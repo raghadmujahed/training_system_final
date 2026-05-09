@@ -20,19 +20,12 @@ class DatabaseSeeder extends Seeder
             UpdateSchoolsClassificationSeeder::class, // تحديث تصنيف المدارس (ذكور/إناث/مختلطة ودنيا/عليا)
             RolePermissionSeeder::class,
             UsersSeeder::class,
-            PsychologyTrainingSitesSeeder::class,
-            BethlehemPsychologyClinicSeeder::class,
             StudentsSeeder::class,
             Students2Seeder::class,
             SectionsSeeder::class,
             EnrollmentsSeeder::class,
             DemoDataSeeder::class,
-            SchoolAdminSupervisorRequestsSeeder::class,
-            OfficialLettersSeeder::class,
-            FeatureFlagsSeeder::class,
-            FieldSupervisorTemplatesSeeder::class, // قوالب المشرف الميداني
-            FormTemplateSeeder::class, // قوالب النماذج العامة
-            FieldSupervisorSeeder::class, // مشرف ميداني تجريبي
+            FeatureFlagsSeeder::class
         ]);
 
       

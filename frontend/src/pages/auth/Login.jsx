@@ -4,10 +4,12 @@ import { login } from "../../services/api";
 import myLogo from "../../assets/HU Logo.webp";
 import { getStudentDashboardPath } from "../../utils/studentSection";
 import { getDashboardPathByRole, normalizeRole, ROLES } from "../../utils/roles";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -99,16 +101,30 @@ export default function Login() {
 
             <div className="form-group-custom">
               <label className="form-label-custom" htmlFor="password">كلمة المرور</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className="form-input-custom"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  className="form-input-custom pr-12"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} className="text-[#142a42]" />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
             </div>
 
             {error && (

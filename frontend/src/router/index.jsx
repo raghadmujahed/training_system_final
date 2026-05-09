@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../app/layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import { ErrorBoundary } from "../components/common";
 
 import Login from "../pages/auth/Login";
+import NotFound from "../pages/common/NotFound";
 
 // Head of Department
 import HeadOfDepartmentDashboard from "../pages/HeadOfDepartment/HeadOfDepartmentDashboard";
@@ -78,6 +80,8 @@ import Profile from "../pages/common/Profile";
 import ChangePassword from "../pages/common/ChangePassword";
 import Notifications from "../pages/common/Notifications";
 
+// Error pages
+
 // Chat
 import ChatPage from "../pages/chat/ChatPage";
 
@@ -148,8 +152,9 @@ import HealthOfficialLetters from "../pages/healthDirectorate/OfficialLetters";
 
 export default function AppRouter() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
         <Route path="/" element={<Login />} />
 
         <Route
@@ -442,15 +447,10 @@ export default function AppRouter() {
           <Route path="/chat" element={<ChatPage />} />
 
           {/* 404 - أي رابط غير معروف */}
-          <Route path="*" element={
-            <div style={{ padding: 40, textAlign: "center" }}>
-              <h2>الصفحة غير موجودة</h2>
-              <p>الرابط الذي تحاول الوصول إليه غير متاح.</p>
-              <a href="/principal/dashboard" style={{ color: "var(--primary)", fontWeight: "bold" }}>العودة للرئيسية</a>
-            </div>
-          } />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }

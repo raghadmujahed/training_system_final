@@ -21,7 +21,7 @@ class StoreUserRequest extends FormRequest
         $studentRoleId = $this->getStudentRoleId();
 
         return [
-            'university_id' => 'required_if:role_id,' . $studentRoleId . '|nullable|string|max:255|unique:users,university_id',
+            'university_id' => 'required_if:role_id,' . $studentRoleId . '|nullable|numeric|digits_between:6,20|unique:users,university_id',
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:8',
@@ -29,7 +29,7 @@ class StoreUserRequest extends FormRequest
             'department_id' => 'required_if:role_id,' . $studentRoleId . '|nullable|exists:departments,id',
             'role_id' => 'required|exists:roles,id',
             'phone' => 'nullable|string|max:20',
-            'major' => 'nullable|string|max:255',
+            'major' => 'required_if:role_id,' . $studentRoleId . '|nullable|string|max:255',
             'training_site_id' => 'nullable|exists:training_sites,id',
             'directorate' => 'nullable|in:وسط,شمال,جنوب,يطا',
         ];
@@ -39,7 +39,10 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'university_id.required_if' => 'الرقم الجامعي مطلوب للطلاب.',
+            'university_id.numeric' => 'الرقم الجامعي يجب أن يكون أرقام فقط.',
+            'university_id.digits_between' => 'الرقم الجامعي يجب أن يكون بين 6 و 20 رقم.',
             'university_id.unique' => 'الرقم الجامعي مستخدم مسبقاً.',
+            'major.required_if' => 'التخصص مطلوب للطلاب.',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً.',
             'department_id.required_if' => 'القسم مطلوب للطلاب.',
         ];
@@ -95,6 +98,17 @@ class StoreUserRequest extends FormRequest
                     $validator->errors()->add(
                         'training_site_id',
                         "يوجد بالفعل {$label} مُعيَّن لهذا الموقع. لا يمكن تعيين أكثر من مدير واحد."
+                    );
+                }
+            }
+
+            // ===== 4) البريد الإلكتروني للطلاب يجب أن يكون من نطاق @students.hebron.edu =====
+            if ($role->name === 'student') {
+                $email = $this->input('email');
+                if ($email && !str_ends_with(strtolower($email), '@students.hebron.edu')) {
+                    $validator->errors()->add(
+                        'email',
+                        'البريد الإلكتروني للطلاب يجب أن ينتهي بـ @students.hebron.edu'
                     );
                 }
             }

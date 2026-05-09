@@ -4,6 +4,16 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useDepartments } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import {
+  isValidEmail,
+  isValidStudentEmail,
+  getStudentEmailErrorMessage,
+  isValidPassword,
+  getPasswordErrorMessage,
+  isValidUniversityId,
+  getUniversityIdErrorMessage,
+  trimInput,
+} from "../../../utils/validation";
 
 export default function AddStudent() {
   const { id } = useParams();
@@ -54,8 +64,103 @@ export default function AddStudent() {
   }, [id]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: null });
+    // Real-time validation
+    validateField(name, value);
+  };
+
+  const validateField = (fieldName, value) => {
+    let error = null;
+
+    switch (fieldName) {
+      case "email":
+        if (value && !isValidEmail(value)) {
+          error = "صيغة البريد الإلكتروني غير صحيحة";
+        } else if (value && !isValidStudentEmail(value)) {
+          error = getStudentEmailErrorMessage();
+        }
+        break;
+      case "university_id":
+        if (value && !isValidUniversityId(value)) {
+          error = getUniversityIdErrorMessage();
+        }
+        break;
+      case "password":
+        if (value && !isEditMode && !isValidPassword(value)) {
+          error = getPasswordErrorMessage();
+        }
+        break;
+      case "password_confirmation":
+        if (value && form.password && value !== form.password) {
+          error = "كلمتا المرور غير متطابقتين";
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (error) {
+      setErrors((prev) => ({ ...prev, [fieldName]: error }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Required fields
+    if (!form.name.trim()) {
+      newErrors.name = "الاسم مطلوب";
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = "البريد الإلكتروني مطلوب";
+    } else if (!isValidEmail(form.email)) {
+      newErrors.email = "صيغة البريد الإلكتروني غير صحيحة";
+    } else if (!isValidStudentEmail(form.email)) {
+      newErrors.email = getStudentEmailErrorMessage();
+    }
+
+    if (!form.university_id.trim()) {
+      newErrors.university_id = "الرقم الجامعي مطلوب";
+    } else if (!isValidUniversityId(form.university_id)) {
+      newErrors.university_id = getUniversityIdErrorMessage();
+    }
+
+    if (!form.department_id) {
+      newErrors.department_id = "القسم مطلوب";
+    }
+
+    if (!form.major.trim()) {
+      newErrors.major = "التخصص مطلوب";
+    }
+
+    // Password validation for new students
+    if (!isEditMode) {
+      if (!form.password) {
+        newErrors.password = "كلمة المرور مطلوبة";
+      } else if (!isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+
+      if (!form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور مطلوب";
+      } else if (form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "كلمتا المرور غير متطابقتين";
+      }
+    } else {
+      // For edit mode, only validate if password is provided
+      if (form.password && !isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+      if (form.password && form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "كلمتا المرور غير متطابقتين";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -63,7 +168,20 @@ export default function AddStudent() {
     setLoading(true);
     setErrors({});
 
-    const formToSend = { ...form, university_id: String(form.university_id || "") };
+    // Frontend validation
+    if (!validateForm()) {
+      setLoading(false);
+      toast.error("يرجى تصحيح الأخطاء قبل المتابعة");
+      return;
+    }
+
+    const formToSend = {
+      ...form,
+      university_id: String(form.university_id || ""),
+      name: trimInput(form.name),
+      email: trimInput(form.email),
+      major: trimInput(form.major),
+    };
 
     // Remove password_confirmation — not accepted by update endpoint
     delete formToSend.password_confirmation;
@@ -215,13 +333,13 @@ export default function AddStudent() {
           <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
         </div>
         <form onSubmit={handleSubmit} className="form">
-          <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0]}</span>}</div>
-          <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />{errors.email && <span className="error">{errors.email[0]}</span>}</div>
-          <div className="form-group"><label>الرقم الجامعي</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} />{errors.university_id && <span className="error">{errors.university_id[0]}</span>}</div>
+          <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0] || errors.name}</span>}</div>
+          <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} required placeholder="يجب أن ينتهي بـ @students.hebron.edu" />{errors.email && <span className="error">{errors.email[0] || errors.email}</span>}</div>
+          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{errors.university_id[0] || errors.university_id}</span>}</div>
           <div className="form-group"><label>القسم</label><select id="department_id" name="department_id" value={form.department_id} onChange={handleChange}><option value="">اختر القسم</option>{departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>{errors.department_id && <span className="error">{errors.department_id[0]}</span>}</div>
           <div className="form-group"><label>التخصص</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} />{errors.major && <span className="error">{errors.major[0]}</span>}</div>
-          <div className="form-group"><label>كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} />{errors.password && <span className="error">{errors.password[0]}</span>}</div>
-          <div className="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} /></div>
+          <div className="form-group"><label>كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} placeholder="8 أحرف على الأقل" />{errors.password && <span className="error">{errors.password[0] || errors.password}</span>}</div>
+          <div className="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} />{errors.password_confirmation && <span className="error">{errors.password_confirmation}</span>}</div>
           <div className="form-actions"><button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "تحديث"}</button><button type="button" onClick={() => navigate("/admin/users")}>إلغاء</button></div>
         </form>
       </div>
@@ -240,13 +358,13 @@ export default function AddStudent() {
       </div>
       {activeTab === "single" && (
         <form onSubmit={handleSubmit} className="form">
-          <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0]}</span>}</div>
-          <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />{errors.email && <span className="error">{errors.email[0]}</span>}</div>
-          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} required />{errors.university_id && <span className="error">{errors.university_id[0]}</span>}</div>
+          <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0] || errors.name}</span>}</div>
+          <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} required placeholder="يجب أن ينتهي بـ @students.hebron.edu" />{errors.email && <span className="error">{errors.email[0] || errors.email}</span>}</div>
+          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{errors.university_id[0] || errors.university_id}</span>}</div>
           <div className="form-group"><label>القسم *</label><select id="department_id" name="department_id" value={form.department_id} onChange={handleChange} required><option value="">اختر القسم</option>{departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>{errors.department_id && <span className="error">{errors.department_id[0]}</span>}</div>
           <div className="form-group"><label>التخصص *</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} required />{errors.major && <span className="error">{errors.major[0]}</span>}</div>
-          <div className="form-group"><label>كلمة المرور *</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} required />{errors.password && <span className="error">{errors.password[0]}</span>}</div>
-          <div className="form-group"><label>تأكيد كلمة المرور *</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} required /></div>
+          <div className="form-group"><label>كلمة المرور *</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} required placeholder="8 أحرف على الأقل" />{errors.password && <span className="error">{errors.password[0] || errors.password}</span>}</div>
+          <div className="form-group"><label>تأكيد كلمة المرور *</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} required />{errors.password_confirmation && <span className="error">{errors.password_confirmation}</span>}</div>
           <div className="form-actions"><button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "إضافة"}</button><button type="button" onClick={() => navigate("/admin/users")}>إلغاء</button></div>
         </form>
       )}

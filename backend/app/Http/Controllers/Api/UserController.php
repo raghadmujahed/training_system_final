@@ -10,6 +10,7 @@ use App\Http\Requests\LoginRequest;
 use App\Enums\UserStatus;
 use App\Helpers\ActivityLogger;
 use App\Http\Resources\UserResource;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\TrainingTrackResolver;
 use App\Services\UserService;
@@ -466,8 +467,20 @@ class UserController extends Controller
         $success = [];
         $failed = [];
 
+        // Get student role ID for email validation
+        $studentRoleId = Role::where('name', 'student')->value('id');
+
         foreach ($request->users as $userData) {
             try {
+                // Validate student email domain
+                $roleId = $userData['role_id'] ?? null;
+                $email = $userData['email'] ?? null;
+                if ($roleId && $email && (string)$roleId === (string)$studentRoleId) {
+                    if (!str_ends_with(strtolower($email), '@students.hebron.edu')) {
+                        throw new \Exception('البريد الإلكتروني للطلاب يجب أن ينتهي بـ @students.hebron.edu');
+                    }
+                }
+
                 $user = $this->userService->createUser($userData);
                 $success[] = $user;
                 ActivityLogger::log(

@@ -3,6 +3,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getUser, createUser, updateUser } from "../../../services/api";
 import { useRoles, useDepartments } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
+import {
+  isValidPhone,
+  getPhoneErrorMessage,
+  isValidEmail,
+  isValidStudentEmail,
+  getStudentEmailErrorMessage,
+  isValidPassword,
+  getPasswordErrorMessage,
+  isValidUniversityId,
+  getUniversityIdErrorMessage,
+  trimInput,
+} from "../../../utils/validation";
 
 export default function UserForm() {
   const toast = useAppToast();
@@ -50,11 +62,114 @@ export default function UserForm() {
   }, [id]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
     // إزالة الخطأ عند التعديل
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: null });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: null });
     }
+    // Real-time validation for specific fields
+    validateField(name, value);
+  };
+
+  const validateField = (fieldName, value) => {
+    const selectedRole = roles.find((r) => r.id === form.role_id);
+    const isStudent = selectedRole?.name === "student";
+
+    let error = null;
+
+    switch (fieldName) {
+      case "email":
+        if (value && !isValidEmail(value)) {
+          error = "صيغة البريد الإلكتروني غير صحيحة";
+        } else if (isStudent && value && !isValidStudentEmail(value)) {
+          error = getStudentEmailErrorMessage();
+        }
+        break;
+      case "phone":
+        if (value && !isValidPhone(value)) {
+          error = getPhoneErrorMessage();
+        }
+        break;
+      case "university_id":
+        if (isStudent && value && !isValidUniversityId(value)) {
+          error = getUniversityIdErrorMessage();
+        }
+        break;
+      case "password":
+        if (value && !id && !isValidPassword(value)) {
+          error = getPasswordErrorMessage();
+        }
+        break;
+      case "password_confirmation":
+        if (value && form.password && value !== form.password) {
+          error = "كلمتا المرور غير متطابقتين";
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (error) {
+      setErrors((prev) => ({ ...prev, [fieldName]: error }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    const selectedRole = roles.find((r) => r.id === form.role_id);
+    const isStudent = selectedRole?.name === "student";
+
+    // Validate name
+    if (!form.name.trim()) {
+      newErrors.name = "الاسم مطلوب";
+    }
+
+    // Validate email
+    if (!form.email.trim()) {
+      newErrors.email = "البريد الإلكتروني مطلوب";
+    } else if (!isValidEmail(form.email)) {
+      newErrors.email = "صيغة البريد الإلكتروني غير صحيحة";
+    } else if (isStudent && !isValidStudentEmail(form.email)) {
+      newErrors.email = getStudentEmailErrorMessage();
+    }
+
+    // Validate phone
+    if (form.phone && !isValidPhone(form.phone)) {
+      newErrors.phone = getPhoneErrorMessage();
+    }
+
+    // Validate university_id for students
+    if (isStudent) {
+      if (!form.university_id.trim()) {
+        newErrors.university_id = "الرقم الجامعي مطلوب للطلاب";
+      } else if (!isValidUniversityId(form.university_id)) {
+        newErrors.university_id = getUniversityIdErrorMessage();
+      }
+    }
+
+    // Validate role
+    if (!form.role_id) {
+      newErrors.role_id = "الدور مطلوب";
+    }
+
+    // Validate password for new users
+    if (!id) {
+      if (!form.password) {
+        newErrors.password = "كلمة المرور مطلوبة";
+      } else if (!isValidPassword(form.password)) {
+        newErrors.password = getPasswordErrorMessage();
+      }
+
+      if (!form.password_confirmation) {
+        newErrors.password_confirmation = "تأكيد كلمة المرور مطلوب";
+      } else if (form.password !== form.password_confirmation) {
+        newErrors.password_confirmation = "كلمتا المرور غير متطابقتين";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -62,12 +177,29 @@ export default function UserForm() {
     setLoading(true);
     setErrors({});
 
+    // Frontend validation
+    if (!validateForm()) {
+      setLoading(false);
+      toast.error("يرجى تصحيح الأخطاء قبل المتابعة");
+      return;
+    }
+
     try {
+      // Trim text fields before sending
+      const trimmedForm = {
+        ...form,
+        name: trimInput(form.name),
+        email: trimInput(form.email),
+        university_id: trimInput(form.university_id),
+        phone: trimInput(form.phone),
+      };
+
       if (id) {
-        await updateUser(id, form);
+        await updateUser(id, trimmedForm);
       } else {
-        await createUser(form);
+        await createUser(trimmedForm);
       }
+      toast.success(id ? "تم تحديث المستخدم بنجاح" : "تم إضافة المستخدم بنجاح");
       navigate("/admin/users");
     } catch (err) {
       if (err.response?.data?.errors) {
@@ -104,13 +236,29 @@ export default function UserForm() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>الرقم الجامعي</label>
-            <input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} />
+            <label>الرقم الجامعي <span id="university_id_required" style={{ color: "#dc2626", display: "none" }}>*</span></label>
+            <input
+              type="text"
+              id="university_id"
+              name="university_id"
+              value={form.university_id}
+              onChange={handleChange}
+              placeholder="أرقام فقط (6-20 رقم)"
+            />
+            {errors.university_id && <span className="error">{errors.university_id}</span>}
           </div>
 
           <div className="form-group">
             <label>رقم الهاتف</label>
-            <input type="text" id="phone" name="phone" value={form.phone} onChange={handleChange} />
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={form.phone}
+              onChange={handleChange}
+              placeholder="مثال: 0561234567"
+            />
+            {errors.phone && <span className="error">{errors.phone}</span>}
           </div>
         </div>
 
@@ -140,13 +288,30 @@ export default function UserForm() {
         <div className="form-row">
           <div className="form-group">
             <label>كلمة المرور {!id && "*"}</label>
-            <input type="password" id="password" name="password" value={form.password} onChange={handleChange} required={!id} />
-            {errors.password && <span className="error">{errors.password[0]}</span>}
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              required={!id}
+              placeholder={!id ? "8 أحرف على الأقل" : ""}
+            />
+            {errors.password && <span className="error">{errors.password}</span>}
           </div>
 
           <div className="form-group">
             <label>تأكيد كلمة المرور {!id && "*"}</label>
-            <input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} required={!id} />
+            <input
+              type="password"
+              id="password_confirmation"
+              name="password_confirmation"
+              value={form.password_confirmation}
+              onChange={handleChange}
+              required={!id}
+              placeholder="أعد إدخال كلمة المرور"
+            />
+            {errors.password_confirmation && <span className="error">{errors.password_confirmation}</span>}
           </div>
         </div>
 

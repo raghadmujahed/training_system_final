@@ -1,42 +1,114 @@
 import { useState } from "react";
-import PageHeader from "../../components/common/PageHeader";
+import { changePassword } from "../../services/api";
+import { PageHeader, PasswordInput, AppButton, AppAlert, AppCard } from "../../components/common";
 import useAppToast from "../../hooks/useAppToast";
 
 export default function ChangePassword() {
   const toast = useAppToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  
   const [form, setForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    current_password: "",
+    new_password: "",
+    new_password_confirmation: "",
   });
 
+  const [fieldErrors, setFieldErrors] = useState({});
+
   const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Clear field error when user types
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: null }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!form.current_password) {
+      errors.current_password = "كلمة المرور الحالية مطلوبة";
+    }
+    
+    if (!form.new_password) {
+      errors.new_password = "كلمة المرور الجديدة مطلوبة";
+    } else if (form.new_password.length < 8) {
+      errors.new_password = "كلمة المرور يجب أن تكون 8 أحرف على الأقل";
+    }
+    
+    if (!form.new_password_confirmation) {
+      errors.new_password_confirmation = "تأكيد كلمة المرور مطلوب";
+    } else if (form.new_password !== form.new_password_confirmation) {
+      errors.new_password_confirmation = "كلمتا المرور غير متطابقتين";
+    }
+    
+    if (form.new_password === form.current_password && form.new_password) {
+      errors.new_password = "كلمة المرور الجديدة يجب أن تختلف عن الحالية";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
 
-    if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      toast.warning("يرجى تعبئة جميع الحقول");
+    if (!validateForm()) {
       return;
     }
 
-    if (form.newPassword !== form.confirmPassword) {
-      toast.warning("كلمة المرور الجديدة وتأكيدها غير متطابقين");
-      return;
+    setLoading(true);
+    
+    try {
+      await changePassword({
+        current_password: form.current_password,
+        new_password: form.new_password,
+        new_password_confirmation: form.new_password_confirmation,
+      });
+
+      setSuccess(true);
+      toast.success("تم تغيير كلمة المرور بنجاح");
+      
+      // Clear form
+      setForm({
+        current_password: "",
+        new_password: "",
+        new_password_confirmation: "",
+      });
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "فشل في تغيير كلمة المرور";
+      setError(errorMessage);
+      
+      // Handle validation errors from backend
+      if (err.response?.data?.errors) {
+        const backendErrors = err.response.data.errors;
+        const mappedErrors = {};
+        
+        if (backendErrors.current_password) {
+          mappedErrors.current_password = backendErrors.current_password[0];
+        }
+        if (backendErrors.new_password) {
+          mappedErrors.new_password = backendErrors.new_password[0];
+        }
+        if (backendErrors.new_password_confirmation) {
+          mappedErrors.new_password_confirmation = backendErrors.new_password_confirmation[0];
+        }
+        
+        setFieldErrors(mappedErrors);
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("تم تغيير كلمة المرور بنجاح");
-
-    setForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
   };
 
   return (
@@ -46,46 +118,86 @@ export default function ChangePassword() {
         subtitle="قم بإدخال كلمة المرور الحالية ثم الجديدة"
       />
 
-      <div className="form-card">
+      <AppCard className="max-w-2xl">
+        {success && (
+          <div className="mb-6">
+            <AppAlert variant="success">
+              تم تغيير كلمة المرور بنجاح. سيتم تطبيق التغيير في تسجيل الدخول القادم.
+            </AppAlert>
+          </div>
+        )}
+
+        {error && !fieldErrors.current_password && !fieldErrors.new_password && (
+          <div className="mb-6">
+            <AppAlert variant="error" dismissible onDismiss={() => setError(null)}>
+              {error}
+            </AppAlert>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <div className="form-group-custom">
-            <label className="form-label-custom">كلمة المرور الحالية</label>
-            <input
-              type="password"
-              name="currentPassword"
-              className="form-control-custom"
-              value={form.currentPassword}
-              onChange={handleChange}
-            />
-          </div>
+          <PasswordInput
+            label="كلمة المرور الحالية"
+            name="current_password"
+            value={form.current_password}
+            onChange={handleChange}
+            placeholder="أدخل كلمة المرور الحالية"
+            error={fieldErrors.current_password}
+            required
+            disabled={loading}
+          />
 
-          <div className="form-group-custom">
-            <label className="form-label-custom">كلمة المرور الجديدة</label>
-            <input
-              type="password"
-              name="newPassword"
-              className="form-control-custom"
-              value={form.newPassword}
-              onChange={handleChange}
-            />
-          </div>
+          <PasswordInput
+            label="كلمة المرور الجديدة"
+            name="new_password"
+            value={form.new_password}
+            onChange={handleChange}
+            placeholder="أدخل كلمة المرور الجديدة (8 أحرف على الأقل)"
+            error={fieldErrors.new_password}
+            required
+            disabled={loading}
+          />
 
-          <div className="form-group-custom">
-            <label className="form-label-custom">تأكيد كلمة المرور الجديدة</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              className="form-control-custom"
-              value={form.confirmPassword}
-              onChange={handleChange}
-            />
-          </div>
+          <PasswordInput
+            label="تأكيد كلمة المرور الجديدة"
+            name="new_password_confirmation"
+            value={form.new_password_confirmation}
+            onChange={handleChange}
+            placeholder="أعد إدخال كلمة المرور الجديدة"
+            error={fieldErrors.new_password_confirmation}
+            required
+            disabled={loading}
+          />
 
-          <button type="submit" className="btn-primary-custom">
-            تحديث كلمة المرور
-          </button>
+          <div className="flex items-center gap-4 mt-6">
+            <AppButton
+              type="submit"
+              variant="primary"
+              loading={loading}
+              disabled={loading}
+            >
+              تحديث كلمة المرور
+            </AppButton>
+            
+            <AppButton
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setForm({
+                  current_password: "",
+                  new_password: "",
+                  new_password_confirmation: "",
+                });
+                setFieldErrors({});
+                setError(null);
+              }}
+              disabled={loading}
+            >
+              إلغاء
+            </AppButton>
+          </div>
         </form>
-      </div>
+      </AppCard>
     </>
   );
 }

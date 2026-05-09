@@ -25,7 +25,7 @@ class UpdateUserRequest extends FormRequest
         $routeUserId = $routeUser instanceof User ? $routeUser->id : (int) $routeUser;
 
         return [
-            'university_id' => ['sometimes', 'nullable', 'string', 'max:255', Rule::unique('users', 'university_id')->ignore($routeUserId)],
+            'university_id' => ['sometimes', 'nullable', 'numeric', 'digits_between:6,20', Rule::unique('users', 'university_id')->ignore($routeUserId)],
             'name' => 'sometimes|string|max:255',
             'email' => ['sometimes', 'email', Rule::unique('users', 'email')->ignore($routeUserId)],
             'password' => 'sometimes|nullable|string|min:8',
@@ -102,6 +102,25 @@ class UpdateUserRequest extends FormRequest
                         'training_site_id',
                         "يوجد بالفعل {$label} مُعيَّن لهذا الموقع. لا يمكن تعيين أكثر من مدير واحد."
                     );
+                }
+            }
+
+            // ===== 4) البريد الإلكتروني للطلاب يجب أن يكون من نطاق @students.hebron.edu =====
+            if ($role->name === 'student') {
+                $email = $this->input('email');
+                if ($email && !str_ends_with(strtolower($email), '@students.hebron.edu')) {
+                    $validator->errors()->add(
+                        'email',
+                        'البريد الإلكتروني للطلاب يجب أن ينتهي بـ @students.hebron.edu'
+                    );
+                }
+            }
+
+            // ===== 5) التخصص إلزامي للطلاب =====
+            if ($role->name === 'student') {
+                $major = $this->input('major', $current?->major);
+                if (empty($major)) {
+                    $validator->errors()->add('major', 'التخصص مطلوب للطلاب.');
                 }
             }
         });

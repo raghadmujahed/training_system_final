@@ -1,0 +1,11 @@
+// Re-export all common components for easy imports
+export { default as AppButton } from './AppButton';
+export { default as AppCard } from './AppCard';
+export { default as AppInput } from './AppInput';
+export { default as AppAlert } from './AppAlert';
+export { default as EmptyState } from './EmptyState';
+export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as PageHeader } from './PageHeader';
+export { default as PasswordInput } from './PasswordInput';
+export { default as StatusBadge } from './StatusBadge';
