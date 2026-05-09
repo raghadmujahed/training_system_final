@@ -17,6 +17,7 @@ return new class extends Migration
             $table->enum('status', ['draft', 'submitted', 'reviewed'])->default('draft');
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('user_id');
             $table->index('form_key');

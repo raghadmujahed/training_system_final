@@ -29,11 +29,13 @@ return new class extends Migration
             $table->timestamp('academic_commented_at')->nullable();
             $table->boolean('visible_to_academic')->default(true);
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index(['training_assignment_id', 'user_id', 'date']);
             $table->index('status');
             $table->index('date');
             $table->index('archived_at');
+            $table->index(['training_assignment_id', 'status', 'date'], 'att_assign_status_date_idx');
         });
     }
 

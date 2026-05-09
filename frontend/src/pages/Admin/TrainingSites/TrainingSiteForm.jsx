@@ -5,6 +5,7 @@ import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/ui/Button";
+import { isRequired, isMinValue, isValidEmail, isValidPhone } from "../../../utils/validation";
 
 export default function TrainingSiteForm() {
   const toast = useAppToast();
@@ -30,6 +31,7 @@ export default function TrainingSiteForm() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkFile, setBulkFile] = useState(null);
   const [bulkResults, setBulkResults] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // تحميل البيانات إذا كان تعديل
   useEffect(() => {
@@ -58,8 +60,65 @@ export default function TrainingSiteForm() {
   }, [id]);
 
   // الإضافة / التعديل الفردي
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    // Clear error when user types
+    if (fieldErrors[name]) {
+      setFieldErrors({ ...fieldErrors, [name]: null });
+    }
+    
+    // Real-time validation for specific fields
+    if (name === 'email' && value && !isValidEmail(value)) {
+      setFieldErrors({ ...fieldErrors, email: "صيغة البريد الإلكتروني غير صحيحة" });
+    }
+    if (name === 'phone' && value && !isValidPhone(value)) {
+      setFieldErrors({ ...fieldErrors, phone: "رقم الهاتف يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059" });
+    }
+    if (name === 'mobile' && value && !isValidPhone(value)) {
+      setFieldErrors({ ...fieldErrors, mobile: "رقم المحمول يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059" });
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!isRequired(form.name)) {
+      errors.name = "اسم الموقع مطلوب";
+    }
+    
+    if (!isRequired(form.directorate)) {
+      errors.directorate = "المديرية مطلوبة";
+    }
+    
+    const capacity = Number(form.capacity);
+    if (!isMinValue(capacity, 1)) {
+      errors.capacity = "السعة يجب أن تكون 1 على الأقل";
+    }
+    
+    if (form.email && !isValidEmail(form.email)) {
+      errors.email = "صيغة البريد الإلكتروني غير صحيحة";
+    }
+    
+    if (form.phone && !isValidPhone(form.phone)) {
+      errors.phone = "رقم الهاتف يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059";
+    }
+    
+    if (form.mobile && !isValidPhone(form.mobile)) {
+      errors.mobile = "رقم المحمول يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059";
+    }
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
     try {
       if (id) await updateTrainingSite(id, form);
@@ -171,40 +230,100 @@ export default function TrainingSiteForm() {
         <h3 className="font-bold text-text mb-3">إضافة فردية</h3>
         <div className="form-group">
           <label>الاسم *</label>
-          <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <input 
+            type="text" 
+            name="name"
+            value={form.name} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.name ? 'border-red-500' : ''}
+            required 
+          />
+          {fieldErrors.name && <div className="text-red-500 text-sm mt-1">{fieldErrors.name}</div>}
         </div>
         <div className="form-group">
           <label>الموقع</label>
-          <input type="text" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+          <input 
+            type="text" 
+            name="location"
+            value={form.location} 
+            onChange={handleChange}
+          />
         </div>
         <div className="form-group">
           <label>الهاتف</label>
-          <input type="text" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <input 
+            type="text" 
+            name="phone"
+            value={form.phone} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.phone ? 'border-red-500' : ''}
+          />
+          {fieldErrors.phone && <div className="text-red-500 text-sm mt-1">{fieldErrors.phone}</div>}
         </div>
         <div className="form-group">
           <label>البريد الإلكتروني (بريد المدير)</label>
-          <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input 
+            type="email" 
+            name="email"
+            value={form.email} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.email ? 'border-red-500' : ''}
+          />
+          {fieldErrors.email && <div className="text-red-500 text-sm mt-1">{fieldErrors.email}</div>}
         </div>
         <div className="form-group">
           <label>رقم المحمول</label>
-          <input type="text" value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} />
+          <input 
+            type="text" 
+            name="mobile"
+            value={form.mobile} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.mobile ? 'border-red-500' : ''}
+          />
+          {fieldErrors.mobile && <div className="text-red-500 text-sm mt-1">{fieldErrors.mobile}</div>}
         </div>
         <div className="form-group">
           <label>الوصف</label>
-          <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <textarea 
+            name="description"
+            value={form.description} 
+            onChange={handleChange}
+          />
         </div>
         <div className="form-group">
-          <label>المديرية</label>
-          <select value={form.directorate} onChange={(e) => setForm({ ...form, directorate: e.target.value })}>
+          <label>المديرية *</label>
+          <select 
+            name="directorate"
+            value={form.directorate} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.directorate ? 'border-red-500' : ''}
+            required
+          >
             <option value="وسط">وسط</option>
             <option value="شمال">شمال</option>
             <option value="جنوب">جنوب</option>
             <option value="يطا">يطا</option>
           </select>
+          {fieldErrors.directorate && <div className="text-red-500 text-sm mt-1">{fieldErrors.directorate}</div>}
         </div>
         <div className="form-group">
-          <label>السعة</label>
-          <input type="number" value={form.capacity} onChange={(e) => setForm({ ...form, capacity: parseInt(e.target.value) })} />
+          <label>السعة *</label>
+          <input 
+            type="number" 
+            name="capacity"
+            value={form.capacity} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.capacity ? 'border-red-500' : ''}
+            min="1"
+            required
+          />
+          {fieldErrors.capacity && <div className="text-red-500 text-sm mt-1">{fieldErrors.capacity}</div>}
         </div>
         <div className="form-group">
           <label>نوع الموقع</label>
@@ -277,5 +396,7 @@ export default function TrainingSiteForm() {
         )}
       </fieldset>
     </div>
+  );
+}   </div>
   );
 }

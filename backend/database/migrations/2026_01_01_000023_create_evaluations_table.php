@@ -25,12 +25,16 @@ return new class extends Migration
             $table->json('criteria_scores')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('template_id');
             $table->index('evaluator_id');
             $table->index('evaluatee_id');
             $table->index('training_assignment_id');
             $table->index('status');
+            $table->index(['training_assignment_id', 'is_final'], 'eval_assign_final_idx');
+            $table->index(['evaluator_id', 'is_final'], 'eval_evaluator_final_idx');
+            $table->index(['status', 'submitted_at'], 'eval_status_submitted_idx');
         });
     }
 

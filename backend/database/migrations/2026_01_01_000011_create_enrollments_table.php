@@ -17,8 +17,11 @@ return new class extends Migration
             $table->enum('status', ['active', 'dropped', 'completed'])->default('active');
             $table->decimal('final_grade', 5, 2)->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->unique(['user_id', 'section_id', 'academic_year', 'semester']);
+            $table->index(['section_id', 'status'], 'enrollments_section_status_idx');
+            $table->index(['user_id', 'status'], 'enrollments_user_status_idx');
         });
     }
 

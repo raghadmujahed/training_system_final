@@ -24,10 +24,13 @@ return new class extends Migration
             $table->boolean('needs_discussion')->default(false);
             $table->timestamp('academic_reviewed_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('training_assignment_id');
             $table->index('user_id');
             $table->index('log_date');
+            $table->index(['training_assignment_id', 'status'], 'logs_assign_status_idx');
+            $table->index(['training_assignment_id', 'academic_review_status'], 'logs_assign_academic_status_idx');
         });
     }
 

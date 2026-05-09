@@ -79,8 +79,28 @@ export default function AnnouncementForm() {
     setForm({ ...form, target_ids: selected });
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!form.title || !form.title.trim()) {
+      newErrors.title = "عنوان الإعلان مطلوب";
+    }
+    
+    if (!form.content || !form.content.trim()) {
+      newErrors.content = "محتوى الإعلان مطلوب";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
     setErrors({});
 
@@ -119,16 +139,31 @@ export default function AnnouncementForm() {
   const targetOptions = () => {
     switch (form.target_type) {
       case "role":
-        return roles;
-      case "user":
-        return users;
-      case "department":
-        return departments;
-      default:
-        return [];
-    }
+        return roles;b4
+      case "user className="block text-sm font-medium mb-1"":
+        return u
+           sers;
+           
+           
+           e={handlChange}
+            onBlure}
+            className={`w-full border rounded px-3 py-2 ${errors.title ? 'border-rd-500' : ''}`
+           
+         
+      case "department":divtxt-ed-500 text-sm mt-1">{Aray.isArray(errs.title) ?  : errors.titlediv
+        return      default:
+        return [];b4
+    } className="block text-sm font-medium mb-1"
   };
-
+           
+          
+           nChage={handle}
+            onBlure}
+            className={`w-full border rounded px-3 py-2 ${rrors.content ? 'border-red-500' : ''`}
+            rows="5"
+           
+         
+divtext-red-500 text-sm mt-1">{Array.isArray(s.contnt) ? e : errors.contentdiv
   return (
     <div className="announcement-form">
       <div className="page-header">

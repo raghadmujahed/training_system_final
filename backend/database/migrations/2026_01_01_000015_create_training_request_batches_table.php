@@ -14,7 +14,7 @@ return new class extends Migration
             $table->date('letter_date')->nullable();
             $table->text('content')->nullable();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-            $table->enum('governing_body', ['directorate_of_education', 'ministry_of_health'])->default('directorate_of_education');
+            $table->enum('governing_body', ['directorate_of_education', 'ministry_of_health', 'health_directorate', 'education_directorate'])->default('directorate_of_education');
             $table->string('directorate')->nullable();
             $table->enum('status', ['draft', 'sent', 'partially_sent', 'archived'])->default('draft');
             $table->timestamp('sent_at')->nullable();

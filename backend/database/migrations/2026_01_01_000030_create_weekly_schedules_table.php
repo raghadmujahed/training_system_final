@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('training_site_id')->constrained()->onDelete('cascade');
             $table->foreignId('submitted_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->unique(['teacher_id', 'day']);
         });

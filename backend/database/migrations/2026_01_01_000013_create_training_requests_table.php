@@ -23,7 +23,7 @@ return new class extends Migration
             $table->text('rejection_reason')->nullable();
             $table->string('letter_number')->nullable();
             $table->date('letter_date')->nullable();
-            $table->enum('governing_body', ['directorate_of_education', 'ministry_of_health'])->default('directorate_of_education');
+            $table->enum('governing_body', ['directorate_of_education', 'ministry_of_health', 'health_directorate', 'education_directorate'])->default('directorate_of_education');
             $table->string('directorate')->nullable();
             $table->string('attachment_path')->nullable();
             $table->timestamp('coordinator_reviewed_at')->nullable();

@@ -15,7 +15,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            $table->string('status')->default('active');
+            $table->string('status')->default('draft');
+            $table->text('coordinator_note')->nullable();
             $table->timestamps();
             $table->index('user_id');
         });

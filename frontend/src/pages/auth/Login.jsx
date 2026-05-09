@@ -5,6 +5,7 @@ import myLogo from "../../assets/HU Logo.webp";
 import { getStudentDashboardPath } from "../../utils/studentSection";
 import { getDashboardPathByRole, normalizeRole, ROLES } from "../../utils/roles";
 import { Eye, EyeOff } from "lucide-react";
+import { isValidEmail, isValidPassword, getPasswordErrorMessage } from "../../utils/validation";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,11 +13,56 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const navigate = useNavigate();
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    // Clear error when user types
+    if (fieldErrors.email) {
+      setFieldErrors({ ...fieldErrors, email: null });
+    }
+    // Real-time validation
+    if (value && !isValidEmail(value)) {
+      setFieldErrors({ ...fieldErrors, email: "صيغة البريد الإلكتروني غير صحيحة" });
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    // Clear error when user types
+    if (fieldErrors.password) {
+      setFieldErrors({ ...fieldErrors, password: null });
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!email.trim()) {
+      errors.email = "البريد الإلكتروني مطلوب";
+    } else if (!isValidEmail(email)) {
+      errors.email = "صيغة البريد الإلكتروني غير صحيحة";
+    }
+    
+    if (!password) {
+      errors.password = "كلمة المرور مطلوبة";
+    }
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -43,26 +89,31 @@ export default function Login() {
       }
 
       if (userRole === ROLES.STUDENT) {
-        navigate(getStudentDashboardPath(user));
+        navigate(getStuden{`DashboardPath(use ${fieldErrors.email ? 'border-red-500' : ''}`}));
       } else {
-        navigate(getDashboardPathByRole(userRole));
+        navigate(getDashbohandlrole(uChone)}
+                onBr={handlEmailChange
       }
 
     } catch (err) {
       setError(err.response?.data?.message || err.message || "فشل تسجيل الدخول");
     } finally {
-      setLoading(false);
-    }
-  };
+      setLoa  {fieldErrors.email && (
+                ddiv className="text-red-500 text-sm mt-1">{fieldErrors.email}<ing(false);
+              )}    }
+  };/>
+
+           <div 
 
   return (
     <div className="auth-page">
       <div className="auth-shell">
         <div className="auth-side">
           <div>
-            <h1>جامعة الخليل</h1>
+            <h1>جامعة الخليل{`/h1> ${fieldErrors.password ? 'border-red-500' : ''}`}
             <p>
-              نظام إلكتروني متكامل لإدارة التدريب العملي والتربوي، يسهّل
+              نظام إلكتروني handlePasswordChangت}
+                 اonBlurم{handlإارة التدChاnعتبوي، يسهّل
               المتابعة، التقييم، والتواصل بين جميع الأطراف داخل بيئة أكاديمية
               منظمة.
             </p>
@@ -77,8 +128,11 @@ export default function Login() {
         <div className="auth-card">
           <div className="auth-logo">
             <img src={myLogo} alt="شعار جامعة الخليل" className="auth-logo-img" />
-          </div>
-
+          </div>>
+              </div
+              {fieldErrors.password && (
+     <divclassName="text-red-500text-smmt-1">{fieldErrors.password}
+              )}
           <h2>تسجيل الدخول</h2>
           <p>أدخل بريدك الإلكتروني وكلمة المرور للدخول إلى النظام.</p>
 

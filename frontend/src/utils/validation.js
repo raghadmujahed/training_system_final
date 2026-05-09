@@ -173,6 +173,166 @@ export const validateField = (fieldName, value, rules, form = {}) => {
   if (!fieldRules) return null;
 
   for (const rule of fieldRules) {
+    const { type, message, compareField, min, max } = rule;
+
+    switch (type) {
+      case "required":
+        if (!isRequired(value)) {
+          return message || getRequiredErrorMessage(fieldName);
+        }
+        break;
+      case "email":
+        if (value && !isValidEmail(value)) {
+          return message || "صيغة البريد الإلكتروني غير صحيحة";
+        }
+        break;
+      case "studentEmail":
+        if (value && !isValidStudentEmail(value)) {
+          return message || getStudentEmailErrorMessage();
+        }
+        break;
+      case "phone":
+        if (value && !isValidPhone(value)) {
+          return message || getPhoneErrorMessage();
+        }
+        break;
+      case "password":
+        if (value && !isValidPassword(value)) {
+          return message || getPasswordErrorMessage();
+        }
+        break;
+      case "passwordMatch":
+        if (!isPasswordMatch(form[compareField], value)) {
+          return message || getPasswordMatchErrorMessage();
+        }
+        break;
+      case "universityId":
+        if (value && !isValidUniversityId(value)) {
+          return message || getUniversityIdErrorMessage();
+        }
+        break;
+      case "name":
+        if (value && !isValidName(value)) {
+          return message || getNameErrorMessage();
+        }
+        break;
+      case "numeric":
+        if (value && !isNumeric(value)) {
+          return message || getNumericErrorMessage();
+        }
+        break;
+      case "minValue":
+        if (value && !isMinValue(value, min)) {
+          return message || getMinValueErrorMessage(min);
+        }
+        break;
+      case "maxValue":
+        if (value && !isMaxValue(value, max)) {
+          return message || getMaxValueErrorMessage(max);
+        }
+        break;
+      case "date":
+        if (value && !isValidDate(value)) {
+          return message || getInvalidDateErrorMessage();
+        }
+        break;
+      case "dateAfter":
+        if (!isDateAfter(form[compareField], value)) {
+          return message || getDateRangeErrorMessage();
+        }
+        break;
+      case "integer":
+        if (value && !isInteger(value)) {
+          return message || getIntegerErrorMessage();
+        }
+        break;
+      case "minLength":
+        if (value && !isMinLength(value, min)) {
+          return message || getMinLengthErrorMessage(min);
+        }
+        break;
+      case "maxLength":
+        if (value && !isMaxLength(value, max)) {
+          return message || getMaxLengthErrorMessage(max);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  return null;
+};
+          if (value && !isValidName(value)) {
+            fieldError = message || getNameErrorMessage();
+          }
+          break;
+        case "numeric":
+          if (value && !isNumeric(value)) {
+            fieldError = message || getNumericErrorMessage();
+          }
+          break;
+        case "minValue":
+          if (value && !isMinValue(value, min)) {
+            fieldError = message || getMinValueErrorMessage(min);
+          }
+          break;
+        case "maxValue":
+          if (value && !isMaxValue(value, max)) {
+            fieldError = message || getMaxValueErrorMessage(max);
+          }
+          break;
+        case "date":
+          if (value && !isValidDate(value)) {
+            fieldError = message || getInvalidDateErrorMessage();
+          }
+          break;
+        case "dateAfter":
+          if (!isDateAfter(form[compareField], value)) {
+            fieldError = message || getDateRangeErrorMessage();
+          }
+          break;
+        case "integer":
+          if (value && !isInteger(value)) {
+            fieldError = message || getIntegerErrorMessage();
+          }
+          break;
+        case "minLength":
+          if (value && !isMinLength(value, min)) {
+            fieldError = message || getMinLengthErrorMessage(min);
+          }
+          break;
+        case "maxLength":
+          if (value && !isMaxLength(value, max)) {
+            fieldError = message || getMaxLengthErrorMessage(max);
+          }
+          break;
+        case "custom":
+          if (condition && !condition(value, form)) {
+            fieldError = message || "قيمة غير صحيحة";
+          }
+          break;
+        default:
+          break;
+      }
+
+      if (fieldError) {
+        errors[field] = fieldError;
+        isValid = false;
+        break; // Stop at first error for this field
+      }
+    }
+  }
+
+  return { isValid, errors };
+};
+
+// Real-time validation helper
+export const validateField = (fieldName, value, rules, form = {}) => {
+  const fieldRules = rules[fieldName];
+  if (!fieldRules) return null;
+
+  for (const rule of fieldRules) {
     const { type, message, compareField } = rule;
 
     switch (type) {

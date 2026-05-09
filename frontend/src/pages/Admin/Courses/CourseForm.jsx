@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCourse, createCourse, updateCourse } from "../../../services/api";
 import { useDepartments } from "../../../hooks/useSharedData";
+import { isRequired, isMinValue, isMaxValue, isInteger } from "../../../utils/validation";
 
 export default function CourseForm() {
   const { id } = useParams();
@@ -25,12 +26,61 @@ export default function CourseForm() {
   }, [id]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: null });
+    
+    // Real-time validation for numeric fields
+    if (name === 'credit_hours' && value) {
+      const numValue = Number(value);
+      if (!isInteger(value) || !isMinValue(numValue, 1) || !isMaxValue(numValue, 6)) {
+        setErrors({ ...errors, credit_hours: "عدد الساعات الجامعية يجب أن يكون عددًا صحيحًا بين 1 و 6" });
+      }
+    }
+    if (name === 'training_hours' && value) {
+      const numValue = Number(value);
+      if (!isInteger(value) || !isMinValue(numValue, 0) || !isMaxValue(numValue, 500)) {
+        setErrors({ ...errors, training_hours: "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا بين 0 و 500" });
+      }
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    onBlu={handlChange} className={errors.code ? 'border-red-500' : ''} re text-red-500 text-smArray.isArray() ? errors.code : errors.code
+    if (!isRequired(form.code)) {nChange={hadle} onBlure} className={errors.name ? 'border-rd-500' : ''r text-ed-500 text-smArray.isArray(errors.nam) ? e : errors.name
+      newErrors.code = "كود المساق مطلوب";
+    }onBlu={handlChange} className={errors.department_id ? 'border-red-500' : ''} re
+    
+    if (!isRequired(form.name)) {
+      newErrors.name = "اسم المساق مطلوب";
+    } text-red-500 text-smArray.isArray(errors.department_id) ?  : errors.department_id
+    
+    if (!isRequired(form.department_id)) {r text-ed-500 text-smArray.isArray() ? errors.description : errors.description
+      newErrors.department_id = "القسم مطلوب";
+    }onBlur={handleChange} classNae={errors.credt_hours ? 'border-red-500' : ''} mi text-red-500 text-smArray.isArray(errors.credit_hours) ?  : errors.credit_hours
+    nChange={hadle} onBlurclassNae={errors.traing_hours ? 'border-red-500' : ''} min text-red-500 text-smArray.isArray(errors.training_hours) ?  : errors.training_hours
+    const creditHours = Number(form.credit_hours);
+    if (!isInteger(form.credit_hours) || !isMinVanChange={haldleue(cre} onBlurditHours, 1) e} className={errors.typ| ? 'border-red-500' : ''| !isMaxValue(creditHours, 6)) {
+      newErrors.credit_hours = "عدد الساعات الجامعية يجب أن يكون عددًا صحيحًا بين 1 و 6";
+    }
+    r text-ed-500 text-smArray.isArray(errors.type) ?  : errors.type
+    const trainingHours = Number(form.training_hours);
+    if (!isInteger(form.training_hours) || !isMinValue(trainingHours, 0) || !isMaxValue(trainingHours, 500)) {
+      newErrors.training_hours = "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا بين 0 و 500";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setErrors({});
     try {
       if (id) await updateCourse(id, form);

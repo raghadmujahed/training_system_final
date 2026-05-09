@@ -99,6 +99,39 @@ export default function EnrollmentForm() {
     if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    
+    if (!form.user_id) {
+      newErrors.user_id = "الطالب مطلوب";
+    }
+    
+    if (!form.section_id) {
+      newErrors.section_id = "الشعبة مطلوبة";
+    }
+    
+    const academicYear = Number(form.academic_year);
+    if (!form.academic_year || academicYear < 2000 || academicYear > 2100) {
+      newErrors.academic_year = "العام الدراسي يجب أن يكون سنة صحيحة بين 2000 و 2100";
+    }
+    
+    if (!form.semester) {
+      newErrors.semester = "الفصل الدراسي مطلوب";
+    }
+    
+    if (form.final_grade !== "" && (form.final_grade < 0 || form.final_grade > 100)) {
+      newErrors.final_grade = "الدرجة النهائية يجب أن تكون بين 0 و 100";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

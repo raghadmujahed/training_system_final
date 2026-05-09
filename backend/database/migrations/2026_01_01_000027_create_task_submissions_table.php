@@ -24,10 +24,14 @@ return new class extends Migration
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('task_id');
             $table->index('user_id');
             $table->index('status');
+            $table->index(['review_status', 'needs_resubmission'], 'task_sub_review_resub_idx');
+            $table->index(['user_id', 'review_status'], 'task_sub_user_review_idx');
+            $table->index(['task_id', 'review_status'], 'task_sub_task_review_idx');
         });
     }
 

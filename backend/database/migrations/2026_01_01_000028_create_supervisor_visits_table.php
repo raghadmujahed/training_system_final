@@ -27,10 +27,12 @@ return new class extends Migration
             $table->text('general_notes')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('supervisor_id');
             $table->index('training_assignment_id');
             $table->index('visit_date');
+            $table->index(['supervisor_id', 'scheduled_date', 'status'], 'visits_supervisor_sched_status_idx');
         });
     }
 

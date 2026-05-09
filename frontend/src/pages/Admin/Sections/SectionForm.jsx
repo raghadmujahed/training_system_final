@@ -61,14 +61,46 @@ export default function SectionForm() {
       // عند تغيير المساق، إعادة تعيين المشرف لأن المشرفين يتغيرون حسب القسم
       ...(name === 'course_id' ? { academic_supervisor_id: '' } : {}),
     }));
-    if (errors[name]) setErrors({ ...errors, [name]: null });
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: null });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!form.name || !form.name.trim()) {
+      newErrors.name = "اسم الشعبة مطلوب";
+    }
+    
+    if (!form.course_id) {
+      newErrors.course_id = "المساق مطلوب";
+    }
+    
+    const academicYear = Number(form.academic_year);
+    if (!form.academic_year || academicYear < 2000 || academicYear > 2100) {
+      newErrors.academic_year = "العام الدراسي يجب أن يكون سنة صحيحة بين 2000 و 2100";
+    }
+    
+    if (!form.semester) {
+      newErrors.semester = "الفصل الدراسي مطلوب";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setErrors({});
-    try {
+    try {onBlu={handlChange} className={errors.name ? 'border-red-500' : ''} re
+            {errors.name && <div className="text-red-500 text-sm mt-1">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</div>}
       if (id) {
         await updateSection(id, form);
       } else {
@@ -97,36 +129,37 @@ export default function SectionForm() {
         <div className="form-row">
           <div className="form-group">
             <label>اسم الشعبة *</label>
-            <input type="text" name="name" value={form.name} onChange={handleChange} required />
-            {errors.name && <span className="error">{errors.name[0]}</span>}
+            <input type="text" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />
+            {errors.name && <div className="text-red-500 text-sm mt-1">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</div>}
           </div>
 
           <div className="form-group">
             <label>السنة الأكاديمية *</label>
-            <input type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
-            {errors.academic_year && <span className="error">{errors.academic_year[0]}</span>}
+            <input type="number" name="academic_year" value={form.academic_year} onChange={handleChange} onBlur={handleChange} className={errors.academic_year ? 'border-red-500' : ''} required />
+            {errors.academic_year && <div className="text-red-500 text-sm mt-1">{Array.isArray(errors.academic_year) ? errors.academic_year[0] : errors.academic_year}</div>}
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label>المساق *</label>
-            <select name="course_id" value={form.course_id} onChange={handleChange} required>
+            <select name="course_id" value={form.course_id} onChange={handleChange} onBlur={handleChange} className={errors.course_id ? 'border-red-500' : ''} required>
               <option value="">اختر المساق</option>
               {courses.map(course => (
                 <option key={course.id} value={course.id}>{course.name} ({course.code})</option>
               ))}
             </select>
-            {errors.course_id && <span className="error">{errors.course_id[0]}</span>}
+            {errors.course_id && <div className="text-red-500 text-sm mt-1">{Array.isArray(errors.course_id) ? errors.course_id[0] : errors.course_id}</div>}
           </div>
 
           <div className="form-group">
             <label>الفصل الدراسي *</label>
-            <select name="semester" value={form.semester} onChange={handleChange}>
+            <select name="semester" value={form.semester} onChange={handleChange} onBlur={handleChange} className={errors.semester ? 'border-red-500' : ''} required>
               <option value="first">الفصل الأول</option>
               <option value="second">الفصل الثاني</option>
               <option value="summer">الفصل الصيفي</option>
             </select>
+            {errors.semester && <div className="text-red-500 text-sm mt-1">{Array.isArray(errors.semester) ? errors.semester[0] : errors.semester}</div>}
           </div>
         </div>
 

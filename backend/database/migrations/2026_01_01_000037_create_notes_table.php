@@ -15,6 +15,7 @@ return new class extends Migration
             $table->text('content');
             $table->string('type')->default('general');
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('user_id');
         });

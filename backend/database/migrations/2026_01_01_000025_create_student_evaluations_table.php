@@ -11,18 +11,32 @@ return new class extends Migration
         Schema::create('student_evaluations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('evaluation_template_id')->constrained()->cascadeOnDelete();
             $table->foreignId('evaluator_id')->constrained('users')->cascadeOnDelete();
-            $table->decimal('score', 5, 2)->nullable();
-            $table->text('feedback')->nullable();
-            $table->json('scores_by_criteria')->nullable();
-            $table->timestamp('completed_at')->nullable();
-            $table->string('status')->default('pending');
+            $table->foreignId('training_request_student_id')->nullable()->constrained('training_request_students')->onDelete('cascade');
+
+            // Rating fields (1-5 scale)
+            $table->tinyInteger('supervisor')->nullable();
+            $table->tinyInteger('attendance')->nullable();
+            $table->tinyInteger('cooperation_with_staff')->nullable();
+            $table->tinyInteger('professionalism')->nullable();
+            $table->tinyInteger('dealing_with_students')->nullable();
+            $table->tinyInteger('manners')->nullable();
+            $table->tinyInteger('participation_in_activities')->nullable();
+            $table->tinyInteger('school')->nullable();
+            $table->tinyInteger('comfort')->nullable();
+            $table->tinyInteger('professional_ethics')->nullable();
+
+            // Text fields
+            $table->text('general_notes')->nullable();
+
+            $table->date('evaluation_date')->default(now());
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
-            $table->index('student_id');
-            $table->index('evaluation_template_id');
-            $table->index('evaluator_id');
+
+            // Indexes for better performance
+            $table->index(['student_id', 'evaluation_date']);
+            $table->index(['evaluator_id', 'evaluation_date']);
         });
     }
 

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('coordinator_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('field_supervisor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('status', ['assigned', 'ongoing', 'completed'])->default('assigned');
-            $table->string('academic_status')->nullable();
+            $table->enum('academic_status', ['not_started', 'in_training', 'needs_follow_up', 'completed', 'late', 'withdrawn'])->default('not_started')->nullable();
             $table->text('academic_status_note')->nullable();
             $table->foreignId('academic_status_updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('academic_status_updated_at')->nullable();
@@ -28,6 +28,7 @@ return new class extends Migration
             $table->date('end_date');
             $table->timestamp('attendance_submitted_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('enrollment_id');
             $table->index('training_request_id');
@@ -41,6 +42,7 @@ return new class extends Migration
             $table->index('academic_status_updated_by');
             $table->index('status');
             $table->index(['status', 'start_date']);
+            $table->index(['academic_supervisor_id', 'academic_status'], 'ta_supervisor_academic_status_idx');
         });
     }
 

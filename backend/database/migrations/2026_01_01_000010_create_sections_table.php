@@ -19,7 +19,9 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->integer('capacity')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
+            $table->index(['academic_supervisor_id', 'semester', 'course_id'], 'sections_supervisor_sem_course_idx');
         });
     }
 

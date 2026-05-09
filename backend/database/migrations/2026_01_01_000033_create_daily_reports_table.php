@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('reviewed_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('student_id');
             $table->index('field_supervisor_id');

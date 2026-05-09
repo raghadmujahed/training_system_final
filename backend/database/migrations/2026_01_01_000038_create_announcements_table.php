@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('expires_at')->nullable();
             $table->boolean('all_students')->default(false);
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('user_id');
             $table->index('status');

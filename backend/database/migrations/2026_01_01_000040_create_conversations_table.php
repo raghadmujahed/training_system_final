@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('participant_two_id')->constrained('users')->cascadeOnDelete();
             $table->timestamp('last_message_at')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('participant_one_id');
             $table->index('participant_two_id');

@@ -26,6 +26,7 @@ return new class extends Migration
             $table->boolean('is_required')->default(true);
             $table->string('distribution_key')->nullable();
             $table->timestamp('archived_at')->nullable();
+            $table->string('archived_period', 50)->nullable();
             $table->timestamps();
             $table->index('assigned_by');
             $table->index('status');

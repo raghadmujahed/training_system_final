@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('capacity')->default(3);
             $table->enum('directorate', ['وسط', 'شمال', 'جنوب', 'يطا'])->nullable();
             $table->enum('site_type', ['school', 'health_center'])->default('school');
-            $table->enum('governing_body', ['directorate_of_education', 'ministry_of_health'])->default('directorate_of_education');
+            $table->enum('governing_body', ['directorate_of_education', 'ministry_of_health', 'health_directorate', 'education_directorate'])->default('directorate_of_education');
             $table->enum('school_type', ['public', 'private', 'unrwa'])->default('public');
             $table->enum('gender_classification', ['boys', 'girls', 'mixed'])->nullable();
             $table->enum('school_level', ['lower', 'upper', 'both'])->nullable();
