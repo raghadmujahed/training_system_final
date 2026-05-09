@@ -131,7 +131,7 @@ export default function CoordinatorOfficialLetters({ audience = "coordinator" })
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <FileText size={44} />
+            <FileText size={26} />
           </div>
           <div className="flex-1">
             <h1 className="hero-title">{isPsych ? "الكتب الرسمية / الدفعات — علم النفس" : "دفعات طلبات التدريب"}</h1>

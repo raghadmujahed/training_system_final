@@ -1,7 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
+import { Users } from "lucide-react";
 import { getHeadDepartmentStudents, getHeadDepartmentStudentDetails, getSections } from "../../services/api";
 import { useCourses } from "../../hooks/useSharedData";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import PageHeader from "../../components/common/PageHeader";
 
 export default function HeadOfDepartmentStudents() {
   const [students, setStudents] = useState([]);
@@ -122,10 +124,11 @@ export default function HeadOfDepartmentStudents() {
 
   return (
     <div className="head-department-students">
-      <div className="page-header">
-        <h1>قائمة الطلاب</h1>
-        <p>عرض وإدارة بيانات طلاب القسم</p>
-      </div>
+      <PageHeader
+        title="قائمة الطلاب"
+        subtitle="عرض وإدارة بيانات طلاب القسم"
+        icon={Users}
+      />
 
       {/* Filters */}
       <div className="filters-section">
@@ -306,19 +309,6 @@ export default function HeadOfDepartmentStudents() {
           margin: 0 auto;
         }
 
-        .page-header {
-          margin-bottom: 30px;
-        }
-
-        .page-header h1 {
-          color: var(--primary);
-          margin-bottom: 5px;
-        }
-
-        .page-header p {
-          color: var(--text-muted);
-          margin: 0;
-        }
 
         .filters-section {
           background: white;

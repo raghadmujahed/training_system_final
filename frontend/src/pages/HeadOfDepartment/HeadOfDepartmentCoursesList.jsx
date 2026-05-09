@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { deleteCourse, archiveCourse } from "../../services/api";
 import { apiCache } from "../../services/apiCache";
 import { useCourses } from "../../hooks/useSharedData";
-import { Plus, Edit, Trash2, BookOpen, Archive } from "lucide-react";
+import { Plus, Edit, Trash2, BookOpen, Archive, GraduationCap } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useAppToast from "../../hooks/useAppToast";
+import PageHeader from "../../components/common/PageHeader";
 
 export default function HeadOfDepartmentCoursesList() {
   const toast = useAppToast();
@@ -97,10 +98,13 @@ export default function HeadOfDepartmentCoursesList() {
 
   return (
     <div className="container">
-      <div
-        className="flex justify-between items-center mb-4"
-      >
-        <h2>المساقات</h2>
+      <PageHeader
+        title="إدارة المساقات"
+        subtitle="عرض وإدارة مساقات القسم الدراسية"
+        icon={GraduationCap}
+      />
+
+      <div className="flex justify-end mb-4">
         <button
           className="btn btn-primary flex items-center gap-2"
           onClick={() => navigate("/head-department/courses/create")}

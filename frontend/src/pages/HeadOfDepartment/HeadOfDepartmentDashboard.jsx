@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { LayoutDashboard } from "lucide-react";
 import { getHeadDepartmentDashboardStats } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import PageHeader from "../../components/common/PageHeader";
 
 export default function HeadOfDepartmentDashboard() {
   const [stats, setStats] = useState(null);
@@ -45,10 +47,11 @@ export default function HeadOfDepartmentDashboard() {
 
   return (
     <div className="head-department-dashboard">
-      <div className="page-header">
-        <h1>لوحة تحكم رئيس القسم</h1>
-        <p>نظرة عامة على إحصائيات القسم</p>
-      </div>
+      <PageHeader
+        title="لوحة تحكم رئيس القسم"
+        subtitle="نظرة عامة على إحصائيات القسم"
+        icon={LayoutDashboard}
+      />
 
       <div className="stats-grid">
         <div className="stat-card">

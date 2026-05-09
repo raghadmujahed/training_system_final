@@ -50,18 +50,14 @@ export default function CoordinatorStudents() {
 
   return (
     <div>
-      {/* Hero Section */}
-      <div className="hero-section mb-4">
-        <div className="hero-content">
-          <div className="hero-icon">
-            <Users size={44} />
-          </div>
-          <div className="flex-1">
-            <h1 className="hero-title">الطلبة</h1>
-            <p className="hero-subtitle">
-              قائمة الطلبة المتاحين للتوزيع على جهات التدريب.
-            </p>
-          </div>
+      {/* Page Header */}
+      <div className="content-header">
+        <div className="content-header-icon">
+          <Users size={26} />
+        </div>
+        <div className="content-header-content">
+          <h1 className="page-title">الطلبة</h1>
+          <p className="page-subtitle">قائمة الطلبة المتاحين للتوزيع على جهات التدريب</p>
         </div>
       </div>
 

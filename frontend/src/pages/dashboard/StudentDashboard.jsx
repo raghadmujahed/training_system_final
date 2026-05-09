@@ -116,7 +116,6 @@ export default function StudentDashboard({ forcedTrack = null }) {
   const [latestItems, setLatestItems] = useState([]);
   const [latestTasks, setLatestTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const abortControllerRef = useRef(null);
   const { data: publicAnnouncements } = useAnnouncements({ per_page: 6 });
   const currentUser = useMemo(() => readStoredUser(), []);
   const detectedTrack = getStudentTrack(currentUser);
@@ -136,17 +135,9 @@ export default function StudentDashboard({ forcedTrack = null }) {
   }, [summaryCards, effectiveTrack]);
 
   const fetchDashboardData = useCallback(async () => {
-    // إلغاء أي طلب سابق قبل بدء طلب جديد
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-    const signal = abortController.signal;
-
     setLoading(true);
     try {
-      const summary = await getStudentDashboardSummary({ signal });
+      const summary = await getStudentDashboardSummary();
       const user = summary?.user || {};
 
       // 1. بيانات المستخدم + الشعبة + المشرفين
@@ -240,26 +231,14 @@ export default function StudentDashboard({ forcedTrack = null }) {
       setLatestItems(formattedNotif);
       setLatestTasks(tasks.slice(0, 4));
     } catch (error) {
-      if (error.name === "CanceledError" || error.code === "ERR_CANCELED") {
-        return;
-      }
       console.error("خطأ في جلب بيانات لوحة التحكم:", error);
     } finally {
-      // فقط إذا لم يتم الإلغاء ننهي حالة التحميل
-      if (!signal.aborted) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   }, [effectiveTrack]);
 
   useEffect(() => {
     fetchDashboardData();
-    return () => {
-      // إلغاء أي طلب قيد التنفيذ عند إزالة المكون
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
   }, [fetchDashboardData]);
 
   if (forcedTrack && forcedTrack !== detectedTrack && detectedTrack) {
@@ -278,7 +257,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <GraduationCap size={48} />
+            <GraduationCap size={26} />
           </div>
           <div className="hero-text">
             <h1 className="hero-title">مرحباً، {studentInfo.name || "طالب"} 👋</h1>

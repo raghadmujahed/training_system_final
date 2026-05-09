@@ -156,23 +156,16 @@ const TraineeStudents = ({ siteType = "school" }) => {
     <>
       <style>{fadeIn}{spin}</style>
       <div className="animate-[fadeIn_0.4s_ease]">
-        {/* Hero */}
-        <div className="text-white mb-6 py-8 px-10 rounded-[20px] transition-all duration-400 ease" style={{
-          background: usePsychForm
-            ? "linear-gradient(135deg, #0e7490 0%, #0891b2 60%, #06b6d4 100%)"
-            : "linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 60%, #3b82f6 100%)",
-          boxShadow: usePsychForm ? "0 8px 32px rgba(14,116,144,0.3)" : "0 8px 32px rgba(30,58,95,0.3)",
-        }}>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
-              <ClipboardCheck size={28} />
-            </div>
-            <div>
-              <h1 className="m-0 text-[1.5rem] font-extrabold">تقييم الطلبة</h1>
-              <p className="m-0 mt-1 opacity-90 text-[0.95rem]">
-                {usePsychForm ? "نموذج تقييم طلاب علم النفس" : "نموذج تقييم طلاب أصول التربية"}
-              </p>
-            </div>
+        {/* Page Header */}
+        <div className="content-header">
+          <div className="content-header-icon">
+            <ClipboardCheck size={26} />
+          </div>
+          <div className="content-header-content">
+            <h1 className="page-title">تقييم الطلبة</h1>
+            <p className="page-subtitle">
+              {usePsychForm ? "نموذج تقييم طلاب علم النفس" : "نموذج تقييم طلاب أصول التربية"}
+            </p>
           </div>
         </div>
 

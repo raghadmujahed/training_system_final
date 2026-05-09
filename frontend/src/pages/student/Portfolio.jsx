@@ -481,8 +481,13 @@ export default function Portfolio() {
     <>
       <style>{fadeInStyles}</style>
       <div className="content-header">
-        <h1 className="page-title">ملف الإنجاز</h1>
-        <p className="page-subtitle">إرفاق شواهد وأعمال تتعلق بتدريبك الميداني</p>
+        <div className="content-header-icon">
+          <FolderOpen size={26} />
+        </div>
+        <div className="content-header-content">
+          <h1 className="page-title">ملف الإنجاز</h1>
+          <p className="page-subtitle">إرفاق شواهد وأعمال تتعلق بتدريبك الميداني</p>
+        </div>
       </div>
 
       {success ? (

@@ -113,7 +113,7 @@ export default function CoordinatorAnnouncements() {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <Megaphone size={24} />
+            <Megaphone size={26} />
           </div>
           <div className="flex-1">
             <h1 className="hero-title">إعلان عام للطلبة</h1>

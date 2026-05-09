@@ -41,7 +41,7 @@ export default function CoordinatorDistributionStatus({ audience = "coordinator"
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <GitBranch size={44} />
+            <GitBranch size={26} />
           </div>
           <div className="flex-1">
             <h1 className="hero-title">{isPsych ? "متابعة حالة الطلبات — علم النفس" : "حالة التوزيع"}</h1>

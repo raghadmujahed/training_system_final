@@ -136,18 +136,14 @@ export default function CoordinatorStatistics() {
     <div className="flex flex-col gap-6">
       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}.spin{animation:spin 1s linear infinite}`}</style>
 
-      {/* ── Hero ── */}
-      <div className="relative overflow-hidden shadow-[0_10px_40px_rgba(15,42,74,0.3)] flex items-center gap-5 py-7 px-8 rounded-[18px] bg-gradient-to-br from-[#0f2a4a] via-[#1a3a5c] to-[#1e4976]">
-        <div className="absolute -top-10 -left-10 w-[200px] h-[200px] rounded-full bg-white/[0.04] pointer-events-none" />
-        <div className="absolute -bottom-[60px] right-[15%] w-[260px] h-[260px] rounded-full bg-white/[0.03] pointer-events-none" />
-        <div className="w-14 h-14 rounded-2xl bg-white/[0.12] flex items-center justify-center border-[1.5px] border-white/[0.18] shrink-0">
-          <BarChart3 size={26} color="white" />
+      {/* Page Header */}
+      <div className="content-header">
+        <div className="content-header-icon">
+          <BarChart3 size={26} />
         </div>
-        <div className="flex-1">
-          <h1 className="m-0 mb-[6px] font-black text-[1.3rem] text-white">لوحة الإحصائيات</h1>
-          <p className="m-0 text-[0.85rem] text-white/65">
-            ملخص شامل لحالات الطلبات، الطلبة، جهات التدريب، والدفعات
-          </p>
+        <div className="content-header-content">
+          <h1 className="page-title">لوحة الإحصائيات</h1>
+          <p className="page-subtitle">ملخص شامل لحالات الطلبات، الطلبة، جهات التدريب، والدفعات</p>
         </div>
       </div>
 

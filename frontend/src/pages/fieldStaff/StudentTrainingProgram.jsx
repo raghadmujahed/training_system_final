@@ -73,7 +73,7 @@ export default function StudentTrainingProgram() {
         <div className="hero-section mb-4">
           <div className="hero-content">
             <div className="hero-icon">
-              <BookOpen size={44} />
+              <BookOpen size={26} />
             </div>
             <div className="flex-1">
               <h1 className="hero-title">برنامج التدريب</h1>
@@ -94,7 +94,7 @@ export default function StudentTrainingProgram() {
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <BookOpen size={44} />
+            <BookOpen size={26} />
           </div>
           <div className="flex-1">
             <h1 className="hero-title">برنامج التدريب</h1>

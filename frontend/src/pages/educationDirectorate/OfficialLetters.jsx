@@ -244,6 +244,13 @@ const OfficialLetters = ({ siteType = "school" }) => {
 
   return (
     <div>
+      {/* Page Header */}
+      <PageHeader
+        title={isHealth ? "طلبات التدريب — وزارة الصحة" : "طلبات التدريب — المديرية"}
+        subtitle={pageSubtitle}
+        icon={FileText}
+      />
+
       {/* ترويسة بصيغة وثيقة رسمية */}
       <div className="relative p-[1.35rem_1.5rem_1.2rem] bg-white border-2 border-[#1e3a5f] rounded-md overflow-hidden shadow-[0_4px_24px_rgba(15,23,42,0.07)] mb-4">
         <div aria-hidden className="absolute top-0 left-0 w-[42%] h-[120px] bg-[radial-gradient(ellipse_90%_80%_at_0%_0%,rgba(30,90,142,0.14)_0%,transparent_72%)]" />

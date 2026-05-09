@@ -66,7 +66,7 @@ export default function SupervisorTrainingProgramControl() {
       {/* ── Hero Section ── */}
       <div className="hero-section mb-4">
         <div className="hero-content">
-          <div className="hero-icon"><Settings size={44} /></div>
+          <div className="hero-icon"><Settings size={26} /></div>
           <div className="flex-1">
             <h1 className="hero-title">التحكم بجدول الحصص الأسبوعية</h1>
             <p className="hero-subtitle">

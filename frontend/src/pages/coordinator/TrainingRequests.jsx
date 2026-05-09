@@ -198,7 +198,7 @@ export default function CoordinatorTrainingRequests({ variant = "coordinator" })
       <div className="hero-section mb-4">
         <div className="hero-content">
           <div className="hero-icon">
-            <ClipboardList size={44} />
+            <ClipboardList size={26} />
           </div>
           <div className="flex-1">
             <h1 className="hero-title">

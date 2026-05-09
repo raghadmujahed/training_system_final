@@ -308,24 +308,28 @@
   font-size: 0.88rem;
 }
 
-/* Hero Section — Modern Minimal */
+/* Hero Section — Unified with content-header style */
 .hero-section {
-  background: var(--primary);
-  border-radius: 14px;
-  padding: 28px 32px;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 50%, #3b82f6 100%);
+  border-radius: 20px;
+  padding: 28px 40px;
   color: #fff;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(30, 58, 95, 0.3);
+  min-height: 100px;
+  display: flex;
+  align-items: center;
 }
 
 .hero-section::before {
   content: "";
   position: absolute;
-  top: -40%;
-  left: -10%;
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  top: -30%;
+  left: -8%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
   border-radius: 50%;
 }
 
@@ -338,10 +342,10 @@
 }
 
 .hero-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.12);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.2);
   color: #fff;
   display: flex;
   align-items: center;
@@ -350,21 +354,22 @@
 }
 
 .hero-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
 }
 
 .hero-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin: 0 0 4px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
   color: #fff;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   margin: 0;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.9);
   line-height: 1.6;
 }
 
@@ -651,8 +656,9 @@
   }
 
   .hero-section {
-    padding: 20px;
-    border-radius: 14px;
+    padding: 20px 24px;
+    border-radius: 16px;
+    min-height: 80px;
   }
 
   .hero-content {
@@ -667,11 +673,11 @@
   }
 
   .hero-title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
 
   .hero-subtitle {
-    font-size: 0.84rem;
+    font-size: 0.85rem;
   }
 
   .info-card {

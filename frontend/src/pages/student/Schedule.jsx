@@ -281,11 +281,16 @@ export default function Schedule() {
   return (
     <>
       <style>{printStyles}</style>
-      
+
       {/* Header */}
       <div className="content-header no-print">
-        <h1 className="page-title">{config.scheduleTitle}</h1>
-        <p className="page-subtitle">{studentInfo.name} — {studentInfo.university_id}</p>
+        <div className="content-header-icon">
+          <Calendar size={26} />
+        </div>
+        <div className="content-header-content">
+          <h1 className="page-title">{config.scheduleTitle}</h1>
+          <p className="page-subtitle">{studentInfo.name} — {studentInfo.university_id}</p>
+        </div>
       </div>
 
       {/* Error/Success Messages */}

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Users } from "lucide-react";
 import { getUsers, deleteUser, changeUserStatus } from "../../../services/api";
 import { useRoles } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import useAppToast from "../../../hooks/useAppToast";
+import PageHeader from "../../../components/common/PageHeader";
 
 export default function UsersList() {
   const toast = useAppToast();
@@ -157,17 +159,20 @@ export default function UsersList() {
 
   return (
     <div className="users-list">
-      <div className="page-header">
-        <h1>إدارة المستخدمين</h1>
-        <div className="add-buttons-group">
-          <button onClick={() => navigate("/admin/users/add/student")} className="btn-add-student">+ إضافة طالب</button>
-          <button onClick={() => navigate("/admin/users/add/schoolmanager")} className="btn-add-admin">+ إضافة مدير مدرسة</button>
+      <PageHeader
+        title="إدارة المستخدمين"
+        subtitle="عرض وإدارة جميع مستخدمي النظام"
+        icon={Users}
+      />
+
+      <div className="add-buttons-group">
+        <button onClick={() => navigate("/admin/users/add/student")} className="btn-add-student">+ إضافة طالب</button>
+        <button onClick={() => navigate("/admin/users/add/schoolmanager")} className="btn-add-admin">+ إضافة مدير مدرسة</button>
           <button onClick={() => navigate("/admin/users/add/teacher")} className="btn-add-teacher">+ إضافة معلم</button>
           <button onClick={() => navigate("/admin/users/add/counselor")} className="btn-add-counselor">+ إضافة مرشد</button>
           <button onClick={() => navigate("/admin/users/add/psychologist")} className="btn-add-psychologist">+ إضافة أخصائي نفسي</button>
           <button onClick={() => navigate("/admin/users/add/academic-supervisor")} className="btn-add-supervisor">+ إضافة مشرف أكاديمي</button>
         </div>
-      </div>
 
       {/* فلاتر البحث */}
       <div className="filters-bar">

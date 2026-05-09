@@ -496,8 +496,13 @@ export default function EForms() {
     <>
       <style>{fadeInStyles}</style>
       <div className="content-header">
-        <h1 className="page-title">النماذج والتقارير</h1>
-        <p className="page-subtitle">اختر النموذج أو التقرير المطلوب تعبئته</p>
+        <div className="content-header-icon">
+          <FileText size={26} />
+        </div>
+        <div className="content-header-content">
+          <h1 className="page-title">النماذج والتقارير</h1>
+          <p className="page-subtitle">اختر النموذج أو التقرير المطلوب تعبئته</p>
+        </div>
       </div>
 
       {error ? <div className="alert-custom alert-danger mb-3">{error}</div> : null}

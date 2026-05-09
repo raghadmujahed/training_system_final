@@ -155,8 +155,8 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
       {/* Hero Section */}
       <div className="hero-section mb-4">
         <div className="hero-content">
-          <div className="hero-icon bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a]">
-            <User size={44} />
+          <div className="hero-icon">
+            <User size={26} />
           </div>
           <div className="flex-1">
             <h1 className="hero-title">{"الملف الشخصي"}</h1>

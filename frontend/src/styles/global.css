@@ -1540,30 +1540,41 @@ html, body {
   }
 }
 
-/* Content Header - Consistent across all pages */
+/* Content Header - Consistent across all pages (matches TrainingRequest hero style) */
 .content-header {
-  background: linear-gradient(135deg, #142a42 0%, #3b82b6 100%);
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 50%, #3b82f6 100%);
+  border-radius: 20px;
+  padding: 1.75rem 2.5rem;
   color: #fff;
   margin-bottom: 1.5rem;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(30, 58, 95, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 100px;
 }
 
 @media (max-width: 768px) {
   .content-header {
-    padding: 1rem 1.25rem;
-    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px;
     margin-bottom: 1rem;
+    min-height: 80px;
   }
-  
+
   .content-header .page-title {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
   }
-  
+
   .content-header .page-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+  }
+
+  .content-header-icon {
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -1578,19 +1589,45 @@ html, body {
   border-radius: 50%;
 }
 
+.content-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.content-header-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.content-header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .content-header .page-title {
   color: #fff;
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 800;
   position: relative;
   z-index: 1;
+  line-height: 1.2;
 }
 
 .content-header .page-subtitle {
-  color: rgba(255,255,255,0.8);
-  margin: 0.25rem 0 0;
-  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 0.92rem;
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
