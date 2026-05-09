@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('form_key');
-            $table->string('form_type');
-            $table->json('data')->nullable();
+            $table->string('title')->nullable();
+            $table->json('payload')->nullable();
             $table->enum('status', ['draft', 'submitted', 'reviewed'])->default('draft');
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('archived_at')->nullable();
