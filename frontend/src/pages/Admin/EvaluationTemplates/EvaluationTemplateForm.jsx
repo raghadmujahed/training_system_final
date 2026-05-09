@@ -234,7 +234,7 @@ export default function EvaluationTemplateForm() {
             <option value="psychology">علم النفس</option>
             <option value="usool_tarbiah">أصول التربية</option>
           </select>
-          {errors.department_key && <span className="error">{errors.department_key[0]}</span>}
+          {errors.department_key && <span className="error">{Array.isArray(errors.department_key) ? errors.department_key[0] : errors.department_key}</span>}
         </div>
 
         <hr className="my-4" />

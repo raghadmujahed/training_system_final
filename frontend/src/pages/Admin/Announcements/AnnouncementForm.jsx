@@ -160,19 +160,40 @@ export default function AnnouncementForm() {
       <form onSubmit={handleSubmit} className="form">
         <div className="form-group">
           <label>العنوان *</label>
-          <input type="text" name="title" value={form.title} onChange={handleChange} required />
-          {errors.title && <span className="error">{errors.title[0]}</span>}
+          <input 
+            type="text" 
+            name="title" 
+            value={form.title} 
+            onChange={handleChange} 
+            onBlur={handleChange}
+            className={errors.title ? 'border-red-500' : ''} 
+            required 
+          />
+          {errors.title && <span className="error">{Array.isArray(errors.title) ? errors.title[0] : errors.title}</span>}
         </div>
 
         <div className="form-group">
           <label>المحتوى *</label>
-          <textarea name="content" rows="6" value={form.content} onChange={handleChange} required />
-          {errors.content && <span className="error">{errors.content[0]}</span>}
+          <textarea 
+            name="content" 
+            rows="6" 
+            value={form.content} 
+            onChange={handleChange} 
+            onBlur={handleChange}
+            className={errors.content ? 'border-red-500' : ''} 
+            required 
+          />
+          {errors.content && <span className="error">{Array.isArray(errors.content) ? errors.content[0] : errors.content}</span>}
         </div>
 
         <div className="form-group">
           <label>نوع الاستهداف *</label>
-          <select name="target_type" value={form.target_type} onChange={handleChange}>
+          <select 
+            name="target_type" 
+            value={form.target_type} 
+            onChange={handleChange}
+            className={errors.target_type ? 'border-red-500' : ''}
+          >
             <option value="all">الجميع</option>
             <option value="role">أدوار</option>
             <option value="user">مستخدمين</option>

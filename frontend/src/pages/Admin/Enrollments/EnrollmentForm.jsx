@@ -196,12 +196,19 @@ export default function EnrollmentForm() {
               <p className="text-text-faint text-[0.85rem]">لا توجد نتائج</p>
             )}
             <input type="hidden" name="user_id" value={form.user_id} />
-            {errors.user_id && <span className="text-danger text-[0.8rem]">{errors.user_id[0]}</span>}
+            {errors.user_id && <span className="text-danger text-[0.8rem]">{Array.isArray(errors.user_id) ? errors.user_id[0] : errors.user_id}</span>}
           </div>
 
           <div>
             <label className="block mb-1 text-text-soft text-[0.9rem]">الشعبة *</label>
-            <select name="section_id" value={form.section_id} onChange={handleChange} required>
+            <select 
+              name="section_id" 
+              value={form.section_id} 
+              onChange={handleChange} 
+              onBlur={handleChange}
+              className={errors.section_id ? 'border-red-500' : ''}
+              required
+            >
               <option value="">اختر الشعبة</option>
               {sections.map(section => (
                 <option key={section.id} value={section.id}>
@@ -209,24 +216,39 @@ export default function EnrollmentForm() {
                 </option>
               ))}
             </select>
-            {errors.section_id && <span className="text-danger text-[0.8rem]">{errors.section_id[0]}</span>}
+            {errors.section_id && <span className="text-danger text-[0.8rem]">{Array.isArray(errors.section_id) ? errors.section_id[0] : errors.section_id}</span>}
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1 text-text-soft text-[0.9rem]">السنة الأكاديمية *</label>
-            <input type="number" name="academic_year" value={form.academic_year} onChange={handleChange} required />
-            {errors.academic_year && <span className="text-danger text-[0.8rem]">{errors.academic_year[0]}</span>}
+            <input 
+              type="number" 
+              name="academic_year" 
+              value={form.academic_year} 
+              onChange={handleChange} 
+              onBlur={handleChange}
+              className={errors.academic_year ? 'border-red-500' : ''}
+              required 
+            />
+            {errors.academic_year && <span className="text-danger text-[0.8rem]">{Array.isArray(errors.academic_year) ? errors.academic_year[0] : errors.academic_year}</span>}
           </div>
 
           <div>
             <label className="block mb-1 text-text-soft text-[0.9rem]">الفصل الدراسي *</label>
-            <select name="semester" value={form.semester} onChange={handleChange}>
+            <select 
+              name="semester" 
+              value={form.semester} 
+              onChange={handleChange} 
+              onBlur={handleChange}
+              className={errors.semester ? 'border-red-500' : ''}
+            >
               <option value="first">الفصل الأول</option>
               <option value="second">الفصل الثاني</option>
               <option value="summer">الفصل الصيفي</option>
             </select>
+            {errors.semester && <span className="text-danger text-[0.8rem]">{Array.isArray(errors.semester) ? errors.semester[0] : errors.semester}</span>}
           </div>
         </div>
 
@@ -242,7 +264,17 @@ export default function EnrollmentForm() {
 
           <div>
             <label className="block mb-1 text-text-soft text-[0.9rem]">الدرجة النهائية</label>
-            <input type="number" step="0.01" name="final_grade" value={form.final_grade} onChange={handleChange} placeholder="0-100" />
+            <input 
+              type="number" 
+              step="0.01" 
+              name="final_grade" 
+              value={form.final_grade} 
+              onChange={handleChange} 
+              onBlur={handleChange}
+              className={errors.final_grade ? 'border-red-500' : ''}
+              placeholder="0-100" 
+            />
+            {errors.final_grade && <span className="text-danger text-[0.8rem]">{Array.isArray(errors.final_grade) ? errors.final_grade[0] : errors.final_grade}</span>}
           </div>
         </div>
 

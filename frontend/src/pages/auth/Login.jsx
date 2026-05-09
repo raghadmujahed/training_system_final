@@ -134,14 +134,19 @@ export default function Login() {
                 type="email"
                 name="email"
                 id="email"
-                className="form-input-custom"
+                className={`form-input-custom ${fieldErrors.email ? 'border-red-500' : ''}`}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                onBlur={handleEmailChange}
                 required
                 placeholder="example@hebron.edu"
-                  autoComplete="email"
-
+                autoComplete="email"
               />
+              {fieldErrors.email && (
+                <p className="mt-1 text-sm text-red-600">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             <div className="form-group-custom">
@@ -170,6 +175,11 @@ export default function Login() {
                   )}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="mt-1 text-sm text-red-600">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {error && (

@@ -19,6 +19,10 @@ export const isValidEmail = (email) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
+export const getEmailErrorMessage = () => {
+  return "البريد الإلكتروني غير صحيح، يرجى إدخال بريد مثل example@email.com";
+};
+
 // Student email domain validation
 export const isValidStudentEmail = (email) => {
   if (!email || email === "") return false;
@@ -190,7 +194,7 @@ export const validateForm = (form, rules) => {
         case "required":
           if (!isRequired(value)) {
             fieldError = message || getRequiredErrorMessage(field);
-          }
+          }getEmailErrorMessage()
           break;
         case "email":
           if (value && !isValidEmail(value)) {
@@ -228,7 +232,47 @@ export const validateForm = (form, rules) => {
             fieldError = message || getNameErrorMessage();
           }
           break;
-        case "custom":
+        case "minValue":
+          const minVal = validation.min;
+          if (value && !isMinValue(value, minVal)) {
+            fieldError = message || getMinValueErrorMessage(minVal);
+          }
+          break;
+        case "maxValue":
+          const maxVal = validation.max;
+          if (value && !isMaxValue(value, maxVal)) {
+            fieldError = message || getMaxValueErrorMessage(maxVal);
+          }
+          break;
+        case "date":
+          if (value && !isValidDate(value)) {
+            fieldError = message || getInvalidDateErrorMessage();
+          }
+          break;
+        case "dateAfter":
+          const compareDateField = validation.compareField;
+          if (!isDateAfter(form[compareDateField], value)) {
+            fieldError = message || getDateRangeErrorMessage();
+          }
+          break;
+        case "integer":
+          if (value && !isInteger(value)) {
+            fieldError = message || getIntegerErrorMessage();
+          }
+          break;
+        case "minLength":
+          const minLen = validation.min;
+          if (value && !isMinLength(value, minLen)) {
+            fieldError = message || getMinLengthErrorMessage(minLen);
+          }
+          break;
+        case "maxLength":
+          const maxLen = validation.max;
+          if (value && !isMaxLength(value, maxLen)) {
+            fieldError = message || getMaxLengthErrorMessage(maxLen);
+          }
+          break;
+                case "custom":
           if (condition && !condition(value, form)) {
             fieldError = message || "قيمة غير صحيحة";
           }
@@ -264,7 +308,7 @@ export const validateField = (fieldName, value, rules, form = {}) => {
         break;
       case "email":
         if (value && !isValidEmail(value)) {
-          return message || "صيغة البريد الإلكتروني غير صحيحة";
+          return message || getEmailErrorMessage();
         }
         break;
       case "studentEmail":

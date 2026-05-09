@@ -97,24 +97,101 @@ export default function CourseForm() {
   return (
     <form onSubmit={handleSubmit} className="form">
       <h1>{id ? "تعديل مساق" : "إضافة مساق"}</h1>
-      <div className="form-group"><label>الكود *</label><input type="text" name="code" value={form.code} onChange={handleChange} required />{errors.code && <span className="error">{errors.code[0]}</span>}</div>
-      <div className="form-group"><label>الاسم *</label><input type="text" name="name" value={form.name} onChange={handleChange} required />{errors.name && <span className="error">{errors.name[0]}</span>}</div>
-      <div className="form-group"><label>القسم *</label>
-        <select name="department_id" value={form.department_id} onChange={handleChange} required>
+      <div className="form-group">
+        <label>الكود *</label>
+        <input 
+          type="text" 
+          name="code" 
+          value={form.code} 
+          onChange={handleChange} 
+          onBlur={handleChange}
+          className={errors.code ? 'border-red-500' : ''}
+          required 
+        />
+        {errors.code && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.code) ? errors.code[0] : errors.code}</p>}
+      </div>
+      <div className="form-group">
+        <label>الاسم *</label>
+        <input 
+          type="text" 
+          name="name" 
+          value={form.name} 
+          onChange={handleChange} 
+          onBlur={handleChange}
+          className={errors.name ? 'border-red-500' : ''}
+          required 
+        />
+        {errors.name && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</p>}
+      </div>
+      <div className="form-group">
+        <label>القسم *</label>
+        <select 
+          name="department_id" 
+          value={form.department_id} 
+          onChange={handleChange} 
+          onBlur={handleChange}
+          className={errors.department_id ? 'border-red-500' : ''}
+          required
+        >
           <option value="">اختر القسم</option>
           {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
         </select>
-        {errors.department_id && <span className="error">{errors.department_id[0]}</span>}
+        {errors.department_id && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</p>}
       </div>
-      <div className="form-group"><label>الوصف</label><textarea name="description" value={form.description} onChange={handleChange} />{errors.description && <span className="error">{errors.description[0]}</span>}</div>
+      <div className="form-group">
+        <label>الوصف</label>
+        <textarea 
+          name="description" 
+          value={form.description} 
+          onChange={handleChange} 
+          className={errors.description ? 'border-red-500' : ''}
+        />
+        {errors.description && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.description) ? errors.description[0] : errors.description}</p>}
+      </div>
       <div className="form-row">
-        <div className="form-group"><label>الساعات الجامعية *</label><input type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} min="1" max="6" required />{errors.credit_hours && <span className="error">{errors.credit_hours[0]}</span>}</div>
-        <div className="form-group"><label>الساعات التدريبية *</label><input type="number" name="training_hours" value={form.training_hours} onChange={handleChange} min="0" max="500" required />{errors.training_hours && <span className="error">{errors.training_hours[0]}</span>}</div>
-        <div className="form-group"><label>النوع *</label>
-          <select name="type" value={form.type} onChange={handleChange} required>
+        <div className="form-group">
+          <label>الساعات الجامعية *</label>
+          <input 
+            type="number" 
+            name="credit_hours" 
+            value={form.credit_hours} 
+            onChange={handleChange} 
+            onBlur={handleChange}
+            className={errors.credit_hours ? 'border-red-500' : ''}
+            min="1" 
+            max="6" 
+            required 
+          />
+          {errors.credit_hours && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.credit_hours) ? errors.credit_hours[0] : errors.credit_hours}</p>}
+        </div>
+        <div className="form-group">
+          <label>الساعات التدريبية *</label>
+          <input 
+            type="number" 
+            name="training_hours" 
+            value={form.training_hours} 
+            onChange={handleChange} 
+            onBlur={handleChange}
+            className={errors.training_hours ? 'border-red-500' : ''}
+            min="0" 
+            max="500" 
+            required 
+          />
+          {errors.training_hours && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.training_hours) ? errors.training_hours[0] : errors.training_hours}</p>}
+        </div>
+        <div className="form-group">
+          <label>النوع *</label>
+          <select 
+            name="type" 
+            value={form.type} 
+            onChange={handleChange} 
+            onBlur={handleChange}
+            className={errors.type ? 'border-red-500' : ''}
+            required
+          >
             <option value="practical">عملي</option><option value="theoretical">نظري</option><option value="both">نظري وعملي</option>
           </select>
-          {errors.type && <span className="error">{errors.type[0]}</span>}
+          {errors.type && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.type) ? errors.type[0] : errors.type}</p>}
         </div>
       </div>
       <div className="form-actions">
