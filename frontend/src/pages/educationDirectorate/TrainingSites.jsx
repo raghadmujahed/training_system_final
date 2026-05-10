@@ -335,7 +335,8 @@ export default function TrainingPlaces() {
               <div className="relative">
                 <School size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                 <input type="text" name="name" placeholder="أدخل اسم مكان التدريب" value={formData.name} onChange={handleChange}
-                  className="w-full py-2.5 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
+                  className="w-full py-2.5 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
+                  style={{ paddingLeft: '12px', paddingRight: '40px' }}
                 />
               </div>
             </div>
@@ -355,7 +356,8 @@ export default function TrainingPlaces() {
               <div className="relative">
                 <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                 <input type="text" name="city" placeholder="أدخل المدينة أو الموقع" value={formData.city} onChange={handleChange}
-                  className="w-full py-2.5 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
+                  className="w-full py-2.5 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
+                  style={{ paddingLeft: '12px', paddingRight: '40px' }}
                 />
               </div>
             </div>
@@ -365,7 +367,8 @@ export default function TrainingPlaces() {
               <div className="relative">
                 <Users size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                 <input type="number" name="capacity" placeholder="عدد الطلبة" value={formData.capacity} onChange={handleChange} min="1"
-                  className="w-full py-2.5 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
+                  className="w-full py-2.5 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none focus:border-[#3b82f6] transition-colors"
+                  style={{ paddingLeft: '12px', paddingRight: '40px' }}
                 />
               </div>
             </div>
@@ -448,7 +451,8 @@ export default function TrainingPlaces() {
           <div className="relative min-w-[220px]">
             <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
             <input type="text" placeholder="بحث بالاسم أو المدينة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2 px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.85rem] bg-[#f8fafc] outline-none"
+              className="w-full py-2 rounded-[10px] border border-[#e2e8f0] text-[0.85rem] bg-[#f8fafc] outline-none"
+              style={{ paddingLeft: '12px', paddingRight: '40px' }}
             />
           </div>
         </div>
