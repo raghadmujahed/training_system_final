@@ -46,8 +46,8 @@ export default function EnrollmentForm() {
           // عرض اسم الطالب عند التعديل
           if (enrollmentData.user_id) {
             try {
-              const usersRes = await getUsers({ role: 'student', search: String(enrollmentData.user_id), per_page: 1 });
-              const found = (usersRes.data || []).find(u => u.id === enrollmentData.user_id);
+              const usersRes = await getUsers({ role: 'student', id: enrollmentData.user_id, per_page: 1 });
+              const found = (usersRes.data || []).find(u => String(u.id) === String(enrollmentData.user_id));
               if (found) setSelectedStudentDisplay(`${found.name} (${found.university_id})`);
             } catch {
               /* optional: student label if API fails */
@@ -61,7 +61,7 @@ export default function EnrollmentForm() {
     fetchData();
   }, [id]);
 
-  // البحث عن طالب بالاسم أو الرقم الجامعي
+  // البحث عن طالب بالاسم أو الرقم الجامعي أو البريد الإلكتروني
   const handleStudentSearch = (value) => {
     setStudentSearch(value);
     setSelectedStudentDisplay("");
@@ -79,9 +79,17 @@ export default function EnrollmentForm() {
     }, 300);
   };
 
+  // التحقق من عدم وجود تطابق مسبق
+  const verifyUniqueStudent = (student) => {
+    const searchLower = studentSearch?.toLowerCase().trim();
+    const emailMatch = student.email?.toLowerCase().trim() === searchLower;
+    const idMatch = String(student.university_id) === searchLower || String(student.id) === searchLower;
+    return emailMatch || idMatch;
+  };
+
   const selectStudent = (student) => {
     setForm(prev => ({ ...prev, user_id: student.id }));
-    setSelectedStudentDisplay(`${student.name} (${student.university_id})`);
+    setSelectedStudentDisplay(`${student.name} (${student.university_id}) - ${student.email || ''}`);
     setStudentSearch("");
     setShowDropdown(false);
     if (errors.user_id) setErrors({ ...errors, user_id: null });
@@ -183,6 +191,7 @@ export default function EnrollmentForm() {
                   <div key={student.id} onClick={() => selectStudent(student)} className="px-3 py-2 cursor-pointer border-b border-[#f0f0f0] hover:bg-[#f5f5f5]">
                     <div className="font-medium">{student.name}</div>
                     <div className="text-xs text-text-soft">الرقم الجامعي: {student.university_id}</div>
+                    {student.email && <div className="text-xs text-primary">{student.email}</div>}
                   </div>
                 ))}
               </div>

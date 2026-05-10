@@ -79,8 +79,15 @@ export default function EnrollmentsList() {
       // البحث عن الطالب
       const userRes = await getUsers({ email: singleEnroll.studentEmail });
       let userId;
-      if (userRes.data && userRes.data.length > 0) {
-        userId = userRes.data[0].id;
+      // البحث عن تطابق دقيق للبريد الإلكتروني
+      const exactMatch = userRes.data?.find(u => u.email?.toLowerCase().trim() === singleEnroll.studentEmail?.toLowerCase().trim());
+      if (exactMatch) {
+        userId = exactMatch.id;
+      } else if (userRes.data && userRes.data.length > 0) {
+        // إذا لم يوجد تطابق دقيق، نعرض خطأ حتى لا يتم اختيار طالب خاطئ
+        toast.error("لم يتم العثور على طالب بهذا البريد الإلكتروني بالضبط. يرجى التحقق من صحة البريد");
+        setSingleLoading(false);
+        return;
       } else {
         toast.error("الطالب غير موجود، يرجى إضافته أولاً");
         setSingleLoading(false);
@@ -133,8 +140,13 @@ export default function EnrollmentsList() {
             // البحث عن الطالب
             const userRes = await getUsers({ email: studentEmail });
             let userId;
-            if (userRes.data && userRes.data.length > 0) {
-              userId = userRes.data[0].id;
+            // البحث عن تطابق دقيق للبريد الإلكتروني
+            const exactMatch = userRes.data?.find(u => u.email?.toLowerCase().trim() === studentEmail?.toLowerCase().trim());
+            if (exactMatch) {
+              userId = exactMatch.id;
+            } else if (userRes.data && userRes.data.length > 0) {
+              errorList.push({ email: studentEmail, error: "لم يتم العثور على تطابق دقيق للبريد الإلكتروني" });
+              continue;
             } else {
               errorList.push({ email: studentEmail, error: "الطالب غير موجود" });
               continue;
