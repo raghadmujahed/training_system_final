@@ -31,9 +31,9 @@ class StoreTrainingSiteRequest extends FormRequest
         return [
             'name' => 'required|string|max:255|unique:training_sites,name',
             'location' => 'nullable|string|max:255',
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^(\+970|970)?(02|05[0-9])\d{6,7}$/'],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
             'email' => 'nullable|email|max:255',
-            'mobile' => ['nullable', 'string', 'max:20', 'regex:/^(\+970|970)?(05[0-9])\d{7}$/'],
+            'mobile' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'directorate' => 'required|in:وسط,شمال,جنوب,يطا',
