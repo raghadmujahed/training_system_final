@@ -7,6 +7,7 @@ use App\Http\Requests\StoreTrainingSiteRequest;
 use App\Http\Requests\UpdateTrainingSiteRequest;
 use App\Http\Resources\TrainingSiteResource;
 use App\Models\TrainingSite;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class TrainingSiteController extends Controller
