@@ -805,7 +805,8 @@ class HeadOfDepartmentController extends Controller
             ->where('status', 'active') // Only active accounts
             ->where(function ($q) use ($query) {
                 $q->where('name', 'LIKE', '%' . $query . '%')
-                  ->orWhere('university_id', 'LIKE', '%' . $query . '%');
+                  ->orWhere('university_id', 'LIKE', '%' . $query . '%')
+                  ->orWhere('email', 'LIKE', '%' . $query . '%');
             })
             ->limit(20)
             ->get(['id', 'name', 'university_id', 'email', 'department_id', 'status']);
