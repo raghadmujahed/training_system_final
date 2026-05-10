@@ -342,7 +342,7 @@ export default function TrainingRequest() {
                   <select value={filters.directorate}
                     onChange={(e) => setFilters(prev => ({ ...prev, directorate: e.target.value, gender_classification: "", school_level: "" }))}
                     disabled={!filters.governing_body}
-                    className={`${inputStyle} bg-[#f8fafc] ${validationErrors.directorate ? 'border-[#f87171]' : ''}`}
+                    className={`${inputStyle} appearance-none ${validationErrors.directorate ? 'border-[#f87171]' : ''}`}
                   >
                     <option value="">اختر المديرية</option>
                     {directorates.map(d => <option key={d} value={d}>{d}</option>)}
@@ -357,7 +357,7 @@ export default function TrainingRequest() {
                     <select value={filters.gender_classification}
                       onChange={(e) => setFilters(prev => ({ ...prev, gender_classification: e.target.value }))}
                       disabled={!filters.directorate}
-                      className={`${inputStyle} bg-[#f8fafc]`}
+                      className={`${inputStyle} appearance-none`}
                     >
                       <option value="">الكل (ذكور وإناث)</option>
                       <option value="boys">مدرسة ذكور</option>
@@ -374,7 +374,7 @@ export default function TrainingRequest() {
                     <select value={filters.school_level}
                       onChange={(e) => setFilters(prev => ({ ...prev, school_level: e.target.value }))}
                       disabled={!filters.directorate}
-                      className={`${inputStyle} bg-[#f8fafc]`}
+                      className={`${inputStyle} appearance-none`}
                     >
                       <option value="">الكل (دنيا وعليا)</option>
                       <option value="lower">أساسية دنيا</option>
