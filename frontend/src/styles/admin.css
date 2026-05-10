@@ -503,8 +503,10 @@
   min-height: 46px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   background: #fff;
+  direction: rtl;
+  text-align: right;
   transition: var(--transition);
 }
 

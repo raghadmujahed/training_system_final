@@ -196,7 +196,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                 <div className="relative">
                   <User size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="principalName" value={profileData.principalName} onChange={handleChange} required disabled={saving}
-                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6] "
                   />
                 </div>
               </div>
@@ -209,7 +209,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                 <div className="relative">
                   <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="email" name="email" value={profileData.email} onChange={handleChange} required disabled={saving}
-                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6] "
                   />
                 </div>
               </div>
@@ -222,7 +222,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                 <div className="relative">
                   <Phone size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="phone" value={profileData.phone} onChange={handleChange} disabled={saving}
-                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6] "
                   />
                 </div>
               </div>
@@ -251,7 +251,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                   <Building2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="schoolName" value={profileData.schoolName} onChange={handleChange}
                     disabled={saving || noTrainingSite} placeholder={noTrainingSite ? "غير متاح بدون ربط موقع" : ""}
-                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none transition-[border-color] duration-200 focus:border-[#10b981]"
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none transition-[border-color] duration-200 focus:border-[#10b981] "
                     style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                   />
                 </div>
@@ -266,7 +266,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                   <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <input type="text" name="address" value={profileData.address} onChange={handleChange}
                     disabled={saving || noTrainingSite}
-                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none transition-[border-color] duration-200 focus:border-[#10b981]"
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none transition-[border-color] duration-200 focus:border-[#10b981] "
                     style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                   />
                 </div>
@@ -281,7 +281,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                   <MapPin size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                   <select name="directorate" value={profileData.directorate} onChange={handleChange}
                     disabled={saving || noTrainingSite}
-                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none appearance-auto"
+                    className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none appearance-auto "
                     style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                   >
                     {DIRECTORATES.map((d) => (
@@ -301,7 +301,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                     <GraduationCap size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                     <select name="schoolType" value={profileData.schoolType} onChange={handleChange}
                       disabled={saving || noTrainingSite}
-                      className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none appearance-auto"
+                      className="w-full py-[0.625rem] px-3 pr-9 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] outline-none appearance-auto "
                       style={{ background: noTrainingSite ? "#f1f5f9" : "#f8fafc" }}
                     >
                       {SCHOOL_TYPES.map((s) => (

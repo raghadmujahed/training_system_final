@@ -113,6 +113,13 @@ button {
   font-family: inherit;
 }
 
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  direction: rtl;
+  text-align: right;
+}
+
 img {
   max-width: 100%;
   display: block;
