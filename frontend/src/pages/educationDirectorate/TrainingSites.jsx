@@ -21,6 +21,8 @@ import {
   Search,
   Building2,
   AlertCircle,
+  Phone,
+  Mail,
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
@@ -387,23 +389,35 @@ export default function TrainingPlaces() {
 
             <div>
               <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">الهاتف</label>
-              <input type="text" name="phone" placeholder="رقم الهاتف" value={formData.phone} onChange={handleChange}
-                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
-              />
+              <div className="relative">
+                <Phone size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                <input type="text" name="phone" placeholder="رقم الهاتف" value={formData.phone} onChange={handleChange}
+                  className="w-full py-2.5 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
+                  style={{ paddingLeft: '12px', paddingRight: '40px' }}
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">البريد الإلكتروني</label>
-              <input type="email" name="email" placeholder="بريد المدير" value={formData.email} onChange={handleChange}
-                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
-              />
+              <div className="relative">
+                <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                <input type="email" name="email" placeholder="بريد المدير" value={formData.email} onChange={handleChange}
+                  className="w-full py-2.5 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
+                  style={{ paddingLeft: '12px', paddingRight: '40px' }}
+                />
+              </div>
             </div>
 
             <div>
               <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">رقم المحمول</label>
-              <input type="text" name="mobile" placeholder="رقم المحمول" value={formData.mobile} onChange={handleChange}
-                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
-              />
+              <div className="relative">
+                <Phone size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+                <input type="text" name="mobile" placeholder="رقم المحمول" value={formData.mobile} onChange={handleChange}
+                  className="w-full py-2.5 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
+                  style={{ paddingLeft: '12px', paddingRight: '40px' }}
+                />
+              </div>
             </div>
 
             <div>
