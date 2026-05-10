@@ -117,6 +117,7 @@ class EvaluationService
                     $result['school_mentor'] = $eval;
                     break;
                 case 'school_manager':
+                case 'principal':
                     $result['school_principal'] = $eval;
                     break;
                 case 'psychologist':

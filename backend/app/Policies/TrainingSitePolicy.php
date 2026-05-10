@@ -44,7 +44,7 @@ class TrainingSitePolicy
             return true;
         }
         // مدير المدرسة أو المركز النفسي يعدّل موقع التدريب المرتبط بحسابه فقط
-        if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager']) && $user->training_site_id) {
+        if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager', 'principal']) && $user->training_site_id) {
             return (int) $user->training_site_id === (int) $trainingSite->id;
         }
 

@@ -16,6 +16,7 @@ class EvaluationTemplate extends Model
         'academic_supervisor' => 'نموذج المشرف الأكاديمي',
         'psychologist' => 'نموذج الأخصائي النفسي',
         'school_manager' => 'نموذج مدير المدرسة',
+        'principal' => 'نموذج مدير المدرسة',
     ];
     private static array $departmentLabels = [
         'psychology' => 'قسم علم النفس',

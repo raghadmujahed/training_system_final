@@ -75,12 +75,13 @@ class StoreUserRequest extends FormRequest
             }
 
             // ===== 2) موقع التدريب إلزامي للمعلم/الأخصائي ومدير المدرسة/المركز =====
-            $rolesNeedingSite = ['teacher', 'psychologist', 'school_manager', 'psychology_center_manager'];
+            $rolesNeedingSite = ['teacher', 'psychologist', 'school_manager', 'principal', 'psychology_center_manager'];
             if (in_array($role->name, $rolesNeedingSite, true) && ! $this->filled('training_site_id')) {
                 $labels = [
                     'teacher' => 'المعلم المرشد',
                     'psychologist' => 'الأخصائي النفسي',
                     'school_manager' => 'مدير المدرسة',
+                    'principal' => 'مدير المدرسة',
                     'psychology_center_manager' => 'مدير المركز النفسي',
                 ];
                 $validator->errors()->add(
@@ -90,7 +91,7 @@ class StoreUserRequest extends FormRequest
             }
 
             // ===== 3) مدير واحد فقط لكل موقع تدريب =====
-            $singleManagerRoles = ['school_manager', 'psychology_center_manager'];
+            $singleManagerRoles = ['school_manager', 'principal', 'psychology_center_manager'];
             $trainingSiteId = $this->input('training_site_id');
             if (in_array($role->name, $singleManagerRoles, true) && $trainingSiteId) {
                 $exists = User::where('role_id', $roleId)
@@ -132,7 +133,7 @@ class StoreUserRequest extends FormRequest
             }
 
             // ===== 6) البريد الإلكتروني لأدوار المدرسة/الحقل التعليمي يجب أن يكون من نطاق @hebron.edu.ps =====
-            $schoolFieldRoles = ['school_manager', 'teacher', 'adviser'];
+            $schoolFieldRoles = ['school_manager', 'principal', 'teacher', 'adviser'];
             if (in_array($role->name, $schoolFieldRoles, true)) {
                 $email = $this->input('email');
                 if ($email && !str_ends_with(strtolower($email), '@hebron.edu.ps')) {

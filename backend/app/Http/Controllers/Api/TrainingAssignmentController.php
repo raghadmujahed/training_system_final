@@ -55,7 +55,7 @@ class TrainingAssignmentController extends Controller
                 ->supervisedAssignmentsBaseQuery($user)
                 ->select('training_assignments.id');
             $query->whereIn('training_assignments.id', $scopeIds);
-        } elseif ($user->role?->name === 'school_manager' && $user->training_site_id) {
+        } elseif (in_array($user->role?->name, ['school_manager', 'principal'], true) && $user->training_site_id) {
             $query->where('training_site_id', $user->training_site_id);
         }
 

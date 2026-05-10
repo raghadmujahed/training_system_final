@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../../services/api";
-import { apiCache } from "../../services/apiCache";
 import myLogo from "../../assets/HU Logo.webp";
 import { getStudentDashboardPath } from "../../utils/studentSection";
 import { getDashboardPathByRole, normalizeRole, ROLES } from "../../utils/roles";
@@ -67,12 +66,6 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // مسح بيانات الجلسة السابقة والـ cache قبل تسجيل الدخول الجديد
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("department_ids");
-      apiCache.clear();
-
       const response = await login({ email, password });
 
       const user = response?.user?.data ?? response?.user;
@@ -86,9 +79,6 @@ export default function Login() {
       // تخزين بيانات الجلسة محليًا بعد نجاح تسجيل الدخول.
       localStorage.setItem("access_token", token);
       localStorage.setItem("user", JSON.stringify(user));
-
-      // مسح الـ cache لضمان عدم عرض بيانات مستخدم سابق
-      apiCache.clear();
 
       // تخزين معرّفات الأقسام لاستخدامها في تحديد المسار
       const deptIds = response?.department_ids;

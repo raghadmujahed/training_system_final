@@ -19,7 +19,7 @@ class SchoolManagerTeacherController extends Controller
     {
         $schoolManager = $request->user();
         
-        if (!$schoolManager->hasRole('school_manager')) {
+        if (!in_array($schoolManager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
@@ -60,7 +60,7 @@ class SchoolManagerTeacherController extends Controller
     {
         $schoolManager = $request->user();
         
-        if (!$schoolManager->hasRole('school_manager')) {
+        if (!in_array($schoolManager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
@@ -110,7 +110,7 @@ class SchoolManagerTeacherController extends Controller
     {
         $schoolManager = $request->user();
         
-        if (!$schoolManager->hasRole('school_manager')) {
+        if (!in_array($schoolManager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
@@ -138,7 +138,7 @@ class SchoolManagerTeacherController extends Controller
     {
         $schoolManager = $request->user();
         
-        if (!$schoolManager->hasRole('school_manager')) {
+        if (!in_array($schoolManager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
@@ -210,7 +210,7 @@ class SchoolManagerTeacherController extends Controller
     {
         $schoolManager = $request->user();
         
-        if (!$schoolManager->hasRole('school_manager')) {
+        if (!in_array($schoolManager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
@@ -273,7 +273,7 @@ class SchoolManagerTeacherController extends Controller
     {
         $schoolManager = $request->user();
         
-        if (!$schoolManager->hasRole('school_manager')) {
+        if (!in_array($schoolManager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 

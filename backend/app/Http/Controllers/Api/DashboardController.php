@@ -192,7 +192,7 @@ class DashboardController extends Controller
             'total_students' => $totalStudents,
             'total_academic_supervisors' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'academic_supervisor'))->count(),
             'total_teachers' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'teacher'))->count(),
-            'total_school_managers' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'school_manager'))->count(),
+            'total_school_managers' => (clone $userQuery)->whereHas('role', fn($q) => $q->whereIn('name', ['school_manager', 'principal']))->count(),
             'total_admins' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'admin'))->count(),
             'total_coordinators' => (clone $userQuery)->whereHas('role', fn($q) => $q->whereIn('name', ['training_coordinator', 'coordinator']))->count(),
             'total_departments' => Department::count(),

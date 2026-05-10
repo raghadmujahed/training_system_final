@@ -184,6 +184,7 @@ class UserProfileController extends Controller
             'training_coordinator'       => 'منسق تدريب',
             'head_of_department'         => 'رئيس قسم',
             'school_manager'             => 'مدير جهة التدريب',
+            'principal'                  => 'مدير جهة التدريب',
             'psychology_center_manager'  => 'مدير المركز النفسي',
             'admin'                      => 'مدير النظام',
             default                      => $role ?? 'مستخدم',

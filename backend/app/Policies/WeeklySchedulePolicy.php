@@ -19,7 +19,7 @@ class WeeklySchedulePolicy
 
     public function create(User $user): bool
     {
-        return in_array($user->role?->name, ['admin', 'teacher', 'training_coordinator', 'coordinator', 'school_manager', 'psychology_center_manager'], true);
+        return in_array($user->role?->name, ['admin', 'teacher', 'training_coordinator', 'coordinator', 'school_manager', 'psychology_center_manager', 'principal'], true);
     }
 
     public function update(User $user, WeeklySchedule $weeklySchedule): bool

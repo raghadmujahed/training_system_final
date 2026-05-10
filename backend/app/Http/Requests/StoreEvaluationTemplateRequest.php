@@ -10,7 +10,7 @@ class StoreEvaluationTemplateRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager']);
+        return in_array($this->user()->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager', 'principal']);
     }
 
     public function rules(): array
@@ -34,7 +34,7 @@ class StoreEvaluationTemplateRequest extends FormRequest
             ],
             'description' => 'nullable|string',
             'form_type' => 'required|in:evaluation,student_form',
-            'target_role' => 'nullable|in:teacher,academic_supervisor,psychologist,school_manager,adviser,field_supervisor,supervisor',
+            'target_role' => 'nullable|in:teacher,academic_supervisor,psychologist,school_manager,principal,adviser,field_supervisor,supervisor',
             'department_key' => ($hasDepartmentKey ? 'nullable|in:psychology,usool_tarbiah' : 'nullable'),
         ];
     }

@@ -17,6 +17,7 @@ class RolePermissionSeeder extends Seeder
         $teacher = Role::where('name', 'teacher')->first();
         $student = Role::where('name', 'student')->first();
         $schoolManager = Role::where('name', 'school_manager')->first();
+        $principal = Role::where('name', 'principal')->first();
         $adviser = Role::where('name', 'adviser')->first();
         $psychologist = Role::where('name', 'psychologist')->first();
         $headOfDepartment = Role::where('name', 'head_of_department')->first();
@@ -82,6 +83,17 @@ class RolePermissionSeeder extends Seeder
                 'view_reports',
             ])->get();
             $schoolManager->permissions()->sync($managerPerms);
+        }
+
+        // 6b. مدير المدرسة (principal) — نفس صلاحيات school_manager
+        if ($principal) {
+            $principalPerms = Permission::whereIn('name', [
+                'manage_training_assignments',
+                'manage_attendances',
+                'manage_evaluations',
+                'view_reports',
+            ])->get();
+            $principal->permissions()->sync($principalPerms);
         }
 
         // 7. الأخصائي النفسي: نفس صلاحيات المشرف الميداني عملياً (مهام، حضور، تقييمات) مع مسار واجهة موحّد

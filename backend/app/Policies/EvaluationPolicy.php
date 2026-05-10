@@ -17,6 +17,7 @@ class EvaluationPolicy
             'psychologist',
             'adviser',
             'school_manager',
+            'principal',
             'psychology_center_manager',
             'student',
         ], true);
@@ -47,6 +48,7 @@ class EvaluationPolicy
             'teacher',
             'academic_supervisor',
             'school_manager',
+            'principal',
             'psychology_center_manager',
             'field_supervisor',
             'psychologist',

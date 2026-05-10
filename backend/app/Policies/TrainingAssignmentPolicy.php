@@ -37,7 +37,7 @@ class TrainingAssignmentPolicy
         if ($user->id === $assignment->enrollment->user_id) {
             return true;
         }
-        if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager']) && $user->training_site_id
+        if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager', 'principal']) && $user->training_site_id
             && (int) $assignment->training_site_id === (int) $user->training_site_id) {
             return true;
         }

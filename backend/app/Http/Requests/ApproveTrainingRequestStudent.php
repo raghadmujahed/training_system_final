@@ -10,7 +10,7 @@ class ApproveTrainingRequestStudent extends FormRequest
     {
         $user = $this->user();
         $role = $user->role?->name;
-        return in_array($role, ['education_directorate', 'school_manager', 'psychology_center_manager', 'coordinator']);
+        return in_array($role, ['education_directorate', 'school_manager', 'psychology_center_manager', 'principal', 'coordinator']);
     }
 
     public function rules(): array

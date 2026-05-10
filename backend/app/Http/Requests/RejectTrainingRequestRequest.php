@@ -13,6 +13,7 @@ class RejectTrainingRequestRequest extends FormRequest
             'training_coordinator',
             'education_directorate',
             'school_manager',
+            'principal',
             'psychology_center_manager',
             'academic_supervisor',
         ], true);

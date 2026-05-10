@@ -18,6 +18,7 @@ class EvaluationTemplatePolicy
             'psychologist',
             'adviser',
             'school_manager',
+            'principal',
             'psychology_center_manager',
         ]);
     }
@@ -29,16 +30,16 @@ class EvaluationTemplatePolicy
 
     public function create(User $user): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager', 'principal']);
     }
 
     public function update(User $user, EvaluationTemplate $evaluationTemplate): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager', 'principal']);
     }
 
     public function delete(User $user, EvaluationTemplate $evaluationTemplate): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'academic_supervisor', 'school_manager', 'principal']);
     }
 }

@@ -23,6 +23,7 @@ class NotePolicy
             'field_supervisor',
             'psychologist',
             'school_manager',
+            'principal',
             'training_coordinator',
             'student',
         ]);
@@ -55,7 +56,7 @@ class NotePolicy
         }
 
         // مدير الجهة
-        if ($user->role?->name === 'school_manager') {
+        if (in_array($user->role?->name, ['school_manager', 'principal'], true)) {
             return true;
         }
 
@@ -79,6 +80,7 @@ class NotePolicy
             'field_supervisor',
             'psychologist',
             'school_manager',
+            'principal',
             'training_coordinator',
             'student',
         ]);

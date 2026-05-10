@@ -15,6 +15,7 @@ class RoleSeeder extends Seeder
             'teacher',                    // المعلم المرشد
             'field_supervisor',           // المشرف الميداني الموحد (جديد)
             'school_manager',             // مدير المدرسة
+            'principal',                  // مدير المدرسة (مدير جهة التدريب)
             'psychology_center_manager',  // مدير المركز النفسي
             'adviser',                    // المرشد التربوي
             'psychologist',               // أخصائي نفسي

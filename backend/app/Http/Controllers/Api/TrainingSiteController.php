@@ -7,7 +7,6 @@ use App\Http\Requests\StoreTrainingSiteRequest;
 use App\Http\Requests\UpdateTrainingSiteRequest;
 use App\Http\Resources\TrainingSiteResource;
 use App\Models\TrainingSite;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class TrainingSiteController extends Controller
@@ -136,7 +135,7 @@ class TrainingSiteController extends Controller
     public function availableSchoolManagers()
     {
         $managers = User::whereHas('role', function ($query) {
-            $query->where('name', 'school_manager');
+            $query->whereIn('name', ['school_manager', 'principal']);
         })
         ->where(function ($query) {
             $query->whereNull('training_site_id')
@@ -161,7 +160,7 @@ class TrainingSiteController extends Controller
         $manager = User::find($request->manager_id);
         
         // Check if user has school_manager role
-        if (!$manager || !in_array($manager->role?->name, ['school_manager', 'principal', 'psychology_center_manager'], true)) {
+        if (!$manager || !in_array($manager->role?->name, ['school_manager', 'principal'], true)) {
             return response()->json([
                 'message' => 'مدير المدرسة يجب أن يكون حساباً موجوداً بدور مدير مدرسة'
             ], 422);
@@ -178,19 +177,7 @@ class TrainingSiteController extends Controller
             ], 422);
         }
 
-        // Clear training_site_id from the previous manager of this school (if any)
-        if ($trainingSite->manager_id && $trainingSite->manager_id != $request->manager_id) {
-            $previousManager = User::find($trainingSite->manager_id);
-            if ($previousManager && $previousManager->training_site_id === $trainingSite->id) {
-                $previousManager->update(['training_site_id' => null]);
-            }
-        }
-
-        // Update the school's manager_id
         $trainingSite->update(['manager_id' => $request->manager_id]);
-
-        // Sync the manager's training_site_id so backend filters work correctly
-        $manager->update(['training_site_id' => $trainingSite->id]);
 
         return response()->json([
             'message' => 'تم ربط المدير بالمدرسة بنجاح',

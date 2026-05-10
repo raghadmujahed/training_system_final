@@ -49,7 +49,7 @@ class UserController extends Controller
         $users = User::query()->select('users.*');
 
         // مدير المدرسة يُسمح له بجلب المعلمين من نفس المدرسة فقط لاستخدامهم في التعيين.
-        if ($request->user()->role?->name === 'school_manager') {
+        if (in_array($request->user()->role?->name, ['school_manager', 'principal'], true)) {
             $users->whereHas('role', function ($q) {
                 $q->where('name', 'teacher');
             });
@@ -411,7 +411,7 @@ class UserController extends Controller
             // Get School Manager (from training site)
             if ($studentTrainingSiteId) {
                 $schoolManager = User::whereHas('role', function ($q) {
-                    $q->where('name', 'school_manager');
+                    $q->whereIn('name', ['school_manager', 'principal']);
                 })->where('training_site_id', $studentTrainingSiteId)
                 ->with(['role', 'trainingSite'])
                 ->first();

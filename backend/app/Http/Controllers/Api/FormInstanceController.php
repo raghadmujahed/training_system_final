@@ -40,7 +40,7 @@ class FormInstanceController extends Controller
                             $assignmentQuery->where('teacher_id', $user->id);
                         } elseif ($role === 'academic_supervisor') {
                             $assignmentQuery->where('academic_supervisor_id', $user->id);
-                        } elseif (in_array($role, ['school_manager', 'psychology_center_manager'], true) && $user->training_site_id) {
+                        } elseif (in_array($role, ['school_manager', 'psychology_center_manager', 'principal'], true) && $user->training_site_id) {
                             $assignmentQuery->where('training_site_id', $user->training_site_id);
                         } elseif (in_array($role, ['coordinator', 'training_coordinator'], true)) {
                             $assignmentQuery->where('coordinator_id', $user->id);

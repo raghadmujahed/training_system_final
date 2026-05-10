@@ -16,6 +16,7 @@ class AttendancePolicy
             'psychologist',
             'field_supervisor',
             'school_manager',
+            'principal',
             'psychology_center_manager',
             'academic_supervisor',
             'student',
@@ -43,7 +44,7 @@ class AttendancePolicy
         if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
         if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
-        if ($user->role?->name === 'school_manager'
+        if (in_array($user->role?->name, ['school_manager', 'principal'], true)
             && $attendance->trainingAssignment->trainingSite
             && (int) $user->training_site_id === (int) $attendance->trainingAssignment->trainingSite->id) return true;
         return false;
@@ -55,7 +56,7 @@ class AttendancePolicy
         if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
         if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
-        if ($user->role?->name === 'school_manager'
+        if (in_array($user->role?->name, ['school_manager', 'principal'], true)
             && $attendance->trainingAssignment->trainingSite
             && (int) $user->training_site_id === (int) $attendance->trainingAssignment->trainingSite->id) return true;
         return false;
@@ -67,7 +68,7 @@ class AttendancePolicy
         if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
         if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
-        if ($user->role?->name === 'school_manager'
+        if (in_array($user->role?->name, ['school_manager', 'principal'], true)
             && $attendance->trainingAssignment->trainingSite
             && (int) $user->training_site_id === (int) $attendance->trainingAssignment->trainingSite->id) return true;
         return false;

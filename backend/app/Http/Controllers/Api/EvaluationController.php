@@ -44,7 +44,7 @@ class EvaluationController extends Controller
                         $ta->where('teacher_id', $uid)->orWhere('field_supervisor_id', $uid);
                     });
             });
-        } elseif ($request->user()->role?->name === 'school_manager' && $request->user()->training_site_id) {
+        } elseif (in_array($request->user()->role?->name, ['school_manager', 'principal'], true) && $request->user()->training_site_id) {
             $query->whereHas('trainingAssignment', fn ($q) => $q->where('training_site_id', $request->user()->training_site_id));
         }
         
@@ -54,7 +54,7 @@ class EvaluationController extends Controller
 
     public function store(StoreEvaluationRequest $request)
     {
-        if ($request->user()->role?->name === 'school_manager' && $request->user()->training_site_id) {
+        if (in_array($request->user()->role?->name, ['school_manager', 'principal'], true) && $request->user()->training_site_id) {
             $assignment = TrainingAssignment::query()->findOrFail($request->input('training_assignment_id'));
             if ((int) $assignment->training_site_id !== (int) $request->user()->training_site_id) {
                 abort(403, 'لا يمكن تقييم طالب خارج جهة التدريب التابعة لك.');

@@ -18,6 +18,7 @@ class TrainingRequestPolicy
             'health_directorate',
             'ministry_of_health',
             'school_manager',
+            'principal',
             'psychology_center_manager',
             'academic_supervisor',
             'head_of_department',
@@ -70,7 +71,7 @@ class TrainingRequestPolicy
             return true;
         }
 
-        if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager'], true)) {
+        if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true)) {
             $sameSite = ! $user->training_site_id
                 || (int) $trainingRequest->training_site_id === (int) $user->training_site_id;
             $inSchoolFlow = in_array($trainingRequest->book_status, [

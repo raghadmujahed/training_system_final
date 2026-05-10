@@ -13,6 +13,7 @@ class UserPolicy
         return in_array($user->role?->name, [
             'admin',
             'school_manager',
+            'principal',
             'psychology_center_manager',
             'training_coordinator',
             'coordinator',

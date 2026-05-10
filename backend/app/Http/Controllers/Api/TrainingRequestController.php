@@ -173,7 +173,7 @@ class TrainingRequestController extends Controller
             });
         }
 
-        if (in_array($request->user()->role?->name, ['school_manager', 'psychology_center_manager'], true) && $request->user()->training_site_id) {
+        if (in_array($request->user()->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true) && $request->user()->training_site_id) {
             $query->where('training_site_id', $request->user()->training_site_id);
         }
         if (in_array($request->user()->role?->name, ['coordinator', 'training_coordinator'], true)) {

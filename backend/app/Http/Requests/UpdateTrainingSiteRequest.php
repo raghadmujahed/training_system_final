@@ -16,7 +16,7 @@ class UpdateTrainingSiteRequest extends FormRequest
         if (in_array($role, ['admin', 'education_directorate', 'ministry_of_health'], true)) {
             return true;
         }
-        if (in_array($role, ['school_manager', 'psychology_center_manager'])) {
+        if (in_array($role, ['school_manager', 'principal', 'psychology_center_manager'])) {
             $site = $this->route('training_site');
 
             return $site
@@ -32,7 +32,7 @@ class UpdateTrainingSiteRequest extends FormRequest
         $trainingSite = $this->route('training_site');
         $role = $this->user()->role?->name;
 
-        if (in_array($role, ['school_manager', 'psychology_center_manager'])) {
+        if (in_array($role, ['school_manager', 'principal', 'psychology_center_manager'])) {
             return [
                 'name' => [
                     'sometimes',
@@ -92,8 +92,8 @@ class UpdateTrainingSiteRequest extends FormRequest
                 }
                 
                 // Check if user has school_manager role
-                $schoolManagerRole = Role::where('name', 'school_manager')->first();
-                if (!$schoolManagerRole || $manager->role_id !== $schoolManagerRole->id) {
+                $schoolManagerRole = Role::whereIn('name', ['school_manager', 'principal'])->first();
+                if ((!$schoolManagerRole || $manager->role_id !== $schoolManagerRole->id) && !in_array($manager->role?->name, ['school_manager', 'principal'], true)) {
                     $validator->errors()->add('manager_id', 'مدير المدرسة يجب أن يكون حساباً موجوداً بدور مدير مدرسة');
                     return;
                 }

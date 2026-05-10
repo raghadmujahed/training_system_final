@@ -22,7 +22,7 @@ class StudentEvaluationController extends Controller
         $query = StudentEvaluation::with(['student', 'evaluator', 'trainingRequestStudent']);
 
         // Filter by evaluator (school manager can only see their own evaluations)
-        if ($user->role && in_array($user->role->name, ['school_manager', 'psychology_center_manager'])) {
+        if ($user->role && in_array($user->role->name, ['school_manager', 'principal', 'psychology_center_manager'])) {
             $query->where('evaluator_id', $user->id);
         }
 
@@ -107,7 +107,7 @@ class StudentEvaluationController extends Controller
 
         // Check if user has permission to view this evaluation
         $user = Auth::user();
-        if ($user->role && in_array($user->role->name, ['school_manager', 'psychology_center_manager'])) {
+        if ($user->role && in_array($user->role->name, ['school_manager', 'principal', 'psychology_center_manager'])) {
             if ($evaluation->evaluator_id !== $user->id) {
                 return response()->json(['message' => 'غير مصرح لك بعرض هذا التقييم'], 403);
             }
