@@ -18,6 +18,11 @@ return new class extends Migration
             $table->text('bio')->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();
+            $table->string('workplace_name')->nullable();
+            $table->string('workplace_type')->nullable();
+            $table->string('department')->nullable();
+            $table->text('address')->nullable();
+            $table->json('preferences')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->index('user_id');

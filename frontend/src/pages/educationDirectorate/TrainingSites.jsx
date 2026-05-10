@@ -233,7 +233,8 @@ export default function TrainingPlaces() {
       !editFormData.school_type ||
       !editFormData.city ||
       !editFormData.capacity ||
-      !editFormData.directorate
+      !editFormData.directorate ||
+      !editFormData.school_level
     ) {
       toast.warning("يرجى تعبئة جميع حقول التعديل المطلوبة.");
       return;

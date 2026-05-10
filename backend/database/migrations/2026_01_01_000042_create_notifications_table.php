@@ -14,7 +14,11 @@ return new class extends Migration
             $table->string('type');
             $table->string('title');
             $table->text('content')->nullable();
+            $table->text('message')->nullable();
+            $table->json('data')->nullable();
             $table->string('action_url')->nullable();
+            $table->string('notifiable_type')->nullable();
+            $table->unsignedBigInteger('notifiable_id')->nullable();
             $table->boolean('is_read')->default(false);
             $table->timestamp('read_at')->nullable();
             $table->timestamp('archived_at')->nullable();
