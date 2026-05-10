@@ -24,10 +24,12 @@ return new class extends Migration
             $table->enum('school_type', ['public', 'private', 'unrwa'])->default('public');
             $table->enum('gender_classification', ['boys', 'girls', 'mixed'])->nullable();
             $table->enum('school_level', ['lower', 'upper', 'both'])->nullable();
+            $table->foreignId('manager_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
             $table->softDeletes();
             $table->index('is_active');
             $table->index('capacity');
+            $table->index('manager_id');
         });
     }
 

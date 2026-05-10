@@ -146,7 +146,10 @@ export default function TrainingPlaces() {
       !formData.school_type ||
       !formData.city ||
       !formData.capacity ||
-      !formData.directorate
+      !formData.directorate ||
+      !formData.phone ||
+      !formData.mobile ||
+      !formData.school_level
     ) {
       toast.warning("يرجى تعبئة جميع الحقول المطلوبة.");
       return;
