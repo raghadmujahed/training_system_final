@@ -359,7 +359,7 @@ export default function Schedule() {
         {/* Print Button */}
         {hasSavedProgram && (
           <div className="no-print flex justify-end mb-4">
-            <button onClick={handlePrint} className="py-[0.4rem] px-[0.75rem] text-[0.8rem] border border-[#e2e8f0] rounded-md bg-white cursor-pointer flex items-center gap-[0.4rem]">
+            <button onClick={handlePrint} className="py-[0.4rem] px-[0.75rem] text-[0.8rem] border border-[#e2e8f0] rounded-md bg-gray-50 text-gray-700 cursor-pointer flex items-center gap-[0.4rem] hover:bg-gray-100">
               <Printer size={14} /> طباعة
             </button>
           </div>
@@ -414,7 +414,7 @@ export default function Schedule() {
         {isEditable && (
           <div className="no-print flex justify-between items-center mt-6">
             <button onClick={handleReset} disabled={saving}
-              className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-white" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1 }}
+              className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-gray-50 text-gray-700" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1 }}
             >
               إعادة تعيين
             </button>

@@ -376,10 +376,10 @@ export default function DailyLogsTab({ studentId }) {
                       <button className="btn-primary-custom text-[0.82rem] py-[6px] px-[14px]" onClick={() => handleAddComment(log.id)}>
                         ✅ اعتماد مع ملاحظة
                       </button>
-                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#fd7e14] bg-white text-[#fd7e14] cursor-pointer" onClick={() => handleSendNote(log.id)}>
+                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#fd7e14] bg-[#fd7e14] text-white cursor-pointer hover:bg-[#e76f00]" onClick={() => handleSendNote(log.id)}>
                         📤 إرسال للطالب (يحتاج تعديل)
                       </button>
-                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#999] bg-white text-[#666] cursor-pointer" onClick={() => { setCommentingLogId(null); setCommentText(""); }}>
+                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#999] bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200" onClick={() => { setCommentingLogId(null); setCommentText(""); }}>
                         إلغاء
                       </button>
                     </div>
@@ -393,7 +393,7 @@ export default function DailyLogsTab({ studentId }) {
                       </div>
                     ) : null}
                     <button
-                      className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#4361ee] bg-white text-[#4361ee] cursor-pointer"
+                      className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#4361ee] bg-[#4361ee] text-white cursor-pointer hover:bg-[#3651de]"
                       onClick={() => setCommentingLogId(log.id)}
                     >
                       💬 إضافة ملاحظة

@@ -27,10 +27,10 @@ const AppButton = memo(function AppButton({
   const baseStyles = "inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
   
   const variants = {
-    primary: "bg-gradient-to-r from-[#142a42] to-[#1e3a5f] text-white hover:from-[#1e3a5f] hover:to-[#2a4a6f] focus:ring-[#142a42] shadow-lg shadow-[#142a42]/20",
-    secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-gray-400",
-    outline: "border-2 border-[#142a42] text-[#142a42] hover:bg-[#142a42]/5 focus:ring-[#142a42]",
-    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-lg shadow-red-600/20",
+    primary: "bg-gradient-to-r from-[#142a42] to-[#1e3a5f] text-white hover:from-[#1e3a5f] hover:to-[#2a4a6f] focus:ring-[#142a42] shadow-lg shadow-[#142a42]/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-md",
+    secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-gray-400 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-600",
+    outline: "border-2 border-[#142a42] text-[#142a42] hover:bg-[#142a42]/5 focus:ring-[#142a42] disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:border-gray-300 disabled:text-gray-500",
+    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 shadow-lg shadow-red-600/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-red-500 disabled:shadow-md",
   };
 
   const sizes = {

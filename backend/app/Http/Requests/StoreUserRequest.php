@@ -23,7 +23,7 @@ class StoreUserRequest extends FormRequest
         return [
             'university_id' => 'required_if:role_id,' . $studentRoleId . '|nullable|numeric|digits_between:6,20|unique:users,university_id',
             'name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:users,email',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'status' => 'required|in:active,inactive,suspended',
             'department_id' => 'required_if:role_id,' . $studentRoleId . '|nullable|exists:departments,id',
@@ -114,8 +114,52 @@ class StoreUserRequest extends FormRequest
                 if ($email && !str_ends_with(strtolower($email), '@students.hebron.edu')) {
                     $validator->errors()->add(
                         'email',
-                        'البريد الإلكتروني للطلاب يجب أن ينتهي بـ @students.hebron.edu'
+                        'يجب أن ينتهي بريد الطالب بـ @students.hebron.edu'
                     );
+                }
+            }
+
+            // ===== 5) البريد الإلكتروني للدور الجامعية الداخلية يجب أن يكون من نطاق @hebron.edu =====
+            $universityInternalRoles = ['training_coordinator', 'head_of_department', 'admin', 'academic_supervisor'];
+            if (in_array($role->name, $universityInternalRoles, true)) {
+                $email = $this->input('email');
+                if ($email && !str_ends_with(strtolower($email), '@hebron.edu')) {
+                    $validator->errors()->add(
+                        'email',
+                        'يجب أن ينتهي بريد هذا الدور بـ @hebron.edu'
+                    );
+                }
+            }
+
+            // ===== 6) البريد الإلكتروني لأدوار المدرسة/الحقل التعليمي يجب أن يكون من نطاق @hebron.edu.ps =====
+            $schoolFieldRoles = ['school_manager', 'teacher', 'adviser'];
+            if (in_array($role->name, $schoolFieldRoles, true)) {
+                $email = $this->input('email');
+                if ($email && !str_ends_with(strtolower($email), '@hebron.edu.ps')) {
+                    $validator->errors()->add(
+                        'email',
+                        'يجب أن ينتهي بريد هذا الدور بـ @hebron.edu.ps'
+                    );
+                }
+            }
+
+            // ===== 7) أدوار لم يتم تحديد نطاق البريد الإلكتروني لها بعد (لا يوجد تحقق محدد) =====
+            // psychologist, psychology_center_manager, education_directorate, health_directorate
+            // يتم تطبيق التحقق من البريد الإلكتروني العادي فقط
+
+            // ===== 6) التحقق من الرقم الجامعي للطلاب فقط =====
+            if ($role->name === 'student') {
+                $universityId = $this->input('university_id');
+                if (empty($universityId)) {
+                    $validator->errors()->add('university_id', 'الرقم الجامعي مطلوب للطلاب.');
+                } elseif (!ctype_digit((string) $universityId)) {
+                    $validator->errors()->add('university_id', 'الرقم الجامعي يجب أن يحتوي على أرقام فقط.');
+                }
+            } else {
+                // للموظفين، يجب ألا يتم إرسال الرقم الجامعي أو يجب أن يكون فارغاً
+                $universityId = $this->input('university_id');
+                if (!empty($universityId)) {
+                    $validator->errors()->add('university_id', 'الرقم الجامعي مخصص للطلاب فقط.');
                 }
             }
         });

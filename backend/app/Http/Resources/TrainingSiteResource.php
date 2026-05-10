@@ -17,6 +17,8 @@ class TrainingSiteResource extends JsonResource
             'name' => $this->name,
             'location' => $this->location,
             'phone' => $this->phone,
+            'email' => $this->email,
+            'mobile' => $this->mobile,
             'description' => $this->description,
             'is_active' => (bool) $this->is_active,
             'directorate' => $this->directorate,
@@ -41,6 +43,25 @@ class TrainingSiteResource extends JsonResource
             'school_level' => $this->school_level ?? null,
             'governing_body' => $this->governing_body,
             'governing_body_label' => GoverningBody::tryFrom($this->governing_body)?->label() ?? $this->governing_body,
+            'manager' => $this->when(
+                $this->relationLoaded('manager') && $this->manager,
+                function () {
+                    return [
+                        'id' => $this->manager->id,
+                        'name' => $this->manager->name,
+                        'email' => $this->manager->email,
+                    ];
+                }
+            ),
+            'manager_id' => $this->manager_id,
+            'training_requests_count' => $this->when(
+                isset($this->training_requests_count),
+                (int) $this->training_requests_count
+            ),
+            'completed_assignments_count' => $this->when(
+                isset($this->completed_assignments_count),
+                (int) $this->completed_assignments_count
+            ),
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
             'deleted_at' => $this->deleted_at?->toDateTimeString(),

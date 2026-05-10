@@ -8,11 +8,17 @@ import {
   getPhoneErrorMessage,
   isValidEmail,
   isValidStudentEmail,
+  isValidUniversityInternalEmail,
+  isValidSchoolFieldEmail,
   getStudentEmailErrorMessage,
+  getUniversityInternalEmailErrorMessage,
+  getSchoolFieldEmailErrorMessage,
   isValidPassword,
   getPasswordErrorMessage,
   isValidUniversityId,
   getUniversityIdErrorMessage,
+  isDigitsOnly,
+  getDigitsOnlyErrorMessage,
   trimInput,
 } from "../../../utils/validation";
 
@@ -75,6 +81,9 @@ export default function UserForm() {
   const validateField = (fieldName, value) => {
     const selectedRole = roles.find((r) => r.id === form.role_id);
     const isStudent = selectedRole?.name === "student";
+    const isUniversityInternal = ['training_coordinator', 'head_of_department', 'admin', 'academic_supervisor'].includes(selectedRole?.name);
+    const isSchoolField = ['school_manager', 'teacher', 'adviser'].includes(selectedRole?.name);
+    const isUndecidedDomain = ['psychologist', 'psychology_center_manager', 'education_directorate', 'health_directorate'].includes(selectedRole?.name);
 
     let error = null;
 
@@ -84,7 +93,12 @@ export default function UserForm() {
           error = "صيغة البريد الإلكتروني غير صحيحة";
         } else if (isStudent && value && !isValidStudentEmail(value)) {
           error = getStudentEmailErrorMessage();
+        } else if (isUniversityInternal && value && !isValidUniversityInternalEmail(value)) {
+          error = getUniversityInternalEmailErrorMessage();
+        } else if (isSchoolField && value && !isValidSchoolFieldEmail(value)) {
+          error = getSchoolFieldEmailErrorMessage();
         }
+        // For undecided domain roles, only basic email validation is applied
         break;
       case "phone":
         if (value && !isValidPhone(value)) {
@@ -92,8 +106,14 @@ export default function UserForm() {
         }
         break;
       case "university_id":
-        if (isStudent && value && !isValidUniversityId(value)) {
-          error = getUniversityIdErrorMessage();
+        if (isStudent && value) {
+          if (!isDigitsOnly(value)) {
+            error = getDigitsOnlyErrorMessage();
+          } else if (!isValidUniversityId(value)) {
+            error = getUniversityIdErrorMessage();
+          }
+        } else if (!isStudent && value) {
+          error = "الرقم الجامعي مخصص للطلاب فقط";
         }
         break;
       case "password":
@@ -119,6 +139,9 @@ export default function UserForm() {
     const newErrors = {};
     const selectedRole = roles.find((r) => r.id === form.role_id);
     const isStudent = selectedRole?.name === "student";
+    const isUniversityInternal = ['training_coordinator', 'head_of_department', 'admin', 'academic_supervisor'].includes(selectedRole?.name);
+    const isSchoolField = ['school_manager', 'teacher', 'adviser'].includes(selectedRole?.name);
+    const isUndecidedDomain = ['psychologist', 'psychology_center_manager', 'education_directorate', 'health_directorate'].includes(selectedRole?.name);
 
     // Validate name
     if (!form.name.trim()) {
@@ -132,7 +155,12 @@ export default function UserForm() {
       newErrors.email = "صيغة البريد الإلكتروني غير صحيحة";
     } else if (isStudent && !isValidStudentEmail(form.email)) {
       newErrors.email = getStudentEmailErrorMessage();
+    } else if (isUniversityInternal && !isValidUniversityInternalEmail(form.email)) {
+      newErrors.email = getUniversityInternalEmailErrorMessage();
+    } else if (isSchoolField && !isValidSchoolFieldEmail(form.email)) {
+      newErrors.email = getSchoolFieldEmailErrorMessage();
     }
+    // For undecided domain roles, only basic email validation is applied
 
     // Validate phone
     if (form.phone && !isValidPhone(form.phone)) {
@@ -143,8 +171,15 @@ export default function UserForm() {
     if (isStudent) {
       if (!form.university_id.trim()) {
         newErrors.university_id = "الرقم الجامعي مطلوب للطلاب";
+      } else if (!isDigitsOnly(form.university_id)) {
+        newErrors.university_id = getDigitsOnlyErrorMessage();
       } else if (!isValidUniversityId(form.university_id)) {
         newErrors.university_id = getUniversityIdErrorMessage();
+      }
+    } else {
+      // For staff, university_id should be empty
+      if (form.university_id.trim()) {
+        newErrors.university_id = "الرقم الجامعي مخصص للطلاب فقط";
       }
     }
 
@@ -212,6 +247,34 @@ export default function UserForm() {
     }
   };
 
+  const getSelectedRole = () => {
+    return roles.find((r) => r.id === form.role_id);
+  };
+
+  const isStudentRole = () => {
+    return getSelectedRole()?.name === "student";
+  };
+
+  const isUniversityInternalRole = () => {
+    return ['training_coordinator', 'head_of_department', 'admin', 'academic_supervisor'].includes(getSelectedRole()?.name);
+  };
+
+  const isSchoolFieldRole = () => {
+    return ['school_manager', 'teacher', 'adviser'].includes(getSelectedRole()?.name);
+  };
+
+  const isUndecidedDomainRole = () => {
+    return ['psychologist', 'psychology_center_manager', 'education_directorate', 'health_directorate'].includes(getSelectedRole()?.name);
+  };
+
+  const getEmailPlaceholder = () => {
+    if (isStudentRole()) return 'studentname@students.hebron.edu';
+    if (isUniversityInternalRole()) return 'username@hebron.edu';
+    if (isSchoolFieldRole()) return 'username@hebron.edu.ps';
+    if (isUndecidedDomainRole()) return 'example@email.com';
+    return 'example@email.com';
+  };
+
   return (
     <div className="user-form">
       <div className="page-header">
@@ -229,21 +292,34 @@ export default function UserForm() {
 
           <div className="form-group">
             <label>البريد الإلكتروني *</label>
-            <input type="email" id="email" name="email" value={form.email} onChange={handleChange} required />
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              value={form.email} 
+              onChange={handleChange} 
+              required 
+              placeholder={getEmailPlaceholder()}
+            />
             {errors.email && <span className="error">{errors.email[0]}</span>}
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
-            <label>الرقم الجامعي <span id="university_id_required" style={{ color: "#dc2626", display: "none" }}>*</span></label>
+            <label>الرقم الجامعي <span style={{ color: "#dc2626", display: isStudentRole() ? 'inline' : 'none' }}>*</span></label>
             <input
               type="text"
               id="university_id"
               name="university_id"
               value={form.university_id}
               onChange={handleChange}
-              placeholder="أرقام فقط (6-20 رقم)"
+              placeholder={isStudentRole() ? 'أرقام فقط (6-20 رقم)' : 'مخصص للطلاب فقط'}
+              disabled={!isStudentRole() && getSelectedRole()}
+              style={{
+                backgroundColor: !isStudentRole() && getSelectedRole() ? '#f5f5f5' : 'white',
+                cursor: !isStudentRole() && getSelectedRole() ? 'not-allowed' : 'text'
+              }}
             />
             {errors.university_id && <span className="error">{errors.university_id}</span>}
           </div>

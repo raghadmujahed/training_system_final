@@ -27,8 +27,10 @@ export default function PortfolioTab({ studentId }) {
             ? data
             : [];
       setEntries(rows.map(normalizePortfolioEntry));
-    } catch {
+    } catch (err) {
+      console.error("Error loading portfolio:", err);
       setError("فشل تحميل ملف الإنجاز");
+      addToast("تعذر تحميل ملف الإنجاز، يرجى المحاولة لاحقاً", "error");
     } finally {
       setLoading(false);
     }
@@ -50,11 +52,11 @@ export default function PortfolioTab({ studentId }) {
     const note = commentText.trim();
     const hasRating = draftRating != null && draftRating >= 1 && draftRating <= 5;
     if (status === "needs_revision" && !note) {
-      showToast("يرجى توضيح سبب طلب التعديل", "error");
+      addToast("يرجى توضيح سبب طلب التعديل", "error");
       return;
     }
     if (status === "reviewed" && !note && !hasRating) {
-      showToast("أدخل تقييماً (1–5) أو ملاحظة نصية", "error");
+      addToast("أدخل تقييماً (1–5) أو ملاحظة نصية", "error");
       return;
     }
     try {
@@ -67,10 +69,11 @@ export default function PortfolioTab({ studentId }) {
       setCommentingId(null);
       setCommentText("");
       setDraftRating(null);
-      showToast(status === "reviewed" ? "تم حفظ التقييم والمراجعة" : "تم طلب التعديل على الملف", "success");
+      addToast(status === "reviewed" ? "تم حفظ التقييم والمراجعة" : "تم طلب التعديل على الملف", "success");
       loadPortfolio();
-    } catch {
-      showToast("فشل حفظ المراجعة", "error");
+    } catch (err) {
+      console.error("Error saving review:", err);
+      addToast("فشل حفظ المراجعة، يرجى المحاولة مرة أخرى", "error");
     }
   };
 
@@ -85,10 +88,7 @@ export default function PortfolioTab({ studentId }) {
     approved: { label: "معتمد", color: "#28a745", bg: "#e8f5e9", icon: "✅" },
   };
 
-  const showToast = (message, type = "success") => {
-    addToast(message, type);
-  };
-
+  
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
   if (error && !entries.length) return <div className="text-[#dc3545] p-5">⚠️ {error}</div>;
 
@@ -234,12 +234,12 @@ export default function PortfolioTab({ studentId }) {
                     <div className="flex gap-2 mt-2 flex-wrap">
                       <button className="btn-primary-custom text-[0.82rem] py-[6px] px-3" type="button" onClick={() => handleSubmitReview(entry.id, "reviewed")}>اعتماد المراجعة</button>
                       <button className="text-[0.82rem] py-[6px] px-3 rounded-md border border-[#fd7e14] bg-[#fff3e0] text-[#c2410c] cursor-pointer" type="button" onClick={() => handleSubmitReview(entry.id, "needs_revision")}>طلب تعديل</button>
-                      <button className="text-[0.82rem] py-[6px] px-3 rounded-md border border-[#999] bg-white cursor-pointer" type="button" onClick={() => { setCommentingId(null); setCommentText(""); setDraftRating(null); }}>إلغاء</button>
+                      <button className="text-[0.82rem] py-[6px] px-3 rounded-md border border-[#999] bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200" type="button" onClick={() => { setCommentingId(null); setCommentText(""); setDraftRating(null); }}>إلغاء</button>
                     </div>
                   </div>
                 ) : (
                   <button
-                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-white text-[#4361ee] cursor-pointer"
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-[#4361ee] text-white cursor-pointer hover:bg-[#3651de]"
                     type="button"
                     onClick={() => openReviewPanel(entry)}
                   >

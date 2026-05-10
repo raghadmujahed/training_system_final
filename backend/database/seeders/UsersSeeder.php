@@ -48,10 +48,9 @@ class UsersSeeder extends Seeder
         // 1. مدير النظام
         $adminRole = Role::where('name', 'admin')->first();
         User::firstOrCreate(
-            ['email' => 'admin@hebron.edu'],
+            ['email' => 'admin@hebron.edu.ps'],
             [
                 'name' => 'مدير النظام',
-                'university_id' => 'ADMIN001',
                 'password' => Hash::make('password'),
                 'role_id' => $adminRole->id,
                 'phone' => '0590000000',
@@ -64,10 +63,9 @@ class UsersSeeder extends Seeder
         $usoolDeptId = Department::where('name', 'usool_tarbiah')->value('id')
             ?? Department::query()->orderBy('id')->value('id');
         User::firstOrCreate(
-            ['email' => 'coordinator.tarbiah@hebron.edu'],
+            ['email' => 'coordinator.tarbiah@hebron.edu.ps'],
             [
                 'name' => 'منسق التدريب — أصول التربية',
-                'university_id' => 'COORD01',
                 'password' => Hash::make('password'),
                 'role_id' => $coordinatorRole->id,
                 'department_id' => $usoolDeptId,
@@ -80,10 +78,9 @@ class UsersSeeder extends Seeder
         $psychDeptId = Department::where('name', 'psychology')->value('id')
             ?? $usoolDeptId;
         User::firstOrCreate(
-            ['email' => 'coordinator.psychology@hebron.edu'],
+            ['email' => 'coordinator.psychology@hebron.edu.ps'],
             [
                 'name' => 'منسق التدريب — علم النفس',
-                'university_id' => 'COORD02',
                 'password' => Hash::make('password'),
                 'role_id' => $coordinatorRole->id,
                 'department_id' => $psychDeptId,
@@ -97,16 +94,15 @@ class UsersSeeder extends Seeder
 
         // مشرفو قسم أصول التربية
         $usoolSupervisors = [
-            ['name' => 'د. أحمد المشرف', 'email' => 'supervisor.usool1@hebron.edu', 'university_id' => 'SUPU001', 'phone' => '0590000011'],
-            ['name' => 'د. سمير العلي', 'email' => 'supervisor.usool2@hebron.edu', 'university_id' => 'SUPU002', 'phone' => '0590000012'],
-            ['name' => 'د. ليلى الحسيني', 'email' => 'supervisor.usool3@hebron.edu', 'university_id' => 'SUPU003', 'phone' => '0590000013'],
+            ['name' => 'د. أحمد المشرف', 'email' => 'supervisor.usool1@hebron.edu.ps', 'phone' => '0590000011'],
+            ['name' => 'د. سمير العلي', 'email' => 'supervisor.usool2@hebron.edu.ps', 'phone' => '0590000012'],
+            ['name' => 'د. ليلى الحسيني', 'email' => 'supervisor.usool3@hebron.edu.ps', 'phone' => '0590000013'],
         ];
         foreach ($usoolSupervisors as $s) {
             User::firstOrCreate(
                 ['email' => $s['email']],
                 [
                     'name' => $s['name'],
-                    'university_id' => $s['university_id'],
                     'password' => Hash::make('password'),
                     'role_id' => $supervisorRole->id,
                     'department_id' => $usoolDeptId,
@@ -118,16 +114,15 @@ class UsersSeeder extends Seeder
 
         // مشرفو قسم علم النفس
         $psychSupervisors = [
-            ['name' => 'د. رامي النفسي', 'email' => 'supervisor.psych1@hebron.edu', 'university_id' => 'SUPP001', 'phone' => '0590000021'],
-            ['name' => 'د. هدى السعيد', 'email' => 'supervisor.psych2@hebron.edu', 'university_id' => 'SUPP002', 'phone' => '0590000022'],
-            ['name' => 'د. نادية القاسم', 'email' => 'supervisor.psych3@hebron.edu', 'university_id' => 'SUPP003', 'phone' => '0590000023'],
+            ['name' => 'د. رامي النفسي', 'email' => 'supervisor.psych1@hebron.edu.ps', 'phone' => '0590000021'],
+            ['name' => 'د. هدى السعيد', 'email' => 'supervisor.psych2@hebron.edu.ps', 'phone' => '0590000022'],
+            ['name' => 'د. نادية القاسم', 'email' => 'supervisor.psych3@hebron.edu.ps', 'phone' => '0590000023'],
         ];
         foreach ($psychSupervisors as $s) {
             User::firstOrCreate(
                 ['email' => $s['email']],
                 [
                     'name' => $s['name'],
-                    'university_id' => $s['university_id'],
                     'password' => Hash::make('password'),
                     'role_id' => $supervisorRole->id,
                     'department_id' => $psychDeptId,
@@ -153,15 +148,12 @@ class UsersSeeder extends Seeder
             ->get();
 
         foreach ($allSchools as $school) {
-            $email = 'teacher.' . $teacherIndex . '@hebron.edu';
+            $email = 'teacher.' . $teacherIndex . '@hebron.edu.ps';
             $nameIdx = ($teacherIndex - 1) % count($teacherNames);
-            // university_id فريد لكل مدرسة (يتجنب التصادم مع TCH001 القديم مثل teacher@hebron.edu)
-            $teacherUniversityId = sprintf('TCHS%05d', (int) $school->id);
             User::firstOrCreate(
                 ['email' => $email],
                 [
                     'name' => $teacherNames[$nameIdx] . ' المعلم - ' . $school->name,
-                    'university_id' => $teacherUniversityId,
                     'password' => Hash::make('password'),
                     'role_id' => $teacherRole->id,
                     'training_site_id' => $school->id,
@@ -176,7 +168,7 @@ class UsersSeeder extends Seeder
         // ربط تعيينات التدريب النشطة بمعلم المرشد الرسمي لكل مدرسة (مثل assigned_teacher_id عند الموافقة)
         $teacherIndex = 1;
         foreach ($allSchools as $school) {
-            $schoolTeacher = User::where('email', 'teacher.' . $teacherIndex . '@hebron.edu')->first();
+            $schoolTeacher = User::where('email', 'teacher.' . $teacherIndex . '@hebron.edu.ps')->first();
             if ($schoolTeacher) {
                 TrainingAssignment::query()
                     ->where('training_site_id', $school->id)
@@ -197,14 +189,12 @@ class UsersSeeder extends Seeder
             ];
             $adviserIndex = 1;
             foreach ($allSchools as $school) {
-                $email = 'adviser.' . $adviserIndex . '@hebron.edu';
+                $email = 'adviser.' . $adviserIndex . '@hebron.edu.ps';
                 $nameIdx = ($adviserIndex - 1) % count($adviserNames);
-                $adviserUniversityId = sprintf('ADVS%05d', (int) $school->id);
                 User::firstOrCreate(
                     ['email' => $email],
                     [
                         'name' => $adviserNames[$nameIdx] . ' المرشد - ' . $school->name,
-                        'university_id' => $adviserUniversityId,
                         'password' => Hash::make('password'),
                         'role_id' => $adviserRole->id,
                         'training_site_id' => $school->id,
@@ -220,10 +210,10 @@ class UsersSeeder extends Seeder
         // 5. طالب
         $studentRole = Role::where('name', 'student')->first();
         User::firstOrCreate(
-            ['email' => 'student@hebron.edu'],
+            ['email' => 'student@student.hebron.edu'],
             [
                 'name' => 'أحمد الطالب',
-                'university_id' => 'STU001',
+                'university_id' => '202000001',
                 'password' => Hash::make('password'),
                 'role_id' => $studentRole->id,
                 'department_id' => $usoolDeptId,
@@ -251,12 +241,11 @@ class UsersSeeder extends Seeder
                 continue;
             }
 
-            $email = 'schoolmanager.' . $schoolIndex . '@hebron.edu';
+            $email = 'schoolmanager.' . $schoolIndex . '@hebron.edu.ps';
             User::firstOrCreate(
                 ['email' => $email],
                 [
                     'name' => 'مدير ' . $school->name,
-                    'university_id' => 'SM' . str_pad((string) $schoolIndex, 3, '0', STR_PAD_LEFT),
                     'password' => Hash::make('password'),
                     'role_id' => $schoolManagerRole->id,
                     'status' => 'active',
@@ -270,10 +259,9 @@ class UsersSeeder extends Seeder
         // 7. أخصائي نفسي
         $psychologistRole = Role::where('name', 'psychologist')->first();
         User::firstOrCreate(
-            ['email' => 'psychologist@hebron.edu'],
+            ['email' => 'psychologist@hebron.edu.ps'],
             [
                 'name' => 'سعاد الأخصائية',
-                'university_id' => 'PSY001',
                 'password' => Hash::make('password'),
                 'role_id' => $psychologistRole->id,
                 'department_id' => $psychDeptId,
@@ -285,10 +273,9 @@ class UsersSeeder extends Seeder
         // 8. رئيس القسم (يجب ربطه بقسم وإلا تفشل واجهة /head-department/* بـ 403)
         $headRole = Role::where('name', 'head_of_department')->first();
         $headUser = User::firstOrCreate(
-            ['email' => 'head@hebron.edu'],
+            ['email' => 'head@hebron.edu.ps'],
             [
                 'name' => 'د. رامي رئيس القسم',
-                'university_id' => 'HEAD001',
                 'password' => Hash::make('password'),
                 'role_id' => $headRole->id,
                 'department_id' => $usoolDeptId,
@@ -303,10 +290,9 @@ class UsersSeeder extends Seeder
         // 8b. رئيس قسم علم النفس
         if ($headRole && $psychDeptId) {
             $psychHead = User::firstOrCreate(
-                ['email' => 'head.psychology@hebron.edu'],
+                ['email' => 'head.psychology@hebron.edu.ps'],
                 [
                     'name' => 'د. ليلى رئيسة قسم علم النفس',
-                    'university_id' => 'HEADPSY01',
                     'password' => Hash::make('password'),
                     'role_id' => $headRole->id,
                     'department_id' => $psychDeptId,
@@ -322,10 +308,9 @@ class UsersSeeder extends Seeder
         // 9. مديرية التربية
         $eduDirectorateRole = Role::where('name', 'education_directorate')->first();
         User::firstOrCreate(
-            ['email' => 'edudirectorate@hebron.edu'],
+            ['email' => 'edudirectorate@hebron.edu.ps'],
             [
                 'name' => 'مديرية التربية والتعليم',
-                'university_id' => 'EDU001',
                 'password' => Hash::make('password'),
                 'role_id' => $eduDirectorateRole->id,
                 'status' => 'active',
@@ -336,10 +321,9 @@ class UsersSeeder extends Seeder
 
         // حسابات مديريات منفصلة للفحص الدقيق حسب المديرية
         User::firstOrCreate(
-            ['email' => 'edudir.west@hebron.edu'],
+            ['email' => 'edudir.west@hebron.edu.ps'],
             [
                 'name' => 'مديرية التربية - وسط',
-                'university_id' => 'EDU002',
                 'password' => Hash::make('password'),
                 'role_id' => $eduDirectorateRole->id,
                 'status' => 'active',
@@ -348,10 +332,9 @@ class UsersSeeder extends Seeder
             ]
         );
         User::firstOrCreate(
-            ['email' => 'edudir.north@hebron.edu'],
+            ['email' => 'edudir.north@hebron.edu.ps'],
             [
                 'name' => 'مديرية التربية - شمال',
-                'university_id' => 'EDU003',
                 'password' => Hash::make('password'),
                 'role_id' => $eduDirectorateRole->id,
                 'status' => 'active',
@@ -360,10 +343,9 @@ class UsersSeeder extends Seeder
             ]
         );
         User::firstOrCreate(
-            ['email' => 'edudir.south@hebron.edu'],
+            ['email' => 'edudir.south@hebron.edu.ps'],
             [
                 'name' => 'مديرية التربية - جنوب',
-                'university_id' => 'EDU004',
                 'password' => Hash::make('password'),
                 'role_id' => $eduDirectorateRole->id,
                 'status' => 'active',
@@ -372,10 +354,9 @@ class UsersSeeder extends Seeder
             ]
         );
         User::firstOrCreate(
-            ['email' => 'edudir.yatta@hebron.edu'],
+            ['email' => 'edudir.yatta@hebron.edu.ps'],
             [
                 'name' => 'مديرية التربية - يطا',
-                'university_id' => 'EDU005',
                 'password' => Hash::make('password'),
                 'role_id' => $eduDirectorateRole->id,
                 'status' => 'active',
@@ -387,10 +368,9 @@ class UsersSeeder extends Seeder
         // 10. وزارة الصحة
         $healthDirectorateRole = Role::where('name', 'health_directorate')->first();
         User::firstOrCreate(
-            ['email' => 'healthdirectorate@hebron.edu'],
+            ['email' => 'healthdirectorate@hebron.edu.ps'],
             [
                 'name' => 'وزارة الصحة',
-                'university_id' => 'HLT001',
                 'password' => Hash::make('password'),
                 'role_id' => $healthDirectorateRole->id,
                 'status' => 'active',
@@ -402,10 +382,9 @@ class UsersSeeder extends Seeder
         $psychCenterManagerRole = Role::where('name', 'psychology_center_manager')->first();
         $healthSite = TrainingSite::where('site_type', 'health_center')->first();
         User::firstOrCreate(
-            ['email' => 'psychcentermanager@hebron.edu'],
+            ['email' => 'psychcentermanager@hebron.edu.ps'],
             [
                 'name' => 'أ. أحمد مدير المركز النفسي',
-                'university_id' => 'PCM001',
                 'password' => Hash::make('password'),
                 'role_id' => $psychCenterManagerRole?->id,
                 'status' => 'active',

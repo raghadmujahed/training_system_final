@@ -34,7 +34,37 @@ export const isValidStudentEmail = (email) => {
 };
 
 export const getStudentEmailErrorMessage = () => {
-  return "البريد الإلكتروني للطلاب يجب أن ينتهي بـ @students.hebron.edu";
+  return "يجب أن ينتهي بريد الطالب بـ @students.hebron.edu";
+};
+
+// University internal roles email domain validation
+export const isValidUniversityInternalEmail = (email) => {
+  if (!email || email === "") return false;
+  return email.toLowerCase().endsWith("@hebron.edu");
+};
+
+export const getUniversityInternalEmailErrorMessage = () => {
+  return "يجب أن ينتهي بريد هذا الدور بـ @hebron.edu";
+};
+
+// School/field educational roles email domain validation
+export const isValidSchoolFieldEmail = (email) => {
+  if (!email || email === "") return false;
+  return email.toLowerCase().endsWith("@hebron.edu.ps");
+};
+
+export const getSchoolFieldEmailErrorMessage = () => {
+  return "يجب أن ينتهي بريد هذا الدور بـ @hebron.edu.ps";
+};
+
+// Legacy staff email validation (for backward compatibility)
+export const isValidStaffEmail = (email) => {
+  if (!email || email === "") return false;
+  return email.toLowerCase().endsWith("@hebron.edu.ps");
+};
+
+export const getStaffEmailErrorMessage = () => {
+  return "يجب أن ينتهي بريد هذا الدور بـ @hebron.edu.ps";
 };
 
 // Password validation (min 8 characters)
@@ -57,7 +87,7 @@ export const getPasswordMatchErrorMessage = () => {
   return "كلمتا المرور غير متطابقتين";
 };
 
-// University ID validation (6-20 digits for students)
+// University ID validation (6-20 digits for students only)
 export const isValidUniversityId = (id) => {
   if (!id || id === "") return false;
   return /^\d{6,20}$/.test(id);
@@ -65,6 +95,16 @@ export const isValidUniversityId = (id) => {
 
 export const getUniversityIdErrorMessage = () => {
   return "الرقم الجامعي يجب أن يكون بين 6 و 20 رقمًا";
+};
+
+// Check if university ID is digits only
+export const isDigitsOnly = (value) => {
+  if (!value || value === "") return false;
+  return /^\d+$/.test(value);
+};
+
+export const getDigitsOnlyErrorMessage = () => {
+  return "يج أن يحتوي على أرقام فقط";
 };
 
 // Required field validation

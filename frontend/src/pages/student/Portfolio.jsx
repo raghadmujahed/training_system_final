@@ -655,7 +655,7 @@ export default function Portfolio() {
                                 بدون مرفق
                               </span>
                               <button type="button" onClick={() => setReplacingFileId(en.id)}
-                                className="inline-flex items-center gap-[0.35rem] text-[#28a745] bg-white border border-[#28a745] text-[0.78rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg cursor-pointer transition-all hover:bg-[#28a745] hover:text-white"
+                                className="inline-flex items-center gap-[0.35rem] text-white bg-[#28a745] border border-[#28a745] text-[0.78rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg cursor-pointer transition-all hover:bg-[#218838] hover:border-[#218838]"
                                 title="رفع ملف جديد"
                               >
                                 <Upload size={12} />

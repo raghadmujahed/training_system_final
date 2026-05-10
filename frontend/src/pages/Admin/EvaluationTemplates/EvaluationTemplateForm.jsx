@@ -141,11 +141,17 @@ export default function EvaluationTemplateForm() {
 
       // 1. إنشاء أو تحديث القالب الأساسي
       if (!id) {
-        const newTemplate = await createEvaluationTemplate(formPayload);
-        templateId = newTemplate?.id;
+        const newTemplateResponse = await createEvaluationTemplate(formPayload);
+        
+        // Extract template ID from response - handle different response structures
+        templateId = newTemplateResponse?.id || 
+                   newTemplateResponse?.data?.id || 
+                   newTemplateResponse?.template?.id || 
+                   newTemplateResponse?.evaluation_template?.id;
         
         // التحقق من وجود templateId صالح
         if (!templateId) {
+          console.error("Missing evaluation template id", newTemplateResponse);
           throw new Error("فشل الحصول على معرف القالب من الخادم");
         }
       } else {
@@ -154,6 +160,13 @@ export default function EvaluationTemplateForm() {
       }
 
       // 2. معالجة البنود: إضافة الجديد وتحديث الموجود
+      
+      // Defensive check before adding items
+      if (!templateId) {
+        console.error("Missing evaluation template id before processing items");
+        throw new Error("تعذر إنشاء القالب، لم يتم العثور على رقم القالب.");
+      }
+      
       for (const item of items) {
         if (!item.title || !item.title.trim()) {
           continue; // تخطي البنود الفارغة

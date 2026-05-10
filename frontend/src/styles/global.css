@@ -283,12 +283,13 @@ p {
 .btn-outline-custom {
   background: #fff;
   border-color: var(--border);
-  color: var(--secondary);
+  color: var(--text);
 }
 
 .btn-outline-custom:hover {
   background: #f7fafc;
   border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .btn-success-custom {
@@ -308,8 +309,14 @@ p {
 
 .btn-light-custom {
   background: #f7f9fc;
-  color: var(--secondary);
+  color: var(--text);
   border-color: var(--border);
+}
+
+.btn-light-custom:hover {
+  background: #eef1f6;
+  color: var(--text);
+  border-color: var(--border-strong);
 }
 
 .btn-sm-custom {
@@ -1254,6 +1261,7 @@ p {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 

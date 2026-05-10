@@ -150,6 +150,24 @@ class User extends Authenticatable
         return $this->hasMany(Note::class, 'user_id');
     }
 
+    public function teacherSchoolAssignments()
+    {
+        return $this->hasMany(TeacherSchoolAssignment::class, 'teacher_id');
+    }
+
+    public function activeTeacherSchoolAssignment()
+    {
+        return $this->teacherSchoolAssignments()->active()->first();
+    }
+
+    public function currentSchool()
+    {
+        if ($this->hasRole('teacher')) {
+            return $this->activeTeacherSchoolAssignment?->school;
+        }
+        return $this->trainingSite;
+    }
+
     public function notifications()
     {
         return $this->hasMany(Notification::class, 'user_id');

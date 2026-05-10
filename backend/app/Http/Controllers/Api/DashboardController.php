@@ -153,6 +153,7 @@ class DashboardController extends Controller
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
         $departmentId = $request->department_id;
+        $year = $request->year;
 
         // Base query builder with filters
         $trainingRequestsQuery = TrainingRequest::query();
@@ -161,6 +162,9 @@ class DashboardController extends Controller
         }
         if ($dateTo) {
             $trainingRequestsQuery->whereDate('created_at', '<=', $dateTo);
+        }
+        if ($year) {
+            $trainingRequestsQuery->whereYear('created_at', $year);
         }
 
         // Base user query with department filter
@@ -175,27 +179,67 @@ class DashboardController extends Controller
             $studentQuery->where('department_id', $departmentId);
         }
 
-        // Summary statistics with department filtering
+        // Get total users for percentage calculations
+        $totalUsers = (clone $userQuery)->count();
+        $totalStudents = (clone $studentQuery)->count();
+        $totalTrainingRequests = $trainingRequestsQuery->count();
+
+        // Enhanced summary statistics
         $summary = [
-            'total_users' => (clone $userQuery)->count(),
+            'total_users' => $totalUsers,
             'active_users' => (clone $userQuery)->where('status', 'active')->count(),
             'inactive_users' => (clone $userQuery)->where('status', 'inactive')->count(),
-            'total_students' => (clone $studentQuery)->count(),
+            'total_students' => $totalStudents,
+            'total_academic_supervisors' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'academic_supervisor'))->count(),
+            'total_teachers' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'teacher'))->count(),
+            'total_school_managers' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'school_manager'))->count(),
+            'total_admins' => (clone $userQuery)->whereHas('role', fn($q) => $q->where('name', 'admin'))->count(),
+            'total_coordinators' => (clone $userQuery)->whereHas('role', fn($q) => $q->whereIn('name', ['training_coordinator', 'coordinator']))->count(),
             'total_departments' => Department::count(),
             'total_sections' => $departmentId
                 ? Section::whereHas('course', fn($q) => $q->where('department_id', $departmentId))->count()
                 : Section::count(),
-            'total_training_requests' => $trainingRequestsQuery->count(),
-            'pending_requests' => (clone $trainingRequestsQuery)->where('book_status', 'draft')->count(),
-            'approved_requests' => (clone $trainingRequestsQuery)->where('status', 'approved')->count(),
-            'rejected_requests' => (clone $trainingRequestsQuery)->where('status', 'rejected')->count(),
+            'total_training_requests' => $totalTrainingRequests,
+            'pending_training_requests' => (clone $trainingRequestsQuery)->where('book_status', 'draft')->count(),
+            'approved_training_requests' => (clone $trainingRequestsQuery)->where('status', 'approved')->count(),
+            'rejected_training_requests' => (clone $trainingRequestsQuery)->where('status', 'rejected')->count(),
+            'completed_training_requests' => (clone $trainingRequestsQuery)->where('status', 'completed')->count(),
             'total_training_sites' => TrainingSite::count(),
             'active_training_sites' => TrainingSite::where('is_active', true)->count(),
+            'schools_with_manager' => TrainingSite::whereNotNull('manager_id')->where('manager_id', '!=', '')->count(),
+            'schools_without_manager' => TrainingSite::whereNull('manager_id')->orWhere('manager_id', '')->count(),
+            'total_evaluation_templates' => \App\Models\EvaluationTemplate::count(),
+            'total_evaluations_submitted' => Evaluation::whereNotNull('total_score')->count(),
             'total_portfolio_entries' => PortfolioEntry::count(),
             'pending_review_entries' => PortfolioEntry::where('review_status', 'pending')->count(),
-            'total_backups' => Backup::count(),
             'total_announcements' => Announcement::count(),
         ];
+
+        // Calculate percentages (avoid division by zero)
+        $percentages = [
+            'students_percentage' => $totalUsers > 0 ? round(($summary['total_students'] / $totalUsers) * 100, 2) : 0,
+            'academic_supervisors_percentage' => $totalUsers > 0 ? round(($summary['total_academic_supervisors'] / $totalUsers) * 100, 2) : 0,
+            'teachers_percentage' => $totalUsers > 0 ? round(($summary['total_teachers'] / $totalUsers) * 100, 2) : 0,
+            'school_managers_percentage' => $totalUsers > 0 ? round(($summary['total_school_managers'] / $totalUsers) * 100, 2) : 0,
+            'approved_requests_percentage' => $totalTrainingRequests > 0 ? round(($summary['approved_training_requests'] / $totalTrainingRequests) * 100, 2) : 0,
+            'pending_requests_percentage' => $totalTrainingRequests > 0 ? round(($summary['pending_training_requests'] / $totalTrainingRequests) * 100, 2) : 0,
+            'rejected_requests_percentage' => $totalTrainingRequests > 0 ? round(($summary['rejected_training_requests'] / $totalTrainingRequests) * 100, 2) : 0,
+            'completed_requests_percentage' => $totalTrainingRequests > 0 ? round(($summary['completed_training_requests'] / $totalTrainingRequests) * 100, 2) : 0,
+            'schools_with_manager_percentage' => $summary['total_training_sites'] > 0 ? round(($summary['schools_with_manager'] / $summary['total_training_sites']) * 100, 2) : 0,
+            'schools_without_manager_percentage' => $summary['total_training_sites'] > 0 ? round(($summary['schools_without_manager'] / $summary['total_training_sites']) * 100, 2) : 0,
+        ];
+
+        // Students section assignment statistics
+        $studentsWithSections = (clone $studentQuery)->whereHas('sections')->count();
+        $studentsWithoutSections = $totalStudents - $studentsWithSections;
+        $percentages['students_with_sections_percentage'] = $totalStudents > 0 ? round(($studentsWithSections / $totalStudents) * 100, 2) : 0;
+        $percentages['students_without_sections_percentage'] = $totalStudents > 0 ? round(($studentsWithoutSections / $totalStudents) * 100, 2) : 0;
+
+        // Students training request statistics
+        $studentsWithRequests = (clone $studentQuery)->whereHas('trainingRequests')->count();
+        $studentsWithoutRequests = $totalStudents - $studentsWithRequests;
+        $percentages['students_with_requests_percentage'] = $totalStudents > 0 ? round(($studentsWithRequests / $totalStudents) * 100, 2) : 0;
+        $percentages['students_without_requests_percentage'] = $totalStudents > 0 ? round(($studentsWithoutRequests / $totalStudents) * 100, 2) : 0;
 
         // Students by department
         $studentsByDepartment = User::whereHas('role', fn($q) => $q->where('name', 'student'))
@@ -274,6 +318,26 @@ class DashboardController extends Controller
                 'count' => $item->count,
             ]);
 
+        // Schools by classification
+        $schoolsByClassification = TrainingSite::select('school_type', DB::raw('count(*) as count'))
+            ->groupBy('school_type')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'classification' => $item->school_type,
+                'count' => $item->count,
+            ]);
+
+        // Schools by level
+        $schoolsByLevel = TrainingSite::select('school_level', DB::raw('count(*) as count'))
+            ->groupBy('school_level')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'level' => $item->school_level,
+                'count' => $item->count,
+            ]);
+
         // Students with/without active training assignments
         $studentsWithAssignments = User::whereHas('role', fn($q) => $q->where('name', 'student'))
             ->whereHas('enrollment.trainingAssignments', fn($q) => $q->where('status', 'ongoing'))
@@ -310,6 +374,7 @@ class DashboardController extends Controller
             ]);
 
         $trainingSiteSummary = TrainingSite::withCount('trainingAssignments')
+            ->with('manager')
             ->get()
             ->map(fn($site) => [
                 'id' => $site->id,
@@ -320,6 +385,9 @@ class DashboardController extends Controller
                 'assignments_count' => $site->training_assignments_count,
                 'directorate' => $site->directorate,
                 'site_type' => $site->site_type,
+                'school_type' => $site->school_type,
+                'school_level' => $site->school_level,
+                'manager' => $site->manager ? $site->manager->name : 'غير مرتبط بمدير',
             ]);
 
         $recentRequests = TrainingRequest::with(['trainingSite', 'requestedBy'])
@@ -337,26 +405,301 @@ class DashboardController extends Controller
                 'created_at' => $req->created_at,
             ]);
 
-        return response()->json([
-            'summary' => $summary,
-            'charts' => [
-                'users_by_role' => $usersByRole,
-                'students_by_department' => $studentsByDepartment,
-                'requests_by_status' => $requestsByStatus,
-                'requests_by_department' => $requestsByDepartment,
-                'requests_over_time' => $requestsOverTime,
-                'sites_by_directorate' => $sitesByDirectorate,
-                'sites_by_type' => $sitesByType,
-                'assignments_by_status' => $assignmentsByStatus,
-                'portfolio_by_status' => $portfolioByStatus,
-                'students_with_assignments' => $studentsWithAssignments,
-                'students_without_assignments' => $studentsWithoutAssignments,
+        // Enhanced charts data
+        $charts = [
+            'users_by_role' => $usersByRole,
+            'students_by_department' => $studentsByDepartment,
+            'requests_by_status' => $requestsByStatus,
+            'requests_by_department' => $requestsByDepartment,
+            'monthly_training_requests' => $this->getMonthlyTrainingRequests($trainingRequestsQuery),
+            'sites_by_directorate' => $sitesByDirectorate,
+            'sites_by_type' => $sitesByType,
+            'schools_by_classification' => $schoolsByClassification,
+            'schools_by_level' => $schoolsByLevel,
+            'assignments_by_status' => $assignmentsByStatus,
+            'portfolio_by_status' => $portfolioByStatus,
+            'students_by_section' => $this->getStudentsBySection($departmentId),
+            'evaluation_completion' => $this->getEvaluationCompletionStats(),
+            'portfolio_activity' => $this->getPortfolioActivity(),
+        ];
+
+        // Enhanced tables data
+        $tables = [
+            'users_by_role' => $this->getUsersByRoleTable($totalUsers),
+            'students_by_department' => $this->getStudentsByDepartmentTable($totalStudents),
+            'requests_by_status' => $this->getRequestsByStatusTable($totalTrainingRequests),
+            'sections_capacity' => $this->getSectionsCapacityTable(),
+            'students_without_section' => $this->getStudentsWithoutSectionTable(),
+            'students_without_training_request' => $this->getStudentsWithoutTrainingRequestTable(),
+            'recent_training_requests' => $this->getRecentTrainingRequestsTable(),
+            'recent_evaluations' => $this->getRecentEvaluationsTable(),
+            'recent_portfolio_entries' => $this->getRecentPortfolioEntriesTable(),
+            'department_summary' => $departmentSummary,
+            'training_site_summary' => $trainingSiteSummary,
+            'teacher_assignment_stats' => $this->getTeacherAssignmentStats(),
+        ];
+
+        // Filters data
+        $filters = [
+            'departments' => Department::select('id', 'name')->get(),
+            'sections' => Section::with('course.department')->select('id', 'name', 'course_id')->get(),
+            'roles' => \App\Models\Role::select('id', 'name')->get(),
+            'statuses' => [
+                ['value' => 'draft', 'label' => 'مسودة'],
+                ['value' => 'pending', 'label' => 'قيد الانتظار'],
+                ['value' => 'approved', 'label' => 'موافق عليه'],
+                ['value' => 'rejected', 'label' => 'مرفوض'],
+                ['value' => 'completed', 'label' => 'مكتمل'],
             ],
-            'tables' => [
-                'department_summary' => $departmentSummary,
-                'training_site_summary' => $trainingSiteSummary,
-                'recent_requests' => $recentRequests,
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'summary' => $summary,
+                'percentages' => $percentages,
+                'charts' => $charts,
+                'tables' => $tables,
+                'filters' => $filters,
             ],
         ]);
+    }
+
+    // Helper methods for enhanced statistics
+    private function getMonthlyTrainingRequests($query)
+    {
+        return $query->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('count(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(12))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->map(fn($item) => [
+                'month' => $item->month,
+                'count' => $item->count,
+            ]);
+    }
+
+    private function getStudentsBySection($departmentId = null)
+    {
+        $query = Section::withCount('sectionStudents');
+        if ($departmentId) {
+            $query->whereHas('course', fn($q) => $q->where('department_id', $departmentId));
+        }
+        
+        return $query->orderByDesc('section_students_count')
+            ->limit(10)
+            ->get()
+            ->map(fn($section) => [
+                'section' => $section->name,
+                'count' => $section->section_students_count,
+            ]);
+    }
+
+    private function getEvaluationCompletionStats()
+    {
+        $totalStudents = User::whereHas('role', fn($q) => $q->where('name', 'student'))->count();
+        $submittedEvaluations = Evaluation::whereNotNull('total_score')->count();
+        
+        return [
+            'submitted' => $submittedEvaluations,
+            'pending' => max(0, $totalStudents - $submittedEvaluations),
+        ];
+    }
+
+    private function getPortfolioActivity()
+    {
+        return PortfolioEntry::select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('count(*) as count')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->map(fn($item) => [
+                'month' => $item->month,
+                'count' => $item->count,
+            ]);
+    }
+
+    private function getUsersByRoleTable($totalUsers)
+    {
+        return User::join('roles', 'users.role_id', '=', 'roles.id')
+            ->select('roles.name as role', DB::raw('count(*) as count'))
+            ->groupBy('roles.id', 'roles.name')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'role' => $item->role,
+                'count' => $item->count,
+                'percentage' => $totalUsers > 0 ? round(($item->count / $totalUsers) * 100, 2) : 0,
+            ]);
+    }
+
+    private function getStudentsByDepartmentTable($totalStudents)
+    {
+        return User::whereHas('role', fn($q) => $q->where('name', 'student'))
+            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->select('departments.name as department', DB::raw('count(*) as count'))
+            ->groupBy('departments.id', 'departments.name')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'department' => $item->department,
+                'count' => $item->count,
+                'percentage' => $totalStudents > 0 ? round(($item->count / $totalStudents) * 100, 2) : 0,
+            ]);
+    }
+
+    private function getRequestsByStatusTable($totalRequests)
+    {
+        return TrainingRequest::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->get()
+            ->map(fn($item) => [
+                'status' => $item->status,
+                'count' => $item->count,
+                'percentage' => $totalRequests > 0 ? round(($item->count / $totalRequests) * 100, 2) : 0,
+            ]);
+    }
+
+    private function getSectionsCapacityTable()
+    {
+        return Section::with(['course.department', 'academicSupervisor'])
+            ->withCount('sectionStudents')
+            ->get()
+            ->map(fn($section) => [
+                'section_name' => $section->name,
+                'department' => $section->course?->department?->name,
+                'academic_supervisor' => $section->academicSupervisor?->name,
+                'students_count' => $section->section_students_count,
+                'capacity' => $section->capacity ?? 30, // Default capacity if not set
+                'fill_percentage' => $section->capacity > 0 ? round(($section->section_students_count / $section->capacity) * 100, 2) : 0,
+            ]);
+    }
+
+    private function getStudentsWithoutSectionTable()
+    {
+        return User::whereHas('role', fn($q) => $q->where('name', 'student'))
+            ->whereDoesntHave('sections')
+            ->with('department')
+            ->select('id', 'name', 'university_id', 'email', 'department_id')
+            ->limit(20)
+            ->get()
+            ->map(fn($student) => [
+                'name' => $student->name,
+                'university_id' => $student->university_id,
+                'department' => $student->department?->name,
+                'email' => $student->email,
+            ]);
+    }
+
+    private function getStudentsWithoutTrainingRequestTable()
+    {
+        return User::whereHas('role', fn($q) => $q->where('name', 'student'))
+            ->whereDoesntHave('trainingRequests')
+            ->with('department')
+            ->select('id', 'name', 'university_id', 'email', 'department_id')
+            ->limit(20)
+            ->get()
+            ->map(fn($student) => [
+                'name' => $student->name,
+                'university_id' => $student->university_id,
+                'department' => $student->department?->name,
+                'email' => $student->email,
+            ]);
+    }
+
+    private function getRecentTrainingRequestsTable()
+    {
+        return TrainingRequest::with(['trainingSite', 'requestedBy.department'])
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn($req) => [
+                'student' => $req->requestedBy?->name,
+                'department' => $req->requestedBy?->department?->name,
+                'training_site' => $req->trainingSite?->name,
+                'status' => $req->status,
+                'created_date' => $req->created_at?->format('Y-m-d'),
+            ]);
+    }
+
+    private function getRecentEvaluationsTable()
+    {
+        return Evaluation::with(['student', 'evaluator', 'template'])
+            ->whereNotNull('total_score')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn($eval) => [
+                'student' => $eval->student?->name,
+                'evaluator' => $eval->evaluator?->name,
+                'template' => $eval->template?->name,
+                'score' => $eval->total_score,
+                'date' => $eval->created_at?->format('Y-m-d'),
+            ]);
+    }
+
+    private function getRecentPortfolioEntriesTable()
+    {
+        return PortfolioEntry::with('student')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn($entry) => [
+                'student' => $entry->student?->name,
+                'title' => $entry->title,
+                'category' => $entry->category ?? '—',
+                'review_status' => $entry->review_status ?? 'pending',
+                'created_date' => $entry->created_at?->format('Y-m-d'),
+            ]);
+    }
+
+    private function getTeacherAssignmentStats()
+    {
+        // Teachers by school
+        $teachersBySchool = TeacherSchoolAssignment::active()
+            ->with(['school', 'teacher'])
+            ->get()
+            ->groupBy('school_id')
+            ->map(function ($assignments) {
+                $school = $assignments->first()->school;
+                return [
+                    'school' => $school?->name ?? 'غير محدد',
+                    'count' => $assignments->count(),
+                ];
+            })
+            ->values();
+
+        // Teachers without active school assignment
+        $teachersWithoutAssignment = TeacherSchoolAssignment::getTeachersWithoutActiveAssignment()->count();
+
+        // Teacher assignments ended this academic year
+        $currentYear = date('Y');
+        $endedAssignmentsThisYear = TeacherSchoolAssignment::where('status', 'ended')
+            ->whereYear('end_date', $currentYear)
+            ->count();
+
+        // Total teacher assignment history count
+        $totalAssignmentHistory = TeacherSchoolAssignment::count();
+
+        // Schools with no active teachers
+        $schoolsWithNoTeachers = TrainingSite::where('is_active', true)
+            ->whereDoesntHave('teacherSchoolAssignments', function ($query) {
+                $query->active();
+            })
+            ->count();
+
+        return [
+            'teachers_by_school' => $teachersBySchool,
+            'teachers_without_assignment' => $teachersWithoutAssignment,
+            'ended_assignments_this_year' => $endedAssignmentsThisYear,
+            'total_assignment_history' => $totalAssignmentHistory,
+            'schools_with_no_teachers' => $schoolsWithNoTeachers,
+        ];
     }
 }

@@ -42,7 +42,8 @@ use App\Http\Controllers\Api\{
     StudentAttendanceController,
     StudentEFormController,
     StudentEvaluationController,
-    HeadOfDepartmentController
+    HeadOfDepartmentController,
+    SchoolManagerTeacherController
 };
 
 // Routes publiques
@@ -89,6 +90,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('training-sites', TrainingSiteController::class);
     Route::apiResource('training-periods', TrainingPeriodController::class);
     Route::patch('training-periods/{training_period}/set-active', [TrainingPeriodController::class, 'setActive']);
+    
+    // Schools without manager functionality
+    Route::get('training-sites/without-manager', [TrainingSiteController::class, 'schoolsWithoutManager']);
+    Route::get('users/school-managers/available', [TrainingSiteController::class, 'availableSchoolManagers']);
+    Route::post('training-sites/{training_site}/assign-manager', [TrainingSiteController::class, 'assignManager']);
 
     // Demandes de stage
     Route::get('training-requests', [TrainingRequestController::class, 'index']);
@@ -338,6 +344,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/mentor-requests', [TrainingRequestController::class, 'schoolManagerMentorRequests']);
         Route::get('/teachers', [TrainingRequestController::class, 'schoolManagerTeachers']);
         Route::post('/mentor-requests/{training_request}/approve', [TrainingRequestController::class, 'schoolManagerApprove']);
+        
+        // Teacher Management Routes
+        Route::get('/school-teachers', [SchoolManagerTeacherController::class, 'index']);
+        Route::get('/teacher-assignments/history', [SchoolManagerTeacherController::class, 'history']);
+        Route::get('/teachers/available', [SchoolManagerTeacherController::class, 'availableTeachers']);
+        Route::post('/teachers/assign', [SchoolManagerTeacherController::class, 'assign']);
+        Route::post('/teachers/{teacher}/end-assignment', [SchoolManagerTeacherController::class, 'endAssignment']);
+        Route::get('/teachers/{teacher}/assignment-details', [SchoolManagerTeacherController::class, 'getAssignmentDetails']);
     });
 
     // ========== ROUTES سجل حضور الطالب ==========

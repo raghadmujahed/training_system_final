@@ -4,14 +4,14 @@ export function Button({ children, onClick, type = 'button', variant = 'default'
   const baseStyles = 'inline-flex items-center justify-center gap-2 font-bold rounded-[14px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 min-h-[46px] px-[18px] border border-transparent whitespace-nowrap';
 
   const variants = {
-    default: 'bg-gradient-to-br from-primary to-secondary text-white shadow-[0_10px_20px_rgba(23,50,75,0.14)] hover:-translate-y-px hover:shadow-[0_14px_24px_rgba(23,50,75,0.18)] focus:ring-primary/50',
-    secondary: 'bg-gradient-to-br from-accent to-[#9a7748] text-white hover:-translate-y-px focus:ring-accent/50',
-    outline: 'bg-white border-border text-secondary hover:bg-[#f7fafc] hover:border-border-strong focus:ring-primary/50',
-    ghost: 'text-text-soft hover:bg-bg hover:text-text focus:ring-primary/50',
-    destructive: 'bg-danger text-white hover:bg-danger/90 focus:ring-danger/50',
-    success: 'bg-success text-white hover:bg-success/90 focus:ring-success/50',
-    warning: 'bg-warning text-white hover:bg-warning/90 focus:ring-warning/50',
-    light: 'bg-[#f7f9fc] text-secondary border-border hover:bg-[#eef1f6] focus:ring-primary/50',
+    default: 'bg-gradient-to-br from-primary to-secondary text-white shadow-[0_10px_20px_rgba(23,50,75,0.14)] hover:-translate-y-px hover:shadow-[0_14px_24px_rgba(23,50,75,0.18)] focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-sm',
+    secondary: 'bg-gradient-to-br from-accent to-[#9a7748] text-white hover:-translate-y-px focus:ring-accent/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none',
+    outline: 'bg-white border-border text-text hover:bg-[#f7fafc] hover:border-border-strong hover:text-text focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500',
+    ghost: 'text-text-soft hover:bg-bg hover:text-text focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-soft',
+    destructive: 'bg-danger text-white hover:bg-danger/90 focus:ring-danger/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-danger/80',
+    success: 'bg-success text-white hover:bg-success/90 focus:ring-success/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-success/80',
+    warning: 'bg-warning text-white hover:bg-warning/90 focus:ring-warning/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-warning/80',
+    light: 'bg-[#f7f9fc] text-text border-border hover:bg-[#eef1f6] hover:text-text focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500',
   };
 
   const sizes = {

@@ -74,7 +74,7 @@ class TestDataSeeder extends Seeder
         $teacher = User::create([
             'university_id' => 'TCH001',
             'name' => 'محمد المعلم',
-            'email' => 'teacher@hebron.edu',
+            'email' => 'teacher@hebron.edu.ps',
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $teacherRole->id,
@@ -82,9 +82,9 @@ class TestDataSeeder extends Seeder
         ]);
 
         $student = User::create([
-            'university_id' => 'STU001',
+            'university_id' => '20201234',
             'name' => 'أحمد الطالب',
-            'email' => 'student@hebron.edu',
+            'email' => 'student@students.hebron.edu',
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $studentRole->id,
@@ -96,7 +96,7 @@ class TestDataSeeder extends Seeder
         $schoolManager = User::create([
             'university_id' => 'SCHMGR001',
             'name' => 'خالد مدير المدرسة',
-            'email' => 'schoolmanager@hebron.edu',
+            'email' => 'schoolmanager@hebron.edu.ps',
             'password' => bcrypt('password'),
             'status' => UserStatus::ACTIVE->value,
             'role_id' => $schoolManagerRole->id,

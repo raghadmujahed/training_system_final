@@ -491,14 +491,14 @@ export default function TasksTab({ studentId }) {
                 <div className="flex gap-2 mt-[10px]">
                   <button
                     type="button"
-                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-white text-[#4361ee] cursor-pointer"
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-[#4361ee] text-white cursor-pointer hover:bg-[#3651de]"
                     onClick={() => openEdit(task)}
                   >
                     ✏️ تعديل
                   </button>
                   <button
                     type="button"
-                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#dc3545] bg-white text-[#dc3545] cursor-pointer"
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#dc3545] bg-[#dc3545] text-white cursor-pointer hover:bg-[#c82333]"
                     onClick={() => handleDelete(task.id)}
                   >
                     🗑️ حذف

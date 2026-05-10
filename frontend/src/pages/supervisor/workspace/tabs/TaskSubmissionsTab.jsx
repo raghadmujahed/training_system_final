@@ -142,16 +142,16 @@ export default function TaskSubmissionsTab({ studentId }) {
                         <input id="grade-note" name="notes" className="form-input-custom" value={gradeNote} onChange={(e) => setGradeNote(e.target.value)} placeholder="ملاحظة..." />
                       </div>
                       <button className="btn-primary-custom text-[0.82rem] py-[6px] px-[14px]" onClick={() => handleGrade(sub.id)}>تقييم</button>
-                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#999] bg-white cursor-pointer" onClick={() => { setGradingId(null); setGradeValue(""); setGradeNote(""); }}>إلغاء</button>
+                      <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#999] bg-gray-100 text-gray-700 cursor-pointer hover:bg-gray-200" onClick={() => { setGradingId(null); setGradeValue(""); setGradeNote(""); }}>إلغاء</button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex gap-2 mt-[10px]">
                     {sub.status === "submitted" || sub.status === "under_review" ? (
-                      <button className="text-[0.82rem] py-1 px-3 rounded-md border border-[#28a745] bg-white text-[#28a745] cursor-pointer" onClick={() => setGradingId(sub.id)}>📊 تقييم</button>
+                      <button className="text-[0.82rem] py-1 px-3 rounded-md border border-[#28a745] bg-[#28a745] text-white cursor-pointer hover:bg-[#218838]" onClick={() => setGradingId(sub.id)}>📊 تقييم</button>
                     ) : null}
                     {sub.status === "graded" && (
-                      <button className="text-[0.82rem] py-1 px-3 rounded-md border border-[#fd7e14] bg-white text-[#fd7e14] cursor-pointer" onClick={() => handleReopen(sub.id)}>🔄 إعادة فتح</button>
+                      <button className="text-[0.82rem] py-1 px-3 rounded-md border border-[#fd7e14] bg-[#fd7e14] text-white cursor-pointer hover:bg-[#e76f00]" onClick={() => handleReopen(sub.id)}>🔄 إعادة فتح</button>
                     )}
                   </div>
                 )}

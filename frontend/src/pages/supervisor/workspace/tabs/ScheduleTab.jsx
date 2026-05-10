@@ -222,7 +222,7 @@ export default function ScheduleTab({ studentId, student }) {
       <div className="section-card no-print mb-4 flex gap-3 flex-wrap">
         <button
           onClick={handlePrint}
-          className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-white cursor-pointer flex items-center gap-[0.4rem]"
+          className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-gray-50 text-gray-700 cursor-pointer flex items-center gap-[0.4rem] hover:bg-gray-100"
         >
           <Printer size={16} /> طباعة
         </button>
@@ -231,7 +231,7 @@ export default function ScheduleTab({ studentId, student }) {
             href={`${apiOrigin}/storage/${filePath.replace(/^\//, "")}`}
             target="_blank"
             rel="noreferrer"
-            className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-white cursor-pointer flex items-center gap-[0.4rem] text-[#0d6efd] no-underline"
+            className="py-2 px-4 text-[0.85rem] border border-[#e2e8f0] rounded-md bg-[#0d6efd] text-white cursor-pointer flex items-center gap-[0.4rem] no-underline hover:bg-[#0b5ed7]"
           >
             <Download size={16} /> تحميل PDF
           </a>

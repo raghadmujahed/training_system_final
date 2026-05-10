@@ -151,7 +151,7 @@ function ActionButton({ icon, label, onClick, color }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-[10px] p-3 rounded-lg border border-[#eee] bg-white cursor-pointer transition-colors text-[0.88rem] w-full text-right border-r-[3px]"
+      className="flex items-center gap-[10px] p-3 rounded-lg border border-[#eee] bg-gray-50 cursor-pointer transition-colors text-[0.88rem] w-full text-right border-r-[3px] hover:bg-gray-100"
       style={{ color: color || "#333", borderRightColor: color || "#4361ee" }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = "#eef0ff";

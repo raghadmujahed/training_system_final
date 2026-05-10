@@ -207,7 +207,7 @@ export default function FieldVisitsTab({ studentId, student }) {
                 )}
 
                 {visit.status === "scheduled" && reportVisitId !== visit.id && (
-                  <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#28a745] bg-white text-[#28a745] cursor-pointer mt-2" onClick={() => setReportVisitId(visit.id)}>
+                  <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#28a745] bg-[#28a745] text-white cursor-pointer hover:bg-[#218838] mt-2" onClick={() => setReportVisitId(visit.id)}>
                     📝 إدخال تقرير الزيارة
                   </button>
                 )}

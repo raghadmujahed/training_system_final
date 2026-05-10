@@ -25,6 +25,7 @@ class TrainingSite extends Model
         'school_type',
         'gender_classification',
         'school_level',
+        'manager_id',
     ];
 
     public function trainingRequests()
@@ -45,5 +46,10 @@ class TrainingSite extends Model
     public function weeklySchedules()
     {
         return $this->hasMany(WeeklySchedule::class);
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
     }
 }

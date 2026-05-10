@@ -40,7 +40,8 @@ class EnrollmentController extends Controller
     {
         $data = $request->validated();
 
-        // Check if student is already enrolled in any ACTIVE section during this period
+        // Check if student is already enrolled in any ACTIVE training course during this period
+        // Students can only enroll in ONE training course and ONE section per training period
         // Exclude: dropped, and sections that are archived
         $existingEnrollment = Enrollment::where('user_id', $data['user_id'])
             ->where('academic_year', $data['academic_year'])

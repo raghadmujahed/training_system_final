@@ -333,6 +333,9 @@ export const getTrainingSites = (params) => apiClient.get('/training-sites', { p
 export const createTrainingSite = (data) => apiClient.post('/training-sites', data).then(res => res.data);
 export const updateTrainingSite = (id, data) => apiClient.put(`/training-sites/${id}`, data).then(res => res.data);
 export const deleteTrainingSite = (id) => apiClient.delete(`/training-sites/${id}`).then(res => res.data);
+export const getSchoolsWithoutManager = () => apiClient.get('/training-sites/without-manager').then(res => res.data);
+export const getAvailableSchoolManagers = () => apiClient.get('/users/school-managers/available').then(res => res.data);
+export const assignManagerToSchool = (schoolId, managerId) => apiClient.post(`/training-sites/${schoolId}/assign-manager`, { manager_id: managerId }).then(res => res.data);
 
 // ==================== Training Periods ====================
 export const getTrainingPeriods = (params = {}) =>
@@ -814,6 +817,37 @@ export const getSchoolManagerTeachers = async (params = {}) => {
 
 export const schoolManagerApproveRequest = async (id, data) => {
   const response = await apiClient.post(`/school-manager/mentor-requests/${id}/approve`, data);
+  return response.data;
+};
+
+// ==================== School Manager Teacher Management ====================
+export const getSchoolTeachers = async (params = {}) => {
+  const response = await apiClient.get('/school-manager/school-teachers', { params });
+  return response.data;
+};
+
+export const getTeacherAssignmentHistory = async (params = {}) => {
+  const response = await apiClient.get('/school-manager/teacher-assignments/history', { params });
+  return response.data;
+};
+
+export const getAvailableTeachers = async (params = {}) => {
+  const response = await apiClient.get('/school-manager/teachers/available', { params });
+  return response.data;
+};
+
+export const assignTeacherToSchool = async (data) => {
+  const response = await apiClient.post('/school-manager/teachers/assign', data);
+  return response.data;
+};
+
+export const endTeacherAssignment = async (teacherId, data) => {
+  const response = await apiClient.post(`/school-manager/teachers/${teacherId}/end-assignment`, data);
+  return response.data;
+};
+
+export const getTeacherAssignmentDetails = async (teacherId) => {
+  const response = await apiClient.get(`/school-manager/teachers/${teacherId}/assignment-details`);
   return response.data;
 };
 

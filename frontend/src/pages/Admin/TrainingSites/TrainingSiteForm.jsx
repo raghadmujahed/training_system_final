@@ -25,6 +25,7 @@ export default function TrainingSiteForm() {
     school_type: "public",
     gender_classification: "",
     school_level: "",
+    manager_id: "",
     is_active: true,
   });
   const [loading, setLoading] = useState(false);
@@ -53,6 +54,7 @@ export default function TrainingSiteForm() {
           school_type: siteData.school_type || "public",
           gender_classification: siteData.gender_classification || "",
           school_level: siteData.school_level || "",
+          manager_id: siteData.manager_id || "",
           is_active: siteData.is_active !== undefined ? siteData.is_active : true,
         });
       });
@@ -91,21 +93,33 @@ export default function TrainingSiteForm() {
       errors.directorate = "المديرية مطلوبة";
     }
     
-    const capacity = Number(form.capacity);
-    if (!isMinValue(capacity, 1)) {
-      errors.capacity = "السعة يجب أن تكون 1 على الأقل";
+    if (!isRequired(form.school_type)) {
+      errors.school_type = "تصنيف المدرسة مطلوب";
+    }
+    
+    if (!isRequired(form.school_level)) {
+      errors.school_level = "المرحلة الدراسية مطلوبة";
+    }
+    
+    if (!isRequired(form.phone)) {
+      errors.phone = "رقم الهاتف مطلوب ويجب أن يكون صحيحاً";
+    } else if (!isValidPhone(form.phone)) {
+      errors.phone = "رقم الهاتف يجب أن يكون صحيحاً (مثال: 022222222 أو +97022222222)";
+    }
+    
+    if (!isRequired(form.mobile)) {
+      errors.mobile = "رقم المحمول مطلوب ويجب أن يكون صحيحاً";
+    } else if (!isValidPhone(form.mobile)) {
+      errors.mobile = "رقم المحمول يجب أن يكون صحيحاً (مثال: 0591234567 أو +970591234567)";
     }
     
     if (form.email && !isValidEmail(form.email)) {
       errors.email = "صيغة البريد الإلكتروني غير صحيحة";
     }
     
-    if (form.phone && !isValidPhone(form.phone)) {
-      errors.phone = "رقم الهاتف يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059";
-    }
-    
-    if (form.mobile && !isValidPhone(form.mobile)) {
-      errors.mobile = "رقم المحمول يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059";
+    const capacity = Number(form.capacity);
+    if (!isMinValue(capacity, 1)) {
+      errors.capacity = "السعة يجب أن تكون 1 على الأقل";
     }
     
     setFieldErrors(errors);
@@ -251,7 +265,7 @@ export default function TrainingSiteForm() {
           />
         </div>
         <div className="form-group">
-          <label>الهاتف</label>
+          <label>الهاتف *</label>
           <input 
             type="text" 
             name="phone"
@@ -259,6 +273,8 @@ export default function TrainingSiteForm() {
             onChange={handleChange}
             onBlur={handleChange}
             className={fieldErrors.phone ? 'border-red-500' : ''}
+            placeholder="مثال: 022222222"
+            required
           />
           {fieldErrors.phone && <div className="text-red-500 text-sm mt-1">{fieldErrors.phone}</div>}
         </div>
@@ -275,7 +291,7 @@ export default function TrainingSiteForm() {
           {fieldErrors.email && <div className="text-red-500 text-sm mt-1">{fieldErrors.email}</div>}
         </div>
         <div className="form-group">
-          <label>رقم المحمول</label>
+          <label>رقم المحمول *</label>
           <input 
             type="text" 
             name="mobile"
@@ -283,6 +299,8 @@ export default function TrainingSiteForm() {
             onChange={handleChange}
             onBlur={handleChange}
             className={fieldErrors.mobile ? 'border-red-500' : ''}
+            placeholder="مثال: 0591234567"
+            required
           />
           {fieldErrors.mobile && <div className="text-red-500 text-sm mt-1">{fieldErrors.mobile}</div>}
         </div>
@@ -333,11 +351,21 @@ export default function TrainingSiteForm() {
           </select>
         </div>
         <div className="form-group">
-          <label>نوع المدرسة</label>
-          <select value={form.school_type} onChange={(e) => setForm({ ...form, school_type: e.target.value })}>
+          <label>تصنيف المدرسة *</label>
+          <select 
+            name="school_type"
+            value={form.school_type} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.school_type ? 'border-red-500' : ''}
+            required
+          >
+            <option value="">اختر التصنيف</option>
             <option value="public">حكومية</option>
             <option value="private">خاصة</option>
+            <option value="unrwa">وكالة</option>
           </select>
+          {fieldErrors.school_type && <div className="text-red-500 text-sm mt-1">{fieldErrors.school_type}</div>}
         </div>
         <div className="form-group">
           <label>تصنيف المدرسة</label>
@@ -349,12 +377,35 @@ export default function TrainingSiteForm() {
           </select>
         </div>
         <div className="form-group">
-          <label>مرحلة المدرسة</label>
-          <select value={form.school_level} onChange={(e) => setForm({ ...form, school_level: e.target.value })}>
-            <option value="">-- اختر --</option>
-            <option value="lower">دنيا</option>
-            <option value="upper">عليا</option>
+          <label>المرحلة الدراسية *</label>
+          <select 
+            name="school_level"
+            value={form.school_level} 
+            onChange={handleChange}
+            onBlur={handleChange}
+            className={fieldErrors.school_level ? 'border-red-500' : ''}
+            required
+          >
+            <option value="">اختر المرحلة</option>
+            <option value="lower">أساسية</option>
+            <option value="upper">ثانوية</option>
+            <option value="both">أساسية وثانوية</option>
           </select>
+          {fieldErrors.school_level && <div className="text-red-500 text-sm mt-1">{fieldErrors.school_level}</div>}
+        </div>
+        <div className="form-group">
+          <label>مدير المدرسة</label>
+          <select 
+            name="manager_id"
+            value={form.manager_id} 
+            onChange={handleChange}
+          >
+            <option value="">اختر مدير المدرسة من الحسابات الموجودة</option>
+          </select>
+          <small className="form-help text-muted">
+            يمكن ترك هذا الحقل فارغاً وربط المدرسة بمدير لاحقاً.
+          </small>
+          {fieldErrors.manager_id && <div className="text-red-500 text-sm mt-1">{fieldErrors.manager_id}</div>}
         </div>
         <div className="form-group">
           <label>الجهة المسؤولة</label>

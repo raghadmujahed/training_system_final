@@ -47,6 +47,7 @@ import EnrollmentsList from "../pages/Admin/Enrollments/EnrollmentsList";
 import EnrollmentForm from "../pages/Admin/Enrollments/EnrollmentForm";
 import TrainingSitesList from "../pages/Admin/TrainingSites/TrainingSitesList";
 import TrainingSiteForm from "../pages/Admin/TrainingSites/TrainingSiteForm";
+import SchoolsWithoutManager from "../pages/Admin/TrainingSites/SchoolsWithoutManager";
 import TrainingPeriodsList from "../pages/Admin/TrainingPeriods/TrainingPeriodsList";
 import TrainingPeriodForm from "../pages/Admin/TrainingPeriods/TrainingPeriodForm";
 import AnnouncementsList from "../pages/Admin/Announcements/AnnouncementsList";
@@ -140,6 +141,7 @@ import MentorAssignment from "../pages/principal/MentorAssignment";
 import TraineeStudents from "../pages/principal/TraineeStudents";
 import StudentEvaluation from "../pages/principal/StudentEvaluation";
 import AttendanceApproval from "../pages/principal/AttendanceApproval";
+import SchoolTeachers from "../pages/principal/SchoolTeachers";
 
 // Health Directorate
 import HealthDirectorateDashboard from "../pages/dashboard/HealthDirectorateDashboard";
@@ -211,6 +213,7 @@ export default function AppRouter() {
           <Route path="/admin/training-sites" element={<TrainingSitesList />} />
           <Route path="/admin/training-sites/create" element={<TrainingSiteForm />} />
           <Route path="/admin/training-sites/edit/:id" element={<TrainingSiteForm />} />
+          <Route path="/admin/training-sites/without-manager" element={<SchoolsWithoutManager />} />
 
           <Route path="/admin/training-periods" element={<TrainingPeriodsList />} />
           <Route path="/admin/training-periods/create" element={<TrainingPeriodForm />} />
@@ -424,6 +427,7 @@ export default function AppRouter() {
           <Route path="/principal/official-letters" element={<PrincipalOfficialLetters />} />
           <Route path="/principal/student-evaluation" element={<StudentEvaluation />} />
           <Route path="/principal/attendance-approval" element={<AttendanceApproval />} />
+          <Route path="/principal/school-teachers" element={<SchoolTeachers />} />
 
           {/* Psychology Center */}
           <Route path="/psychology-center/dashboard" element={<PrincipalDashboard siteType="health_center" />} />

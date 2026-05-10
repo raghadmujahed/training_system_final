@@ -300,7 +300,7 @@ export default function TrainingRequest() {
               )}
               {canCancelLatestRequest && (
                 <button type="button" onClick={handleCancelLatestRequest} disabled={saving}
-                  className="inline-flex items-center gap-[6px] py-[0.55rem] px-5 bg-white text-[#dc2626] border-[1.5px] border-[#fecaca] rounded-[10px] font-bold text-[0.88rem]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                  className="inline-flex items-center gap-[6px] py-[0.55rem] px-5 bg-[#dc2626] text-white border-[1.5px] border-[#dc2626] rounded-[10px] font-bold text-[0.88rem] hover:bg-[#b91c1c]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
                 >
                   <Trash2 size={16} /> إلغاء الطلب
                 </button>
@@ -475,7 +475,7 @@ export default function TrainingRequest() {
                 {editingId && (
                   <button type="button"
                     onClick={() => { setEditingId(null); setError(""); setSuccess(""); }}
-                    className="inline-flex items-center gap-[6px] py-[0.7rem] px-5 bg-white text-[#64748b] border-[1.5px] border-[#e2e8f0] rounded-xl font-bold text-[0.88rem] cursor-pointer"
+                    className="inline-flex items-center gap-[6px] py-[0.7rem] px-5 bg-gray-100 text-gray-700 border-[1.5px] border-[#e2e8f0] rounded-xl font-bold text-[0.88rem] cursor-pointer hover:bg-gray-200"
                   >
                     <XCircle size={16} /> إلغاء
                   </button>

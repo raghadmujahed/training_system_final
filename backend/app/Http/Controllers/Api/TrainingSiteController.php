@@ -75,6 +75,9 @@ class TrainingSiteController extends Controller
             ]);
         }
 
+        // Always include manager relationship for the list
+        $query->with('manager');
+
         $sites = $query->latest()->paginate($request->per_page ?? 15);
         return TrainingSiteResource::collection($sites);
     }
@@ -87,6 +90,22 @@ class TrainingSiteController extends Controller
 
     public function show(TrainingSite $trainingSite)
     {
+        $trainingSite->load([
+            'manager',
+            'trainingAssignments' => function ($query) {
+                $query->with(['enrollment.user', 'teacher', 'academic_supervisor']);
+            }
+        ]);
+
+        // Add counts for detailed view
+        $trainingSite->training_requests_count = $trainingSite->trainingRequests()->count();
+        $trainingSite->active_assignments_count = $trainingSite->trainingAssignments()
+            ->whereIn('status', ['assigned', 'ongoing'])
+            ->count();
+        $trainingSite->completed_assignments_count = $trainingSite->trainingAssignments()
+            ->where('status', 'completed')
+            ->count();
+
         return new TrainingSiteResource($trainingSite);
     }
 
@@ -100,5 +119,69 @@ class TrainingSiteController extends Controller
     {
         $trainingSite->delete();
         return response()->json(['message' => 'تم حذف موقع التدريب']);
+    }
+
+    public function schoolsWithoutManager()
+    {
+        $schools = TrainingSite::whereNull('manager_id')
+            ->orWhere('manager_id', '')
+            ->with('manager')
+            ->latest()
+            ->get();
+
+        return response()->json($schools);
+    }
+
+    public function availableSchoolManagers()
+    {
+        $managers = User::whereHas('role', function ($query) {
+            $query->where('name', 'school_manager');
+        })
+        ->where(function ($query) {
+            $query->whereNull('training_site_id')
+                ->orWhereNotIn('id', function ($subQuery) {
+                    $subQuery->select('manager_id')
+                        ->from('training_sites')
+                        ->whereNotNull('manager_id');
+                });
+        })
+        ->select('id', 'name', 'email')
+        ->get();
+
+        return response()->json($managers);
+    }
+
+    public function assignManager(Request $request, TrainingSite $trainingSite)
+    {
+        $request->validate([
+            'manager_id' => 'required|exists:users,id'
+        ]);
+
+        $manager = User::find($request->manager_id);
+        
+        // Check if user has school_manager role
+        if (!$manager || $manager->role?->name !== 'school_manager') {
+            return response()->json([
+                'message' => 'مدير المدرسة يجب أن يكون حساباً موجوداً بدور مدير مدرسة'
+            ], 422);
+        }
+
+        // Check if manager is already linked to another school
+        $existingAssignment = TrainingSite::where('manager_id', $request->manager_id)
+            ->where('id', '!=', $trainingSite->id)
+            ->first();
+
+        if ($existingAssignment) {
+            return response()->json([
+                'message' => 'هذا المدير مرتبط بمدرسة أخرى حالياً'
+            ], 422);
+        }
+
+        $trainingSite->update(['manager_id' => $request->manager_id]);
+
+        return response()->json([
+            'message' => 'تم ربط المدير بالمدرسة بنجاح',
+            'training_site' => $trainingSite->load('manager')
+        ]);
     }
 }
