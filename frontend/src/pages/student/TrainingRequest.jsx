@@ -293,14 +293,14 @@ export default function TrainingRequest() {
             <div className="flex gap-2 mt-5 flex-wrap">
               {canEditLatestRequest && (
                 <button type="button" onClick={() => startEdit(latestRequest)} disabled={saving}
-                  className="inline-flex items-center gap-[6px] py-[0.55rem] px-5 bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] text-white border-none rounded-[10px] font-bold text-[0.88rem]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                  className="flex items-center gap-[6px] py-[0.55rem] px-5 bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] text-white border-none rounded-[10px] font-bold text-[0.88rem] relative z-10" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
                 >
                   <Edit3 size={16} /> تعديل نفس الطلب
                 </button>
               )}
               {canCancelLatestRequest && (
                 <button type="button" onClick={handleCancelLatestRequest} disabled={saving}
-                  className="inline-flex items-center gap-[6px] py-[0.55rem] px-5 bg-[#dc2626] text-white border-[1.5px] border-[#dc2626] rounded-[10px] font-bold text-[0.88rem] hover:bg-[#b91c1c]" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                  className="flex items-center gap-[6px] py-[0.55rem] px-5 bg-[#dc2626] text-white border-[1.5px] border-[#dc2626] rounded-[10px] font-bold text-[0.88rem] hover:bg-[#b91c1c] relative z-10" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
                 >
                   <Trash2 size={16} /> إلغاء الطلب
                 </button>
@@ -467,7 +467,7 @@ export default function TrainingRequest() {
               {/* Actions */}
               <div className="flex gap-2 flex-wrap">
                 <button type="submit" disabled={saving || (hasSubmittedRequest && !submitTargetRequestId)}
-                  className="inline-flex items-center gap-[6px] py-[0.7rem] px-7 border-none rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] text-white text-[0.95rem] font-bold shadow-[0_4px_12px_rgba(30,58,95,0.3)]" style={{ cursor: saving || (hasSubmittedRequest && !submitTargetRequestId) ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                  className="flex items-center gap-[6px] py-[0.7rem] px-7 border-none rounded-xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] text-white text-[0.95rem] font-bold shadow-[0_4px_12px_rgba(30,58,95,0.3)] relative z-10" style={{ cursor: saving || (hasSubmittedRequest && !submitTargetRequestId) ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
                 >
                   {saving ? <LoadingSpinner size="button" /> : submitTargetRequestId ? <Edit3 size={18} /> : <Send size={18} />}
                   {saving ? "جاري الحفظ..." : submitTargetRequestId ? "حفظ التعديلات" : "إرسال الطلب"}
@@ -475,7 +475,7 @@ export default function TrainingRequest() {
                 {editingId && (
                   <button type="button"
                     onClick={() => { setEditingId(null); setError(""); setSuccess(""); }}
-                    className="inline-flex items-center gap-[6px] py-[0.7rem] px-5 bg-gray-100 text-gray-700 border-[1.5px] border-[#e2e8f0] rounded-xl font-bold text-[0.88rem] cursor-pointer hover:bg-gray-200"
+                    className="flex items-center gap-[6px] py-[0.7rem] px-5 bg-gray-100 text-gray-700 border-[1.5px] border-[#e2e8f0] rounded-xl font-bold text-[0.88rem] cursor-pointer hover:bg-gray-200 relative z-10"
                   >
                     <XCircle size={16} /> إلغاء
                   </button>
