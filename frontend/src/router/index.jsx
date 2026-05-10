@@ -58,6 +58,7 @@ import ActivityLogsList from "../pages/Admin/ActivityLogs/ActivityLogsList";
 import FeatureFlagsList from "../pages/Admin/FeatureFlags/FeatureFlagsList";
 import EvaluationTemplatesList from "../pages/Admin/EvaluationTemplates/EvaluationTemplatesList";
 import EvaluationTemplateForm from "../pages/Admin/EvaluationTemplates/EvaluationTemplateForm";
+import AdminReports from "../pages/Admin/Reports";
 
 // Reports
 import ReportsDashboard from "../pages/reports/ReportsDashboard";
@@ -228,6 +229,8 @@ export default function AppRouter() {
           <Route path="/admin/evaluation-templates" element={<EvaluationTemplatesList />} />
           <Route path="/admin/evaluation-templates/create" element={<EvaluationTemplateForm />} />
           <Route path="/admin/evaluation-templates/edit/:id" element={<EvaluationTemplateForm />} />
+
+          <Route path="/admin/reports" element={<AdminReports />} />
 
           {/* Reports */}
           <Route path="/reports" element={<ReportsDashboard />} />

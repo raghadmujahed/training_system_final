@@ -1,20 +1,43 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getSections, deleteSection } from "../../../services/api";
+import { getSections, deleteSection, getCourses } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import PageHeader from "../../../components/common/PageHeader";
 
 export default function SectionsList() {
   const [sections, setSections] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    academic_year: "",
+    semester: "",
+    course_id: ""
+  });
 
   useEffect(() => {
+    fetchCourses();
     fetchSections();
   }, []);
 
+  useEffect(() => {
+    fetchSections();
+  }, [filters]);
+
+  const fetchCourses = async () => {
+    try {
+      const res = await getCourses({ per_page: 100 });
+      setCourses(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchSections = async () => {
     try {
-      const res = await getSections();
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value !== "")
+      );
+      const res = await getSections(cleanFilters);
       setSections(res.data.data || res.data || []);
     } catch (err) {
       console.error(err);
@@ -45,6 +68,49 @@ export default function SectionsList() {
              إضافة طلاب إلى شعب
           </Link>
         </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filters-bar" style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <select
+          value={filters.academic_year}
+          onChange={(e) => setFilters({ ...filters, academic_year: e.target.value })}
+        >
+          <option value="">جميع السنوات</option>
+          <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
+          <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
+          <option value={new Date().getFullYear() + 1}>{new Date().getFullYear() + 1}</option>
+        </select>
+
+        <select
+          value={filters.semester}
+          onChange={(e) => setFilters({ ...filters, semester: e.target.value })}
+        >
+          <option value="">جميع الفصول</option>
+          <option value="first">الأول</option>
+          <option value="second">الثاني</option>
+          <option value="summer">الصيفي</option>
+        </select>
+
+        <select
+          value={filters.course_id}
+          onChange={(e) => setFilters({ ...filters, course_id: e.target.value })}
+          style={{ minWidth: '200px' }}
+        >
+          <option value="">جميع المساقات</option>
+          {courses.map((course) => (
+            <option key={course.id} value={course.id}>
+              {course.name}
+            </option>
+          ))}
+        </select>
+
+        <button
+          onClick={() => setFilters({ academic_year: "", semester: "", course_id: "" })}
+          className="btn-secondary"
+        >
+          إعادة تعيين
+        </button>
       </div>
 
       <table className="data-table">

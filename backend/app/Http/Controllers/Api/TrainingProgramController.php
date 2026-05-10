@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\FeatureFlag;
+use App\Models\Notification;
 use App\Models\PortfolioEntry;
 use App\Models\StudentPortfolio;
 use App\Models\TrainingProgram;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 
@@ -213,17 +215,64 @@ class TrainingProgramController extends Controller
             }
         }
 
-        $title = 'برنامج التدريب';
+        $title = 'جدول الحصص الأسبوعي';
+        $code = 'weekly_schedule';
+        $category = 'schedule';
         $content = json_encode($program->schedule, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 
-        return PortfolioEntry::updateOrCreate(
+        $portfolioEntry = PortfolioEntry::updateOrCreate(
             [
                 'student_portfolio_id' => $portfolio->id,
-                'title' => $title,
+                'code' => $code,
             ],
             [
+                'title' => $title,
+                'category' => $category,
                 'content' => $content,
             ]
         );
+
+        // إرسال إشعار للمشرف الأكاديمي
+        $this->notifyAcademicSupervisor($user, $program, $portfolioEntry);
+
+        return $portfolioEntry;
+    }
+
+    /**
+     * إرسال إشعار للمشرف الأكاديمي عند حفظ جدول الحصص
+     */
+    protected function notifyAcademicSupervisor($user, $program, $portfolioEntry)
+    {
+        $assignment = $program->trainingAssignment;
+
+        if (! $assignment || ! $assignment->academic_supervisor_id) {
+            return;
+        }
+
+        $supervisor = $assignment->academicSupervisor;
+
+        if (! $supervisor) {
+            return;
+        }
+
+        try {
+            $notificationService = new NotificationService();
+            $notificationService->sendToUser(
+                $supervisor,
+                'weekly_schedule_submitted',
+                "قام الطالب {$user->name} ({$user->university_id}) بحفظ جدول الحصص الأسبوعي",
+                [
+                    'student_id' => $user->id,
+                    'student_name' => $user->name,
+                    'portfolio_entry_id' => $portfolioEntry->id,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // فشل الإشعار لا يجب أن يوقف عملية الحفظ
+            \Log::error('Failed to send notification to academic supervisor', [
+                'error' => $e->getMessage(),
+                'supervisor_id' => $supervisor->id,
+            ]);
+        }
     }
 }

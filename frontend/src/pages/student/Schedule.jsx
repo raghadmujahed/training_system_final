@@ -421,7 +421,7 @@ export default function Schedule() {
             <button onClick={handleSave} disabled={saving}
               className="py-2 px-5 text-[0.9rem] font-semibold border-none rounded-md bg-[#142a42] text-white" style={{ cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
             >
-              {saving ? "جاري الحفظ..." : "حفظ الجدول"}
+              {saving ? "جاري الحفظ..." : "حفظ"}
             </button>
           </div>
         )}

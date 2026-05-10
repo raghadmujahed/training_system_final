@@ -23,7 +23,15 @@ class EnrollmentController extends Controller
         if ($request->has('section_id')) $query->where('section_id', $request->section_id);
         if ($request->has('user_id')) $query->where('user_id', $request->user_id);
         if ($request->has('status')) $query->where('status', $request->status);
-        
+        if ($request->filled('search')) {
+            $term = '%' . str_replace(['%', '_'], ['\%', '\_'], $request->search) . '%';
+            $query->whereHas('user', function ($uq) use ($term) {
+                $uq->where('name', 'like', $term)
+                    ->orWhere('university_id', 'like', $term)
+                    ->orWhere('email', 'like', $term);
+            });
+        }
+
         $enrollments = $query->paginate($request->per_page ?? 15);
         return EnrollmentResource::collection($enrollments);
     }

@@ -20,7 +20,20 @@ class SectionPolicy
      */
     public function view(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department', 'academic_supervisor']);
+        // Admin can view any section
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+
+        // Head of Department can only view sections from their own department
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $section->course
+                && (int) $section->course->department_id === (int) $user->department_id;
+        }
+
+        // Coordinator and academic supervisor can view sections they have access to
+        return in_array($user->role?->name, ['training_coordinator', 'academic_supervisor']);
     }
 
     /**
@@ -36,7 +49,20 @@ class SectionPolicy
      */
     public function update(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
+        // Admin can update any section
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+
+        // Head of Department can only update sections from their own department
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $section->course
+                && (int) $section->course->department_id === (int) $user->department_id;
+        }
+
+        // Coordinator can update sections
+        return $user->role?->name === 'training_coordinator';
     }
 
     /**
@@ -44,7 +70,20 @@ class SectionPolicy
      */
     public function delete(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
+        // Admin can delete any section
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+
+        // Head of Department can only delete sections from their own department
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $section->course
+                && (int) $section->course->department_id === (int) $user->department_id;
+        }
+
+        // Coordinator can delete sections
+        return $user->role?->name === 'training_coordinator';
     }
 
     /**
@@ -52,7 +91,20 @@ class SectionPolicy
      */
     public function restore(User $user, Section $section): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
+        // Admin can restore any section
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+
+        // Head of Department can only restore sections from their own department
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $section->course
+                && (int) $section->course->department_id === (int) $user->department_id;
+        }
+
+        // Coordinator can restore sections
+        return $user->role?->name === 'training_coordinator';
     }
 
     /**

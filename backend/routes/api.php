@@ -53,6 +53,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/admin/reports', [DashboardController::class, 'adminReports']);
     Route::get('/user', [UserController::class, 'currentUser']);
 
     // Utilisateurs, rôles, départements

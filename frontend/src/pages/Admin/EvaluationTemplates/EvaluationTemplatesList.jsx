@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getEvaluationTemplates, deleteEvaluationTemplate } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import Button from "../../../components/ui/Button";
 import useAppToast from "../../../hooks/useAppToast";
 
 export default function EvaluationTemplatesList() {
@@ -47,9 +48,9 @@ export default function EvaluationTemplatesList() {
     <div>
       <div className="page-header">
         <h1>قوالب التقييم</h1>
-        <Link to="/admin/evaluation-templates/create" className="btn-primary">
+        <Button as={Link} to="/admin/evaluation-templates/create">
           + إضافة قالب جديد
-        </Link>
+        </Button>
       </div>
 
       {templates.length === 0 ? (
@@ -75,18 +76,24 @@ export default function EvaluationTemplatesList() {
                 <td>{template.department_label || "عام"}</td>
                 <td>{template.items?.length || 0}</td>
                 <td>
-                  <Link
-                    to={`/admin/evaluation-templates/edit/${template.id}`}
-                    className="btn-sm"
-                  >
-                    تعديل
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(template.id)}
-                    className="btn-sm danger"
-                  >
-                    حذف
-                  </button>
+                  <div className="flex gap-2">
+                    <Button
+                      as={Link}
+                      to={`/admin/evaluation-templates/edit/${template.id}`}
+                      size="sm"
+                      variant="outline"
+                    >
+                      تعديل
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(template.id)}
+                      className="text-danger border-danger hover:bg-danger/10"
+                    >
+                      حذف
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

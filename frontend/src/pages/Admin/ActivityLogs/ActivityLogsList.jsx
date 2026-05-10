@@ -11,6 +11,8 @@ export default function ActivityLogsList() {
   const [filters, setFilters] = useState({
     user_id: "",
     action: "",
+    from_date: "",
+    to_date: "",
   });
 
   const [pagination, setPagination] = useState({
@@ -99,6 +101,29 @@ export default function ActivityLogsList() {
           value={filters.action}
           onChange={(e) => setFilters({ ...filters, action: e.target.value })}
         />
+
+        <input
+          type="date"
+          placeholder="من تاريخ"
+          value={filters.from_date}
+          onChange={(e) => setFilters({ ...filters, from_date: e.target.value })}
+          title="من تاريخ"
+        />
+
+        <input
+          type="date"
+          placeholder="إلى تاريخ"
+          value={filters.to_date}
+          onChange={(e) => setFilters({ ...filters, to_date: e.target.value })}
+          title="إلى تاريخ"
+        />
+
+        <button
+          onClick={() => setFilters({ user_id: "", action: "", from_date: "", to_date: "" })}
+          className="btn-secondary"
+        >
+          إعادة تعيين
+        </button>
 
         <select
           value={perPage}

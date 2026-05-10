@@ -119,6 +119,12 @@ export default function EvaluationTemplateForm() {
   // حفظ القالب وجميع بنوده
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // التحقق من صحة النموذج قبل الإرسال
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     setErrors({});
     setSubmitError("");
@@ -126,17 +132,33 @@ export default function EvaluationTemplateForm() {
     try {
       let templateId = id;
 
+      // تحويل الحقول الفارغة إلى null
+      const formPayload = {
+        ...form,
+        target_role: form.target_role || null,
+        department_key: form.department_key || null,
+      };
+
       // 1. إنشاء أو تحديث القالب الأساسي
       if (!id) {
-        const newTemplate = await createEvaluationTemplate(form);
-        templateId = newTemplate.id;
+        const newTemplate = await createEvaluationTemplate(formPayload);
+        templateId = newTemplate?.id;
+        
+        // التحقق من وجود templateId صالح
+        if (!templateId) {
+          throw new Error("فشل الحصول على معرف القالب من الخادم");
+        }
       } else {
-        await updateEvaluationTemplate(id, form);
+        await updateEvaluationTemplate(id, formPayload);
         templateId = id;
       }
 
       // 2. معالجة البنود: إضافة الجديد وتحديث الموجود
       for (const item of items) {
+        if (!item.title || !item.title.trim()) {
+          continue; // تخطي البنود الفارغة
+        }
+        
         const normalizedOptions = normalizeItemOptions(item);
         if (item._isNew) {
           // إضافة بند جديد
@@ -159,6 +181,7 @@ export default function EvaluationTemplateForm() {
         }
       }
 
+      toast.success(id ? "تم تحديث القالب بنجاح" : "تم إنشاء القالب بنجاح");
       navigate("/admin/evaluation-templates");
     } catch (err) {
       if (err.response?.data?.errors) {
@@ -238,10 +261,13 @@ export default function EvaluationTemplateForm() {
         </div>
 
         <hr className="my-4" />
-        <h3 className="font-bold text-text">بنود التقييم</h3>
-        <Button variant="outline" size="sm" onClick={addItem} className="mb-4 mt-2">
-          + إضافة بند جديد
-        </Button>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-text text-lg">بنود التقييم</h3>
+          <Button variant="outline" size="sm" onClick={addItem} className="flex items-center gap-2">
+            <span>+</span>
+            <span>إضافة بند جديد</span>
+          </Button>
+        </div>
 
         {items.length === 0 && <p>لا توجد بنود بعد. أضف بنداً باستخدام الزر أعلاه.</p>}
 
@@ -311,15 +337,29 @@ export default function EvaluationTemplateForm() {
               </div>
             </div>
 
-            <button type="button" onClick={() => deleteItem(idx)} className="text-danger hover:underline text-[0.85rem] mt-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={() => deleteItem(idx)} 
+              className="text-danger border-danger hover:bg-danger/10 mt-2"
+            >
               حذف هذا البند
-            </button>
+            </Button>
           </div>
         ))}
 
         <div className="flex gap-2 mt-4">
           <Button type="submit" disabled={loading}>
-            {loading ? "جاري الحفظ..." : id ? "تحديث القالب" : "إنشاء القالب"}
+            {loading ? "جاري الحفظ..." : id ? "حفظ التغييرات" : "إنشاء القالب"}
+          </Button>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => navigate("/admin/evaluation-templates")}
+            disabled={loading}
+          >
+            إلغاء
           </Button>
         </div>
       </form>

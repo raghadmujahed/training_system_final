@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getBackups, createBackup, restoreBackup, deleteBackup, downloadBackup } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import Button from "../../../components/ui/Button";
 import useAppToast from "../../../hooks/useAppToast";
 
 export default function BackupsList() {
@@ -31,6 +32,7 @@ export default function BackupsList() {
   const handleCreate = async () => {
     if (!window.confirm("هل أنت متأكد من إنشاء نسخة احتياطية جديدة؟")) return;
     setCreating(true);
+    setError(null);
     try {
       const response = await createBackup({ type: "full" });
       toast.success("تم إنشاء النسخة الاحتياطية بنجاح");
@@ -44,12 +46,15 @@ export default function BackupsList() {
           toast.success("تم تحميل النسخة الاحتياطية بنجاح");
         } catch (downloadErr) {
           console.error("فشل التحميل التلقائي:", downloadErr);
+          toast.warning("تم إنشاء النسخة ولكن فشل التحميل التلقائي");
         }
       }
       
       fetchBackups();
     } catch (err) {
-      setError("فشل إنشاء النسخة");
+      const errorMessage = err.response?.data?.message || err.message || "فشل إنشاء النسخة الاحتياطية";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setCreating(false);
     }
@@ -62,7 +67,9 @@ export default function BackupsList() {
       toast.success("تمت استعادة النسخة بنجاح");
       fetchBackups();
     } catch (err) {
-      setError("فشل استعادة النسخة");
+      const errorMessage = err.response?.data?.message || err.message || "فشل استعادة النسخة";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -70,10 +77,12 @@ export default function BackupsList() {
     if (!window.confirm("هل أنت متأكد من حذف هذه النسخة؟")) return;
     try {
       await deleteBackup(id);
-      toast.success("تم حذف النسخة");
+      toast.success("تم حذف النسخة بنجاح");
       fetchBackups();
     } catch (err) {
-      setError("فشل حذف النسخة");
+      const errorMessage = err.response?.data?.message || err.message || "فشل حذف النسخة";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -95,9 +104,9 @@ export default function BackupsList() {
     <div>
       <div className="page-header">
         <h1>النسخ الاحتياطية</h1>
-        <button onClick={handleCreate} disabled={creating} className="btn-primary">
-          {creating ? "جاري الإنشاء..." : "+ إنشاء نسخة جديدة"}
-        </button>
+        <Button onClick={handleCreate} disabled={creating}>
+          {creating ? "جاري الإنشاء..." : "+ إنشاء نسخة احتياطية جديدة"}
+        </Button>
       </div>
 
       {backups.length === 0 ? (
@@ -119,18 +128,39 @@ export default function BackupsList() {
                 <td>{new Date(backup.created_at).toLocaleString()} </td>
                 <td>{backup.size?.toLocaleString() || "غير معروف"} bytes</td>
                 <td>
-                  <Link to={`/admin/backups/${backup.id}`} className="btn-sm">
-                    عرض التفاصيل
-                  </Link>
-                  <button onClick={() => handleDownload(backup.id, backup.name)} className="btn-sm">
-                    تحميل
-                  </button>
-                  <button onClick={() => handleRestore(backup.id)} className="btn-sm">
-                    استعادة
-                  </button>
-                  <button onClick={() => handleDelete(backup.id)} className="btn-sm danger">
-                    حذف
-                  </button>
+                  <div className="flex gap-2">
+                    <Button
+                      as={Link}
+                      to={`/admin/backups/${backup.id}`}
+                      size="sm"
+                      variant="outline"
+                    >
+                      عرض التفاصيل
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDownload(backup.id, backup.name)}
+                    >
+                      تحميل
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRestore(backup.id)}
+                      className="text-warning border-warning hover:bg-warning/10"
+                    >
+                      استعادة
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(backup.id)}
+                      className="text-danger border-danger hover:bg-danger/10"
+                    >
+                      حذف
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -10,7 +10,7 @@ class Note extends Model
 {
     use HasFactory, HidesArchived;
 
-    protected $fillable = ['user_id', 'training_assignment_id', 'content'];
+    protected $fillable = ['user_id', 'training_assignment_id', 'content', 'notable_type', 'notable_id'];
 
     public function user()
     {

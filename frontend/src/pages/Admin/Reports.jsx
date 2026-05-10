@@ -1,0 +1,488 @@
+import { useEffect, useState } from "react";
+import { getAdminReports, getDepartments } from "../../services/api";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from "chart.js";
+import { Users, GraduationCap, Building2, FileText, Calendar, RefreshCw, Filter } from "lucide-react";
+
+// Register Chart.js components
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement);
+
+export default function AdminReports() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [data, setData] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [filters, setFilters] = useState({
+    date_from: "",
+    date_to: "",
+    department_id: "",
+  });
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchData();
+    fetchDepartments();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await getAdminReports(filters);
+      setData(response);
+    } catch (err) {
+      console.error(err);
+      setError("فشل تحميل بيانات التقارير");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await getDepartments({ per_page: 100 });
+      setDepartments(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch departments:", err);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const applyFilters = async () => {
+    await fetchData();
+  };
+
+  const clearFilters = async () => {
+    setFilters({ date_from: "", date_to: "", department_id: "" });
+    await fetchData();
+  };
+
+  if (loading) {
+    return <LoadingSpinner size="page" text="جاري تحميل التقارير..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="section-card p-10 text-center">
+        <p className="text-danger text-lg">{error}</p>
+      </div>
+    );
+  }
+
+  // Chart configurations
+  const usersByRoleChart = {
+    labels: data?.charts?.users_by_role?.map((item) => item.role) || [],
+    datasets: [
+      {
+        label: "عدد المستخدمين",
+        data: data?.charts?.users_by_role?.map((item) => item.count) || [],
+        backgroundColor: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const studentsByDepartmentChart = {
+    labels: data?.charts?.students_by_department?.map((item) => item.department) || [],
+    datasets: [
+      {
+        label: "عدد الطلبة",
+        data: data?.charts?.students_by_department?.map((item) => item.count) || [],
+        backgroundColor: "#3B82F6",
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const requestsByStatusChart = {
+    labels: data?.charts?.requests_by_status?.map((item) => item.status) || [],
+    datasets: [
+      {
+        data: data?.charts?.requests_by_status?.map((item) => item.count) || [],
+        backgroundColor: ["#FBBF24", "#10B981", "#EF4444"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const requestsOverTimeChart = {
+    labels: data?.charts?.requests_over_time?.map((item) => item.month) || [],
+    datasets: [
+      {
+        label: "عدد الطلبات",
+        data: data?.charts?.requests_over_time?.map((item) => item.count) || [],
+        borderColor: "#3B82F6",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const sitesByDirectorateChart = {
+    labels: data?.charts?.sites_by_directorate?.map((item) => item.directorate) || [],
+    datasets: [
+      {
+        label: "عدد المواقع",
+        data: data?.charts?.sites_by_directorate?.map((item) => item.count) || [],
+        backgroundColor: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444"],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: {
+          padding: 20,
+          usePointStyle: true,
+        },
+      },
+    },
+  };
+
+  const barChartOptions = {
+    ...chartOptions,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          precision: 0,
+        },
+      },
+    },
+  };
+
+  return (
+    <div className="content-wrapper">
+      {/* Header */}
+      <div className="content-header">
+        <div className="content-header-icon">
+          <FileText size={26} />
+        </div>
+        <div className="content-header-content">
+          <h1 className="page-title">التقارير والإحصائيات</h1>
+          <p className="page-subtitle">نظرة شاملة على النظام</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="section-card mb-6 p-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2 text-[#64748b]">
+            <Filter size={18} />
+            <span className="font-semibold">الفلاتر:</span>
+          </div>
+          <input
+            type="date"
+            name="date_from"
+            value={filters.date_from}
+            onChange={handleFilterChange}
+            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
+            placeholder="من تاريخ"
+          />
+          <input
+            type="date"
+            name="date_to"
+            value={filters.date_to}
+            onChange={handleFilterChange}
+            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
+            placeholder="إلى تاريخ"
+          />
+          <select
+            name="department_id"
+            value={filters.department_id}
+            onChange={handleFilterChange}
+            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
+          >
+            <option value="">جميع الأقسام</option>
+            {departments.map((dept) => (
+              <option key={dept.id} value={dept.id}>
+                {dept.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={applyFilters}
+            className="px-4 py-2 bg-[#142a42] text-white rounded-lg text-sm hover:bg-[#1e3a5a] transition-colors"
+          >
+            تطبيق الفلاتر
+          </button>
+          <button
+            onClick={clearFilters}
+            className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-[#f8fafc] transition-colors"
+          >
+            مسح الفلاتر
+          </button>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-[#f8fafc] transition-colors flex items-center gap-2"
+            style={{ opacity: refreshing ? 0.5 : 1 }}
+          >
+            <RefreshCw size={16} className={refreshing ? "spin" : ""} />
+            تحديث
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="section-card p-5 border-l-4 border-l-[#3B82F6]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[#64748b] text-sm mb-1">إجمالي المستخدمين</p>
+              <p className="text-2xl font-bold text-[#1e293b]">{data?.summary?.total_users || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[#DBEAFE] flex items-center justify-center">
+              <Users size={24} className="text-[#3B82F6]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="section-card p-5 border-l-4 border-l-[#10B981]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[#64748b] text-sm mb-1">إجمالي الطلبة</p>
+              <p className="text-2xl font-bold text-[#1e293b]">{data?.summary?.total_students || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[#D1FAE5] flex items-center justify-center">
+              <GraduationCap size={24} className="text-[#10B981]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="section-card p-5 border-l-4 border-l-[#F59E0B]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[#64748b] text-sm mb-1">طلبات التدريب</p>
+              <p className="text-2xl font-bold text-[#1e293b]">{data?.summary?.total_training_requests || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[#FEF3C7] flex items-center justify-center">
+              <FileText size={24} className="text-[#F59E0B]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="section-card p-5 border-l-4 border-l-[#8B5CF6]">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[#64748b] text-sm mb-1">أماكن التدريب</p>
+              <p className="text-2xl font-bold text-[#1e293b]">{data?.summary?.total_training_sites || 0}</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-[#EDE9FE] flex items-center justify-center">
+              <Building2 size={24} className="text-[#8B5CF6]" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Summary Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="section-card p-4">
+          <p className="text-[#64748b] text-sm mb-1">الأقسام</p>
+          <p className="text-xl font-bold text-[#1e293b]">{data?.summary?.total_departments || 0}</p>
+        </div>
+        <div className="section-card p-4">
+          <p className="text-[#64748b] text-sm mb-1">الشعب</p>
+          <p className="text-xl font-bold text-[#1e293b]">{data?.summary?.total_sections || 0}</p>
+        </div>
+        <div className="section-card p-4">
+          <p className="text-[#64748b] text-sm mb-1">مدخلات ملف الإنجاز</p>
+          <p className="text-xl font-bold text-[#1e293b]">{data?.summary?.total_portfolio_entries || 0}</p>
+        </div>
+        <div className="section-card p-4">
+          <p className="text-[#64748b] text-sm mb-1">النسخ الاحتياطية</p>
+          <p className="text-xl font-bold text-[#1e293b]">{data?.summary?.total_backups || 0}</p>
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Users by Role Chart */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">المستخدمون حسب الدور</h3>
+          <div style={{ height: "300px" }}>
+            <Doughnut data={usersByRoleChart} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Students by Department Chart */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">الطلبة حسب القسم</h3>
+          <div style={{ height: "300px" }}>
+            <Bar data={studentsByDepartmentChart} options={barChartOptions} />
+          </div>
+        </div>
+
+        {/* Requests by Status Chart */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">طلبات التدريب حسب الحالة</h3>
+          <div style={{ height: "300px" }}>
+            <Doughnut data={requestsByStatusChart} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Requests Over Time Chart */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">طلبات التدريب خلال الأشهر الستة الماضية</h3>
+          <div style={{ height: "300px" }}>
+            <Line data={requestsOverTimeChart} options={barChartOptions} />
+          </div>
+        </div>
+
+        {/* Training Sites by Directorate Chart */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">أماكن التدريب حسب المديرية</h3>
+          <div style={{ height: "300px" }}>
+            <Doughnut data={sitesByDirectorateChart} options={chartOptions} />
+          </div>
+        </div>
+
+        {/* Training Assignments by Status Chart */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">تعيينات التدريب حسب الحالة</h3>
+          <div style={{ height: "300px" }}>
+            <Bar
+              data={{
+                labels: data?.charts?.assignments_by_status?.map((item) => item.status) || [],
+                datasets: [
+                  {
+                    label: "عدد التعيينات",
+                    data: data?.charts?.assignments_by_status?.map((item) => item.count) || [],
+                    backgroundColor: "#8B5CF6",
+                    borderWidth: 1,
+                  },
+                ],
+              }}
+              options={barChartOptions}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Tables Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Department Summary Table */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">ملخص الأقسام</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#f8fafc]">
+                  <th className="p-3 text-right font-semibold text-[#1e293b]">القسم</th>
+                  <th className="p-3 text-center font-semibold text-[#1e293b]">المستخدمين</th>
+                  <th className="p-3 text-center font-semibold text-[#1e293b]">الشعب</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.tables?.department_summary?.map((dept) => (
+                  <tr key={dept.id} className="border-b border-[#e2e8f0]">
+                    <td className="p-3">{dept.name}</td>
+                    <td className="p-3 text-center">{dept.users_count}</td>
+                    <td className="p-3 text-center">{dept.sections_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Recent Requests Table */}
+        <div className="section-card p-5">
+          <h3 className="text-lg font-bold text-[#1e293b] mb-4">أحدث طلبات التدريب</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#f8fafc]">
+                  <th className="p-3 text-right font-semibold text-[#1e293b]">رقم الكتاب</th>
+                  <th className="p-3 text-right font-semibold text-[#1e293b]">المكان</th>
+                  <th className="p-3 text-center font-semibold text-[#1e293b]">الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data?.tables?.recent_requests?.map((req) => (
+                  <tr key={req.id} className="border-b border-[#e2e8f0]">
+                    <td className="p-3">{req.letter_number || "—"}</td>
+                    <td className="p-3">{req.training_site || "—"}</td>
+                    <td className="p-3 text-center">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          req.status === "approved"
+                            ? "bg-[#D1FAE5] text-[#065F46]"
+                            : req.status === "rejected"
+                            ? "bg-[#FEE2E2] text-[#991B1B]"
+                            : "bg-[#FEF3C7] text-[#92400E]"
+                        }`}
+                      >
+                        {req.status || "—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Training Sites Summary Table */}
+      <div className="section-card p-5 mb-6">
+        <h3 className="text-lg font-bold text-[#1e293b] mb-4">ملخص أماكن التدريب</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-[#f8fafc]">
+                <th className="p-3 text-right font-semibold text-[#1e293b]">المكان</th>
+                <th className="p-3 text-right font-semibold text-[#1e293b]">الموقع</th>
+                <th className="p-3 text-center font-semibold text-[#1e293b]">الحالة</th>
+                <th className="p-3 text-center font-semibold text-[#1e293b]">السعة</th>
+                <th className="p-3 text-center font-semibold text-[#1e293b]">التعيينات</th>
+                <th className="p-3 text-center font-semibold text-[#1e293b]">المديرية</th>
+                <th className="p-3 text-center font-semibold text-[#1e293b]">النوع</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data?.tables?.training_site_summary?.map((site) => (
+                <tr key={site.id} className="border-b border-[#e2e8f0]">
+                  <td className="p-3">{site.name}</td>
+                  <td className="p-3">{site.location || "—"}</td>
+                  <td className="p-3 text-center">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        site.is_active
+                          ? "bg-[#D1FAE5] text-[#065F46]"
+                          : "bg-[#FEE2E2] text-[#991B1B]"
+                      }`}
+                    >
+                      {site.is_active ? "نشط" : "غير نشط"}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center">{site.capacity}</td>
+                  <td className="p-3 text-center">{site.assignments_count}</td>
+                  <td className="p-3 text-center">{site.directorate || "—"}</td>
+                  <td className="p-3 text-center">{site.site_type || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}

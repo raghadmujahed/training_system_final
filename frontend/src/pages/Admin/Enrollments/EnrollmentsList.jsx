@@ -17,12 +17,24 @@ export default function EnrollmentsList() {
   const [singleEnroll, setSingleEnroll] = useState({ studentEmail: "", sectionId: "" });
   const [sections, setSections] = useState([]);
   const [singleLoading, setSingleLoading] = useState(false);
+  // Filters state
+  const [filters, setFilters] = useState({
+    section_id: "",
+    status: "",
+    search: ""
+  });
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [enrollData, sectionsRes] = await Promise.all([getEnrollments(), getSections()]);
+        const cleanFilters = Object.fromEntries(
+          Object.entries(filters).filter(([, value]) => value !== "")
+        );
+        const [enrollData, sectionsRes] = await Promise.all([
+          getEnrollments(cleanFilters),
+          getSections()
+        ]);
         if (!cancelled) {
           setEnrollments(enrollData.data || enrollData || []);
           setSections(sectionsRes.data || []);
@@ -34,11 +46,14 @@ export default function EnrollmentsList() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [filters]);
 
   const fetchEnrollments = async () => {
     try {
-      const data = await getEnrollments();
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value !== "")
+      );
+      const data = await getEnrollments(cleanFilters);
       setEnrollments(data.data || data || []);
     } catch (err) {
       console.error(err);
@@ -195,6 +210,46 @@ export default function EnrollmentsList() {
           )}
         </div>
       )}
+
+      {/* Filters */}
+      <div className="filters-bar" style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <select
+          value={filters.section_id}
+          onChange={(e) => setFilters({ ...filters, section_id: e.target.value })}
+          style={{ minWidth: '200px' }}
+        >
+          <option value="">جميع الشعب</option>
+          {sections.map((section) => (
+            <option key={section.id} value={section.id}>
+              {section.name} ({section.course?.name || "—"})
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={filters.status}
+          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+        >
+          <option value="">جميع الحالات</option>
+          <option value="active">نشط</option>
+          <option value="dropped">منسحب</option>
+          <option value="completed">مكتمل</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="بحث بالطالب..."
+          value={filters.search}
+          onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+        />
+
+        <button
+          onClick={() => setFilters({ section_id: "", status: "", search: "" })}
+          className="btn-secondary"
+        >
+          إعادة تعيين
+        </button>
+      </div>
 
       <table className="data-table">
         <thead>

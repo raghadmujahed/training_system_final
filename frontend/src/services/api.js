@@ -283,6 +283,7 @@ export const sendTrainingRequestBatch = (id, data) =>
 
 // services/api.js
 export const getDashboardStats = () => apiClient.get('/dashboard/stats').then(res => res.data);
+export const getAdminReports = (params) => apiClient.get('/admin/reports', { params }).then(res => res.data);
 // ==================== Users ====================
 export const getUsers = (params) => apiClient.get('/users', { params }).then(res => res.data);
 export const searchSupervisors = (query) => apiClient.get('/users/search', { params: { query, role: 'academic_supervisor' } }).then(res => res.data);

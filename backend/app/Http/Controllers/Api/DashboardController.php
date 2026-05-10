@@ -12,13 +12,21 @@ use App\Models\TrainingRequestBatch;
 use App\Models\FeatureFlag;
 use App\Models\Notification;
 use App\Models\StudentPortfolio;
+use App\Models\PortfolioEntry;
 use App\Models\Task;
 use App\Models\TrainingProgram;
+use App\Models\Department;
+use App\Models\Section;
+use App\Models\Enrollment;
+use App\Models\Attendance;
+use App\Models\Backup;
+use App\Models\Announcement;
 use App\Http\Resources\NotificationResource;
 use App\Http\Resources\TaskResource;
 use App\Http\Resources\TrainingRequestResource;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -136,6 +144,219 @@ class DashboardController extends Controller
                 ],
             ],
             'notifications' => NotificationResource::collection($notifications)->resolve($request),
+        ]);
+    }
+
+    public function adminReports(Request $request)
+    {
+        // Apply filters
+        $dateFrom = $request->date_from;
+        $dateTo = $request->date_to;
+        $departmentId = $request->department_id;
+
+        // Base query builder with filters
+        $trainingRequestsQuery = TrainingRequest::query();
+        if ($dateFrom) {
+            $trainingRequestsQuery->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $trainingRequestsQuery->whereDate('created_at', '<=', $dateTo);
+        }
+
+        // Base user query with department filter
+        $userQuery = User::query();
+        if ($departmentId) {
+            $userQuery->where('department_id', $departmentId);
+        }
+
+        // Base student query with department filter
+        $studentQuery = User::whereHas('role', fn($q) => $q->where('name', 'student'));
+        if ($departmentId) {
+            $studentQuery->where('department_id', $departmentId);
+        }
+
+        // Summary statistics with department filtering
+        $summary = [
+            'total_users' => (clone $userQuery)->count(),
+            'active_users' => (clone $userQuery)->where('status', 'active')->count(),
+            'inactive_users' => (clone $userQuery)->where('status', 'inactive')->count(),
+            'total_students' => (clone $studentQuery)->count(),
+            'total_departments' => Department::count(),
+            'total_sections' => $departmentId
+                ? Section::whereHas('course', fn($q) => $q->where('department_id', $departmentId))->count()
+                : Section::count(),
+            'total_training_requests' => $trainingRequestsQuery->count(),
+            'pending_requests' => (clone $trainingRequestsQuery)->where('book_status', 'draft')->count(),
+            'approved_requests' => (clone $trainingRequestsQuery)->where('status', 'approved')->count(),
+            'rejected_requests' => (clone $trainingRequestsQuery)->where('status', 'rejected')->count(),
+            'total_training_sites' => TrainingSite::count(),
+            'active_training_sites' => TrainingSite::where('is_active', true)->count(),
+            'total_portfolio_entries' => PortfolioEntry::count(),
+            'pending_review_entries' => PortfolioEntry::where('review_status', 'pending')->count(),
+            'total_backups' => Backup::count(),
+            'total_announcements' => Announcement::count(),
+        ];
+
+        // Students by department
+        $studentsByDepartment = User::whereHas('role', fn($q) => $q->where('name', 'student'))
+            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->select('departments.name as department', DB::raw('count(*) as count'))
+            ->groupBy('departments.id', 'departments.name')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'department' => $item->department,
+                'count' => $item->count,
+            ]);
+
+        // Users by role
+        $usersByRole = User::join('roles', 'users.role_id', '=', 'roles.id')
+            ->select('roles.name as role', DB::raw('count(*) as count'))
+            ->groupBy('roles.id', 'roles.name')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'role' => $item->role,
+                'count' => $item->count,
+            ]);
+
+        // Training requests by status
+        $requestsByStatus = TrainingRequest::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->get()
+            ->map(fn($item) => [
+                'status' => $item->status,
+                'count' => $item->count,
+            ]);
+
+        // Training requests by department (through users)
+        $requestsByDepartment = TrainingRequest::join('users', 'training_requests.requested_by', '=', 'users.id')
+            ->join('departments', 'users.department_id', '=', 'departments.id')
+            ->select('departments.name as department', DB::raw('count(*) as count'))
+            ->groupBy('departments.id', 'departments.name')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'department' => $item->department,
+                'count' => $item->count,
+            ]);
+
+        // Training requests over time (last 6 months)
+        $requestsOverTime = TrainingRequest::select(
+            DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+            DB::raw('count(*) as count')
+        )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get()
+            ->map(fn($item) => [
+                'month' => $item->month,
+                'count' => $item->count,
+            ]);
+
+        // Training sites by directorate
+        $sitesByDirectorate = TrainingSite::select('directorate', DB::raw('count(*) as count'))
+            ->groupBy('directorate')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn($item) => [
+                'directorate' => $item->directorate,
+                'count' => $item->count,
+            ]);
+
+        // Training sites by type
+        $sitesByType = TrainingSite::select('site_type', DB::raw('count(*) as count'))
+            ->groupBy('site_type')
+            ->get()
+            ->map(fn($item) => [
+                'type' => $item->site_type,
+                'count' => $item->count,
+            ]);
+
+        // Students with/without active training assignments
+        $studentsWithAssignments = User::whereHas('role', fn($q) => $q->where('name', 'student'))
+            ->whereHas('enrollment.trainingAssignments', fn($q) => $q->where('status', 'ongoing'))
+            ->count();
+        $studentsWithoutAssignments = $summary['total_students'] - $studentsWithAssignments;
+
+        // Training assignments by status
+        $assignmentsByStatus = TrainingAssignment::select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->get()
+            ->map(fn($item) => [
+                'status' => $item->status,
+                'count' => $item->count,
+            ]);
+
+        // Portfolio entries by review status
+        $portfolioByStatus = PortfolioEntry::select('review_status', DB::raw('count(*) as count'))
+            ->groupBy('review_status')
+            ->get()
+            ->map(fn($item) => [
+                'status' => $item->review_status,
+                'count' => $item->count,
+            ]);
+
+        // Tables data
+        $departmentSummary = Department::withCount('users')
+            ->withCount('sections')
+            ->get()
+            ->map(fn($dept) => [
+                'id' => $dept->id,
+                'name' => $dept->name,
+                'users_count' => $dept->users_count,
+                'sections_count' => $dept->sections_count,
+            ]);
+
+        $trainingSiteSummary = TrainingSite::withCount('trainingAssignments')
+            ->get()
+            ->map(fn($site) => [
+                'id' => $site->id,
+                'name' => $site->name,
+                'location' => $site->location,
+                'is_active' => $site->is_active,
+                'capacity' => $site->capacity,
+                'assignments_count' => $site->training_assignments_count,
+                'directorate' => $site->directorate,
+                'site_type' => $site->site_type,
+            ]);
+
+        $recentRequests = TrainingRequest::with(['trainingSite', 'requestedBy'])
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(fn($req) => [
+                'id' => $req->id,
+                'letter_number' => $req->letter_number,
+                'letter_date' => $req->letter_date,
+                'book_status' => $req->book_status,
+                'status' => $req->status,
+                'training_site' => $req->trainingSite?->name,
+                'requested_by' => $req->requestedBy?->name,
+                'created_at' => $req->created_at,
+            ]);
+
+        return response()->json([
+            'summary' => $summary,
+            'charts' => [
+                'users_by_role' => $usersByRole,
+                'students_by_department' => $studentsByDepartment,
+                'requests_by_status' => $requestsByStatus,
+                'requests_by_department' => $requestsByDepartment,
+                'requests_over_time' => $requestsOverTime,
+                'sites_by_directorate' => $sitesByDirectorate,
+                'sites_by_type' => $sitesByType,
+                'assignments_by_status' => $assignmentsByStatus,
+                'portfolio_by_status' => $portfolioByStatus,
+                'students_with_assignments' => $studentsWithAssignments,
+                'students_without_assignments' => $studentsWithoutAssignments,
+            ],
+            'tables' => [
+                'department_summary' => $departmentSummary,
+                'training_site_summary' => $trainingSiteSummary,
+                'recent_requests' => $recentRequests,
+            ],
         ]);
     }
 }

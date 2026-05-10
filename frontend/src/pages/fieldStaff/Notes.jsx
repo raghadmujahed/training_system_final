@@ -19,6 +19,7 @@ export default function FieldStaffNotes() {
   const [error, setError] = useState("");
   const [notes, setNotes] = useState([]);
   const [assignments, setAssignments] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modal
   const [showModal, setShowModal] = useState(false);
@@ -163,6 +164,13 @@ export default function FieldStaffNotes() {
 
                 <div className="form-group">
                   <label className="form-label">تعيين التدريب (الطالب) *</label>
+                  <input
+                    type="text"
+                    className="form-control-custom mb-2"
+                    placeholder="البحث بالاسم أو الرقم الجامعي..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
                   <select
                     className="form-control-custom"
                     value={form.training_assignment_id}
@@ -170,14 +178,24 @@ export default function FieldStaffNotes() {
                     required
                   >
                     <option value="">— اختر الطالب —</option>
-                    {assignments.map((a) => {
-                      const stu = a.enrollment?.user;
-                      return (
-                        <option key={a.id} value={a.id}>
-                          {stu?.name || "طالب"} — {a.training_site?.name || "جهة"}
-                        </option>
-                      );
-                    })}
+                    {assignments
+                      .filter((a) => {
+                        const stu = a.enrollment?.user;
+                        if (!searchQuery) return true;
+                        const query = searchQuery.toLowerCase();
+                        return (
+                          stu?.name?.toLowerCase().includes(query) ||
+                          stu?.university_id?.toLowerCase().includes(query)
+                        );
+                      })
+                      .map((a) => {
+                        const stu = a.enrollment?.user;
+                        return (
+                          <option key={a.id} value={a.id}>
+                            {stu?.name || "طالب"} — {stu?.university_id || ""} — {a.training_site?.name || "جهة"}
+                          </option>
+                        );
+                      })}
                   </select>
                 </div>
 

@@ -187,7 +187,7 @@ export default function HeadOfDepartmentDashboard() {
                   <span className="section-course">{section.course_name}</span>
                 </div>
                 <div className="section-count">
-                  <span className="count-number">{section.student_count}</span>
+                  <span className="count-number">{section.active_students}</span>
                   <span className="count-label">طالب</span>
                 </div>
               </div>

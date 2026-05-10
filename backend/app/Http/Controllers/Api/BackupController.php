@@ -25,58 +25,103 @@ class BackupController extends Controller
 
     public function store(CreateBackupRequest $request)
     {
-        // توليد اسم الملف
-        $filename = 'backup_' . date('Ymd_His') . '_' . Str::random(8) . '.sql';
-        $filepath = 'backups/' . $filename;
+        try {
+            // توليد اسم الملف
+            $filename = 'backup_' . date('Ymd_His') . '_' . Str::random(8) . '.sql';
+            $filepath = 'backups/' . $filename;
 
-        // استخدام public disk للتخزين
-        $disk = Storage::disk('public');
+            // استخدام public disk للتخزين
+            $disk = Storage::disk('public');
 
-        // تأكد من وجود مجلد النسخ الاحتياطية
-        if (!$disk->exists('backups')) {
-            $disk->makeDirectory('backups');
-        }
+            // تأكد من وجود مجلد النسخ الاحتياطية
+            if (!$disk->exists('backups')) {
+                $disk->makeDirectory('backups');
+            }
 
-        // تنفيذ أمر mysqldump (تأكد من وجوده في المسار)
-        $db = config('database.connections.mysql.database');
-        $user = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
-        $host = config('database.connections.mysql.host');
+            // استخدام Laravel DB facade لإنشاء نسخة احتياطية بدلاً من mysqldump
+            $sqlContent = $this->generateDatabaseDump();
 
-        // استخدام طريقة أكثر أماناً لتنفيذ mysqldump
-        $outputFile = $disk->path($filepath);
-        $command = sprintf('mysqldump --user=%s --password=%s --host=%s --single-transaction --quick --lock-tables=false %s > %s 2>&1',
-            escapeshellarg($user),
-            escapeshellarg($password),
-            escapeshellarg($host),
-            escapeshellarg($db),
-            escapeshellarg($outputFile)
-        );
+            if (empty($sqlContent)) {
+                return response()->json([
+                    'message' => 'فشل إنشاء النسخة الاحتياطية: لم يتم إنشاء محتوى SQL',
+                ], 500);
+            }
 
-        exec($command, $output, $returnCode);
+            // حفظ المحتوى في الملف
+            $disk->put($filepath, $sqlContent);
 
-        // التحقق من نجاح العملية
-        if ($returnCode !== 0 || !$disk->exists($filepath)) {
+            // التحقق من نجاح العملية
+            if (!$disk->exists($filepath)) {
+                return response()->json([
+                    'message' => 'فشل حفظ ملف النسخة الاحتياطية',
+                ], 500);
+            }
+
+            $backup = Backup::create([
+                'user_id' => $request->user()->id,
+                'type' => $request->type,
+                'name' => $filename,
+                'file_path' => $filepath,
+                'size' => $disk->size($filepath),
+                'status' => 'completed',
+                'notes' => $request->notes,
+            ]);
+
+            return response()->json([
+                'backup' => $backup,
+                'download_url' => url('/api/backups/' . $backup->id . '/download'),
+            ], 201);
+        } catch (\Exception $e) {
+            \Log::error('Backup creation failed: ' . $e->getMessage());
             return response()->json([
                 'message' => 'فشل إنشاء النسخة الاحتياطية',
-                'error' => implode("\n", $output),
+                'error' => $e->getMessage(),
             ], 500);
         }
+    }
 
-        $backup = Backup::create([
-            'user_id' => $request->user()->id,
-            'type' => $request->type,
-            'name' => $filename,
-            'file_path' => $filepath,
-            'size' => $disk->exists($filepath) ? $disk->size($filepath) : 0,
-            'status' => 'completed',
-            'notes' => $request->notes,
-        ]);
+    /**
+     * Generate SQL dump using Laravel DB facade (works on Railway without mysqldump)
+     */
+    private function generateDatabaseDump()
+    {
+        $db = config('database.connections.mysql.database');
+        $sql = "-- Database Backup: {$db}\n";
+        $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
 
-        return response()->json([
-            'backup' => $backup,
-            'download_url' => url('/api/backups/' . $backup->id . '/download'),
-        ], 201);
+        // Get all tables
+        $tables = \DB::select("SHOW TABLES");
+        $tableKey = 'Tables_in_' . $db;
+
+        foreach ($tables as $table) {
+            $tableName = $table->$tableKey;
+            $sql .= "-- Table: {$tableName}\n";
+
+            // Get CREATE TABLE statement
+            $createTable = \DB::select("SHOW CREATE TABLE {$tableName}");
+            if (!empty($createTable)) {
+                $sql .= $createTable[0]->{'Create Table'} . ";\n\n";
+            }
+
+            // Get table data
+            $rows = \DB::select("SELECT * FROM {$tableName}");
+            if (!empty($rows)) {
+                foreach ($rows as $row) {
+                    $values = [];
+                    foreach ($row as $value) {
+                        if ($value === null) {
+                            $values[] = 'NULL';
+                        } else {
+                            $values[] = "'" . addslashes($value) . "'";
+                        }
+                    }
+                    $sql .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $values) . ");\n";
+                }
+                $sql .= "\n";
+            }
+        }
+
+        return $sql;
     }
 
     public function show($id)

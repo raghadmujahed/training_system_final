@@ -19,11 +19,14 @@ class StoreEnrollmentRequest extends FormRequest
                 'required',
                 'exists:users,id',
                 function ($attribute, $value, $fail) {
-                    $user = \App\Models\User::find($value);
+                    $user = \App\Models\User::with('role')->find($value);
                     if (!$user || $user->status !== 'active') {
                         $fail('الطالب غير مفعل أو غير موجود.');
+                        return;
                     }
-                    if ($user && $user->role?->name !== 'student') {
+                    // Check if user is a student by role name or role_id (2 is the student role)
+                    $isStudent = $user->role?->name === 'student' || $user->role_id === 2;
+                    if (!$isStudent) {
                         $fail('المستخدم المحدد ليس طالباً.');
                     }
                 }
