@@ -147,8 +147,6 @@ export default function TrainingPlaces() {
       !formData.city ||
       !formData.capacity ||
       !formData.directorate ||
-      !formData.phone ||
-      !formData.mobile ||
       !formData.school_level
     ) {
       toast.warning("يرجى تعبئة جميع الحقول المطلوبة.");
@@ -156,21 +154,22 @@ export default function TrainingPlaces() {
     }
 
     try {
-      await createTrainingSite({
+      const payload = {
         name: formData.name,
         location: formData.city,
-        phone: formData.phone,
-        email: formData.email,
-        mobile: formData.mobile,
         capacity: Number(formData.capacity),
         is_active: true,
         directorate: formData.directorate,
         school_type: toApiSchoolType(formData.school_type),
-        gender_classification: formData.gender_classification,
         school_level: formData.school_level,
         site_type: "school",
         governing_body: "directorate_of_education",
-      });
+      };
+      if (formData.phone) payload.phone = formData.phone;
+      if (formData.mobile) payload.mobile = formData.mobile;
+      if (formData.email) payload.email = formData.email;
+      if (formData.gender_classification) payload.gender_classification = formData.gender_classification;
+      await createTrainingSite(payload);
 
       setFormData({
         name: "",
@@ -241,21 +240,22 @@ export default function TrainingPlaces() {
     }
 
     try {
-      await updateTrainingSite(id, {
+      const payload = {
         name: editFormData.name,
         location: editFormData.city,
-        phone: editFormData.phone,
-        email: editFormData.email,
-        mobile: editFormData.mobile,
         capacity: Number(editFormData.capacity),
         is_active: editFormData.is_active,
         directorate: editFormData.directorate,
         school_type: toApiSchoolType(editFormData.school_type),
-        gender_classification: editFormData.gender_classification,
         school_level: editFormData.school_level,
         site_type: "school",
         governing_body: "directorate_of_education",
-      });
+      };
+      if (editFormData.phone) payload.phone = editFormData.phone;
+      if (editFormData.mobile) payload.mobile = editFormData.mobile;
+      if (editFormData.email) payload.email = editFormData.email;
+      if (editFormData.gender_classification) payload.gender_classification = editFormData.gender_classification;
+      await updateTrainingSite(id, payload);
 
       toast.success("تم تعديل مكان التدريب بنجاح.");
       setEditingId(null);
