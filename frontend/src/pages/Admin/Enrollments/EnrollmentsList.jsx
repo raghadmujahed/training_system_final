@@ -76,18 +76,11 @@ export default function EnrollmentsList() {
     }
     setSingleLoading(true);
     try {
-      // البحث عن الطالب
-      const userRes = await getUsers({ email: singleEnroll.studentEmail });
+      // البحث عن الطالب بالبريد الإلكتروني (تطابق دقيق من الـ backend)
+      const userRes = await getUsers({ email: singleEnroll.studentEmail, role: 'student', per_page: 10 });
       let userId;
-      // البحث عن تطابق دقيق للبريد الإلكتروني
-      const exactMatch = userRes.data?.find(u => u.email?.toLowerCase().trim() === singleEnroll.studentEmail?.toLowerCase().trim());
-      if (exactMatch) {
-        userId = exactMatch.id;
-      } else if (userRes.data && userRes.data.length > 0) {
-        // إذا لم يوجد تطابق دقيق، نعرض خطأ حتى لا يتم اختيار طالب خاطئ
-        toast.error("لم يتم العثور على طالب بهذا البريد الإلكتروني بالضبط. يرجى التحقق من صحة البريد");
-        setSingleLoading(false);
-        return;
+      if (userRes.data && userRes.data.length > 0) {
+        userId = userRes.data[0].id;
       } else {
         toast.error("الطالب غير موجود، يرجى إضافته أولاً");
         setSingleLoading(false);
@@ -137,16 +130,11 @@ export default function EnrollmentsList() {
             continue;
           }
           try {
-            // البحث عن الطالب
-            const userRes = await getUsers({ email: studentEmail });
+            // البحث عن الطالب بالبريد الإلكتروني (تطابق دقيق من الـ backend)
+            const userRes = await getUsers({ email: studentEmail, role: 'student', per_page: 10 });
             let userId;
-            // البحث عن تطابق دقيق للبريد الإلكتروني
-            const exactMatch = userRes.data?.find(u => u.email?.toLowerCase().trim() === studentEmail?.toLowerCase().trim());
-            if (exactMatch) {
-              userId = exactMatch.id;
-            } else if (userRes.data && userRes.data.length > 0) {
-              errorList.push({ email: studentEmail, error: "لم يتم العثور على تطابق دقيق للبريد الإلكتروني" });
-              continue;
+            if (userRes.data && userRes.data.length > 0) {
+              userId = userRes.data[0].id;
             } else {
               errorList.push({ email: studentEmail, error: "الطالب غير موجود" });
               continue;

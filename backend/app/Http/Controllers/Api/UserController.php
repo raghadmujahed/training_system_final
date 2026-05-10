@@ -38,6 +38,7 @@ class UserController extends Controller
                 'nullable',
                 Rule::in(array_map(static fn (UserStatus $status) => $status->value, UserStatus::cases())),
             ],
+            'email' => 'nullable|string|max:255',
             'search' => 'nullable|string|max:255',
             'sort_by' => ['nullable', Rule::in(['id', 'university_id', 'name', 'email', 'role', 'status', 'created_at'])],
             'sort_direction' => ['nullable', Rule::in(['asc', 'desc'])],
@@ -92,6 +93,11 @@ class UserController extends Controller
                     ->orWhere('users.email', 'like', "%{$term}%")
                     ->orWhere('users.university_id', 'like', "%{$term}%");
             });
+        });
+
+        // تطابق دقيق للبريد الإلكتروني — يُستخدم عند تسجيل الطلاب لضمان اختيار الطالب الصحيح
+        $users->when($validated['email'] ?? null, function ($q, $email) {
+            $q->where('users.email', trim($email));
         });
 
         $sortBy = $validated['sort_by'] ?? 'created_at';
