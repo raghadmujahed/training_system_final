@@ -253,6 +253,7 @@ export default function Portfolio() {
   const [removingFileId, setRemovingFileId] = useState(null);
   const [replacingFileId, setReplacingFileId] = useState(null);
   const [replacementFile, setReplacementFile] = useState(null);
+  const [previewEntry, setPreviewEntry] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -272,6 +273,63 @@ export default function Portfolio() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const openMentorVisitPdf = (data) => {
+    const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+    const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
+    const fc = data.form_context && typeof data.form_context === "object" ? data.form_context : {};
+    const rows = criteria.map((c) => {
+      const row = scores[c.id] || {};
+      return `<tr>
+        <td style="padding:8px 10px;font-weight:bold;background:#f0f9ff;border:1px solid #bae6fd">${c.label}</td>
+        <td style="padding:8px 10px;border:1px solid #bae6fd;white-space:pre-wrap">${row.positive || '—'}</td>
+        <td style="padding:8px 10px;border:1px solid #bae6fd;white-space:pre-wrap">${row.development || '—'}</td>
+      </tr>`;
+    }).join('');
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تقرير زيارة صفية — نموذج 6</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;padding:24px;color:#1e293b;direction:rtl;}
+  .header{text-align:center;border-bottom:2px solid #0369a1;padding-bottom:14px;margin-bottom:18px;}
+  .header h2{margin:0 0 4px;color:#0369a1;font-size:1.2rem;}
+  .header h3{margin:0;color:#0f172a;font-size:1rem;font-weight:normal;}
+  .badge{display:inline-block;background:#e0f2fe;color:#0369a1;padding:3px 12px;border-radius:20px;font-size:0.82rem;margin-bottom:10px;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin-bottom:16px;font-size:0.9rem;}
+  .meta span{color:#64748b;}
+  .meta strong{color:#0f172a;}
+  table{width:100%;border-collapse:collapse;font-size:0.88rem;margin-bottom:16px;}
+  thead tr th{background:#e0f2fe;padding:8px 10px;text-align:right;border:1px solid #bae6fd;}
+  .notes{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:0.9rem;}
+  @media print{body{padding:10px;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="badge">نموذج رقم (6)</div>
+  <h2>تقرير زيارة صفية — مساق التربية العملية</h2>
+  <h3>جامعة الخليل — كلية التربية</h3>
+</div>
+<div class="meta">
+  ${data.student_name ? `<div><span>الطالب: </span><strong>${data.student_name}</strong></div>` : ''}
+  ${data.school_name ? `<div><span>المدرسة: </span><strong>${data.school_name}</strong></div>` : ''}
+  ${fc.university_name ? `<div><span>الجامعة: </span><strong>${fc.university_name}</strong></div>` : ''}
+  ${fc.academic_year ? `<div><span>العام الدراسي: </span><strong>${fc.academic_year}</strong></div>` : ''}
+  ${fc.semester ? `<div><span>الفصل: </span><strong>${fc.semester}</strong></div>` : ''}
+  ${data.supervisor_name ? `<div><span>المعلم المقيم: </span><strong>${data.supervisor_name}</strong></div>` : ''}
+  ${data.evaluation_date ? `<div><span>التاريخ: </span><strong>${data.evaluation_date}</strong></div>` : ''}
+</div>
+<table>
+  <thead><tr><th style="width:24%">المحور</th><th>الأمور الإيجابية</th><th>الأمور التي بحاجة إلى تطوير</th></tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</strong><br>${data.general_notes}</div>` : ''}
+</body></html>`;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400); }
+  };
 
   const fileHref = (path) => {
     if (!path) return null;
@@ -639,7 +697,29 @@ export default function Portfolio() {
 
                         {/* أزرار المرفق والتعديل والحذف */}
                         <div className="flex items-center gap-[0.35rem] shrink-0">
-                          {en.file_path ? (
+                          {mentorVisitPayload ? (
+                            <button type="button"
+                              onClick={() => openMentorVisitPdf(mentorVisitPayload)}
+                              className="inline-flex items-center gap-[0.35rem] text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all border-none cursor-pointer"
+                              style={{ color: style.color, backgroundColor: style.bg }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${style.color}18`; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = style.bg; }}
+                            >
+                              <FileText size={14} />
+                              عرض الملف
+                            </button>
+                          ) : (counselorPayload || psychInstitutionPayload) ? (
+                            <button type="button"
+                              onClick={() => setPreviewEntry(en)}
+                              className="inline-flex items-center gap-[0.35rem] text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all border-none cursor-pointer"
+                              style={{ color: style.color, backgroundColor: style.bg }}
+                              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${style.color}18`; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = style.bg; }}
+                            >
+                              <FileText size={14} />
+                              عرض النموذج
+                            </button>
+                          ) : en.file_path ? (
                             <a href={fileHref(en.file_path)} target="_blank" rel="noreferrer"
                               className="inline-flex items-center gap-[0.35rem] no-underline text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all" style={{ color: style.color, backgroundColor: style.bg }}
                               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${style.color}18`; }}
@@ -686,9 +766,6 @@ export default function Portfolio() {
                     )}
 
                     {counselorPayload && editingId !== en.id ? <CounselorPortfolioReadOnly data={counselorPayload} /> : null}
-                    {mentorVisitPayload && editingId !== en.id ? (
-                      <MentorClassroomVisitPortfolioReadOnly data={mentorVisitPayload} />
-                    ) : null}
                     {psychInstitutionPayload && editingId !== en.id ? (
                       <PsychologistInstitutionPortfolioReadOnly data={psychInstitutionPayload} />
                     ) : null}
