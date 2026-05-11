@@ -32,7 +32,7 @@ class StoreUserRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:20',
-                'regex:/^(\+970|970)?(05[0-9]|02)\d{7}$/'
+                'regex:/^0(56|59)\d{7}$/'
             ],
             'major' => 'required_if:role_id,' . $studentRoleId . '|nullable|string|max:255',
             'training_site_id' => 'nullable|exists:training_sites,id',
@@ -50,7 +50,7 @@ class StoreUserRequest extends FormRequest
             'major.required_if' => 'التخصص مطلوب للطلاب.',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً.',
             'department_id.required_if' => 'القسم مطلوب للطلاب.',
-            'phone.regex' => 'رقم الهاتف غير صحيح، يرجى إدخال رقم هاتف فلسطيني صالح.',
+            'phone.regex' => 'رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059',
         ];
     }
 
@@ -74,14 +74,13 @@ class StoreUserRequest extends FormRequest
                 $validator->errors()->add('department_id', "القسم مطلوب لـ{$label}.");
             }
 
-            // ===== 2) موقع التدريب إلزامي للمعلم/الأخصائي ومدير المدرسة/المركز =====
-            $rolesNeedingSite = ['teacher', 'psychologist', 'school_manager', 'principal', 'psychology_center_manager'];
+            // ===== 2) موقع التدريب إلزامي للمعلم/الأخصائي ومدير المركز =====
+            // ملاحظة: school_manager و principal يتم التحقق منهم بشكل منفصل في قسم 2.5
+            $rolesNeedingSite = ['teacher', 'psychologist', 'psychology_center_manager'];
             if (in_array($role->name, $rolesNeedingSite, true) && ! $this->filled('training_site_id')) {
                 $labels = [
                     'teacher' => 'المعلم المرشد',
                     'psychologist' => 'الأخصائي النفسي',
-                    'school_manager' => 'مدير المدرسة',
-                    'principal' => 'مدير المدرسة',
                     'psychology_center_manager' => 'مدير المركز النفسي',
                 ];
                 $validator->errors()->add(
@@ -90,21 +89,35 @@ class StoreUserRequest extends FormRequest
                 );
             }
 
-            // ===== 3) مدير واحد فقط لكل موقع تدريب =====
-            $singleManagerRoles = ['school_manager', 'principal', 'psychology_center_manager'];
-            $trainingSiteId = $this->input('training_site_id');
-            if (in_array($role->name, $singleManagerRoles, true) && $trainingSiteId) {
+            // ===== 2.5) التحقق من أن المدرسة غير مربوطة بمدير آخر إذا تم اختيارها لمدير مدرسة =====
+            // يشمل school_manager و principal
+            if (in_array($role->name, ['school_manager', 'principal'], true) && $this->filled('training_site_id')) {
+                $trainingSiteId = $this->input('training_site_id');
+                $exists = User::where('training_site_id', $trainingSiteId)
+                    ->whereHas('role', function ($q) {
+                        $q->whereIn('name', ['school_manager', 'principal']);
+                    })
+                    ->exists();
+
+                if ($exists) {
+                    $validator->errors()->add(
+                        'training_site_id',
+                        'يوجد بالفعل مدير للمدرسة مُعيَّن لهذا الموقع. لا يمكن تعيين أكثر من مدير واحد.'
+                    );
+                }
+            }
+
+            // ===== 3) مدير واحد فقط لكل مركز نفسي =====
+            if ($role->name === 'psychology_center_manager' && $this->filled('training_site_id')) {
+                $trainingSiteId = $this->input('training_site_id');
                 $exists = User::where('role_id', $roleId)
                     ->where('training_site_id', $trainingSiteId)
                     ->exists();
 
                 if ($exists) {
-                    $label = $role->name === 'psychology_center_manager'
-                        ? 'مدير للمركز النفسي'
-                        : 'مدير للمدرسة';
                     $validator->errors()->add(
                         'training_site_id',
-                        "يوجد بالفعل {$label} مُعيَّن لهذا الموقع. لا يمكن تعيين أكثر من مدير واحد."
+                        'يوجد بالفعل مدير للمركز النفسي مُعيَّن لهذا الموقع. لا يمكن تعيين أكثر من مدير واحد.'
                     );
                 }
             }
@@ -139,7 +152,7 @@ class StoreUserRequest extends FormRequest
                 if ($email && !str_ends_with(strtolower($email), '@hebron.edu.ps')) {
                     $validator->errors()->add(
                         'email',
-                        'يجب أن ينتهي بريد هذا الدور بـ @hebron.edu.ps'
+                        'البريد الإلكتروني غير صحيح. يجب أن يكون البريد بصيغة صحيحة وينتهي بـ @hebron.edu.ps مثل manager@hebron.edu.ps'
                     );
                 }
             }
@@ -147,6 +160,15 @@ class StoreUserRequest extends FormRequest
             // ===== 7) أدوار لم يتم تحديد نطاق البريد الإلكتروني لها بعد (لا يوجد تحقق محدد) =====
             // psychologist, psychology_center_manager, education_directorate, health_directorate
             // يتم تطبيق التحقق من البريد الإلكتروني العادي فقط
+
+            // ===== 8) التحقق من رقم الهاتف للمستخدمين - يجب أن يكون محمول (056 أو 059) =====
+            $phone = $this->input('phone');
+            if ($phone && !preg_match('/^0(56|59)\d{7}$/', preg_replace('/\D/', '', $phone))) {
+                $validator->errors()->add(
+                    'phone',
+                    'رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059'
+                );
+            }
 
             // ===== 6) التحقق من الرقم الجامعي للطلاب فقط =====
             if ($role->name === 'student') {

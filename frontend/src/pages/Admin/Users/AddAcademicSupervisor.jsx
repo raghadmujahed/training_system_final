@@ -4,7 +4,7 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useDepartments, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
-import { isValidPhone, getPhoneErrorMessage, isValidEmail, getEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
+import { isValidMobilePhone, getMobilePhoneErrorMessage, isValidEmail, getEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
 
 export default function AddAcademicSupervisor() {
   const { id } = useParams();
@@ -71,8 +71,8 @@ export default function AddAcademicSupervisor() {
         }
         break;
       case "phone":
-        if (value && !isValidPhone(value)) {
-          error = getPhoneErrorMessage();
+        if (value && !isValidMobilePhone(value)) {
+          error = getMobilePhoneErrorMessage();
         }
         break;
       case "password":
@@ -107,8 +107,8 @@ export default function AddAcademicSupervisor() {
       newErrors.email = getEmailErrorMessage();
     }
 
-    if (form.phone && !isValidPhone(form.phone)) {
-      newErrors.phone = getPhoneErrorMessage();
+    if (form.phone && !isValidMobilePhone(form.phone)) {
+      newErrors.phone = getMobilePhoneErrorMessage();
     }
 
     if (!form.department_id) {

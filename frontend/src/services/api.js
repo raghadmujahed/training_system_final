@@ -70,7 +70,7 @@ export const getErrorMessage = (error) => {
       return "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.";
     
     case 403:
-      return data?.message || "ليس لديك صلاحية للوصول إلى هذا المورد.";
+      return data?.message || "لا تملك صلاحية تنفيذ هذه العملية";
     
     case 404:
       return data?.message || "المورد المطلوب غير موجود.";
@@ -140,10 +140,23 @@ apiClient.interceptors.response.use(
       localStorage.removeItem("user");
       apiCache.clear();
       resetNotificationsState();
-      
+
       // Redirect to login if not already there
       if (window.location.pathname !== "/") {
         window.location.href = "/";
+      }
+    }
+
+    // Handle 403 Forbidden - dispatch custom event for global toast notification
+    if (error?.response?.status === 403) {
+      const message = error?.response?.data?.message || "لا تملك صلاحية تنفيذ هذه العملية";
+      // Dispatch custom event that App component can listen to
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("api-forbidden", {
+            detail: { message, url: requestUrl },
+          })
+        );
       }
     }
 
@@ -230,6 +243,24 @@ export const getCurrentUser = (config = {}) => {
     return apiClient.get("/user", config).then((r) => r.data);
   }
   return apiCache.get("current-user:me", () => apiClient.get("/user").then((r) => r.data), 2 * 60_000);
+};
+
+/**
+ * Refresh current user data from server and update localStorage
+ * Use this after role/permission updates to get fresh permissions
+ */
+export const refreshCurrentUser = async () => {
+  // Clear the cache first to force fresh fetch
+  apiCache.invalidate("current-user:me");
+  const response = await apiClient.get("/user");
+  const userData = response.data?.data ?? response.data;
+
+  // Update localStorage with fresh user data including permissions
+  if (userData) {
+    localStorage.setItem("user", JSON.stringify(userData));
+  }
+
+  return userData;
 };
 
 // -------------------- TRAINING --------------------
@@ -604,25 +635,38 @@ export const getSectionEnrollments = async (sectionId) => {
     return response.data;
 };
 
-export const getArchivePreview = async () => {
-    const response = await apiClient.get('/archive/preview');
+export const getArchiveBatches = async () => {
+    const response = await apiClient.get('/archive/batches');
     return response.data;
 };
 
-export const archiveCurrentPeriod = async () => {
-    const response = await apiClient.post('/archive/current-period');
+export const getArchiveActivePeriod = async () => {
+    const response = await apiClient.get('/archive/active-period');
     return response.data;
 };
 
-export const getArchivedPeriods = async () => {
-    const response = await apiClient.get('/archive/periods');
+export const getArchivePreview = async (periodId) => {
+    const response = await apiClient.get(`/archive/preview/${periodId}`);
     return response.data;
 };
 
-export const getArchivedPeriodDetails = async ({ academic_year, semester, archived_period }) => {
-    const response = await apiClient.get('/archive/period-details', {
-        params: { academic_year, semester, archived_period },
-    });
+export const archivePeriod = async (periodId) => {
+    const response = await apiClient.post(`/archive/period/${periodId}`);
+    return response.data;
+};
+
+export const getArchivePeriodDetails = async (periodId) => {
+    const response = await apiClient.get(`/archive/period/${periodId}/details`);
+    return response.data;
+};
+
+export const getPublicArchiveBatches = async () => {
+    const response = await apiClient.get('/archive/public-batches');
+    return response.data;
+};
+
+export const getPublicArchivePeriodDetails = async (periodId) => {
+    const response = await apiClient.get(`/archive/public-periods/${periodId}/details`);
     return response.data;
 };
 

@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/ui/Button";
-import { isRequired, isMinValue, isValidEmail, isValidPhone } from "../../../utils/validation";
+import { isRequired, isMinValue, isValidEmail, isValidLandlinePhone, getLandlinePhoneErrorMessage, isValidMobilePhone, getMobilePhoneErrorMessage } from "../../../utils/validation";
 
 export default function TrainingSiteForm() {
   const toast = useAppToast();
@@ -74,11 +74,11 @@ export default function TrainingSiteForm() {
     if (name === 'email' && value && !isValidEmail(value)) {
       setFieldErrors({ ...fieldErrors, email: "صيغة البريد الإلكتروني غير صحيحة" });
     }
-    if (name === 'phone' && value && !isValidPhone(value)) {
-      setFieldErrors({ ...fieldErrors, phone: "رقم الهاتف يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059" });
+    if (name === 'phone' && value && !isValidLandlinePhone(value)) {
+      setFieldErrors({ ...fieldErrors, phone: getLandlinePhoneErrorMessage() });
     }
-    if (name === 'mobile' && value && !isValidPhone(value)) {
-      setFieldErrors({ ...fieldErrors, mobile: "رقم المحمول يجب أن يكون مكونًا من 10 أرقام ويبدأ بـ 056 أو 059" });
+    if (name === 'mobile' && value && !isValidMobilePhone(value)) {
+      setFieldErrors({ ...fieldErrors, mobile: getMobilePhoneErrorMessage() });
     }
   };
 
@@ -103,14 +103,14 @@ export default function TrainingSiteForm() {
     
     if (!isRequired(form.phone)) {
       errors.phone = "رقم الهاتف مطلوب ويجب أن يكون صحيحاً";
-    } else if (!isValidPhone(form.phone)) {
-      errors.phone = "رقم الهاتف يجب أن يكون صحيحاً (مثال: 022222222 أو +97022222222)";
+    } else if (!isValidLandlinePhone(form.phone)) {
+      errors.phone = getLandlinePhoneErrorMessage();
     }
-    
+
     if (!isRequired(form.mobile)) {
       errors.mobile = "رقم المحمول مطلوب ويجب أن يكون صحيحاً";
-    } else if (!isValidPhone(form.mobile)) {
-      errors.mobile = "رقم المحمول يجب أن يكون صحيحاً (مثال: 0591234567 أو +970591234567)";
+    } else if (!isValidMobilePhone(form.mobile)) {
+      errors.mobile = getMobilePhoneErrorMessage();
     }
     
     if (form.email && !isValidEmail(form.email)) {

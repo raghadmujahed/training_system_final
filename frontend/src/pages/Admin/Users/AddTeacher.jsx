@@ -4,7 +4,7 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
-import { isValidPhone, getPhoneErrorMessage, isValidEmail, getEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
+import { isValidMobilePhone, getMobilePhoneErrorMessage, isValidSchoolFieldEmail, getSchoolFieldEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
 
 export default function AddTeacher() {
   const { id } = useParams();
@@ -52,13 +52,13 @@ export default function AddTeacher() {
 
     switch (fieldName) {
       case "email":
-        if (value && !isValidEmail(value)) {
-          error = getEmailErrorMessage();
+        if (value && !isValidSchoolFieldEmail(value)) {
+          error = getSchoolFieldEmailErrorMessage();
         }
         break;
       case "phone":
-        if (value && !isValidPhone(value)) {
-          error = getPhoneErrorMessage();
+        if (value && !isValidMobilePhone(value)) {
+          error = getMobilePhoneErrorMessage();
         }
         break;
       case "password":
@@ -89,12 +89,12 @@ export default function AddTeacher() {
 
     if (!form.email.trim()) {
       newErrors.email = "البريد الإلكتروني مطلوب";
-    } else if (!isValidEmail(form.email)) {
-      newErrors.email = getEmailErrorMessage();
+    } else if (!isValidSchoolFieldEmail(form.email)) {
+      newErrors.email = getSchoolFieldEmailErrorMessage();
     }
 
-    if (form.phone && !isValidPhone(form.phone)) {
-      newErrors.phone = getPhoneErrorMessage();
+    if (form.phone && !isValidMobilePhone(form.phone)) {
+      newErrors.phone = getMobilePhoneErrorMessage();
     }
 
     if (!form.major.trim()) {

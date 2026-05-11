@@ -80,11 +80,18 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('sections/{section}/assign-supervisor', [SectionController::class, 'assignSupervisor']);
     Route::apiResource('enrollments', EnrollmentController::class);
 
-    // Archive current training period
-    Route::get('archive/preview', [ArchiveController::class, 'preview']);
-    Route::post('archive/current-period', [ArchiveController::class, 'archiveCurrentPeriod']);
-    Route::get('archive/periods', [ArchiveController::class, 'listArchivedPeriods']);
-    Route::get('archive/period-details', [ArchiveController::class, 'periodDetails']);
+    // Archive management - Admin only
+    Route::prefix('archive')->middleware('role:admin')->group(function () {
+        Route::get('batches', [ArchiveController::class, 'index']);
+        Route::get('active-period', [ArchiveController::class, 'getActivePeriodForArchive']);
+        Route::get('preview/{period}', [ArchiveController::class, 'preview']);
+        Route::post('period/{period}', [ArchiveController::class, 'archivePeriod']);
+        Route::get('period/{period}/details', [ArchiveController::class, 'periodDetails']);
+    });
+
+    // Public archive read-only access (for all authenticated users)
+    Route::get('archive/public-batches', [ArchiveController::class, 'publicBatches']);
+    Route::get('archive/public-periods/{periodId}/details', [ArchiveController::class, 'publicPeriodDetails']);
 
     // Sites et périodes de stage
     Route::apiResource('training-sites', TrainingSiteController::class);

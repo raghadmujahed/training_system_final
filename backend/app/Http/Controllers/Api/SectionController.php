@@ -10,6 +10,7 @@ use App\Http\Resources\EnrollmentResource;
 use App\Models\Course;
 use App\Models\Notification as AppNotification;
 use App\Models\Section;
+use App\Models\TrainingPeriod;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,8 @@ class SectionController extends Controller
 
     public function index(Request $request)
     {
-        $query = Section::with(['course', 'academicSupervisor', 'createdBy'])
+        // Always exclude archived sections - do not allow overriding this via request params
+        $query = Section::with(['course.department', 'academicSupervisor', 'createdBy'])
             ->withCount('enrollments');
 
         // Restrict head_of_department to their own department
@@ -33,23 +35,28 @@ class SectionController extends Controller
             $query->whereIn('course_id', $courseIds);
         }
 
-        // The NotArchivedScope automatically excludes archived sections.
-        // Use ?include_archived=1 to include them, or ?only_archived=1 for archived only.
-        if ($request->boolean('include_archived')) {
-            $query->withoutGlobalScope(\App\Models\Scopes\NotArchivedScope::class);
-        }
-        if ($request->boolean('only_archived')) {
-            $query = Section::onlyArchived()->with(['course', 'academicSupervisor', 'createdBy'])->withCount('enrollments');
-            if ($role === 'head_of_department' && $user->department_id) {
-                $courseIds = Course::where('department_id', $user->department_id)->pluck('id');
-                $query->whereIn('course_id', $courseIds);
-            }
+        // Department filter - filter by course's department
+        if ($request->filled('department_id')) {
+            $courseIds = Course::where('department_id', $request->department_id)->pluck('id');
+            $query->whereIn('course_id', $courseIds);
         }
 
-        if ($request->has('course_id')) $query->where('course_id', $request->course_id);
-        if ($request->has('semester')) $query->where('semester', $request->semester);
-        if ($request->has('academic_year')) $query->where('academic_year', $request->academic_year);
-        
+        // Academic supervisor filter
+        if ($request->filled('academic_supervisor_id')) {
+            $query->where('academic_supervisor_id', $request->academic_supervisor_id);
+        }
+
+        // Legacy filters (kept for backward compatibility)
+        if ($request->filled('course_id')) {
+            $query->where('course_id', $request->course_id);
+        }
+        if ($request->filled('semester')) {
+            $query->where('semester', $request->semester);
+        }
+        if ($request->filled('academic_year')) {
+            $query->where('academic_year', $request->academic_year);
+        }
+
         $sections = $query->paginate($request->per_page ?? 15);
 
         return SectionResource::collection($sections);
@@ -59,23 +66,23 @@ class SectionController extends Controller
     {
         $data = $request->validated();
         $data['created_by'] = auth()->id();
-        
-        // Handle empty academic_supervisor_id
-        if (empty($data['academic_supervisor_id'])) {
-            $data['academic_supervisor_id'] = null;
+
+        // Auto-assign active training period
+        $activePeriod = TrainingPeriod::active()->first();
+        if ($activePeriod) {
+            $data['training_period_id'] = $activePeriod->id;
         }
 
+        // Validate supervisor matches course department
         $this->ensureAcademicSupervisorMatchesCourse(
-            $data['academic_supervisor_id'] ?? null,
+            $data['academic_supervisor_id'],
             (int) $data['course_id']
         );
-        
+
         $section = Section::create($data);
 
-        // إشعار المشرف الأكاديمي إن عُيّن
-        if (! empty($data['academic_supervisor_id'])) {
-            $this->notifySupervisorAssigned($section, $data['academic_supervisor_id']);
-        }
+        // إشعار المشرف الأكاديمي
+        $this->notifySupervisorAssigned($section, $data['academic_supervisor_id']);
 
         return new SectionResource($section->load(['course', 'academicSupervisor', 'createdBy']));
     }
@@ -90,13 +97,19 @@ class SectionController extends Controller
     {
         $data = $request->validated();
 
-        if (array_key_exists('academic_supervisor_id', $data) && empty($data['academic_supervisor_id'])) {
-            $data['academic_supervisor_id'] = null;
-        }
+        // Prevent removing the supervisor by setting it to null/empty
+        if (array_key_exists('academic_supervisor_id', $data)) {
+            if (empty($data['academic_supervisor_id'])) {
+                return response()->json([
+                    'message' => 'لا يمكن إزالة المشرف الأكاديمي من الشعبة',
+                    'errors' => [
+                        'academic_supervisor_id' => ['يجب اختيار مشرف أكاديمي للشعبة']
+                    ]
+                ], 422);
+            }
 
-        if (array_key_exists('academic_supervisor_id', $data) || array_key_exists('course_id', $data)) {
             $this->ensureAcademicSupervisorMatchesCourse(
-                $data['academic_supervisor_id'] ?? $section->academic_supervisor_id,
+                $data['academic_supervisor_id'],
                 (int) ($data['course_id'] ?? $section->course_id)
             );
         }

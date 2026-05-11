@@ -146,9 +146,9 @@ const menus = {
     { name: "إدارة الشعب", path: "/admin/sections" },
     { name: "تسجيل الطلاب في الشعب", path: "/admin/enrollments" },
     
-    // إدارة التدريب الميداني
-    { name: "إدارة مواقع التدريب", path: "/admin/training-sites" },
+    // إدارة الفترات التدريبية
     { name: "إدارة الفترات التدريبية", path: "/admin/training-periods" },
+    { name: "إدارة الأرشفة", path: "/admin/archive" },
     
     // إدارة المحتوى والإشعارات
     { name: "إدارة الإعلانات", path: "/admin/announcements" },

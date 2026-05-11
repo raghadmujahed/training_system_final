@@ -7,6 +7,7 @@ use App\Http\Requests\StoreTrainingPeriodRequest;
 use App\Http\Requests\UpdateTrainingPeriodRequest;
 use App\Http\Resources\TrainingPeriodResource;
 use App\Models\TrainingPeriod;
+use App\Services\ArchiveService;
 use Illuminate\Http\Request;
 
 class TrainingPeriodController extends Controller
@@ -54,10 +55,33 @@ class TrainingPeriodController extends Controller
         return response()->json(['message' => 'تم حذف الفترة التدريبية']);
     }
 
-    public function setActive(TrainingPeriod $trainingPeriod)
+    /**
+     * Activate a training period. Optionally archive the previously active period first.
+     */
+    public function setActive(Request $request, TrainingPeriod $trainingPeriod, ArchiveService $archiveService)
     {
+        $autoArchive = $request->boolean('auto_archive');
+
+        if ($autoArchive) {
+            // Find the currently active period and archive it
+            $currentActive = TrainingPeriod::where('is_active', true)->first();
+            if ($currentActive && $currentActive->id !== $trainingPeriod->id) {
+                try {
+                    $archiveService->archivePeriod($currentActive->id, auth()->id());
+                } catch (\Exception $e) {
+                    // If already archived or other error, log but continue
+                    // We don't want to block activation if archive fails for some reason
+                    \Illuminate\Support\Facades\Log::warning('Auto-archive failed during period activation', [
+                        'period_id' => $currentActive->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+        }
+
         TrainingPeriod::where('is_active', true)->update(['is_active' => false]);
         $trainingPeriod->update(['is_active' => true]);
-        return new TrainingPeriodResource($trainingPeriod);
+
+        return new TrainingPeriodResource($trainingPeriod->fresh());
     }
 }

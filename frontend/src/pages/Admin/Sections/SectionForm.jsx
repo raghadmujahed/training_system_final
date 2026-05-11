@@ -70,24 +70,29 @@ export default function SectionForm() {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!form.name || !form.name.trim()) {
       newErrors.name = "اسم الشعبة مطلوب";
     }
-    
+
     if (!form.course_id) {
       newErrors.course_id = "المساق مطلوب";
     }
-    
+
     const academicYear = Number(form.academic_year);
     if (!form.academic_year || academicYear < 2000 || academicYear > 2100) {
       newErrors.academic_year = "العام الدراسي يجب أن يكون سنة صحيحة بين 2000 و 2100";
     }
-    
+
     if (!form.semester) {
       newErrors.semester = "الفصل الدراسي مطلوب";
     }
-    
+
+    // Academic supervisor is now required
+    if (!form.academic_supervisor_id) {
+      newErrors.academic_supervisor_id = "يجب اختيار مشرف أكاديمي للشعبة";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -95,7 +100,11 @@ export default function SectionForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (loading) return;
+
     if (!validateForm()) {
+      toast.error("يرجى تصحيح الأخطاء في النموذج");
       return;
     }
 
@@ -116,6 +125,8 @@ export default function SectionForm() {
       if (err.response?.status === 422 && err.response?.data?.errors) {
         setErrors(err.response.data.errors);
         toast.error("يرجى التحقق من البيانات المدخلة");
+      } else if (err.response?.status === 403) {
+        toast.error(err.response?.data?.message || "لا تملك صلاحية تنفيذ هذه العملية");
       } else if (err.response?.status === 500) {
         toast.error("حدث خطأ في الخادم، يرجى المحاولة لاحقًا");
       } else {
@@ -172,18 +183,42 @@ export default function SectionForm() {
         </div>
 
         <div className="form-group">
-          <label>المشرف الأكاديمي</label>
+          <label>المشرف الأكاديمي *</label>
           {!form.course_id ? (
-            <p className="text-text-soft text-[0.9rem] my-1">اختر المساق أولاً لعرض المشرفين التابعين لقسمه</p>
+            <>
+              <select name="academic_supervisor_id" value="" disabled className="bg-gray-100">
+                <option value="">اختر المساق أولاً</option>
+              </select>
+              <p className="text-text-soft text-[0.9rem] my-1">اختر المساق أولاً لعرض المشرفين التابعين لقسمه</p>
+            </>
           ) : supervisors.length === 0 ? (
-            <p className="text-text-soft text-[0.9rem] my-1">لا يوجد مشرفين أكاديميين في هذا القسم</p>
+            <>
+              <select name="academic_supervisor_id" value="" disabled className="bg-gray-100 border-red-300">
+                <option value="">لا يوجد مشرفين</option>
+              </select>
+              <p className="text-red-500 text-sm mt-1">لا يوجد مشرفين أكاديميين متاحين في هذا القسم</p>
+            </>
           ) : (
-            <select name="academic_supervisor_id" value={form.academic_supervisor_id} onChange={handleChange}>
-              <option value="">اختر المشرف</option>
-              {supervisors.map(sup => (
-                <option key={sup.id} value={sup.id}>{sup.name}</option>
-              ))}
-            </select>
+            <>
+              <select
+                name="academic_supervisor_id"
+                value={form.academic_supervisor_id}
+                onChange={handleChange}
+                onBlur={handleChange}
+                className={errors.academic_supervisor_id ? 'border-red-500' : ''}
+                required
+              >
+                <option value="">اختر المشرف الأكاديمي</option>
+                {supervisors.map(sup => (
+                  <option key={sup.id} value={sup.id}>{sup.name}</option>
+                ))}
+              </select>
+              {errors.academic_supervisor_id && (
+                <div className="text-red-500 text-sm mt-1">
+                  {Array.isArray(errors.academic_supervisor_id) ? errors.academic_supervisor_id[0] : errors.academic_supervisor_id}
+                </div>
+              )}
+            </>
           )}
         </div>
 

@@ -28,7 +28,7 @@ class UpdateSectionRequest extends FormRequest
                 })->ignore($sectionId)
             ],
             'academic_year' => 'sometimes|digits:4|integer|min:2000|max:2100',
-            'academic_supervisor_id' => 'sometimes|exists:users,id',
+            'academic_supervisor_id' => 'sometimes|required|integer|exists:users,id',
             'semester' => 'sometimes|in:first,second,summer',
             'course_id' => 'sometimes|exists:courses,id',
             'capacity' => 'nullable|integer|min:1|max:1000',
@@ -39,6 +39,41 @@ class UpdateSectionRequest extends FormRequest
     {
         return [
             'name.unique' => 'يوجد شعبة بهذا الاسم في نفس المساق والفصل الدراسي والعام الدراسي.',
+            'academic_supervisor_id.required' => 'يجب اختيار مشرف أكاديمي للشعبة',
+            'academic_supervisor_id.exists' => 'المشرف الأكاديمي المحدد غير موجود',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     * Add custom validation to ensure the supervisor has the correct role.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $supervisorId = $this->input('academic_supervisor_id');
+
+            // Only validate if supervisor_id is being updated
+            if (! $this->has('academic_supervisor_id')) {
+                return;
+            }
+
+            if (empty($supervisorId)) {
+                $validator->errors()->add('academic_supervisor_id', 'يجب اختيار مشرف أكاديمي للشعبة');
+                return;
+            }
+
+            // Check if user exists and has academic_supervisor role
+            $supervisor = \App\Models\User::with('role')->find($supervisorId);
+
+            if (! $supervisor) {
+                $validator->errors()->add('academic_supervisor_id', 'المشرف الأكاديمي المحدد غير موجود');
+                return;
+            }
+
+            if ($supervisor->role?->name !== 'academic_supervisor') {
+                $validator->errors()->add('academic_supervisor_id', 'المستخدم المحدد ليس مشرفاً أكاديمياً');
+            }
+        });
     }
 }

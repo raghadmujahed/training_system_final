@@ -3,8 +3,36 @@
  * Matches backend Laravel validation rules
  */
 
-// Phone number validation - Palestinian format
-// Supports: 05xxxxxxxx, 059xxxxxxx, 056xxxxxxx, 02xxxxxxx, +9705xxxxxxxx, +9725xxxxxxxx
+// Mobile phone validation - Palestinian format (056 or 059 only)
+// For users: students, supervisors, coordinators, managers, teachers, counselors, admin
+export const isValidMobilePhone = (phone) => {
+  if (!phone || phone === "") return true; // Phone is optional
+  // Remove spaces, dashes, and any non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  // Must be exactly 10 digits starting with 056 or 059
+  return /^0(56|59)\d{7}$/.test(cleaned);
+};
+
+export const getMobilePhoneErrorMessage = () => {
+  return "رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059";
+};
+
+// Landline phone validation - Palestinian format (for schools, directorates, training sites)
+// Supports: 02xxxxxxx, 022xxxxxx, +9702xxxxxxx
+export const isValidLandlinePhone = (phone) => {
+  if (!phone || phone === "") return true; // Phone is optional
+  // Remove spaces, dashes, and any non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  // Must be exactly 9 digits starting with 02 (Palestinian landline)
+  return /^02\d{7}$/.test(cleaned);
+};
+
+export const getLandlinePhoneErrorMessage = () => {
+  return "رقم الهاتف الأرضي غير صحيح. يجب أن يتكون من 9 أرقام ويبدأ بـ 02";
+};
+
+// Legacy phone validation - for backward compatibility
+// Supports: 05xxxxxxxx, 059xxxxxxx, 056xxxxxxx, 02xxxxxxx
 export const isValidPhone = (phone) => {
   if (!phone || phone === "") return true; // Phone is optional
   // Remove spaces and dashes
@@ -24,7 +52,7 @@ export const isValidEmail = (email) => {
 };
 
 export const getEmailErrorMessage = () => {
-  return "البريد الإلكتروني غير صحيح، يرجى إدخال بريد مثل example@email.com";
+  return "البريد الإلكتروني غير صحيح، يرجى إدخال بريد إلكتروني صالح مثل user@example.com";
 };
 
 // Student email domain validation
@@ -54,7 +82,7 @@ export const isValidSchoolFieldEmail = (email) => {
 };
 
 export const getSchoolFieldEmailErrorMessage = () => {
-  return "يجب أن ينتهي بريد هذا الدور بـ @hebron.edu.ps";
+  return "البريد الإلكتروني غير صحيح. يجب أن يكون البريد بصيغة صحيحة وينتهي بـ @hebron.edu.ps مثل manager@hebron.edu.ps";
 };
 
 // Legacy staff email validation (for backward compatibility)

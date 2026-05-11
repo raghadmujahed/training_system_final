@@ -18,7 +18,7 @@ class RoleController extends Controller
 
     public function index(Request $request)
     {
-        $roles = Role::with('permissions')->paginate($request->per_page ?? 15);
+        $roles = Role::withCount('permissions')->with('permissions')->paginate($request->per_page ?? 15);
         return RoleResource::collection($roles);
     }
 
