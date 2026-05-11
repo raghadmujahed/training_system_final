@@ -338,19 +338,14 @@ export default function FieldStaffDailyReports() {
                   <div>
                     <h4 className="panel-title">{stu?.name || "طالب"}</h4>
                     <p className="panel-subtitle">
-                      التاريخ: {log.log_date ? new Date(log.log_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"} | من {log.start_time || "—"} إلى {log.end_time || "—"}
+                      التاريخ: {log.log_date ? new Date(log.log_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
                     </p>
                   </div>
                   <div className="flex gap-2 items-center">
                     {statusBadge(log.status)}
-                    <button className="btn-outline-custom btn-sm-custom" onClick={() => openReview(log)}>
-                      عرض
+                    <button className="btn-primary-custom btn-sm-custom" onClick={() => openReview(log)}>
+                      مراجعة
                     </button>
-                    {log.status === "submitted" && (
-                      <button className="btn-primary-custom btn-sm-custom" onClick={() => openReview(log)}>
-                        مراجعة
-                      </button>
-                    )}
                   </div>
                 </div>
 
