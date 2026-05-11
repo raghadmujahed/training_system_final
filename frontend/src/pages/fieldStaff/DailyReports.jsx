@@ -338,11 +338,14 @@ export default function FieldStaffDailyReports() {
                   <div>
                     <h4 className="panel-title">{stu?.name || "طالب"}</h4>
                     <p className="panel-subtitle">
-                      التاريخ: {log.log_date} | من {log.start_time || "—"} إلى {log.end_time || "—"}
+                      التاريخ: {log.log_date ? new Date(log.log_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"} | من {log.start_time || "—"} إلى {log.end_time || "—"}
                     </p>
                   </div>
                   <div className="flex gap-2 items-center">
                     {statusBadge(log.status)}
+                    <button className="btn-outline-custom btn-sm-custom" onClick={() => openReview(log)}>
+                      عرض
+                    </button>
                     {log.status === "submitted" && (
                       <button className="btn-primary-custom btn-sm-custom" onClick={() => openReview(log)}>
                         مراجعة
@@ -357,34 +360,6 @@ export default function FieldStaffDailyReports() {
                     <span className="text-soft">{log.activities_performed}</span>
                   </div>
                 )}
-
-                {(() => {
-                  const parsed = parseReflection(log.student_reflection);
-                  const formKey = detectFormKey(log.activities_performed);
-                  if (parsed && formKey) {
-                    return (
-                      <div className="mt-3">
-                        <StructuredFormContent data={parsed} formKey={formKey} />
-                      </div>
-                    );
-                  }
-                  if (parsed) {
-                    return (
-                      <div className="mt-3">
-                        <StructuredFormContent data={parsed} formKey={null} />
-                      </div>
-                    );
-                  }
-                  if (log.student_reflection) {
-                    return (
-                      <div className="mt-[6px]">
-                        <strong>تأمل الطالب:</strong>
-                        <p className="text-soft mt-1">{log.student_reflection}</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
 
                 {log.supervisor_notes && (
                   <div className="mt-[6px]">
@@ -412,7 +387,7 @@ export default function FieldStaffDailyReports() {
 
                 <div className="mb-3">
                   <p><strong>الطالب:</strong> {selectedLog.training_assignment?.enrollment?.user?.name || "—"}</p>
-                  <p><strong>التاريخ:</strong> {selectedLog.log_date}</p>
+                  <p><strong>التاريخ:</strong> {selectedLog.log_date ? new Date(selectedLog.log_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}</p>
                   {selectedLog.activities_performed && (
                     <p><strong>نوع النموذج:</strong> {selectedLog.activities_performed}</p>
                   )}
