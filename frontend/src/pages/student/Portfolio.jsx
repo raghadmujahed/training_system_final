@@ -25,40 +25,40 @@ const fadeInStyles = `
 `;
 
 function parseCounselorPortfolioPayload(entry) {
-  if (!entry?.content || typeof entry.content !== "string") return null;
-  try {
-    const o = JSON.parse(entry.content);
-    if (o?.type === "counselor_field_evaluation" || entry.category === "counselor_field_evaluation") {
-      return o;
-    }
-  } catch {
-    return null;
+  if (!entry?.content) return null;
+  let o = entry.content;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { return null; }
+  }
+  if (typeof o !== "object") return null;
+  if (o?.type === "counselor_field_evaluation" || entry.category === "counselor_field_evaluation") {
+    return o;
   }
   return null;
 }
 
 function parseMentorClassroomVisitPayload(entry) {
-  if (!entry?.content || typeof entry.content !== "string") return null;
-  try {
-    const o = JSON.parse(entry.content);
-    if (o?.type === "mentor_classroom_visit" || entry.category === "mentor_classroom_visit") {
-      return o;
-    }
-  } catch {
-    return null;
+  if (!entry?.content) return null;
+  let o = entry.content;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { return null; }
+  }
+  if (typeof o !== "object") return null;
+  if (o?.type === "mentor_classroom_visit" || entry.category === "mentor_classroom_visit") {
+    return o;
   }
   return null;
 }
 
 function parsePsychologistInstitutionPayload(entry) {
-  if (!entry?.content || typeof entry.content !== "string") return null;
-  try {
-    const o = JSON.parse(entry.content);
-    if (o?.type === "psychologist_institution_evaluation" || entry.category === "psychologist_institution_evaluation") {
-      return o;
-    }
-  } catch {
-    return null;
+  if (!entry?.content) return null;
+  let o = entry.content;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { return null; }
+  }
+  if (typeof o !== "object") return null;
+  if (o?.type === "psychologist_institution_evaluation" || entry.category === "psychologist_institution_evaluation") {
+    return o;
   }
   return null;
 }
@@ -327,8 +327,10 @@ export default function Portfolio() {
 </table>
 ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</strong><br>${data.general_notes}</div>` : ''}
 </body></html>`;
-    const w = window.open('', '_blank');
-    if (w) { w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400); }
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if (w) { setTimeout(() => { w.print(); URL.revokeObjectURL(url); }, 600); }
   };
 
   const fileHref = (path) => {
