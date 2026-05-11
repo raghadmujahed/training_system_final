@@ -51,7 +51,20 @@ public function index(Request $request)
               ->join('enrollments', 'training_assignments.enrollment_id', '=', 'enrollments.id')
               ->where('enrollments.user_id', $user->id)
               ->select('training_logs.*'); // تجنب تضارب الأعمدة
+    } elseif (in_array($user->role?->name, ['teacher', 'adviser', 'academic_supervisor', 'psychologist', 'school_manager', 'principal'], true)) {
+        // الكادر الميداني: عرض سجلات الطلبة المرتبطين بموقع التدريب أو التعيين
+        if ($user->role?->name === 'teacher') {
+            $query->whereHas('trainingAssignment', fn ($q) => $q->where('teacher_id', $user->id));
+        } elseif ($user->role?->name === 'adviser') {
+            $query->whereHas('trainingAssignment', fn ($q) => $q->where('training_site_id', $user->training_site_id));
+        } elseif ($user->role?->name === 'academic_supervisor') {
+            $query->whereHas('trainingAssignment', fn ($q) => $q->where('academic_supervisor_id', $user->id));
+        } elseif (in_array($user->role?->name, ['school_manager', 'principal'], true)) {
+            $query->whereHas('trainingAssignment', fn ($q) => $q->where('training_site_id', $user->training_site_id));
+        }
     }
+
+    $query->with(['trainingAssignment.enrollment.user']);
 
     $logs = $query->latest('log_date')->paginate($request->per_page ?? 15);
 
