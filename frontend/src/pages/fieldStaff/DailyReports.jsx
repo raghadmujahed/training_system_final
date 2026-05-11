@@ -38,6 +38,7 @@ const FIELD_LABELS = {
   morningAssembly: "الطابور الصباحي",
   duty: "المناوبة",
   implementedLessons: "الحصص التي نفذها (كلي – جزئي – أوراق العمل)",
+  teachingAids: "الوسائل التي أعدها",
   activities: "الأنشطة التي قام بها",
   meetings: "حضور الاجتماعات",
   // نقد خبرات التعلم
@@ -96,18 +97,53 @@ function detectFormKey(title) {
   return null;
 }
 
+// Form meta: gradient header per form type
+const FORM_META = {
+  weekly_full_report:        { title: "التقرير الأسبوعي",               gradient: "linear-gradient(135deg, #f093fb, #f5576c)" },
+  weekly_brief_report:       { title: "التقرير المختصر الأسبوعي",        gradient: "linear-gradient(135deg, #fa709a, #fee140)" },
+  weekly_reflection:         { title: "نموذج التأمل الأسبوعي",           gradient: "linear-gradient(135deg, #6366f1, #8b5cf6)" },
+  learning_experience_review:{ title: "نقد خبرات التعلم",               gradient: "linear-gradient(135deg, #11998e, #38ef7d)" },
+  field_visit_summary:       { title: "ملخص الزيارة الميدانية",           gradient: "linear-gradient(135deg, #0891b2, #06b6d4)" },
+  classes_count:             { title: "عدد الحصص التي درسها الطالب",     gradient: "linear-gradient(135deg, #667eea, #764ba2)" },
+  daily_tasks_report:        { title: "تقرير المهام والأعمال اليومية",   gradient: "linear-gradient(135deg, #0e7490, #06b6d4)" },
+};
+
+// Sections for weekly_brief_report
+const BRIEF_SECTIONS = [
+  { label: "القسم الأول: التخطيط والتحضير", color: "#fa709a", keys: ["lessonsTaught","worksheetsCount","teachingMaterials","otherWorks"] },
+  { label: "القسم الثاني: العمل والإنجاز الصفي", color: "#fee140", keys: ["observedStrengths","coTeachingReflection","selfTeachingReflection"] },
+  { label: "القسم الثالث: الجوانب السلوكية والمهنية", color: "#11998e", keys: ["studentAttendance","studentDiscipline","studentInteraction","schoolSupport","professionalRelations"] },
+  { label: "القسم الرابع: التقييم والتأمل الذاتي", color: "#667eea", keys: ["strengthsThisWeek","areasForImprovement","supervisorSupportNeeds"] },
+];
+
+function FieldBox({ label, value }) {
+  return (
+    <div className="flex flex-col">
+      <label className="text-[0.85rem] font-semibold text-[#495057] mb-2">{label}</label>
+      <div className="w-full p-3 border-[1.5px] border-[#e0e0e0] rounded-[10px] text-[0.9rem] bg-white text-[#212529] whitespace-pre-wrap min-h-[72px]">
+        {value || "—"}
+      </div>
+    </div>
+  );
+}
+
 /** Render structured form content from parsed JSON */
 function StructuredFormContent({ data, formKey }) {
   if (!data || typeof data !== "object") return null;
 
-  // Array-based forms (table layout)
-  if (Array.isArray(data)) {
-    if (formKey === "classes_count") {
-      return (
-        <div className="overflow-x-auto mt-2">
+  const meta = FORM_META[formKey] || { title: "محتوى النموذج", gradient: "linear-gradient(135deg, #64748b, #94a3b8)" };
+
+  // Array-based: classes_count
+  if (Array.isArray(data) && formKey === "classes_count") {
+    return (
+      <div className="mt-3 rounded-2xl overflow-hidden border border-[#e8e8e8] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="py-4 px-6 text-white text-[1.05rem] font-semibold" style={{ background: meta.gradient }}>
+          {meta.title}
+        </div>
+        <div className="bg-white p-4 overflow-x-auto">
           <table className="w-full border-collapse text-[0.88rem]">
             <thead>
-              <tr className="bg-[#f8f9fa]">
+              <tr style={{ background: "#f8f9fa" }}>
                 {CLASS_COUNT_COLUMNS.map((col) => (
                   <th key={col} className="py-2 px-3 border border-[#dee2e6] font-semibold text-[#495057]">{CLASS_COUNT_LABELS[col]}</th>
                 ))}
@@ -124,49 +160,87 @@ function StructuredFormContent({ data, formKey }) {
             </tbody>
           </table>
         </div>
-      );
-    }
-    // daily_tasks_report
-    return (
-      <div className="overflow-x-auto mt-2">
-        <table className="w-full border-collapse text-[0.88rem]">
-          <thead>
-            <tr className="bg-[#f8f9fa]">
-              {DAILY_TASK_COLUMNS.map((col) => (
-                <th key={col} className="py-2 px-3 border border-[#dee2e6] font-semibold text-[#495057] min-w-[100px]">{FIELD_LABELS[col] || col}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, idx) => (
-              <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-[#fafbfc]"}>
-                {DAILY_TASK_COLUMNS.map((col) => (
-                  <td key={col} className="py-2 px-3 border border-[#e9ecef]">{row[col] || "—"}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     );
   }
 
-  // Object-based forms (key-value layout)
+  // Array-based: daily_tasks_report
+  if (Array.isArray(data)) {
+    return (
+      <div className="mt-3 rounded-2xl overflow-hidden border border-[#e8e8e8] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="py-4 px-6 text-white text-[1.05rem] font-semibold" style={{ background: meta.gradient }}>
+          {meta.title}
+        </div>
+        <div className="bg-white p-4 overflow-x-auto">
+          <table className="w-full border-collapse text-[0.88rem]">
+            <thead>
+              <tr style={{ background: "#0e7490" }}>
+                {DAILY_TASK_COLUMNS.map((col) => (
+                  <th key={col} className="py-3 px-3 border border-[#0891b2] font-semibold text-white min-w-[110px]">{FIELD_LABELS[col] || col}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, idx) => (
+                <tr key={idx} className={idx % 2 === 0 ? "bg-[#f0f9ff]" : "bg-white"}>
+                  {DAILY_TASK_COLUMNS.map((col) => (
+                    <td key={col} className="py-2 px-3 border border-[#bae6fd]">{row[col] || "—"}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
+
+  // weekly_brief_report: sectioned layout
+  if (formKey === "weekly_brief_report") {
+    return (
+      <div className="mt-3 rounded-2xl overflow-hidden border border-[#e8e8e8] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+        <div className="py-4 px-6 text-white text-[1.05rem] font-semibold" style={{ background: meta.gradient }}>
+          {meta.title}
+        </div>
+        <div className="bg-white p-6">
+          {BRIEF_SECTIONS.map((sec) => {
+            const sectionEntries = sec.keys.filter((k) => data[k] !== undefined && data[k] !== "");
+            if (sectionEntries.length === 0) return null;
+            return (
+              <div key={sec.label} className="mb-6">
+                <h5 className="text-[1rem] font-bold text-[#495057] mb-4 py-3 px-4 bg-[#e9ecef] rounded-lg"
+                  style={{ borderRight: `4px solid ${sec.color}` }}>
+                  {sec.label}
+                </h5>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+                  {sectionEntries.map((key) => (
+                    <FieldBox key={key} label={FIELD_LABELS[key] || key} value={data[key]} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Object-based forms (generic grid)
   const entries = Object.entries(data).filter(([, v]) => v !== undefined && v !== "");
   if (entries.length === 0) return null;
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-3 mt-2">
-      {entries.map(([key, value]) => (
-        <div key={key} className="flex flex-col">
-          <span className="text-[0.8rem] font-semibold text-[#475569] mb-1">
-            {FIELD_LABELS[key] || key}
-          </span>
-          <span className="text-[0.85rem] text-[#334155] bg-[#f8fafc] p-2 rounded-lg border border-[#e2e8f0] whitespace-pre-wrap">
-            {typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)}
-          </span>
+    <div className="mt-3 rounded-2xl overflow-hidden border border-[#e8e8e8] shadow-[0_4px_24px_rgba(0,0,0,0.06)]">
+      <div className="py-4 px-6 text-white text-[1.05rem] font-semibold" style={{ background: meta.gradient }}>
+        {meta.title}
+      </div>
+      <div className="bg-white p-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-4">
+          {entries.map(([key, value]) => (
+            <FieldBox key={key} label={FIELD_LABELS[key] || key} value={typeof value === "object" ? JSON.stringify(value, null, 2) : String(value)} />
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 }
