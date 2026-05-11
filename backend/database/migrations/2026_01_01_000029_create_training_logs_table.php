@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('activities_performed')->nullable();
             $table->text('supervisor_notes')->nullable();
             $table->text('student_reflection')->nullable();
-            $table->enum('status', ['draft', 'submitted', 'approved', 'returned'])->default('draft');
+            $table->enum('status', ['draft', 'submitted', 'reviewed'])->default('draft');
             $table->string('academic_review_status')->nullable();
             $table->text('academic_note')->nullable();
             $table->boolean('needs_discussion')->default(false);
