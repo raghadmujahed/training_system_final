@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\TrainingLog;
+use App\Models\Notification;
 use App\Enums\TrainingLogStatus;
 
 class TrainingLogService
@@ -25,6 +26,24 @@ class TrainingLogService
             'status' => $status,
             'supervisor_notes' => $supervisorNotes ?? $log->supervisor_notes,
         ]);
+
+        // إرسال إشعار للطالب
+        $studentId = $log->trainingAssignment?->enrollment?->user_id;
+        if ($studentId) {
+            $dateStr = $log->log_date ?? '';
+            if ($status === 'approved') {
+                $msg = "تمت الموافقة على سجل التدريب بتاريخ {$dateStr}." . ($supervisorNotes ? " ملاحظات: {$supervisorNotes}" : '');
+            } else {
+                $msg = "تم إرجاع سجل التدريب بتاريخ {$dateStr}." . ($supervisorNotes ? " السبب: {$supervisorNotes}" : '');
+            }
+            Notification::create([
+                'user_id' => $studentId,
+                'type' => 'training_log_reviewed',
+                'message' => $msg,
+                'data' => ['log_id' => $log->id, 'status' => $status],
+            ]);
+        }
+
         return $log;
     }
 }

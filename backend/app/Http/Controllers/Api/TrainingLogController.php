@@ -109,6 +109,7 @@ public function index(Request $request)
 
     public function review(ReviewTrainingLogRequest $request, TrainingLog $trainingLog)
     {
+        $trainingLog->loadMissing('trainingAssignment.enrollment');
         $log = $this->trainingLogService->reviewLog(
             $trainingLog,
             $request->status,

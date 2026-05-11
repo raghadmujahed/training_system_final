@@ -7,6 +7,7 @@ use App\Http\Requests\StoreNoteRequest;
 use App\Http\Requests\UpdateNoteRequest;
 use App\Http\Resources\NoteResource;
 use App\Models\Note;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class NoteController extends Controller
@@ -50,6 +51,20 @@ class NoteController extends Controller
     public function store(StoreNoteRequest $request)
     {
         $note = Note::create($request->validated());
+
+        // إرسال إشعار للطالب
+        $studentId = $note->trainingAssignment?->enrollment?->user_id;
+        $authorName = $request->user()?->name ?? 'المشرف';
+        if ($studentId && $studentId !== $request->user()->id) {
+            $preview = mb_strlen($note->content) > 60 ? mb_substr($note->content, 0, 60) . '...' : $note->content;
+            Notification::create([
+                'user_id' => $studentId,
+                'type' => 'note_added',
+                'message' => "ملاحظة جديدة من {$authorName}: {$preview}",
+                'data' => ['note_id' => $note->id, 'training_assignment_id' => $note->training_assignment_id],
+            ]);
+        }
+
         return new NoteResource($note);
     }
 
