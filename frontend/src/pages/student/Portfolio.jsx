@@ -274,7 +274,7 @@ export default function Portfolio() {
     load();
   }, [load]);
 
-  const openMentorVisitPdf = async (data) => {
+  const openMentorVisitPdf = (data) => {
     const criteria = Array.isArray(data.criteria) ? data.criteria : [];
     const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
     const fc = data.form_context && typeof data.form_context === "object" ? data.form_context : {};
@@ -286,47 +286,50 @@ export default function Portfolio() {
         <td style="padding:8px 10px;border:1px solid #bae6fd;white-space:pre-wrap">${row.development || '—'}</td>
       </tr>`;
     }).join('');
-
-    const container = document.createElement('div');
-    container.style.cssText = 'font-family:Arial,sans-serif;padding:24px;color:#1e293b;direction:rtl;width:210mm;';
-    container.innerHTML = `
-<div style="text-align:center;border-bottom:2px solid #0369a1;padding-bottom:14px;margin-bottom:18px;">
-  <div style="display:inline-block;background:#e0f2fe;color:#0369a1;padding:3px 12px;border-radius:20px;font-size:0.82rem;margin-bottom:10px;">نموذج رقم (6)</div>
-  <h2 style="margin:0 0 4px;color:#0369a1;font-size:1.2rem;">تقرير زيارة صفية — مساق التربية العملية</h2>
-  <h3 style="margin:0;color:#0f172a;font-size:1rem;font-weight:normal;">جامعة الخليل — كلية التربية</h3>
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>تقرير زيارة صفية — نموذج 6</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;padding:24px;color:#1e293b;direction:rtl;}
+  .header{text-align:center;border-bottom:2px solid #0369a1;padding-bottom:14px;margin-bottom:18px;}
+  .header h2{margin:0 0 4px;color:#0369a1;font-size:1.2rem;}
+  .header h3{margin:0;color:#0f172a;font-size:1rem;font-weight:normal;}
+  .badge{display:inline-block;background:#e0f2fe;color:#0369a1;padding:3px 12px;border-radius:20px;font-size:0.82rem;margin-bottom:10px;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin-bottom:16px;font-size:0.9rem;}
+  .meta span{color:#64748b;}
+  .meta strong{color:#0f172a;}
+  table{width:100%;border-collapse:collapse;font-size:0.88rem;margin-bottom:16px;}
+  thead tr th{background:#e0f2fe;padding:8px 10px;text-align:right;border:1px solid #bae6fd;}
+  .notes{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:0.9rem;}
+  @media print{body{padding:10px;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="badge">نموذج رقم (6)</div>
+  <h2>تقرير زيارة صفية — مساق التربية العملية</h2>
+  <h3>جامعة الخليل — كلية التربية</h3>
 </div>
-<div style="display:flex;flex-wrap:wrap;gap:8px 28px;margin-bottom:16px;font-size:0.9rem;">
-  ${data.student_name ? `<div><span style="color:#64748b;">الطالب: </span><strong style="color:#0f172a;">${data.student_name}</strong></div>` : ''}
-  ${data.school_name ? `<div><span style="color:#64748b;">المدرسة: </span><strong style="color:#0f172a;">${data.school_name}</strong></div>` : ''}
-  ${fc.university_name ? `<div><span style="color:#64748b;">الجامعة: </span><strong style="color:#0f172a;">${fc.university_name}</strong></div>` : ''}
-  ${fc.academic_year ? `<div><span style="color:#64748b;">العام الدراسي: </span><strong style="color:#0f172a;">${fc.academic_year}</strong></div>` : ''}
-  ${fc.semester ? `<div><span style="color:#64748b;">الفصل: </span><strong style="color:#0f172a;">${fc.semester}</strong></div>` : ''}
-  ${data.supervisor_name ? `<div><span style="color:#64748b;">المعلم المقيم: </span><strong style="color:#0f172a;">${data.supervisor_name}</strong></div>` : ''}
-  ${data.evaluation_date ? `<div><span style="color:#64748b;">التاريخ: </span><strong style="color:#0f172a;">${data.evaluation_date}</strong></div>` : ''}
+<div class="meta">
+  ${data.student_name ? `<div><span>الطالب: </span><strong>${data.student_name}</strong></div>` : ''}
+  ${data.school_name ? `<div><span>المدرسة: </span><strong>${data.school_name}</strong></div>` : ''}
+  ${fc.university_name ? `<div><span>الجامعة: </span><strong>${fc.university_name}</strong></div>` : ''}
+  ${fc.academic_year ? `<div><span>العام الدراسي: </span><strong>${fc.academic_year}</strong></div>` : ''}
+  ${fc.semester ? `<div><span>الفصل: </span><strong>${fc.semester}</strong></div>` : ''}
+  ${data.supervisor_name ? `<div><span>المعلم المقيم: </span><strong>${data.supervisor_name}</strong></div>` : ''}
+  ${data.evaluation_date ? `<div><span>التاريخ: </span><strong>${data.evaluation_date}</strong></div>` : ''}
 </div>
-<table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin-bottom:16px;">
-  <thead><tr><th style="width:24%;background:#e0f2fe;padding:8px 10px;text-align:right;border:1px solid #bae6fd;">المحور</th><th style="background:#e0f2fe;padding:8px 10px;text-align:right;border:1px solid #bae6fd;">الأمور الإيجابية</th><th style="background:#e0f2fe;padding:8px 10px;text-align:right;border:1px solid #bae6fd;">الأمور التي بحاجة إلى تطوير</th></tr></thead>
+<table>
+  <thead><tr><th style="width:24%">المحور</th><th>الأمور الإيجابية</th><th>الأمور التي بحاجة إلى تطوير</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>
-${data.general_notes ? `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;font-size:0.9rem;"><strong>ملاحظات عامة:</strong><br>${data.general_notes}</div>` : ''}`;
-
-    document.body.appendChild(container);
-    try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      const blob = await html2pdf().set({
-        margin: 10,
-        filename: 'تقرير_زيارة_صفية_نموذج_6.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(container).outputPdf('blob');
-      document.body.removeChild(container);
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch {
-      document.body.removeChild(container);
-    }
+${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</strong><br>${data.general_notes}</div>` : ''}
+</body></html>`;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
   };
 
   const fileHref = (path) => {
