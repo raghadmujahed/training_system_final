@@ -10,7 +10,7 @@ class Enrollment extends Model
 {
     use HasFactory, HidesArchived;
 
-    protected $fillable = ['user_id', 'section_id', 'academic_year', 'semester', 'status', 'final_grade'];
+    protected $fillable = ['user_id', 'section_id', 'academic_year', 'semester', 'status', 'final_grade', 'training_period_id'];
 
     public function user()
     {

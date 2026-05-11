@@ -1,10 +1,12 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import MainLayout from "../app/layouts/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
+import PermissionProtectedRoute from "./PermissionProtectedRoute";
 import { ErrorBoundary } from "../components/common";
 
 import Login from "../pages/auth/Login";
 import NotFound from "../pages/common/NotFound";
+import Unauthorized from "../pages/common/Unauthorized";
 
 // Head of Department
 import HeadOfDepartmentDashboard from "../pages/HeadOfDepartment/HeadOfDepartmentDashboard";
@@ -60,6 +62,8 @@ import FeatureFlagsList from "../pages/Admin/FeatureFlags/FeatureFlagsList";
 import EvaluationTemplatesList from "../pages/Admin/EvaluationTemplates/EvaluationTemplatesList";
 import EvaluationTemplateForm from "../pages/Admin/EvaluationTemplates/EvaluationTemplateForm";
 import AdminReports from "../pages/Admin/Reports";
+import AdminArchive from "../pages/Admin/AdminArchive";
+import AdminArchiveDetails from "../pages/Admin/AdminArchiveDetails";
 
 // Reports
 import ReportsDashboard from "../pages/reports/ReportsDashboard";
@@ -186,9 +190,30 @@ export default function AppRouter() {
           <Route path="/admin/users/edit/schoolmanager/:id" element={<AddSchoolManager />} />
           <Route path="/admin/users/edit/:id" element={<UserForm />} />
 
-          <Route path="/admin/roles" element={<RolesList />} />
-          <Route path="/admin/roles/create" element={<RoleForm />} />
-          <Route path="/admin/roles/edit/:id" element={<RoleForm />} />
+          <Route
+            path="/admin/roles"
+            element={
+              <PermissionProtectedRoute permission="manage_roles">
+                <RolesList />
+              </PermissionProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/roles/create"
+            element={
+              <PermissionProtectedRoute permission="manage_roles">
+                <RoleForm />
+              </PermissionProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/roles/edit/:id"
+            element={
+              <PermissionProtectedRoute permission="manage_roles">
+                <RoleForm />
+              </PermissionProtectedRoute>
+            }
+          />
 
           <Route path="/admin/departments" element={<DepartmentsList />} />
           <Route path="/admin/departments/create" element={<DepartmentForm />} />
@@ -218,6 +243,18 @@ export default function AppRouter() {
           <Route path="/admin/training-periods" element={<TrainingPeriodsList />} />
           <Route path="/admin/training-periods/create" element={<TrainingPeriodForm />} />
           <Route path="/admin/training-periods/edit/:id" element={<TrainingPeriodForm />} />
+
+          {/* Archive Management */}
+          <Route path="/admin/archive" element={
+            <PermissionProtectedRoute permission="archive.manage">
+              <AdminArchive />
+            </PermissionProtectedRoute>
+          } />
+          <Route path="/admin/archive/details/:periodId" element={
+            <PermissionProtectedRoute permission="archive.manage">
+              <AdminArchiveDetails />
+            </PermissionProtectedRoute>
+          } />
 
           <Route path="/admin/announcements" element={<AnnouncementsList />} />
           <Route path="/admin/announcements/create" element={<AnnouncementForm />} />
@@ -403,8 +440,10 @@ export default function AppRouter() {
           <Route path="/head-department/sections/create" element={<HeadOfDepartmentSectionForm />} />
           <Route path="/head-department/sections/edit/:id" element={<HeadOfDepartmentSectionForm />} />
           <Route path="/head-department/sections/:id" element={<HeadOfDepartmentSectionDetails />} />
+          {/* Archive viewing for head of department (read-only) */}
           <Route path="/head-department/archive" element={<HeadOfDepartmentArchive />} />
           <Route path="/head-department/archive/details" element={<HeadOfDepartmentArchiveDetails />} />
+
           <Route path="/head-department/enrollments/create" element={<HeadOfDepartmentEnrollmentForm />} />
           <Route path="/head-department/enrollments/edit/:id" element={<HeadOfDepartmentEnrollmentForm />} />
 
@@ -452,6 +491,9 @@ export default function AppRouter() {
 
           {/* Chat */}
           <Route path="/chat" element={<ChatPage />} />
+
+          {/* Unauthorized access page */}
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
           {/* 404 - أي رابط غير معروف */}
           <Route path="*" element={<NotFound />} />

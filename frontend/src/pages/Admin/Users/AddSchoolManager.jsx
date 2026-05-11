@@ -4,7 +4,7 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
-import { isValidPhone, getPhoneErrorMessage, isValidEmail, getEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
+import { isValidMobilePhone, getMobilePhoneErrorMessage, isValidSchoolFieldEmail, getSchoolFieldEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
 
 export default function AddSchoolManager() {
   const { id } = useParams();
@@ -54,13 +54,13 @@ export default function AddSchoolManager() {
 
     switch (fieldName) {
       case "email":
-        if (value && !isValidEmail(value)) {
-          error = getEmailErrorMessage();
+        if (value && !isValidSchoolFieldEmail(value)) {
+          error = getSchoolFieldEmailErrorMessage();
         }
         break;
       case "phone":
-        if (value && !isValidPhone(value)) {
-          error = getPhoneErrorMessage();
+        if (value && !isValidMobilePhone(value)) {
+          error = getMobilePhoneErrorMessage();
         }
         break;
       case "password":
@@ -91,17 +91,14 @@ export default function AddSchoolManager() {
 
     if (!form.email.trim()) {
       newErrors.email = "البريد الإلكتروني مطلوب";
-    } else if (!isValidEmail(form.email)) {
-      newErrors.email = getEmailErrorMessage();
+    } else if (!isValidSchoolFieldEmail(form.email)) {
+      newErrors.email = getSchoolFieldEmailErrorMessage();
     }
 
-    if (form.phone && !isValidPhone(form.phone)) {
-      newErrors.phone = getPhoneErrorMessage();
+    if (form.phone && !isValidMobilePhone(form.phone)) {
+      newErrors.phone = getMobilePhoneErrorMessage();
     }
 
-    if (!form.training_site_id) {
-      newErrors.training_site_id = "مكان التدريب مطلوب";
-    }
 
     if (!isEditMode) {
       if (!form.password) {
@@ -303,9 +300,9 @@ export default function AddSchoolManager() {
             {errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}
           </div>
           <div className="form-group">
-            <label>مكان التدريب (المدرسة) *</label>
-            <select name="training_site_id" value={form.training_site_id} onChange={handleChange} onBlur={handleChange} className={errors.training_site_id ? 'border-red-500' : ''} required>
-              <option value="">اختر المدرسة</option>
+            <label>مكان التدريب (المدرسة) (اختياري)</label>
+            <select name="training_site_id" value={form.training_site_id} onChange={handleChange} onBlur={handleChange} className={errors.training_site_id ? 'border-red-500' : ''}>
+              <option value="">-- بدون مدرسة --</option>
               {trainingSites.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
@@ -371,9 +368,9 @@ export default function AddSchoolManager() {
             {errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}
           </div>
           <div className="form-group">
-            <label>مكان التدريب (المدرسة) *</label>
-            <select name="training_site_id" value={form.training_site_id} onChange={handleChange} onBlur={handleChange} className={errors.training_site_id ? 'border-red-500' : ''} required>
-              <option value="">اختر المدرسة</option>
+            <label>مكان التدريب (المدرسة) (اختياري)</label>
+            <select name="training_site_id" value={form.training_site_id} onChange={handleChange} onBlur={handleChange} className={errors.training_site_id ? 'border-red-500' : ''}>
+              <option value="">-- بدون مدرسة --</option>
               {trainingSites.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}

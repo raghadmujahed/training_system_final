@@ -31,9 +31,9 @@ class StoreTrainingSiteRequest extends FormRequest
         return [
             'name' => 'required|string|max:255|unique:training_sites,name',
             'location' => 'nullable|string|max:255',
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
+            'phone' => 'required|string|max:20|regex:/^02\d{7}$/',
             'email' => 'nullable|email|max:255',
-            'mobile' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
+            'mobile' => 'required|string|max:20|regex:/^0(56|59)\d{7}$/',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'directorate' => 'required|in:وسط,شمال,جنوب,يطا',
@@ -96,9 +96,9 @@ class StoreTrainingSiteRequest extends FormRequest
     {
         return [
             'phone.required' => 'رقم الهاتف مطلوب ويجب أن يكون صحيحاً',
-            'phone.regex' => 'رقم الهاتف يجب أن يكون صحيحاً (مثال: 022222222 أو +97022222222)',
+            'phone.regex' => 'رقم الهاتف الأرضي غير صحيح. يجب أن يتكون من 9 أرقام ويبدأ بـ 02',
             'mobile.required' => 'رقم المحمول مطلوب ويجب أن يكون صحيحاً',
-            'mobile.regex' => 'رقم المحمول يجب أن يكون صحيحاً (مثال: 0591234567 أو +970591234567)',
+            'mobile.regex' => 'رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059',
             'school_type.required' => 'تصنيف المدرسة مطلوب',
             'school_level.required' => 'المرحلة الدراسية مطلوبة',
         ];

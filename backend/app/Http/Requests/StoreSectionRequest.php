@@ -27,7 +27,7 @@ class StoreSectionRequest extends FormRequest
                 })
             ],
             'academic_year' => 'required|digits:4|integer|min:2000|max:2100',
-            'academic_supervisor_id' => 'nullable|integer|exists:users,id',
+            'academic_supervisor_id' => 'required|integer|exists:users,id',
             'semester' => 'required|in:first,second,summer',
             'course_id' => 'required|exists:courses,id',
             'capacity' => 'nullable|integer|min:1|max:1000',
@@ -38,6 +38,36 @@ class StoreSectionRequest extends FormRequest
     {
         return [
             'name.unique' => 'يوجد شعبة بهذا الاسم في نفس المساق والفصل الدراسي والعام الدراسي.',
+            'academic_supervisor_id.required' => 'يجب اختيار مشرف أكاديمي للشعبة',
+            'academic_supervisor_id.exists' => 'المشرف الأكاديمي المحدد غير موجود',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     * Add custom validation to ensure the supervisor has the correct role.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $supervisorId = $this->input('academic_supervisor_id');
+
+            if (empty($supervisorId)) {
+                $validator->errors()->add('academic_supervisor_id', 'يجب اختيار مشرف أكاديمي للشعبة');
+                return;
+            }
+
+            // Check if user exists and has academic_supervisor role
+            $supervisor = \App\Models\User::with('role')->find($supervisorId);
+
+            if (! $supervisor) {
+                $validator->errors()->add('academic_supervisor_id', 'المشرف الأكاديمي المحدد غير موجود');
+                return;
+            }
+
+            if ($supervisor->role?->name !== 'academic_supervisor') {
+                $validator->errors()->add('academic_supervisor_id', 'المستخدم المحدد ليس مشرفاً أكاديمياً');
+            }
+        });
     }
 }

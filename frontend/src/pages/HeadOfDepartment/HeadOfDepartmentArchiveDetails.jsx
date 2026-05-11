@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, Calendar, Users, BookOpen, Database, FileText } from "lucide-react";
-import { getArchivedPeriodDetails } from "../../services/api";
+import { ArrowRight, Calendar, Users, BookOpen, Database } from "lucide-react";
+import { getPublicArchivePeriodDetails } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const TABLE_LABELS = {
@@ -37,9 +37,7 @@ export default function HeadOfDepartmentArchiveDetails() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
 
-  const academic_year = params.get("academic_year");
-  const semester = params.get("semester");
-  const archived_period = params.get("archived_period");
+  const periodId = params.get("period_id");
 
   useEffect(() => {
     let mounted = true;
@@ -47,7 +45,12 @@ export default function HeadOfDepartmentArchiveDetails() {
       try {
         setLoading(true);
         setError(null);
-        const res = await getArchivedPeriodDetails({ academic_year, semester, archived_period });
+        if (!periodId) {
+          setError("معرّف الفترة غير موجود");
+          setLoading(false);
+          return;
+        }
+        const res = await getPublicArchivePeriodDetails(periodId);
         if (mounted) setData(res);
       } catch (err) {
         if (mounted) setError(err?.response?.data?.message || "فشل في تحميل تفاصيل الفترة");
@@ -56,7 +59,7 @@ export default function HeadOfDepartmentArchiveDetails() {
       }
     })();
     return () => { mounted = false; };
-  }, [academic_year, semester, archived_period]);
+  }, [periodId]);
 
   // Group enrollments by course -> section
   const grouped = useMemo(() => {

@@ -61,6 +61,12 @@ class EnrollmentController extends Controller
             ], 422);
         }
         
+        // Auto-assign training period from section
+        $section = \App\Models\Section::find($data['section_id']);
+        if ($section && $section->training_period_id) {
+            $data['training_period_id'] = $section->training_period_id;
+        }
+
         $enrollment = Enrollment::create($data);
 
         // إشعار الطالب بإضافته إلى الشعبة

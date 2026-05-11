@@ -41,9 +41,9 @@ class UpdateTrainingSiteRequest extends FormRequest
                     Rule::unique('training_sites', 'name')->ignore($trainingSite?->id),
                 ],
                 'location' => 'nullable|string|max:255',
-                'phone' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
+                'phone' => 'sometimes|string|max:20|regex:/^02\d{7}$/',
                 'email' => 'nullable|email|max:255',
-                'mobile' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
+                'mobile' => 'sometimes|string|max:20|regex:/^0(56|59)\d{7}$/',
                 'description' => 'nullable|string',
                 'directorate' => 'sometimes|in:وسط,شمال,جنوب,يطا',
                 'school_type' => 'sometimes|in:public,private,unrwa',
@@ -61,9 +61,9 @@ class UpdateTrainingSiteRequest extends FormRequest
                 Rule::unique('training_sites', 'name')->ignore($trainingSite?->id),
             ],
             'location' => 'nullable|string|max:255',
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
+            'phone' => 'sometimes|string|max:20|regex:/^02\d{7}$/',
             'email' => 'nullable|email|max:255',
-            'mobile' => ['nullable', 'string', 'max:20', 'regex:/^[\d\+\-\s\(\)]{7,20}$/'],
+            'mobile' => 'sometimes|string|max:20|regex:/^0(56|59)\d{7}$/',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'capacity' => 'sometimes|integer|min:1',
@@ -112,8 +112,8 @@ class UpdateTrainingSiteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.regex' => 'رقم الهاتف يجب أن يكون صحيحاً (مثال: 022222222 أو +97022222222)',
-            'mobile.regex' => 'رقم المحمول يجب أن يكون صحيحاً (مثال: 0591234567 أو +970591234567)',
+            'phone.regex' => 'رقم الهاتف الأرضي غير صحيح. يجب أن يتكون من 9 أرقام ويبدأ بـ 02',
+            'mobile.regex' => 'رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059',
             'school_type.required' => 'تصنيف المدرسة مطلوب',
             'school_level.required' => 'المرحلة الدراسية مطلوبة',
         ];

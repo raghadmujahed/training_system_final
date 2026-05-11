@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HidesArchived;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SectionStudent extends Model
 {
-    use HasFactory;
+    use HasFactory, HidesArchived;
 
     protected $fillable = [
         'section_id',

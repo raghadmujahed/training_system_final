@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRole, createRole, updateRole } from "../../../services/api";
+import { getRole, createRole, updateRole, refreshCurrentUser } from "../../../services/api";
 import { usePermissions } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
 import { apiCache } from "../../../services/apiCache";
@@ -90,28 +90,45 @@ export default function RoleForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return; // Prevent double submission
     setLoading(true);
     setErrors({});
 
     try {
+      const permissionIds = grantedPermissions.map(p => p.id);
+
       if (id) {
         // تحديث الدور مع الصلاحيات
         await updateRole(id, {
           name: roleName,
-          permissions: grantedPermissions.map(p => p.id)
+          permissions: permissionIds
         });
+        toast.success(`تم تحديث الصلاحيات بنجاح. عدد الصلاحيات: ${permissionIds.length}`);
       } else {
         await createRole({
           name: roleName,
-          permissions: grantedPermissions.map(p => p.id),
+          permissions: permissionIds,
         });
+        toast.success(`تم إضافة الدور بنجاح مع ${permissionIds.length} صلاحية`);
       }
       // Invalidate roles cache to refresh permissions count
       apiCache.invalidate("roles:list");
+      apiCache.invalidate("roles"); // Invalidate all role-related caches
+
+      // If editing the current user's role, refresh user data to update permissions
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (id && currentUser?.role?.id === parseInt(id)) {
+        await refreshCurrentUser();
+        toast.info("تم تحديث صلاحياتك الشخصية بنجاح");
+      }
+
       navigate("/admin/roles");
     } catch (err) {
-      if (err.response?.data?.errors) {
+      if (err.response?.status === 403) {
+        toast.error(err.response?.data?.message || "لا تملك صلاحية تنفيذ هذه العملية");
+      } else if (err.response?.status === 422 && err.response?.data?.errors) {
         setErrors(err.response.data.errors);
+        toast.error("يرجى تصحيح الأخطاء في النموذج");
       } else {
         toast.apiError(err, "حدث خطأ أثناء حفظ الدور");
       }

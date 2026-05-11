@@ -18,12 +18,18 @@ class Section extends Model
         'course_id',
         'capacity',
         'supervisor_id',
-        'created_by'
+        'created_by',
+        'training_period_id',
     ];
 
     protected $casts = [
         'capacity' => 'integer',
     ];
+
+    public function trainingPeriod()
+    {
+        return $this->belongsTo(TrainingPeriod::class);
+    }
 
     public function course()
     {
@@ -53,7 +59,8 @@ class Section extends Model
     public function students()
     {
         return $this->belongsToMany(User::class, 'section_students', 'section_id', 'student_id')
-            ->withPivot('status', 'notes')
+            ->withPivot('status', 'notes', 'archived_at', 'archived_period')
+            ->whereNull('section_students.archived_at')
             ->withTimestamps();
     }
 

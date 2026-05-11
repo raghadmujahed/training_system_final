@@ -27,7 +27,7 @@ export default function RolesList() {
               <td>{role.id}</td>
               <td>{role.name}</td>
               <td>
-                {role.permissions?.length || 0} صلاحية
+                {role.permissions_count ?? role.permissions?.length ?? 0} صلاحية
               </td>
               <td>
                 <Link to={`/admin/roles/edit/${role.id}`} className="btn-sm">

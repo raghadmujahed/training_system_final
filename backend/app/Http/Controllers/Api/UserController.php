@@ -256,7 +256,7 @@ class UserController extends Controller
         );
 
         return response()->json([
-            'user' => new UserResource($user->load(['role', 'department', 'trainingSite', 'fieldSupervisorProfile', 'enrollments.section.course'])),
+            'user' => new UserResource($user->load(['role.permissions', 'department', 'trainingSite', 'fieldSupervisorProfile', 'enrollments.section.course'])),
             'access_token' => $token,
             'token_type' => 'Bearer',
             'department_ids' => [
@@ -267,8 +267,16 @@ class UserController extends Controller
     }
 
     public function currentUser(Request $request)
-{
-        return new UserResource($request->user()->load(['role', 'department', 'trainingSite', 'enrollments.section.course']));
+    {
+        $user = $request->user();
+
+        // Load role with its permissions so frontend has latest permission data
+        $roleWithPermissions = $user->role()->with('permissions')->first();
+
+        // Load all relationships including the role with permissions
+        $user->load(['role.permissions', 'department', 'trainingSite', 'enrollments.section.course']);
+
+        return new UserResource($user);
     }
 
     public function updateProfile(Request $request)

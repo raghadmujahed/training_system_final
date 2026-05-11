@@ -4,8 +4,8 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useRoles, useDepartments } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
 import {
-  isValidPhone,
-  getPhoneErrorMessage,
+  isValidMobilePhone,
+  getMobilePhoneErrorMessage,
   isValidEmail,
   isValidStudentEmail,
   isValidUniversityInternalEmail,
@@ -101,8 +101,8 @@ export default function UserForm() {
         // For undecided domain roles, only basic email validation is applied
         break;
       case "phone":
-        if (value && !isValidPhone(value)) {
-          error = getPhoneErrorMessage();
+        if (value && !isValidMobilePhone(value)) {
+          error = getMobilePhoneErrorMessage();
         }
         break;
       case "university_id":
@@ -162,9 +162,9 @@ export default function UserForm() {
     }
     // For undecided domain roles, only basic email validation is applied
 
-    // Validate phone
-    if (form.phone && !isValidPhone(form.phone)) {
-      newErrors.phone = getPhoneErrorMessage();
+    // Validate phone (mobile only for users)
+    if (form.phone && !isValidMobilePhone(form.phone)) {
+      newErrors.phone = getMobilePhoneErrorMessage();
     }
 
     // Validate university_id for students

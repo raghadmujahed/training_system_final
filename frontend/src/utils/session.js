@@ -22,3 +22,29 @@ export function clearStoredToken() {
   localStorage.removeItem("access_token");
 }
 
+/**
+ * Refresh stored user data with new data from API
+ * @param {Object} userData - The fresh user data from API
+ */
+export function refreshStoredUser(userData) {
+  if (userData) {
+    localStorage.setItem("user", JSON.stringify(userData));
+  }
+}
+
+/**
+ * Update only the role permissions in stored user data
+ * @param {Array} permissions - The new permissions array
+ */
+export function updateStoredUserPermissions(permissions) {
+  try {
+    const user = readStoredUser();
+    if (user && user.role) {
+      user.role.permissions = permissions;
+      writeStoredUser(user);
+    }
+  } catch (e) {
+    console.error("Failed to update stored user permissions:", e);
+  }
+}
+
