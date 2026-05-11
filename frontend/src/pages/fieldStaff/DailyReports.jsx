@@ -276,7 +276,7 @@ export default function FieldStaffDailyReports() {
 
   function openReview(log) {
     setSelectedLog(log);
-    setReviewStatus("reviewed");
+    setReviewStatus("approved");
     setSupervisorNotes(log.supervisor_notes || "");
     setFormError("");
     setShowModal(true);
@@ -411,8 +411,8 @@ export default function FieldStaffDailyReports() {
                 <div className="form-group">
                   <label className="form-label">قرار المراجعة *</label>
                   <select className="form-control-custom" value={reviewStatus} onChange={(e) => setReviewStatus(e.target.value)} required>
-                    <option value="reviewed">قبول</option>
-                    <option value="rejected">رفض</option>
+                    <option value="approved">قبول</option>
+                    <option value="returned">إرجاع</option>
                   </select>
                 </div>
 
