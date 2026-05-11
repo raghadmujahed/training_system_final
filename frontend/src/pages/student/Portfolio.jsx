@@ -758,9 +758,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                                 <Trash2 size={15} />
                               </button>
                             </>
-                          ) : (
-                            <span className="text-[0.72rem] text-[#94a3b8] py-1 px-2">وثيقة رسمية</span>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     )}
