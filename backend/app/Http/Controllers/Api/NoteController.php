@@ -51,6 +51,7 @@ class NoteController extends Controller
     public function store(StoreNoteRequest $request)
     {
         $note = Note::create($request->validated());
+        $note->load('trainingAssignment.enrollment');
 
         // إرسال إشعار للطالب
         $studentId = $note->trainingAssignment?->enrollment?->user_id;
