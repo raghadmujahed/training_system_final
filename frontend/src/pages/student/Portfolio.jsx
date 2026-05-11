@@ -721,14 +721,24 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                               عرض النموذج
                             </button>
                           ) : en.file_path ? (
-                            <a href={fileHref(en.file_path)} target="_blank" rel="noreferrer"
-                              className="inline-flex items-center gap-[0.35rem] no-underline text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all" style={{ color: style.color, backgroundColor: style.bg }}
+                            <button type="button"
+                              onClick={async () => {
+                                const href = fileHref(en.file_path);
+                                if (!href) return;
+                                try {
+                                  const res = await fetch(href, { method: 'HEAD' });
+                                  if (res.ok) { window.open(href, '_blank'); }
+                                  else { alert('الملف غير متاح حالياً. يرجى إعادة رفع الملف.'); }
+                                } catch { window.open(href, '_blank'); }
+                              }}
+                              className="inline-flex items-center gap-[0.35rem] text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all border-none cursor-pointer"
+                              style={{ color: style.color, backgroundColor: style.bg }}
                               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${style.color}18`; }}
                               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = style.bg; }}
                             >
                               <FileText size={14} />
                               عرض الملف
-                            </a>
+                            </button>
                           ) : (
                             <div className="flex items-center gap-[0.35rem]">
                               <span className="text-[#cbd5e1] text-[0.78rem] flex items-center gap-1 py-[0.35rem] px-2">
