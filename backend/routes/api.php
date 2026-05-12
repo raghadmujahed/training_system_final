@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\{
     DepartmentController,
     RoleController,
     PermissionController,
+    TrainingSiteStaffController,
     StudentPortfolioController,
     SupervisorVisitController,
     SupervisorWorkspaceController,
@@ -102,6 +103,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('training-sites/without-manager', [TrainingSiteController::class, 'schoolsWithoutManager']);
     Route::get('users/school-managers/available', [TrainingSiteController::class, 'availableSchoolManagers']);
     Route::post('training-sites/{training_site}/assign-manager', [TrainingSiteController::class, 'assignManager']);
+
+    // Training Site Staff Management
+    Route::get('training-site-staff', [TrainingSiteStaffController::class, 'index']);
+    Route::get('training-site-staff/available', [TrainingSiteStaffController::class, 'availableStaff']);
+    Route::get('training-sites/{id}/staff', [TrainingSiteStaffController::class, 'siteStaff']);
+    Route::post('training-site-staff/assign', [TrainingSiteStaffController::class, 'assign']);
+    Route::post('training-site-staff/transfer', [TrainingSiteStaffController::class, 'transfer']);
+    Route::delete('training-site-staff/{userId}/remove', [TrainingSiteStaffController::class, 'remove']);
 
     // Demandes de stage
     Route::get('training-requests', [TrainingRequestController::class, 'index']);

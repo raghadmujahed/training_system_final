@@ -20,6 +20,14 @@ class TrainingSiteController extends Controller
     public function index(Request $request)
     {
         $query = TrainingSite::query();
+
+        // Automatically scope to the authenticated user's directorate when applicable
+        $user = $request->user();
+        $role = $user?->role?->name;
+        if ($role === 'education_directorate' && $user->directorate) {
+            $query->where('directorate', $user->directorate);
+        }
+
         if ($request->filled('site_type')) {
             $query->where('site_type', trim((string) $request->site_type));
         }
@@ -85,8 +93,13 @@ class TrainingSiteController extends Controller
 
     public function store(StoreTrainingSiteRequest $request)
     {
-        $site = TrainingSite::create($request->validated());
-        return new TrainingSiteResource($site);
+        try {
+            $site = TrainingSite::create($request->validated());
+            return new TrainingSiteResource($site);
+        } catch (\Exception $e) {
+            \Log::error('TrainingSite store error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'حدث خطأ أثناء إنشاء مكان التدريب. يرجى المحاولة مرة أخرى.'], 500);
+        }
     }
 
     public function show(TrainingSite $trainingSite)
@@ -112,14 +125,24 @@ class TrainingSiteController extends Controller
 
     public function update(UpdateTrainingSiteRequest $request, TrainingSite $trainingSite)
     {
-        $trainingSite->update($request->validated());
-        return new TrainingSiteResource($trainingSite);
+        try {
+            $trainingSite->update($request->validated());
+            return new TrainingSiteResource($trainingSite);
+        } catch (\Exception $e) {
+            \Log::error('TrainingSite update error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'حدث خطأ أثناء تعديل مكان التدريب. يرجى المحاولة مرة أخرى.'], 500);
+        }
     }
 
     public function destroy(TrainingSite $trainingSite)
     {
-        $trainingSite->delete();
-        return response()->json(['message' => 'تم حذف موقع التدريب']);
+        try {
+            $trainingSite->delete();
+            return response()->json(['message' => 'تم حذف موقع التدريب بنجاح.']);
+        } catch (\Exception $e) {
+            \Log::error('TrainingSite destroy error: ' . $e->getMessage());
+            return response()->json(['message' => 'حدث خطأ أثناء حذف مكان التدريب.'], 500);
+        }
     }
 
     public function schoolsWithoutManager()

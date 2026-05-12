@@ -3,14 +3,20 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingSite, createTrainingSite, updateTrainingSite } from "../../../services/api";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import { useAuth } from "../../../stores/AuthContext";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/ui/Button";
 import { isRequired, isMinValue, isValidEmail, isValidLandlinePhone, getLandlinePhoneErrorMessage, isValidMobilePhone, getMobilePhoneErrorMessage } from "../../../utils/validation";
 
 export default function TrainingSiteForm() {
   const toast = useAppToast();
+  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
+  const userRoleName = user?.role?.name ?? user?.role ?? '';
+  const isDirectorateUser = userRoleName === 'education_directorate';
+  const userDirectorate = user?.directorate || "وسط";
+
   const [form, setForm] = useState({
     name: "",
     location: "",
@@ -18,13 +24,13 @@ export default function TrainingSiteForm() {
     email: "",
     mobile: "",
     description: "",
-    directorate: "وسط",
+    directorate: isDirectorateUser ? userDirectorate : "وسط",
     capacity: 10,
     site_type: "school",
     governing_body: "directorate_of_education",
     school_type: "public",
     gender_classification: "",
-    school_level: "",
+    school_level: "lower",
     manager_id: "",
     is_active: true,
   });
@@ -101,15 +107,11 @@ export default function TrainingSiteForm() {
       errors.school_level = "المرحلة الدراسية مطلوبة";
     }
     
-    if (!isRequired(form.phone)) {
-      errors.phone = "رقم الهاتف مطلوب ويجب أن يكون صحيحاً";
-    } else if (!isValidLandlinePhone(form.phone)) {
+    if (form.phone && !isValidLandlinePhone(form.phone)) {
       errors.phone = getLandlinePhoneErrorMessage();
     }
 
-    if (!isRequired(form.mobile)) {
-      errors.mobile = "رقم المحمول مطلوب ويجب أن يكون صحيحاً";
-    } else if (!isValidMobilePhone(form.mobile)) {
+    if (form.mobile && !isValidMobilePhone(form.mobile)) {
       errors.mobile = getMobilePhoneErrorMessage();
     }
     
@@ -130,17 +132,37 @@ export default function TrainingSiteForm() {
     e.preventDefault();
     
     if (!validateForm()) {
+      toast.warning("يرجى تصحيح الأخطاء المذكورة في النموذج.");
       return;
     }
     
     setLoading(true);
     try {
-      if (id) await updateTrainingSite(id, form);
-      else await createTrainingSite(form);
+      if (id) {
+        await updateTrainingSite(id, form);
+        toast.success("تم تحديث مكان التدريب بنجاح.");
+      } else {
+        await createTrainingSite(form);
+        toast.success("تم إضافة مكان التدريب بنجاح.");
+      }
       navigate("/admin/training-sites");
     } catch (err) {
       console.error(err);
-      toast.apiError(err, "حدث خطأ أثناء الحفظ");
+      // Map backend field-level errors into fieldErrors state
+      const backendErrors = err?.response?.data?.errors;
+      if (backendErrors && typeof backendErrors === 'object') {
+        const mapped = {};
+        Object.keys(backendErrors).forEach(field => {
+          mapped[field] = Array.isArray(backendErrors[field])
+            ? backendErrors[field][0]
+            : backendErrors[field];
+        });
+        setFieldErrors(mapped);
+        toast.error("يرجى تصحيح الأخطاء في النموذج.");
+      } else {
+        const msg = err?.response?.data?.message || "حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.";
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -265,7 +287,7 @@ export default function TrainingSiteForm() {
           />
         </div>
         <div className="form-group">
-          <label>الهاتف *</label>
+          <label>الهاتف</label>
           <input 
             type="text" 
             name="phone"
@@ -274,7 +296,6 @@ export default function TrainingSiteForm() {
             onBlur={handleChange}
             className={fieldErrors.phone ? 'border-red-500' : ''}
             placeholder="مثال: 022222222"
-            required
           />
           {fieldErrors.phone && <div className="text-red-500 text-sm mt-1">{fieldErrors.phone}</div>}
         </div>
@@ -291,7 +312,7 @@ export default function TrainingSiteForm() {
           {fieldErrors.email && <div className="text-red-500 text-sm mt-1">{fieldErrors.email}</div>}
         </div>
         <div className="form-group">
-          <label>رقم المحمول *</label>
+          <label>رقم المحمول</label>
           <input 
             type="text" 
             name="mobile"
@@ -300,7 +321,6 @@ export default function TrainingSiteForm() {
             onBlur={handleChange}
             className={fieldErrors.mobile ? 'border-red-500' : ''}
             placeholder="مثال: 0591234567"
-            required
           />
           {fieldErrors.mobile && <div className="text-red-500 text-sm mt-1">{fieldErrors.mobile}</div>}
         </div>
@@ -314,19 +334,32 @@ export default function TrainingSiteForm() {
         </div>
         <div className="form-group">
           <label>المديرية *</label>
-          <select 
-            name="directorate"
-            value={form.directorate} 
-            onChange={handleChange}
-            onBlur={handleChange}
-            className={fieldErrors.directorate ? 'border-red-500' : ''}
-            required
-          >
-            <option value="وسط">وسط</option>
-            <option value="شمال">شمال</option>
-            <option value="جنوب">جنوب</option>
-            <option value="يطا">يطا</option>
-          </select>
+          {isDirectorateUser ? (
+            <>
+              <input
+                type="text"
+                value={form.directorate}
+                readOnly
+                disabled
+                className="bg-gray-100 cursor-not-allowed"
+              />
+              <small className="form-help text-muted">المديرية مقيدة بمديريتك ({form.directorate}).</small>
+            </>
+          ) : (
+            <select 
+              name="directorate"
+              value={form.directorate} 
+              onChange={handleChange}
+              onBlur={handleChange}
+              className={fieldErrors.directorate ? 'border-red-500' : ''}
+              required
+            >
+              <option value="وسط">وسط</option>
+              <option value="شمال">شمال</option>
+              <option value="جنوب">جنوب</option>
+              <option value="يطا">يطا</option>
+            </select>
+          )}
           {fieldErrors.directorate && <div className="text-red-500 text-sm mt-1">{fieldErrors.directorate}</div>}
         </div>
         <div className="form-group">
@@ -386,7 +419,6 @@ export default function TrainingSiteForm() {
             className={fieldErrors.school_level ? 'border-red-500' : ''}
             required
           >
-            <option value="">اختر المرحلة</option>
             <option value="lower">أساسية</option>
             <option value="upper">ثانوية</option>
             <option value="both">أساسية وثانوية</option>

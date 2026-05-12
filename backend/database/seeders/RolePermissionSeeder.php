@@ -33,6 +33,8 @@ class RolePermissionSeeder extends Seeder
         if ($trainingCoordinator) {
             $coordinatorPerms = Permission::whereIn('name', [
                 'manage_training_sites', 'manage_training_periods',
+                'training_sites.staff.view', 'training_sites.staff.assign',
+                'training_sites.staff.transfer', 'training_sites.staff.remove',
                 'manage_training_requests', 'approve_training_requests', 'reject_training_requests',
                 'manage_training_assignments',
                 'manage_announcements',
@@ -107,6 +109,15 @@ class RolePermissionSeeder extends Seeder
                 'send_notifications',
             ])->get();
             $psychologist->permissions()->sync($psychologistPerms);
+        }
+
+        // 8b. مديريات التربية
+        if ($educationDirectorate) {
+            $educationDirectorate->permissions()->sync(
+                Permission::whereIn('name', [
+                    'training_sites.staff.view',
+                ])->get()
+            );
         }
 
         // 8. المشرف الميداني الموحد (معلم مرشد / مرشد تربوي / أخصائي نفسي)

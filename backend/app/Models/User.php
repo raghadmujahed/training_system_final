@@ -42,8 +42,7 @@ class User extends Authenticatable
     public function sections()
     {
         return $this->belongsToMany(Section::class, 'section_students', 'student_id', 'section_id')
-            ->withPivot('status', 'notes', 'archived_at', 'archived_period')
-            ->whereNull('section_students.archived_at')
+            ->withPivot('status', 'notes', 'archived_at', 'archived_period', 'training_period_id')
             ->withTimestamps();
     }
     public function hasPermission($permission)

@@ -74,6 +74,7 @@ export default function TrainingSitesList() {
       <div className="page-header">
         <h1>مواقع التدريب</h1>
         <div>
+          <Link to="/admin/training-sites/staff" className="btn-secondary me-2">إدارة الكوادر</Link>
           <Link to="/admin/training-sites/without-manager" className="btn-secondary me-2">المدارس بدون مدير</Link>
           <Link to="/admin/training-sites/create" className="btn-primary">+ إضافة موقع</Link>
         </div>

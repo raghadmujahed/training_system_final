@@ -12,6 +12,7 @@ const ROUTE_ICON = {
   "/admin/sections": "layers",
   "/admin/enrollments": "userPlus",
   "/admin/training-sites": "mapPin",
+  "/admin/training-sites/staff": "users",
   "/admin/training-periods": "calendar",
   "/admin/announcements": "megaphone",
   "/admin/evaluation-templates": "clipboard",

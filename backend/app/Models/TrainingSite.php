@@ -52,4 +52,17 @@ class TrainingSite extends Model
     {
         return $this->belongsTo(User::class, 'manager_id');
     }
+
+    public function staff()
+    {
+        return $this->hasMany(User::class, 'training_site_id');
+    }
+
+    public function mentorTeachers()
+    {
+        return $this->hasMany(User::class, 'training_site_id')
+            ->whereHas('role', function ($q) {
+                $q->whereIn('name', ['teacher', 'field_supervisor', 'adviser', 'psychologist']);
+            });
+    }
 }

@@ -6,10 +6,11 @@ import {
 } from "../../services/api";
 import PageHeader from "../../components/common/PageHeader";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import { LayoutDashboard, MapPin, CheckCircle2, Clock } from "lucide-react";
+import { LayoutDashboard, MapPin, GraduationCap, Clock } from "lucide-react";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
+    total_users: 0,
     total_students: 0,
     total_sites: 0,
     completed_evaluations: 0,
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
       try {
         const statsData = await getDashboardStats();
         setStats({
+          total_users: statsData.total_users || 0,
           total_students: statsData.total_students || 0,
           total_sites: statsData.total_sites || 0,
           completed_evaluations: statsData.completed_evaluations || 0,
@@ -54,10 +56,10 @@ export default function AdminDashboard() {
   if (error) return <div className="bg-danger/8 border border-danger/20 text-danger rounded-[16px] p-4">{error}</div>;
 
   const statCards = [
-    { title: "إجمالي المستخدمين", value: stats.total_students, icon: LayoutDashboard, color: "border-r-info", bg: "bg-info/8" },
+    { title: "إجمالي المستخدمين", value: stats.total_users, icon: LayoutDashboard, color: "border-r-info", bg: "bg-info/8" },
+    { title: "إجمالي الطلبة", value: stats.total_students, icon: GraduationCap, color: "border-r-success", bg: "bg-success/8" },
     { title: "أماكن التدريب", value: stats.total_sites, icon: MapPin, color: "border-r-accent", bg: "bg-accent/8" },
-    { title: "التقييمات المكتملة", value: stats.completed_evaluations, icon: CheckCircle2, color: "border-r-success", bg: "bg-success/8" },
-    { title: "التقارير المعلقة", value: stats.pending_reports, icon: Clock, color: "border-r-primary", bg: "bg-primary/8" },
+    { title: "التقييمات المعلقة", value: stats.pending_reports, icon: Clock, color: "border-r-primary", bg: "bg-primary/8" },
   ];
 
   return (

@@ -368,6 +368,14 @@ export const getSchoolsWithoutManager = () => apiClient.get('/training-sites/wit
 export const getAvailableSchoolManagers = () => apiClient.get('/users/school-managers/available').then(res => res.data);
 export const assignManagerToSchool = (schoolId, managerId) => apiClient.post(`/training-sites/${schoolId}/assign-manager`, { manager_id: managerId }).then(res => res.data);
 
+// ==================== Training Site Staff ====================
+export const getTrainingSiteStaff = (params) => apiClient.get('/training-site-staff', { params }).then(res => res.data);
+export const getAvailableStaff = (params) => apiClient.get('/training-site-staff/available', { params }).then(res => res.data);
+export const getSiteStaff = (siteId) => apiClient.get(`/training-sites/${siteId}/staff`).then(res => res.data);
+export const assignStaff = (data) => apiClient.post('/training-site-staff/assign', data).then(res => res.data);
+export const transferStaff = (data) => apiClient.post('/training-site-staff/transfer', data).then(res => res.data);
+export const removeStaff = (userId) => apiClient.delete(`/training-site-staff/${userId}/remove`).then(res => res.data);
+
 // ==================== Training Periods ====================
 export const getTrainingPeriods = (params = {}) =>
   apiClient.get('/training-periods', { params }).then((res) => res.data);

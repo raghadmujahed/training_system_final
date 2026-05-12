@@ -33,6 +33,7 @@ class DashboardController extends Controller
     public function stats(Request $request)
     {
         $stats = [
+            'total_users' => User::count(),
             'total_students' => User::whereHas('role', fn($q) => $q->where('name', 'student'))->count(),
             'active_trainings' => TrainingAssignment::where('status', 'ongoing')->count(),
             'completed_trainings' => TrainingAssignment::where('status', 'completed')->count(),

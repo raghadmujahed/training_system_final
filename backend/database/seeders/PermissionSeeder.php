@@ -19,6 +19,12 @@ class PermissionSeeder extends Seeder
             'manage_training_sites',
             'manage_training_periods',
 
+            // إدارة الكوادر التدريبية
+            'training_sites.staff.view',
+            'training_sites.staff.assign',
+            'training_sites.staff.transfer',
+            'training_sites.staff.remove',
+
             // طلبات التدريب
             'manage_training_requests',
             'approve_training_requests',

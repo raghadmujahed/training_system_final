@@ -59,8 +59,7 @@ class Section extends Model
     public function students()
     {
         return $this->belongsToMany(User::class, 'section_students', 'section_id', 'student_id')
-            ->withPivot('status', 'notes', 'archived_at', 'archived_period')
-            ->whereNull('section_students.archived_at')
+            ->withPivot('status', 'notes', 'archived_at', 'archived_period', 'training_period_id')
             ->withTimestamps();
     }
 

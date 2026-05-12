@@ -28,6 +28,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 import PageHeader from "../../components/common/PageHeader";
 import useAppToast from "../../hooks/useAppToast";
+import { useAuth } from "../../stores/AuthContext";
 
 const getSchoolTypeFromItem = (item) => {
   if (item.school_type === "private") return "خاصة";
@@ -68,8 +69,11 @@ const extractValidationMessage = (error, fallback) => {
 export default function TrainingPlaces() {
   const [places, setPlaces] = useState([]);
   const toast = useAppToast();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
+
+  const userDirectorate = user?.directorate || "وسط";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -79,9 +83,9 @@ export default function TrainingPlaces() {
     email: "",
     mobile: "",
     capacity: "",
-    directorate: "وسط",
+    directorate: userDirectorate,
     gender_classification: "",
-    school_level: "",
+    school_level: "lower",
   });
 
   const [editFormData, setEditFormData] = useState({
@@ -92,10 +96,10 @@ export default function TrainingPlaces() {
     email: "",
     mobile: "",
     capacity: "",
-    directorate: "وسط",
+    directorate: userDirectorate,
     is_active: true,
     gender_classification: "",
-    school_level: "",
+    school_level: "lower",
   });
 
   useEffect(() => {
@@ -159,9 +163,9 @@ export default function TrainingPlaces() {
         location: formData.city,
         capacity: Number(formData.capacity),
         is_active: true,
-        directorate: formData.directorate,
+        directorate: userDirectorate,
         school_type: toApiSchoolType(formData.school_type),
-        school_level: formData.school_level,
+        school_level: formData.school_level || "lower",
         site_type: "school",
         governing_body: "directorate_of_education",
       };
@@ -179,9 +183,9 @@ export default function TrainingPlaces() {
         email: "",
         mobile: "",
         capacity: "",
-        directorate: "وسط",
+        directorate: userDirectorate,
         gender_classification: "",
-        school_level: "",
+        school_level: "lower",
       });
 
       toast.success("تم حفظ مكان التدريب بنجاح.");
@@ -219,10 +223,10 @@ export default function TrainingPlaces() {
       email: "",
       mobile: "",
       capacity: "",
-      directorate: "وسط",
+      directorate: userDirectorate,
       is_active: true,
       gender_classification: "",
-      school_level: "",
+      school_level: "lower",
     });
   };
 
@@ -245,9 +249,9 @@ export default function TrainingPlaces() {
         location: editFormData.city,
         capacity: Number(editFormData.capacity),
         is_active: editFormData.is_active,
-        directorate: editFormData.directorate,
+        directorate: userDirectorate,
         school_type: toApiSchoolType(editFormData.school_type),
-        school_level: editFormData.school_level,
+        school_level: editFormData.school_level || "lower",
         site_type: "school",
         governing_body: "directorate_of_education",
       };
@@ -381,14 +385,13 @@ export default function TrainingPlaces() {
 
             <div>
               <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">المديرية</label>
-              <select name="directorate" value={formData.directorate} onChange={handleChange}
-                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
-              >
-                <option value="وسط">وسط</option>
-                <option value="شمال">شمال</option>
-                <option value="جنوب">جنوب</option>
-                <option value="يطا">يطا</option>
-              </select>
+              <input
+                type="text"
+                value={userDirectorate}
+                readOnly
+                disabled
+                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f1f5f9] text-[#64748b] cursor-not-allowed outline-none"
+              />
             </div>
 
             <div>
@@ -441,7 +444,6 @@ export default function TrainingPlaces() {
               <select name="school_level" value={formData.school_level} onChange={handleChange}
                 className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none"
               >
-                <option value="">-- اختر --</option>
                 <option value="lower">دنيا</option>
                 <option value="upper">عليا</option>
               </select>
@@ -530,14 +532,7 @@ export default function TrainingPlaces() {
                         />
                       </td>
                       <td className="py-3 px-4 border-b border-[#e2e8f0]">
-                        <select name="directorate" value={editFormData.directorate} onChange={handleEditChange}
-                          className="py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
-                        >
-                          <option value="وسط">وسط</option>
-                          <option value="شمال">شمال</option>
-                          <option value="جنوب">جنوب</option>
-                          <option value="يطا">يطا</option>
-                        </select>
+                        <span className="text-[0.85rem] text-[#64748b] font-semibold">{userDirectorate}</span>
                       </td>
                       <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <label className="flex gap-1.5 items-center text-[0.85rem] cursor-pointer">

@@ -64,30 +64,35 @@ class SupervisorWorkspaceController extends Controller
 
     public function stats(Request $request)
     {
-        $user = $request->user();
-        $assignments = $this->studentService->supervisedAssignmentsQuery($user)->get();
-        $assignmentIds = $assignments->pluck('id');
-        $studentIds = $assignments->pluck('enrollment.user_id')->filter()->unique()->values();
+        try {
+            $user = $request->user();
+            $assignments = $this->studentService->supervisedAssignmentsQuery($user)->get();
+            $assignmentIds = $assignments->pluck('id');
+            $studentIds = $assignments->pluck('enrollment.user_id')->filter()->unique()->values();
 
-        // Also count sections assigned directly via academic_supervisor_id (section_students pivot)
-        $directSectionIds = Section::where('academic_supervisor_id', $user->id)
-            ->when($user->department_id, fn ($q) => $q->where(function ($q2) use ($user) {
-                $q2->whereHas('course', fn ($cq) => $cq->where('department_id', $user->department_id))
-                    ->orWhereHas('students', fn ($sq) => $sq->where('department_id', $user->department_id));
-            }))
-            ->pluck('id');
+            // Also count sections assigned directly via academic_supervisor_id (section_students pivot)
+            $directSectionIds = Section::where('academic_supervisor_id', $user->id)
+                ->when($user->department_id, fn ($q) => $q->where(function ($q2) use ($user) {
+                    $q2->whereHas('course', fn ($cq) => $cq->where('department_id', $user->department_id))
+                        ->orWhereHas('students', fn ($sq) => $sq->where('department_id', $user->department_id));
+                }))
+                ->pluck('id');
 
-        // Also count students from section_students pivot
-        $pivotStudentIds = \DB::table('section_students')
-            ->whereIn('section_id', $directSectionIds)
-            ->where('status', 'accepted')
-            ->pluck('student_id')
-            ->unique()
-            ->values();
+            // Also count students from section_students pivot
+            $pivotStudentIds = \DB::table('section_students')
+                ->whereIn('section_id', $directSectionIds)
+                ->where('status', 'accepted')
+                ->pluck('student_id')
+                ->unique()
+                ->values();
 
-        $allStudentIds = $studentIds->merge($pivotStudentIds)->unique()->values();
-        $allSectionIds = $assignments->pluck('enrollment.section_id')->filter()->unique()
-            ->merge($directSectionIds)->unique()->values();
+            $allStudentIds = $studentIds->merge($pivotStudentIds)->unique()->values();
+            $allSectionIds = $assignments->pluck('enrollment.section_id')->filter()->unique()
+                ->merge($directSectionIds)->unique()->values();
+        } catch (\Exception $e) {
+            \Log::error('Supervisor stats error: ' . $e->getMessage(), ['exception' => $e, 'user_id' => $request->user()?->id]);
+            return $this->errorResponse('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة لاحقاً.', 500);
+        }
 
         $recentActivity = Note::query()
             ->whereIn('training_assignment_id', $assignmentIds)
@@ -169,21 +174,22 @@ class SupervisorWorkspaceController extends Controller
 
     public function students(Request $request)
     {
-        $user = $request->user();
-        $perPage = max(1, min((int) $request->input('per_page', 15), 500));
-        $filters = [
-            'section_id' => $request->input('section_id'),
-            'department' => $request->input('department'),
-            'training_track' => $request->input('training_track'),
-            'attendance_status' => $request->input('attendance_status'),
-            'daily_log_status' => $request->input('daily_log_status'),
-            'portfolio_status' => $request->input('portfolio_status'),
-            'evaluation_status' => $request->input('evaluation_status'),
-            'search' => $request->input('search'),
-        ];
+        try {
+            $user = $request->user();
+            $perPage = max(1, min((int) $request->input('per_page', 15), 500));
+            $filters = [
+                'section_id' => $request->input('section_id'),
+                'department' => $request->input('department'),
+                'training_track' => $request->input('training_track'),
+                'attendance_status' => $request->input('attendance_status'),
+                'daily_log_status' => $request->input('daily_log_status'),
+                'portfolio_status' => $request->input('portfolio_status'),
+                'evaluation_status' => $request->input('evaluation_status'),
+                'search' => $request->input('search'),
+            ];
 
-        // قائمة على مستوى التسجيل في الشعبة (وليس فقط تعيينات التدريب) حتى يظهر الطالب قبل إنشاء تعيين.
-        $query = $this->studentService->supervisedEnrollmentsQuery($user)
+            // قائمة على مستوى التسجيل في الشعبة (وليس فقط تعيينات التدريب) حتى يظهر الطالب قبل إنشاء تعيين.
+            $query = $this->studentService->supervisedEnrollmentsQuery($user)
             ->with([
                 'user.department',
                 'section.course',
@@ -387,31 +393,36 @@ class SupervisorWorkspaceController extends Controller
                 ],
             ]
         );
+        } catch (\Exception $e) {
+            \Log::error('Supervisor students error: ' . $e->getMessage(), ['exception' => $e, 'user_id' => $request->user()?->id]);
+            return $this->errorResponse('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة لاحقاً.', 500);
+        }
     }
 
     public function sections(Request $request)
     {
-        $supervisor = $request->user();
-        $perPage = max(1, min((int) $request->input('per_page', 15), 500));
-        $filters = [
-            'department' => $request->input('department'),
-            'course_id' => $request->input('course_id'),
-            'semester' => $request->input('semester'),
-            'training_track' => $request->input('training_track'),
-            'search' => $request->input('search'),
-        ];
+        try {
+            $supervisor = $request->user();
+            $perPage = max(1, min((int) $request->input('per_page', 15), 500));
+            $filters = [
+                'department' => $request->input('department'),
+                'course_id' => $request->input('course_id'),
+                'semester' => $request->input('semester'),
+                'training_track' => $request->input('training_track'),
+                'search' => $request->input('search'),
+            ];
 
-        $query = Section::query()
-            ->where('academic_supervisor_id', $supervisor->id)
-            ->when($supervisor->department_id, function ($sectionQuery) use ($supervisor) {
-                $sectionQuery->where(function ($q) use ($supervisor) {
-                    $q->whereHas('course', fn ($courseQuery) => $courseQuery->where('department_id', $supervisor->department_id))
-                        ->orWhereHas('enrollments.user', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id))
-                        ->orWhereHas('students', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id));
-                });
-            })
-            ->with(['course', 'academicSupervisor', 'enrollments.user.department', 'enrollments.trainingAssignments.trainingSite', 'students.department'])
-            ->withCount('enrollments');
+            $query = Section::query()
+                ->where('academic_supervisor_id', $supervisor->id)
+                ->when($supervisor->department_id, function ($sectionQuery) use ($supervisor) {
+                    $sectionQuery->where(function ($q) use ($supervisor) {
+                        $q->whereHas('course', fn ($courseQuery) => $courseQuery->where('department_id', $supervisor->department_id))
+                            ->orWhereHas('enrollments.user', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id))
+                            ->orWhereHas('students', fn ($studentQuery) => $studentQuery->where('department_id', $supervisor->department_id));
+                    });
+                })
+                ->with(['course', 'academicSupervisor', 'enrollments.user.department', 'enrollments.trainingAssignments.trainingSite', 'students.department'])
+                ->withCount('enrollments');
 
         if ($filters['semester']) {
             $query->where('semester', $filters['semester']);
@@ -543,6 +554,10 @@ class SupervisorWorkspaceController extends Controller
                 ],
             ]
         );
+        } catch (\Exception $e) {
+            \Log::error('Supervisor sections error: ' . $e->getMessage(), ['exception' => $e, 'user_id' => $request->user()?->id]);
+            return $this->errorResponse('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة لاحقاً.', 500);
+        }
     }
 
     public function studentOverview(Request $request, $studentId)

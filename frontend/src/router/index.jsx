@@ -50,6 +50,7 @@ import EnrollmentForm from "../pages/Admin/Enrollments/EnrollmentForm";
 import TrainingSitesList from "../pages/Admin/TrainingSites/TrainingSitesList";
 import TrainingSiteForm from "../pages/Admin/TrainingSites/TrainingSiteForm";
 import SchoolsWithoutManager from "../pages/Admin/TrainingSites/SchoolsWithoutManager";
+import TrainingSiteStaffManagement from "../pages/Admin/TrainingSites/TrainingSiteStaffManagement";
 import TrainingPeriodsList from "../pages/Admin/TrainingPeriods/TrainingPeriodsList";
 import TrainingPeriodForm from "../pages/Admin/TrainingPeriods/TrainingPeriodForm";
 import AnnouncementsList from "../pages/Admin/Announcements/AnnouncementsList";
@@ -239,6 +240,11 @@ export default function AppRouter() {
           <Route path="/admin/training-sites/create" element={<TrainingSiteForm />} />
           <Route path="/admin/training-sites/edit/:id" element={<TrainingSiteForm />} />
           <Route path="/admin/training-sites/without-manager" element={<SchoolsWithoutManager />} />
+          <Route path="/admin/training-sites/staff" element={
+            <PermissionProtectedRoute permission="training_sites.staff.view">
+              <TrainingSiteStaffManagement />
+            </PermissionProtectedRoute>
+          } />
 
           <Route path="/admin/training-periods" element={<TrainingPeriodsList />} />
           <Route path="/admin/training-periods/create" element={<TrainingPeriodForm />} />

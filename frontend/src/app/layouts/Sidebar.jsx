@@ -148,6 +148,7 @@ const menus = {
     
     // إدارة الفترات التدريبية
     { name: "إدارة الفترات التدريبية", path: "/admin/training-periods" },
+    { name: "إدارة كوادر المواقع", path: "/admin/training-sites/staff" },
     { name: "إدارة الأرشفة", path: "/admin/archive" },
     
     // إدارة المحتوى والإشعارات
