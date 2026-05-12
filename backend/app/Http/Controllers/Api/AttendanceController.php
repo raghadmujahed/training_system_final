@@ -86,11 +86,13 @@ class AttendanceController extends Controller
 
     public function show(Attendance $attendance)
     {
+        $attendance->load(['trainingAssignment']);
         return new AttendanceResource($attendance->load(['user', 'approvedBy', 'trainingAssignment']));
     }
 
     public function update(Request $request, Attendance $attendance)
     {
+        $attendance->load(['trainingAssignment']);
         $this->authorize('update', $attendance);
 
         $data = $request->validate([
@@ -120,6 +122,7 @@ class AttendanceController extends Controller
 
     public function destroy(Attendance $attendance)
     {
+        $attendance->load(['trainingAssignment']);
         $this->authorize('delete', $attendance);
 
         $attendance->delete();
@@ -128,6 +131,7 @@ class AttendanceController extends Controller
 
     public function approve(ApproveAttendanceRequest $request, Attendance $attendance)
     {
+        $attendance->load(['trainingAssignment']);
         $this->authorize('approve', $attendance);
         $attendance = $this->attendanceService->approveAttendance(
             $attendance,
@@ -135,8 +139,11 @@ class AttendanceController extends Controller
             $request->notes
         );
 
+        // تحميل العلاقات المطلوبة
+        $attendance->load(['trainingAssignment.enrollment.user', 'trainingAssignment.teacher']);
+
         // إرسال إشعار للطالب
-        $student = $attendance->trainingAssignment->enrollment->user;
+        $student = $attendance->trainingAssignment?->enrollment?->user;
         if ($student) {
             Notification::create([
                 'user_id' => $student->id,
@@ -150,16 +157,16 @@ class AttendanceController extends Controller
         }
 
         // إرسال إشعار للمعلم المرشد
-        $teacher = $attendance->trainingAssignment->teacher;
+        $teacher = $attendance->trainingAssignment?->teacher;
         if ($teacher) {
             Notification::create([
                 'user_id' => $teacher->id,
                 'type' => 'attendance_approved',
-                'message' => 'تم اعتماد سجل الحضور للطالب ' . $student->name . ' بتاريخ ' . $attendance->date,
+                'message' => 'تم اعتماد سجل الحضور للطالب ' . ($student?->name ?? 'الطالب') . ' بتاريخ ' . $attendance->date,
                 'data' => [
                     'attendance_id' => $attendance->id,
                     'date' => $attendance->date,
-                    'student_name' => $student->name,
+                    'student_name' => $student?->name,
                 ],
             ]);
         }
@@ -169,6 +176,7 @@ class AttendanceController extends Controller
 
     public function reject(Request $request, Attendance $attendance)
     {
+        $attendance->load(['trainingAssignment']);
         $this->authorize('approve', $attendance);
 
         $data = $request->validate([
@@ -180,7 +188,7 @@ class AttendanceController extends Controller
             $request->user()->id,
             $data['rejection_reason'] ?? null
         );
-        return new AttendanceResource($attendance);
+        return new AttendanceResource($attendance->load(['user', 'trainingAssignment']));
     }
 
     public function submitToManager(Request $request)
