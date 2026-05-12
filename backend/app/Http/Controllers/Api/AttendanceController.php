@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAttendanceRequest;
 use App\Http\Requests\ApproveAttendanceRequest;
 use App\Http\Resources\AttendanceResource;
 use App\Models\Attendance;
+use App\Models\Notification;
 use App\Services\AttendanceService;
 use Illuminate\Http\Request;
 
@@ -133,6 +134,36 @@ class AttendanceController extends Controller
             $request->user()->id,
             $request->notes
         );
+
+        // إرسال إشعار للطالب
+        $student = $attendance->trainingAssignment->enrollment->user;
+        if ($student) {
+            Notification::create([
+                'user_id' => $student->id,
+                'type' => 'attendance_approved',
+                'message' => 'تم اعتماد سجل الحضور بتاريخ ' . $attendance->date,
+                'data' => [
+                    'attendance_id' => $attendance->id,
+                    'date' => $attendance->date,
+                ],
+            ]);
+        }
+
+        // إرسال إشعار للمعلم المرشد
+        $teacher = $attendance->trainingAssignment->teacher;
+        if ($teacher) {
+            Notification::create([
+                'user_id' => $teacher->id,
+                'type' => 'attendance_approved',
+                'message' => 'تم اعتماد سجل الحضور للطالب ' . $student->name . ' بتاريخ ' . $attendance->date,
+                'data' => [
+                    'attendance_id' => $attendance->id,
+                    'date' => $attendance->date,
+                    'student_name' => $student->name,
+                ],
+            ]);
+        }
+
         return new AttendanceResource($attendance);
     }
 
