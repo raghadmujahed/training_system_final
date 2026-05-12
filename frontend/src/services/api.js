@@ -789,6 +789,13 @@ export const addPortfolioEntry = async (data) => {
 };
 
 export const updatePortfolioEntry = async (id, data) => {
+    if (data instanceof FormData) {
+        data.append('_method', 'PUT');
+        const response = await apiClient.post(`/student/portfolio/entries/${id}`, data, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return response.data;
+    }
     const response = await apiClient.put(`/student/portfolio/entries/${id}`, data);
     return response.data;
 };
@@ -821,6 +828,13 @@ export const submitStudentTask = async (taskId, data) => {
 
 /** data: JSON object أو FormData (لإعادة التسليم) */
 export const updateStudentTaskSubmission = async (submissionId, data) => {
+  if (data instanceof FormData) {
+    data.append('_method', 'PUT');
+    const response = await apiClient.post(`/student/task-submissions/${submissionId}`, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
   const response = await apiClient.put(`/student/task-submissions/${submissionId}`, data);
   return response.data;
 };

@@ -18,6 +18,16 @@ class ActivityLogController extends Controller
     public function index(Request $request)
     {
         $query = ActivityLog::with('user');
+
+        // تصفية حسب نوع ومعرف الموضوع
+        if ($request->filled('subject_type')) $query->where('subject_type', $request->subject_type);
+        if ($request->filled('subject_id')) $query->where('subject_id', $request->subject_id);
+
+        // للطالب: عرض سجلاته فقط
+        if ($request->user()->role?->name === 'student') {
+            $query->where('causer_id', $request->user()->id);
+        }
+
         if ($request->filled('user_id')) $query->where('user_id', $request->user_id);
         if ($request->filled('action')) $query->where('action', $request->action);
         if ($request->filled('from_date')) $query->whereDate('created_at', '>=', $request->from_date);

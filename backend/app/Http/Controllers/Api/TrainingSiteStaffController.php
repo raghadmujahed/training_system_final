@@ -463,6 +463,15 @@ class TrainingSiteStaffController extends Controller
                 ->where('status', 'active')
                 ->with('role');
 
+            // Directorate restriction for education_directorate users
+            $user = $request->user();
+            if ($user?->role?->name === 'education_directorate' && $user->directorate) {
+                // Filter users by their directorate field if they have one
+                $query->where('directorate', $user->directorate);
+            } elseif (!empty($validated['directorate'])) {
+                $query->where('directorate', $validated['directorate']);
+            }
+
             if (!empty($validated['role'])) {
                 $query->whereHas('role', function ($q) use ($validated) {
                     $q->where('name', $validated['role']);

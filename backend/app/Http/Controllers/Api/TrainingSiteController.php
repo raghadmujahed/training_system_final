@@ -24,7 +24,7 @@ class TrainingSiteController extends Controller
         // Automatically scope to the authenticated user's directorate when applicable
         $user = $request->user();
         $role = $user?->role?->name;
-        if ($role === 'education_directorate' && $user->directorate) {
+        if (in_array($role, ['education_directorate', 'health_directorate'], true) && $user->directorate) {
             $query->where('directorate', $user->directorate);
         }
 
@@ -136,6 +136,8 @@ class TrainingSiteController extends Controller
 
     public function destroy(TrainingSite $trainingSite)
     {
+        $this->authorize('delete', $trainingSite);
+
         try {
             $trainingSite->delete();
             return response()->json(['message' => 'تم حذف موقع التدريب بنجاح.']);

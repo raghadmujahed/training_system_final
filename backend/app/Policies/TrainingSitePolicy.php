@@ -56,6 +56,17 @@ class TrainingSitePolicy
      */
     public function delete(User $user, TrainingSite $trainingSite): bool
     {
-        return $user->role?->name === 'admin'; // فقط الأدمن
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        // مديرية التربية يمكنها حذف مواقع في مديريتها فقط
+        if ($user->role?->name === 'education_directorate' && !empty($user->directorate)) {
+            return $trainingSite->directorate === $user->directorate;
+        }
+        // وزارة الصحة يمكنها حذف مواقع تابعة لها
+        if ($user->role?->name === 'ministry_of_health') {
+            return true;
+        }
+        return false;
     }
 }

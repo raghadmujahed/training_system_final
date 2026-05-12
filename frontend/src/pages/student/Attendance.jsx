@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import { getAttendances, itemsFromPagedResponse } from "../../services/api";
+import { getStudentAttendances } from "../../services/api";
 import { CalendarCheck, Clock, CheckCircle2 } from "lucide-react";
 import huLogo from "../../assets/HU Logo.webp";
 
@@ -26,6 +26,7 @@ export default function StudentAttendance() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [rows, setRows] = useState([]);
+  const [trainingSite, setTrainingSite] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -33,8 +34,11 @@ export default function StudentAttendance() {
       setLoading(true);
       setError("");
       try {
-        const res = await getAttendances({ per_page: 200 });
-        if (active) setRows(itemsFromPagedResponse(res));
+        const res = await getStudentAttendances({ per_page: 200 });
+        if (active) {
+          setRows(Array.isArray(res?.data) ? res.data : []);
+          setTrainingSite(res?.training_site || null);
+        }
       } catch (e) {
         if (active) setError(e?.response?.data?.message || "تعذر تحميل سجل الحضور.");
       } finally {
@@ -97,28 +101,28 @@ export default function StudentAttendance() {
           <div className="sa-info-grid">
             <div className="sa-info-item">
               <span className="sa-info-label">اسم الطالب</span>
-              <span className="sa-info-value">{rows[0]?.training_assignment?.enrollment?.user?.name || "—"}</span>
+              <span className="sa-info-value">{rows[0]?.user?.name || rows[0]?.training_request_student?.user?.name || "—"}</span>
             </div>
             <div className="sa-info-item">
               <span className="sa-info-label">الرقم الجامعي</span>
-              <span className="sa-info-value">{rows[0]?.training_assignment?.enrollment?.user?.university_id || "—"}</span>
+              <span className="sa-info-value">{rows[0]?.user?.university_id || rows[0]?.training_request_student?.user?.university_id || "—"}</span>
             </div>
             <div className="sa-info-item">
               <span className="sa-info-label">جهة التدريب</span>
-              <span className="sa-info-value">{rows[0]?.training_assignment?.training_site?.name || "—"}</span>
+              <span className="sa-info-value">{trainingSite?.name || rows[0]?.training_request_student?.trainingRequest?.trainingSite?.name || "—"}</span>
             </div>
             <div className="sa-info-item">
               <span className="sa-info-label">الفترة من</span>
-              <span className="sa-info-value">{rows[0]?.training_assignment?.start_date ? String(rows[0].training_assignment.start_date).slice(0,10) : "—"}</span>
+              <span className="sa-info-value">{rows[0]?.date ? String(rows[0].date).slice(0,7) !== String(rows[rows.length-1]?.date).slice(0,7) ? fmtDate(rows[0].date) : "—" : "—"}</span>
             </div>
             <div className="sa-info-item">
               <span className="sa-info-label">الفترة إلى</span>
-              <span className="sa-info-value">{rows[0]?.training_assignment?.end_date ? String(rows[0].training_assignment.end_date).slice(0,10) : "—"}</span>
+              <span className="sa-info-value">{rows[rows.length-1]?.date ? fmtDate(rows[rows.length-1].date) : "—"}</span>
             </div>
             <div className="sa-info-item">
               <span className="sa-info-label">الحالة</span>
               <span className="sa-info-value">
-                {rows[0]?.training_assignment?.status_label || rows[0]?.training_assignment?.status || "—"}
+                {rows.some(r => r.approved_at) ? "معتمد" : "قيد المتابعة"}
               </span>
             </div>
           </div>
@@ -165,7 +169,7 @@ export default function StudentAttendance() {
                     </td>
                     <td className="sa-td-time">{fmtTime(r.check_in)}</td>
                     <td className="sa-td-time">{fmtTime(r.check_out)}</td>
-                    <td>{r.periods != null && r.periods !== "" ? r.periods : "—"}</td>
+                    <td>{r.lessons_count != null && r.lessons_count !== "" ? r.lessons_count : "—"}</td>
                     <td className="sa-td-notes">{r.notes || "—"}</td>
                     <td>
                       {r.approved_at ? (

@@ -48,6 +48,11 @@ const normalizePlace = (item) => ({
   city: item.location || "—",
   capacity: item.capacity ?? 0,
   directorate: item.directorate || "وسط",
+  phone: item.phone || "",
+  email: item.email || "",
+  mobile: item.mobile || "",
+  gender_classification: item.gender_classification || "",
+  school_level: item.school_level || "",
   status:
     item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
   is_active: item.is_active === true || item.is_active === 1,

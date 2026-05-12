@@ -162,10 +162,13 @@ export default function EForms() {
     if (!editData) return;
 
     const { formKey, content } = editData;
-    // Find the eform ID from the saved forms list
-    const matchingForm = forms.find(f => f.form_key === formKey);
-    const eformId = matchingForm?.id || editData.eformId || null;
-    setEditingEntry({ ...editData, eformId });
+    // Find the specific eform by ID (preferred) or fall back to form_key match
+    const eformId = editData.eformId || editData.id || null;
+    const matchingForm = eformId
+      ? forms.find(f => f.id === eformId)
+      : forms.find(f => f.form_key === formKey);
+    const resolvedEformId = matchingForm?.id || eformId || null;
+    setEditingEntry({ ...editData, eformId: resolvedEformId });
     setSelectedForm(formKey);
 
     // Parse saved form data and load it

@@ -83,10 +83,6 @@ const buildEmptySchedule = () => {
 export default function Schedule() {
   const location = useLocation();
   const { isPsychology, config } = useStudentTrack();
-
-  if (isPsychology) {
-    return <Navigate to="/student/dashboard" replace />;
-  }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -184,6 +180,10 @@ export default function Schedule() {
     // Clear navigation state
     window.history.replaceState({}, "");
   }, [location.state]);
+
+  if (isPsychology) {
+    return <Navigate to="/student/dashboard" replace />;
+  }
 
   const handleCellChange = (dayId, periodId, value) => {
     setSchedule((prev) => ({

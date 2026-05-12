@@ -416,7 +416,7 @@ class UserController extends Controller
                 ];
             }
 
-            // Get School Manager (from training site)
+            // Get School Manager / Psychology Center Manager (from training site)
             if ($studentTrainingSiteId) {
                 $schoolManager = User::whereHas('role', function ($q) {
                     $q->whereIn('name', ['school_manager', 'principal']);
@@ -436,20 +436,44 @@ class UserController extends Controller
                     ];
                 }
 
-                // Get Teachers (from training site)
+                // Psychology Center Manager
+                $centerManager = User::whereHas('role', function ($q) {
+                    $q->where('name', 'psychology_center_manager');
+                })->where('training_site_id', $studentTrainingSiteId)
+                ->with(['role', 'trainingSite'])
+                ->first();
+
+                if ($centerManager) {
+                    $staff[] = [
+                        'id' => $centerManager->id,
+                        'name' => $centerManager->name,
+                        'email' => $centerManager->email,
+                        'phone' => $centerManager->phone,
+                        'role' => 'مدير المركز',
+                        'role_name' => $centerManager->role->name,
+                        'training_site' => $centerManager->trainingSite?->name,
+                    ];
+                }
+
+                // Get Teachers / Psychologist mentors (from training site)
                 $teachers = User::whereHas('role', function ($q) {
-                    $q->where('name', 'teacher');
+                    $q->whereIn('name', ['teacher', 'psychologist', 'mentor']);
                 })->where('training_site_id', $studentTrainingSiteId)
                 ->with(['role', 'trainingSite'])
                 ->get();
 
                 foreach ($teachers as $teacher) {
+                    $roleLabel = match ($teacher->role->name) {
+                        'psychologist' => 'الأخصائي المرشد',
+                        'mentor' => 'الأخصائي المرشد',
+                        default => 'المعلم',
+                    };
                     $staff[] = [
                         'id' => $teacher->id,
                         'name' => $teacher->name,
                         'email' => $teacher->email,
                         'phone' => $teacher->phone,
-                        'role' => 'المعلم',
+                        'role' => $roleLabel,
                         'role_name' => $teacher->role->name,
                         'training_site' => $teacher->trainingSite?->name,
                     ];

@@ -152,7 +152,6 @@ export default function Assignments() {
       }
       const n = (notes[task.id] || "").trim();
       if (n) fd.append("notes", n);
-      fd.append("_method", "PUT");
       await updateStudentTaskSubmission(submission.id, fd);
       setSuccess("تم إعادة تسليم التكليف بنجاح.");
       addToast("تم إعادة تسليم التكليف بنجاح", "success");

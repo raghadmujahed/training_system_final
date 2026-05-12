@@ -6,6 +6,7 @@ import {
   deletePortfolioEntry,
   getStudentPortfolio,
   updatePortfolioEntry,
+  uploadPortfolioFile,
 } from "../../services/api";
 import { useToast } from "../../components/Toast";
 import { Loader2, Upload, FileText, Trash2, ExternalLink, Plus, FolderOpen, Calendar, FileCheck, BookOpen, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, Edit3, Save as SaveIcon } from "lucide-react";
@@ -393,7 +394,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
     setRemovingFileId(entryId);
     setError("");
     try {
-      await updatePortfolioEntry(entryId, { file_path: null });
+      await updatePortfolioEntry(entryId, { remove_file: true });
       setSuccess("تم إزالة الملف بنجاح. يمكنك الآن رفع ملف جديد.");
       addToast("تم إزالة الملف بنجاح", "success");
       await load();
@@ -415,10 +416,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
     setReplacingFileId(entryId);
     setError("");
     try {
-      const fd = new FormData();
-      fd.append("file", replacementFile);
-      
-      await updatePortfolioEntry(entryId, fd);
+      await uploadPortfolioFile(entryId, replacementFile, replacementFile.name || 'file.pdf');
       setSuccess("تم استبدال الملف بنجاح.");
       addToast("تم استبدال الملف بنجاح", "success");
       setReplacingFileId(null);

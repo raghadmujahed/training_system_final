@@ -45,4 +45,23 @@ class OfficialLetterPolicy
 
         return $user->id === $letter->received_by;
     }
+
+    public function approve(User $user, OfficialLetter $letter): bool
+    {
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        // مديرية التربية يمكنها الموافقة/رفض الكتب الموجهة لها
+        if ($user->role?->name === 'education_directorate' && $letter->type === 'to_directorate') {
+            return true;
+        }
+        // مدير المدرسة يمكنه الموافقة/رفض الكتب الموجهة لمدرسته
+        if (in_array($user->role?->name, ['school_manager', 'principal', 'psychology_center_manager'], true) && $letter->type === 'to_school') {
+            if (! $user->training_site_id || ! $letter->training_site_id) {
+                return true;
+            }
+            return (int) $letter->training_site_id === (int) $user->training_site_id;
+        }
+        return false;
+    }
 }

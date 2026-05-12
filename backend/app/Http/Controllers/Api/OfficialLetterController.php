@@ -77,6 +77,8 @@ class OfficialLetterController extends Controller
 
     public function approve(ApproveOfficialLetterRequest $request, OfficialLetter $officialLetter)
     {
+        $this->authorize('approve', $officialLetter);
+
         // منطق الموافقة على الكتاب من المديرية أو المدرسة
         $officialLetter->update([
             'status' => $request->status === 'approved' ? 'directorate_approved' : 'rejected',

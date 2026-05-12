@@ -16,7 +16,7 @@ class StudentEFormController extends Controller
         'weekly_full_report',
         'weekly_brief_report',
         'weekly_reflection',
-        'weekly_brief_report',
+        'daily_tasks_report',
         'learning_experience_review',
         'field_visit_summary',
         'classes_count',
