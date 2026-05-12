@@ -31,8 +31,10 @@ class StudentAttendanceController extends Controller
             ], 403);
         }
         
-        $query = StudentAttendance::with(['trainingRequestStudent.trainingRequest.trainingSite'])
-            ->forUser($user->id);
+        // جلب سجلات الحضور من جدول attendances (التي يسجلها المعلم المرشد)
+        $query = Attendance::with(['trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite'])
+            ->where('user_id', $user->id)
+            ->where('approved_at', '!=', null); // فقط السجلات المعتمدة
         
         // فلترة حسب الشهر/السنة
         if ($request->filled('month') && $request->filled('year')) {
@@ -42,7 +44,7 @@ class StudentAttendanceController extends Controller
         
         // فلترة حسب الفترة
         if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->forPeriod($request->start_date, $request->end_date);
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
         }
         
         $attendances = $query->orderBy('date', 'desc')
