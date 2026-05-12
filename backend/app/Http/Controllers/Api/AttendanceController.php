@@ -176,19 +176,27 @@ class AttendanceController extends Controller
 
     public function reject(Request $request, Attendance $attendance)
     {
-        $attendance->load(['trainingAssignment']);
-        $this->authorize('approve', $attendance);
+        try {
+            if (!$attendance->trainingAssignment) {
+                return response()->json(['message' => 'سجل الحضور غير مرتبط بمهمة تدريبية'], 400);
+            }
 
-        $data = $request->validate([
-            'rejection_reason' => 'nullable|string|max:500',
-        ]);
+            $attendance->load(['trainingAssignment']);
+            $this->authorize('approve', $attendance);
 
-        $attendance = $this->attendanceService->rejectAttendance(
-            $attendance,
-            $request->user()->id,
-            $data['rejection_reason'] ?? null
-        );
-        return new AttendanceResource($attendance->load(['user', 'trainingAssignment']));
+            $data = $request->validate([
+                'rejection_reason' => 'nullable|string|max:500',
+            ]);
+
+            $attendance = $this->attendanceService->rejectAttendance(
+                $attendance,
+                $request->user()->id,
+                $data['rejection_reason'] ?? null
+            );
+            return new AttendanceResource($attendance->load(['user', 'trainingAssignment']));
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'حدث خطأ أثناء رفض سجل الحضور: ' . $e->getMessage()], 500);
+        }
     }
 
     public function submitToManager(Request $request)

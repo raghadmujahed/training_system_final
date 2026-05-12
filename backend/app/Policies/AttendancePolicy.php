@@ -26,10 +26,11 @@ class AttendancePolicy
     public function view(User $user, Attendance $attendance): bool
     {
         if ($user->id === $attendance->user_id) return true;
-        if ($user->id === $attendance->trainingAssignment?->teacher_id) return true;
-        if ($attendance->trainingAssignment?->field_supervisor_id
+        if (!$attendance->trainingAssignment) return $user->role?->name === 'admin';
+        if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
+        if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
-        if ($user->id === $attendance->trainingAssignment?->academic_supervisor_id) return true;
+        if ($user->id === $attendance->trainingAssignment->academic_supervisor_id) return true;
         return $user->role?->name === 'admin';
     }
 
@@ -41,11 +42,12 @@ class AttendancePolicy
     public function update(User $user, Attendance $attendance): bool
     {
         if ($user->role?->name === 'admin') return true;
-        if ($user->id === $attendance->trainingAssignment?->teacher_id) return true;
-        if ($attendance->trainingAssignment?->field_supervisor_id
+        if (!$attendance->trainingAssignment) return false;
+        if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
+        if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
         if (in_array($user->role?->name, ['school_manager', 'principal'], true)
-            && $attendance->trainingAssignment?->trainingSite
+            && $attendance->trainingAssignment->trainingSite
             && (int) $user->training_site_id === (int) $attendance->trainingAssignment->trainingSite->id) return true;
         return false;
     }
@@ -53,11 +55,12 @@ class AttendancePolicy
     public function delete(User $user, Attendance $attendance): bool
     {
         if ($user->role?->name === 'admin') return true;
-        if ($user->id === $attendance->trainingAssignment?->teacher_id) return true;
-        if ($attendance->trainingAssignment?->field_supervisor_id
+        if (!$attendance->trainingAssignment) return false;
+        if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
+        if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
         if (in_array($user->role?->name, ['school_manager', 'principal'], true)
-            && $attendance->trainingAssignment?->trainingSite
+            && $attendance->trainingAssignment->trainingSite
             && (int) $user->training_site_id === (int) $attendance->trainingAssignment->trainingSite->id) return true;
         return false;
     }
@@ -65,11 +68,12 @@ class AttendancePolicy
     public function approve(User $user, Attendance $attendance): bool
     {
         if ($user->role?->name === 'admin') return true;
-        if ($user->id === $attendance->trainingAssignment?->teacher_id) return true;
-        if ($attendance->trainingAssignment?->field_supervisor_id
+        if (!$attendance->trainingAssignment) return false;
+        if ($user->id === $attendance->trainingAssignment->teacher_id) return true;
+        if ($attendance->trainingAssignment->field_supervisor_id
             && (int) $user->id === (int) $attendance->trainingAssignment->field_supervisor_id) return true;
         if (in_array($user->role?->name, ['school_manager', 'principal'], true)
-            && $attendance->trainingAssignment?->trainingSite
+            && $attendance->trainingAssignment->trainingSite
             && (int) $user->training_site_id === (int) $attendance->trainingAssignment->trainingSite->id) return true;
         return false;
     }
