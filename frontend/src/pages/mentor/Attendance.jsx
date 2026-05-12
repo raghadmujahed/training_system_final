@@ -292,7 +292,7 @@ export default function MentorAttendance() {
                   <div className="att-form-group">
                     <label>التاريخ</label>
                     <div className="att-date-picker-wrap">
-                      <input type="date" value={form.date} onChange={(e) => handleFormChange("date", e.target.value)} className="att-date-hidden" {...(!editingId && { min: new Date().toISOString().slice(0,10), max: new Date().toISOString().slice(0,10) })} required />
+                      <input type="date" value={form.date} onChange={(e) => handleFormChange("date", e.target.value)} className="att-date-hidden" required />
                       <div className="att-date-display" onClick={(e) => e.currentTarget.previousSibling.showPicker?.()}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6C3CE1" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         {form.date
