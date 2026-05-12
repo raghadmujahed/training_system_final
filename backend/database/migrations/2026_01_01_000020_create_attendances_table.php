@@ -19,7 +19,7 @@ return new class extends Migration
             $table->time('check_out')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->timestamp('approved_at')->nullable();
-            $table->enum('status', ['present', 'absent', 'late'])->default('present');
+            $table->enum('status', ['present', 'absent', 'late', 'rejected'])->default('present');
             $table->text('rejection_reason')->nullable();
             $table->integer('periods')->nullable();
             $table->timestamp('submitted_to_manager_at')->nullable();
