@@ -32,8 +32,10 @@ class StudentAttendanceController extends Controller
         }
         
         // جلب سجلات الحضور من جدول attendances (التي يسجلها المعلم المرشد)
-        $query = Attendance::with(['trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite'])
-            ->where('user_id', $user->id)
+        $query = Attendance::with(['trainingAssignment.trainingSite', 'user', 'approvedBy'])
+            ->whereHas('trainingAssignment.enrollment', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
             ->where('approved_at', '!=', null); // فقط السجلات المعتمدة
         
         // فلترة حسب الشهر/السنة
