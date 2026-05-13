@@ -181,7 +181,9 @@ class DashboardController extends Controller
         }
 
         // Get total users for percentage calculations
-        $totalUsers = (clone $userQuery)->count();
+        // total_users is always the absolute count of ALL users (no department filter)
+        // $userQuery (department-filtered) is used only for role-breakdown sub-counts
+        $totalUsers = User::count();
         $totalStudents = (clone $studentQuery)->count();
         $totalTrainingRequests = $trainingRequestsQuery->count();
 

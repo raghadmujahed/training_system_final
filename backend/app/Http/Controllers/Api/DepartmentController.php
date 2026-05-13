@@ -35,7 +35,11 @@ class DepartmentController extends Controller
 
     public function update(UpdateDepartmentRequest $request, Department $department)
     {
-        $department->update($request->validated());
+        $department->fill($request->validated());
+        if (!$department->isDirty()) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+        $department->save();
         return new DepartmentResource($department);
     }
 

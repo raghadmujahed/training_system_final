@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getAdminReports, getDepartments } from "../../services/api";
+import { getAdminReports, getDepartments, exportUsers, exportTrainingRequests } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from "chart.js";
@@ -20,6 +20,8 @@ export default function AdminReports() {
     year: new Date().getFullYear().toString(),
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [exportingUsers, setExportingUsers] = useState(false);
+  const [exportingRequests, setExportingRequests] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -72,6 +74,32 @@ export default function AdminReports() {
       year: new Date().getFullYear().toString(),
     });
     await fetchData();
+  };
+
+  const handleExportUsers = async () => {
+    if (exportingUsers) return;
+    setExportingUsers(true);
+    try {
+      await exportUsers(filters);
+    } catch (err) {
+      const msg = err?.message || err?.response?.data?.message;
+      alert(msg?.includes('صلاحية') ? 'لا تملك صلاحية التصدير' : (msg || 'فشل تصدير المستخدمين'));
+    } finally {
+      setExportingUsers(false);
+    }
+  };
+
+  const handleExportTrainingRequests = async () => {
+    if (exportingRequests) return;
+    setExportingRequests(true);
+    try {
+      await exportTrainingRequests(filters);
+    } catch (err) {
+      const msg = err?.message || err?.response?.data?.message;
+      alert(msg?.includes('صلاحية') ? 'لا تملك صلاحية التصدير' : (msg || 'فشل تصدير طلبات التدريب'));
+    } finally {
+      setExportingRequests(false);
+    }
   };
 
   if (loading) {
@@ -233,33 +261,25 @@ export default function AdminReports() {
       </div>
 
       {/* Enhanced Filters */}
-      <div className="section-card mb-6 p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-[#64748b]">
-            <Filter size={18} />
-            <span className="font-semibold">الفلاتر:</span>
-          </div>
+      <div className="filters-bar mb-6">
           <input
             type="date"
             name="date_from"
             value={filters.date_from}
             onChange={handleFilterChange}
-            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
-            placeholder="من تاريخ"
+            title="من تاريخ"
           />
           <input
             type="date"
             name="date_to"
             value={filters.date_to}
             onChange={handleFilterChange}
-            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
-            placeholder="إلى تاريخ"
+            title="إلى تاريخ"
           />
           <select
             name="year"
             value={filters.year}
             onChange={handleFilterChange}
-            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
           >
             <option value="">كل السنوات</option>
             <option value="2026">2026</option>
@@ -270,7 +290,6 @@ export default function AdminReports() {
             name="department_id"
             value={filters.department_id}
             onChange={handleFilterChange}
-            className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm"
           >
             <option value="">جميع الأقسام</option>
             {departments.map((dept) => (
@@ -279,28 +298,26 @@ export default function AdminReports() {
               </option>
             ))}
           </select>
-          <button
-            onClick={applyFilters}
-            className="px-4 py-2 bg-[#142a42] text-white rounded-lg text-sm hover:bg-[#1e3a5a] transition-colors"
-          >
+          <button onClick={applyFilters} className="btn-primary">
             تطبيق الفلاتر
           </button>
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-[#f8fafc] transition-colors"
-          >
+          <button onClick={clearFilters} className="btn-secondary">
             مسح الفلاتر
           </button>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-[#f8fafc] transition-colors flex items-center gap-2"
-            style={{ opacity: refreshing ? 0.5 : 1 }}
+            className="btn-secondary"
           >
             <RefreshCw size={16} className={refreshing ? "spin" : ""} />
             تحديث
           </button>
-        </div>
+          <button onClick={handleExportUsers} disabled={exportingUsers} className="btn-secondary">
+            {exportingUsers ? "جاري تجهيز الملف..." : "⬇ تصدير المستخدمين CSV"}
+          </button>
+          <button onClick={handleExportTrainingRequests} disabled={exportingRequests} className="btn-secondary">
+            {exportingRequests ? "جاري تجهيز الملف..." : "⬇ تصدير طلبات التدريب CSV"}
+          </button>
       </div>
 
       {/* Enhanced Summary Cards */}

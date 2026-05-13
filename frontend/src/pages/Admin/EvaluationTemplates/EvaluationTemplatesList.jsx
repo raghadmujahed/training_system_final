@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { getEvaluationTemplates, deleteEvaluationTemplate } from "../../../services/api";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import Button from "../../../components/ui/Button";
@@ -7,6 +7,7 @@ import useAppToast from "../../../hooks/useAppToast";
 
 export default function EvaluationTemplatesList() {
   const toast = useAppToast();
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -19,8 +20,10 @@ export default function EvaluationTemplatesList() {
     setLoading(true);
     try {
       const response = await getEvaluationTemplates();
-      // الصحيح: response.data هي المصفوفة
-      const templatesData = response.data || [];
+      // getEvaluationTemplates returns res.data which may be an array or { data: [] }
+      const templatesData = Array.isArray(response)
+        ? response
+        : response.data || [];
       setTemplates(templatesData);
     } catch (err) {
       console.error(err);
@@ -48,7 +51,7 @@ export default function EvaluationTemplatesList() {
     <div>
       <div className="page-header">
         <h1>قوالب التقييم</h1>
-        <Button as={Link} to="/admin/evaluation-templates/create">
+        <Button type="button" onClick={() => navigate("/admin/evaluation-templates/create")}>
           + إضافة قالب جديد
         </Button>
       </div>
@@ -78,10 +81,10 @@ export default function EvaluationTemplatesList() {
                 <td>
                   <div className="flex gap-2">
                     <Button
-                      as={Link}
-                      to={`/admin/evaluation-templates/edit/${template.id}`}
+                      type="button"
                       size="sm"
                       variant="outline"
+                      onClick={() => navigate(`/admin/evaluation-templates/edit/${template.id}`)}
                     >
                       تعديل
                     </Button>

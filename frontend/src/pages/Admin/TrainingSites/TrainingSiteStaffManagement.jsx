@@ -254,19 +254,16 @@ export default function TrainingSiteStaffManagement() {
     <div className="page-container">
       <PageHeader title="إدارة كوادر مواقع التدريب" />
 
-      <div className="filters-bar mb-4">
-        <div className="flex flex-wrap gap-2">
+      <div className="filters-bar">
           <input
             type="text"
             placeholder="بحث بالاسم أو البريد أو الهاتف..."
             value={filters.search}
             onChange={(e) => handleFilterChange("search", e.target.value)}
-            className="form-input min-w-[250px]"
           />
           <select
             value={filters.directorate}
             onChange={(e) => handleFilterChange("directorate", e.target.value)}
-            className="form-select"
             disabled={isEducationDirectorate}
           >
             {DIRECTORATES.map((d) => (
@@ -278,7 +275,6 @@ export default function TrainingSiteStaffManagement() {
           <select
             value={filters.training_site_id}
             onChange={(e) => handleFilterChange("training_site_id", e.target.value)}
-            className="form-select min-w-[200px]"
           >
             <option value="">كل المواقع</option>
             {filteredSites.map((site) => (
@@ -290,7 +286,6 @@ export default function TrainingSiteStaffManagement() {
           <select
             value={filters.role}
             onChange={(e) => handleFilterChange("role", e.target.value)}
-            className="form-select"
           >
             {STAFF_ROLES.map((r) => (
               <option key={r.value} value={r.value}>
@@ -303,7 +298,6 @@ export default function TrainingSiteStaffManagement() {
               + تعيين جديد
             </Button>
           )}
-        </div>
       </div>
 
       {loading ? (

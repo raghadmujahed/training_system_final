@@ -67,7 +67,11 @@ class EvaluationTemplateController extends Controller
         if (! Schema::hasColumn('evaluation_templates', 'department_key')) {
             unset($payload['department_key']);
         }
-        $evaluationTemplate->update($payload);
+        $evaluationTemplate->fill($payload);
+        if (!$evaluationTemplate->isDirty()) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+        $evaluationTemplate->save();
         return new EvaluationTemplateResource($evaluationTemplate);
     }
 
@@ -86,7 +90,11 @@ class EvaluationTemplateController extends Controller
 
     public function updateItem(UpdateEvaluationItemRequest $request, EvaluationItem $item)
     {
-        $item->update($request->validated());
+        $item->fill($request->validated());
+        if (!$item->isDirty()) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+        $item->save();
         return response()->json($item);
     }
 

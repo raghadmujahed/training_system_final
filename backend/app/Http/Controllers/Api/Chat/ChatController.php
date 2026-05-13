@@ -28,18 +28,92 @@ class ChatController extends Controller
         }
     }
 
+    /**
+     * POST /chats/create-or-get
+     * Find an existing chat with the user. Do NOT create one if none exists.
+     * Returns the chat data or null if no conversation exists yet.
+     */
     public function createOrGet(Request $request): JsonResponse
     {
         $request->validate(['user_id' => 'required|integer|exists:users,id']);
         $userA = $request->user();
         $userB = User::findOrFail($request->user_id);
+
+        // Check permission first
+        if (! $this->permissions->canMessage($userA, $userB)) {
+            return response()->json(['success' => false, 'message' => 'غير مسموح لك بمراسلة هذا المستخدم.'], 403);
+        }
+
+        $chat = $this->chatService->findDirectChat($userA, $userB);
+
+        if (! $chat) {
+            // No existing conversation — return draft info so frontend can open draft mode
+            return response()->json([
+                'success'  => true,
+                'data'     => null,
+                'draft'    => true,
+                'receiver' => ['id' => $userB->id, 'name' => $userB->name, 'role' => $userB->role?->name],
+            ]);
+        }
+
+        // Load full chat data the same way getUserChats does
+        $data = $this->chatService->getUserChats($userA)->firstWhere('id', $chat->id);
+        // If the chat exists but has no messages yet (shouldn't happen now but handle gracefully)
+        if (! $data) {
+            return response()->json([
+                'success'  => true,
+                'data'     => null,
+                'draft'    => true,
+                'receiver' => ['id' => $userB->id, 'name' => $userB->name, 'role' => $userB->role?->name],
+            ]);
+        }
+
+        return response()->json(['success' => true, 'data' => $data, 'draft' => false]);
+    }
+
+    /**
+     * POST /chats/start-with-message
+     * Atomically find-or-create a chat AND send the first message.
+     * Body: { user_id, message, type? }
+     */
+    public function startWithMessage(Request $request): JsonResponse
+    {
+        $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'message' => 'required|string|max:5000',
+            'type'    => 'sometimes|in:text,image',
+        ]);
+
+        $userA = $request->user();
+        $userB = User::findOrFail($request->user_id);
+
         try {
-            $chat = $this->chatService->createOrGetDirectChat($userA, $userB);
+            [$chat, $msg] = $this->chatService->startWithMessage(
+                $userA,
+                $userB,
+                $request->message,
+                $request->type ?? 'text',
+            );
         } catch (\RuntimeException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 403);
         }
+
+        // Return chat with last message in the same shape as getUserChats
         $data = $this->chatService->getUserChats($userA)->firstWhere('id', $chat->id);
-        return response()->json(['success' => true, 'data' => $data]);
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+            'message' => [
+                'id'         => $msg->id,
+                'message'    => $msg->message,
+                'type'       => $msg->type,
+                'is_read'    => $msg->is_read,
+                'created_at' => $msg->getRawOriginal('created_at') ? str_replace(' ', 'T', $msg->getRawOriginal('created_at')) . 'Z' : null,
+                'sender'     => ['id' => $msg->sender?->id, 'name' => $msg->sender?->name],
+                'is_mine'    => true,
+            ],
+        ], 201);
     }
 
     public function unreadCount(Request $request): JsonResponse
@@ -59,14 +133,36 @@ class ChatController extends Controller
     public function allowedUsers(Request $request): JsonResponse
     {
         try {
-            $user    = $request->user();
-            $allowed = $this->permissions->getAllowedChatUsers($user);
-            $result  = $allowed->map(fn(User $u) => [
+            $user   = $request->user();
+            $search = $request->query('search');
+            $allowed = $this->permissions->getAllowedChatUsers($user, $search ?: null);
+
+            $roleLabels = [
+                'student'                   => 'طالب',
+                'academic_supervisor'       => 'مشرف أكاديمي',
+                'field_supervisor'          => 'مشرف ميداني',
+                'teacher'                   => 'معلم مرشد',
+                'adviser'                   => 'مرشد تربوي',
+                'psychologist'              => 'أخصائي نفسي',
+                'training_coordinator'      => 'منسق تدريب',
+                'head_of_department'        => 'رئيس قسم',
+                'school_manager'            => 'مدير مدرسة',
+                'principal'                 => 'مدير المدرسة',
+                'psychology_center_manager' => 'مدير مركز نفسي',
+                'education_directorate'     => 'مديرية التربية',
+                'health_directorate'        => 'مديرية الصحة',
+                'admin'                     => 'مدير النظام',
+            ];
+
+            $result = $allowed->map(fn(User $u) => [
                 'id'            => $u->id,
                 'name'          => $u->name,
                 'role'          => $u->role?->name,
+                'role_label'    => $roleLabels[$u->role?->name] ?? ($u->role?->name ?? ''),
                 'department_id' => $u->department_id,
+                'university_id' => $u->university_id,
             ])->values();
+
             return response()->json(['success' => true, 'data' => $result]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

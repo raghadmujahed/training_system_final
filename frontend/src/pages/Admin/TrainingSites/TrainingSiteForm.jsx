@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingSite, createTrainingSite, updateTrainingSite } from "../../../services/api";
 import * as XLSX from "xlsx";
@@ -7,6 +7,7 @@ import { useAuth } from "../../../stores/AuthContext";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/ui/Button";
 import { isRequired, isMinValue, isValidEmail, isValidLandlinePhone, getLandlinePhoneErrorMessage, isValidMobilePhone, getMobilePhoneErrorMessage } from "../../../utils/validation";
+import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function TrainingSiteForm() {
   const toast = useAppToast();
@@ -34,6 +35,7 @@ export default function TrainingSiteForm() {
     manager_id: "",
     is_active: true,
   });
+  const originalRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkFile, setBulkFile] = useState(null);
@@ -46,7 +48,7 @@ export default function TrainingSiteForm() {
       getTrainingSite(id).then((data) => {
         // API response might be nested, extract the actual data
         const siteData = data.data || data;
-        setForm({
+        const loaded = {
           name: siteData.name || "",
           location: siteData.location || "",
           phone: siteData.phone || "",
@@ -62,7 +64,9 @@ export default function TrainingSiteForm() {
           school_level: siteData.school_level || "",
           manager_id: siteData.manager_id || "",
           is_active: siteData.is_active !== undefined ? siteData.is_active : true,
-        });
+        };
+        originalRef.current = loaded;
+        setForm(loaded);
       });
     }
   }, [id]);
@@ -136,11 +140,17 @@ export default function TrainingSiteForm() {
       return;
     }
     
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
+      return;
+    }
+
     setLoading(true);
     try {
       if (id) {
-        await updateTrainingSite(id, form);
-        toast.success("تم تحديث مكان التدريب بنجاح.");
+        const res = await updateTrainingSite(id, form);
+        if (res?.status === 'no_changes') { toast.info("لم تقم بتغيير أي بيانات"); return; }
+        toast.success("تم تحديث البيانات بنجاح");
       } else {
         await createTrainingSite(form);
         toast.success("تم إضافة مكان التدريب بنجاح.");

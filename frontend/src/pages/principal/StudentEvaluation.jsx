@@ -48,6 +48,7 @@ export default function StudentEvaluation() {
 
   const [students, setStudents] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   const evalFields = useMemo(() => {
     if (isPsychCenter) return PSYCH_CENTER_EVAL_FIELDS;
@@ -72,6 +73,7 @@ export default function StudentEvaluation() {
   const fetchStudents = async () => {
     try {
       setLoading(true);
+      setFetchError(null);
       const response = await getMySiteStudents();
       
       const allStudents = (response.students || []).map((student) => ({
@@ -91,7 +93,8 @@ export default function StudentEvaluation() {
       setStudents(allStudents);
     } catch (error) {
       console.error("Failed to load students:", error);
-      toast.error("تعذر تحميل بيانات الطلبة.");
+      const msg = error?.response?.data?.message || "تعذر تحميل بيانات الطلبة.";
+      setFetchError(msg);
     } finally {
       setLoading(false);
     }
@@ -136,6 +139,46 @@ export default function StudentEvaluation() {
   if (loading) {
     return (
       <LoadingSpinner size="page" text="جاري تحميل بيانات الطلبة..." />
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div>
+        <div className="hero-section mb-4">
+          <div className="hero-content">
+            <div className="hero-icon"><Users size={26} /></div>
+            <div className="flex-1">
+              <h1 className="hero-title">تقييم الطلبة</h1>
+            </div>
+          </div>
+        </div>
+        <div className="section-card p-8 rounded-2xl border border-[#fee2e2] bg-[#fff5f5] flex flex-col items-center gap-3 text-center">
+          <AlertCircle size={40} className="text-[#dc2626]" />
+          <p className="text-[1rem] font-semibold text-[#dc2626]">{fetchError}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (students.length === 0) {
+    return (
+      <div>
+        <div className="hero-section mb-4">
+          <div className="hero-content">
+            <div className="hero-icon"><Users size={26} /></div>
+            <div className="flex-1">
+              <h1 className="hero-title">تقييم الطلبة</h1>
+              <p className="hero-subtitle">اختر الطالب ثم قم بتعبئة نموذج التقييم</p>
+            </div>
+          </div>
+        </div>
+        <div className="section-card p-8 rounded-2xl border border-[#e2e8f0] flex flex-col items-center gap-3 text-center">
+          <Users size={36} className="text-[#94a3b8]" />
+          <p className="text-[1rem] font-semibold text-[#64748b]">لا يوجد طلبة مرتبطون بجهة التدريب الخاصة بك حالياً</p>
+          <p className="text-[0.85rem] text-[#94a3b8]">سيظهر الطلبة هنا بعد الموافقة على طلبات التدريب المرتبطة بموقعك</p>
+        </div>
+      </div>
     );
   }
 

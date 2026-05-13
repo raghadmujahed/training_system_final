@@ -315,6 +315,43 @@ export const sendTrainingRequestBatch = (id, data) =>
 // services/api.js
 export const getDashboardStats = () => apiClient.get('/dashboard/stats').then(res => res.data);
 export const getAdminReports = (params) => apiClient.get('/admin/reports', { params }).then(res => res.data);
+
+// ==================== Admin Exports ====================
+/**
+ * Trigger a file download from a blob response.
+ * If backend returns JSON error (e.g. 403), parse and throw it.
+ */
+async function downloadBlob(promise, filename) {
+  const response = await promise;
+  const blob = response.data;
+  // If backend returned JSON (error case) instead of CSV
+  if (blob.type === 'application/json' || blob.type === 'text/html') {
+    const text = await blob.text();
+    let msg = 'فشل التصدير';
+    try { msg = JSON.parse(text)?.message || msg; } catch (_) {}
+    throw new Error(msg);
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export const exportUsers = (params = {}) =>
+  downloadBlob(
+    apiClient.get('/admin/export/users', { params, responseType: 'blob' }),
+    `users_export_${new Date().toISOString().slice(0, 10)}.csv`
+  );
+
+export const exportTrainingRequests = (params = {}) =>
+  downloadBlob(
+    apiClient.get('/admin/export/training-requests', { params, responseType: 'blob' }),
+    `training_requests_export_${new Date().toISOString().slice(0, 10)}.csv`
+  );
 // ==================== Users ====================
 export const getUsers = (params) => apiClient.get('/users', { params }).then(res => res.data);
 export const searchSupervisors = (query) => apiClient.get('/users/search', { params: { query, role: 'academic_supervisor' } }).then(res => res.data);
@@ -361,6 +398,7 @@ export const deleteEnrollment = (id) => apiClient.delete(`/enrollments/${id}`).t
 
 // ==================== Training Sites ====================
 export const getTrainingSites = (params) => apiClient.get('/training-sites', { params }).then(res => res.data);
+export const getAvailableTrainingSites = (params) => apiClient.get('/training-sites/available', { params }).then(res => res.data);
 export const createTrainingSite = (data) => apiClient.post('/training-sites', data).then(res => res.data);
 export const updateTrainingSite = (id, data) => apiClient.put(`/training-sites/${id}`, data).then(res => res.data);
 export const deleteTrainingSite = (id) => apiClient.delete(`/training-sites/${id}`).then(res => res.data);
@@ -383,6 +421,7 @@ export const createTrainingPeriod = (data) => apiClient.post('/training-periods'
 export const updateTrainingPeriod = (id, data) => apiClient.put(`/training-periods/${id}`, data).then(res => res.data);
 export const deleteTrainingPeriod = (id) => apiClient.delete(`/training-periods/${id}`).then(res => res.data);
 export const setActivePeriod = (id) => apiClient.patch(`/training-periods/${id}/set-active`).then(res => res.data);
+export const getActiveTrainingPeriod = () => apiClient.get('/sections/active-training-period').then(res => res.data);
 
 // ==================== Announcements ====================
 export const getAnnouncements = (params = {}) =>

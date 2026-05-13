@@ -67,11 +67,24 @@ class SectionController extends Controller
         $data = $request->validated();
         $data['created_by'] = auth()->id();
 
-        // Auto-assign active training period
+        // Auto-assign active training period — this is the authoritative source
         $activePeriod = TrainingPeriod::active()->first();
-        if ($activePeriod) {
-            $data['training_period_id'] = $activePeriod->id;
+        if (! $activePeriod) {
+            return response()->json([
+                'message' => 'لا توجد فترة تدريبية مفعلة حالياً، يرجى تفعيل فترة تدريبية أولاً.',
+                'errors' => [
+                    'training_period' => ['لا توجد فترة تدريبية مفعلة حالياً، يرجى تفعيل فترة تدريبية أولاً.']
+                ]
+            ], 422);
         }
+
+        // Always use the active period values — override whatever the frontend sent
+        $data['training_period_id'] = $activePeriod->id;
+        $data['academic_year'] = (int) $activePeriod->start_date->format('Y');
+        $data['semester'] = $this->resolveSemesterFromDates($activePeriod->start_date, $activePeriod->end_date);
+
+        // Remove department_id — not a sections column, only used for filtering
+        unset($data['department_id']);
 
         // Validate supervisor matches course department
         $this->ensureAcademicSupervisorMatchesCourse(
@@ -79,12 +92,63 @@ class SectionController extends Controller
             (int) $data['course_id']
         );
 
-        $section = Section::create($data);
+        try {
+            $section = Section::create($data);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Convert SQL duplicate / constraint violations to 422
+            $sqlCode = $e->errorInfo[1] ?? 0;
+            if ($sqlCode === 1062) {
+                return response()->json([
+                    'message' => 'يوجد شعبة بهذا الاسم في نفس المساق والفترة التدريبية الحالية.',
+                    'errors' => [
+                        'name' => ['يوجد شعبة بهذا الاسم في نفس المساق والفترة التدريبية الحالية.']
+                    ]
+                ], 422);
+            }
+            // Unknown column or other DB structural issue
+            if ($sqlCode === 1054) {
+                \Illuminate\Support\Facades\Log::error('Section create column error', [
+                    'message' => $e->getMessage(),
+                    'data_keys' => array_keys($data),
+                ]);
+                return response()->json([
+                    'message' => 'خطأ في بنية قاعدة البيانات. يرجى التواصل مع مسؤول النظام.',
+                    'errors' => ['database' => [$e->getMessage()]]
+                ], 422);
+            }
+            throw $e;
+        }
 
         // إشعار المشرف الأكاديمي
         $this->notifySupervisorAssigned($section, $data['academic_supervisor_id']);
 
         return new SectionResource($section->load(['course', 'academicSupervisor', 'createdBy']));
+    }
+
+    /**
+     * Get the currently active training period
+     */
+    public function getActiveTrainingPeriod()
+    {
+        $activePeriod = TrainingPeriod::active()->first();
+
+        if (! $activePeriod) {
+            return response()->json([
+                'message' => 'لا توجد فترة تدريبية مفعلة حالياً',
+                'data' => null
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'id' => $activePeriod->id,
+                'name' => $activePeriod->name,
+                'academic_year' => $activePeriod->start_date->format('Y'),
+                'semester' => $this->resolveSemesterFromDates($activePeriod->start_date, $activePeriod->end_date),
+                'start_date' => $activePeriod->start_date->toDateString(),
+                'end_date' => $activePeriod->end_date->toDateString(),
+            ]
+        ]);
     }
 
     public function show(Section $section)
@@ -241,10 +305,14 @@ class SectionController extends Controller
     public function assignSupervisor(Request $request, Section $section)
     {
         $request->validate([
-            'supervisor_id' => 'nullable|exists:users,id'
+            'supervisor_id' => [
+                'required',
+                'integer',
+                'exists:users,id',
+            ],
         ]);
 
-        $this->ensureAcademicSupervisorMatchesCourse($request->supervisor_id, (int) $section->course_id);
+        $this->ensureAcademicSupervisorMatchesCourse((int) $request->supervisor_id, (int) $section->course_id);
 
         // Check if academic supervisor is already assigned to another section of the same course
         if ($request->supervisor_id) {
@@ -302,7 +370,7 @@ class SectionController extends Controller
     private function ensureAcademicSupervisorMatchesCourse(?int $supervisorId, int $courseId): void
     {
         if (! $supervisorId) {
-            return;
+            abort(422, 'يجب تعيين مشرف أكاديمي للشعبة');
         }
 
         $supervisor = User::with(['role', 'department'])->findOrFail($supervisorId);
@@ -322,5 +390,26 @@ class SectionController extends Controller
                 'قسم المشرف الأكاديمي لا يطابق قسم المساق.'
             );
         }
+    }
+
+    /**
+     * Resolve semester from date range
+     */
+    private function resolveSemesterFromDates($startDate, $endDate): string
+    {
+        $startMonth = (int) $startDate->format('n');
+
+        // Summer: June-August (6-8)
+        if ($startMonth >= 6 && $startMonth <= 8) {
+            return 'summer';
+        }
+
+        // Second semester: January-May (1-5)
+        if ($startMonth >= 1 && $startMonth <= 5) {
+            return 'second';
+        }
+
+        // First semester: September-December (9-12)
+        return 'first';
     }
 }

@@ -126,7 +126,11 @@ class TrainingSiteController extends Controller
     public function update(UpdateTrainingSiteRequest $request, TrainingSite $trainingSite)
     {
         try {
-            $trainingSite->update($request->validated());
+            $trainingSite->fill($request->validated());
+            if (!$trainingSite->isDirty()) {
+                return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+            }
+            $trainingSite->save();
             return new TrainingSiteResource($trainingSite);
         } catch (\Exception $e) {
             \Log::error('TrainingSite update error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
@@ -145,6 +149,117 @@ class TrainingSiteController extends Controller
             \Log::error('TrainingSite destroy error: ' . $e->getMessage());
             return response()->json(['message' => 'حدث خطأ أثناء حذف مكان التدريب.'], 500);
         }
+    }
+
+    /**
+     * GET /training-sites/available
+     *
+     * Student-facing endpoint: returns only active, manager-linked training sites
+     * that match the supplied filter criteria. Filters are REQUIRED for education
+     * students (governing_body + site_type + directorate). Missing required filters
+     * return 422 instead of dumping all sites.
+     *
+     * Additional filters accepted:
+     *   - governing_body   (required if site_type = school)
+     *   - site_type        (required if governing_body = directorate_of_education)
+     *   - directorate      (required for education track)
+     *   - gender_classification  (optional)
+     *   - school_level           (optional: 'lower'|'upper' — also matches 'both' sites)
+     *   - search           (optional name/location search)
+     */
+    public function availableForStudent(\Illuminate\Http\Request $request)
+    {
+        $governingBody = trim((string) ($request->governing_body ?? ''));
+        $siteType      = trim((string) ($request->site_type ?? ''));
+        $directorate   = trim((string) ($request->directorate ?? ''));
+
+        // Require governing_body and site_type for all calls
+        if ($governingBody === '' || $siteType === '') {
+            return response()->json([
+                'message' => 'يرجى اختيار الجهة الرسمية ونوع الموقع لعرض أماكن التدريب المناسبة',
+                'errors' => [
+                    'filters' => ['governing_body و site_type مطلوبان'],
+                ],
+            ], 422);
+        }
+
+        // For education (school) track: directorate is required
+        if ($siteType === 'school' && $directorate === '') {
+            return response()->json([
+                'message' => 'يرجى اختيار المديرية لعرض أماكن التدريب المناسبة',
+                'errors' => [
+                    'directorate' => ['المديرية مطلوبة لعرض مدارس التدريب'],
+                ],
+            ], 422);
+        }
+
+        $query = TrainingSite::query()
+            ->where('is_active', true)
+            ->where('governing_body', $governingBody)
+            ->where('site_type', $siteType);
+
+        // Scope to authenticated education_directorate user's directorate
+        $user = $request->user();
+        $role = $user?->role?->name;
+        if ($role === 'education_directorate' && $user->directorate) {
+            $query->where('directorate', $user->directorate);
+        } elseif ($directorate !== '') {
+            $query->where(function ($q) use ($directorate) {
+                $q->where('directorate', $directorate)
+                  ->orWhere('directorate', 'like', '%' . $directorate . '%');
+            });
+        }
+
+        // gender_classification filter (exact match)
+        $genderClassification = trim((string) ($request->gender_classification ?? ''));
+        if ($genderClassification !== '') {
+            $query->where('gender_classification', $genderClassification);
+        }
+
+        // school_level filter: requested 'lower' or 'upper' should also match 'both'
+        $schoolLevel = trim((string) ($request->school_level ?? ''));
+        if ($schoolLevel !== '' && in_array($schoolLevel, ['lower', 'upper'], true)) {
+            $query->whereIn('school_level', [$schoolLevel, 'both']);
+        }
+
+        // General name/location search
+        if ($request->filled('search')) {
+            $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], trim((string) $request->search)) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', $term)
+                  ->orWhere('location', 'like', $term);
+            });
+        }
+
+        // Only sites that have a linked manager account
+        $query->whereIn('id', function ($sub) use ($siteType) {
+            $managerRoles = $siteType === 'health_center'
+                ? ['psychology_center_manager']
+                : ['school_manager', 'principal'];
+
+            $sub->select('training_site_id')
+                ->from('users')
+                ->whereNotNull('training_site_id')
+                ->whereIn('role_id', function ($roleSub) use ($managerRoles) {
+                    $roleSub->select('id')
+                        ->from('roles')
+                        ->whereIn('name', $managerRoles);
+                });
+        });
+
+        // Include occupancy data (capacity - active assignments)
+        $query->withCount([
+            'trainingAssignments as active_assignments_count' => static function ($q) {
+                $q->whereIn('status', ['assigned', 'ongoing']);
+            },
+        ]);
+
+        $query->with('manager');
+
+        $perPage = min((int) ($request->per_page ?? 200), 500);
+        $sites   = $query->orderBy('name')->paginate($perPage);
+
+        return TrainingSiteResource::collection($sites);
     }
 
     public function schoolsWithoutManager()

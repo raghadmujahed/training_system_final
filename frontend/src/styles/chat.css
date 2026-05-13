@@ -319,6 +319,14 @@
   color: #64748b;
 }
 
+.chat-draft-hint {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  padding: 24px 16px 8px;
+  direction: rtl;
+}
+
 /* ─── Messages Area ──────────────────────────────────────── */
 
 .chat-messages-area {
@@ -793,6 +801,19 @@
   font-weight: 500;
   text-align: left;
   word-break: break-word;
+}
+
+/* ─── Read-only notice (old conversation) ────────────────── */
+
+.chat-readonly-notice {
+  padding: 12px 16px;
+  background: #fff8e1;
+  border-top: 1px solid #ffe082;
+  color: #7c6200;
+  font-size: 13px;
+  text-align: center;
+  direction: rtl;
+  line-height: 1.5;
 }
 
 /* ─── Responsive ─────────────────────────────────────────── */

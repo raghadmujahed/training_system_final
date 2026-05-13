@@ -88,6 +88,8 @@ const ROUTE_ICON = {
   "/principal/training-requests": "fileText",
   "/principal/mentor-assignment": "fileText",
   "/principal/trainee-students": "graduation",
+  "/principal/student-evaluation": "star",
+  "/principal/attendance-approval": "clipboardCheck",
 
   "/psychology-center/dashboard": "home",
   "/psychology-center/profile": "user",

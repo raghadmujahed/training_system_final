@@ -1,27 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCourse, createCourse, updateCourse } from "../../../services/api";
 import { useDepartments } from "../../../hooks/useSharedData";
 import { isRequired, isMinValue, isMaxValue, isInteger } from "../../../utils/validation";
+import { hasFormChanged } from "../../../utils/formChanged";
+import useAppToast from "../../../hooks/useAppToast";
 
 export default function CourseForm() {
+  const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: departments } = useDepartments();
+  const originalRef = useRef(null);
   const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 0, type: "practical", department_id: "" });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (id) {
-      getCourse(id).then(data => setForm({
-        code: data?.code ?? "",
-        name: data?.name ?? "",
-        description: data?.description ?? "",
-        credit_hours: data?.credit_hours ?? 3,
-        training_hours: data?.training_hours ?? 0,
-        type: data?.type ?? "practical",
-        department_id: data?.department_id ?? "",
-      })).catch(() => {});
+      getCourse(id).then(data => {
+        const loaded = {
+          code: data?.code ?? "",
+          name: data?.name ?? "",
+          description: data?.description ?? "",
+          credit_hours: data?.credit_hours ?? 3,
+          training_hours: data?.training_hours ?? 0,
+          type: data?.type ?? "practical",
+          department_id: data?.department_id ?? "",
+        };
+        originalRef.current = loaded;
+        setForm(loaded);
+      }).catch(() => {});
     }
   }, [id]);
 
@@ -80,17 +88,27 @@ export default function CourseForm() {
     if (!validateForm()) {
       return;
     }
+
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
+      return;
+    }
     
     setErrors({});
     try {
-      if (id) await updateCourse(id, form);
-      else await createCourse(form);
+      if (id) {
+        const res = await updateCourse(id, form);
+        if (res?.status === 'no_changes') { toast.info("لم تقم بتغيير أي بيانات"); return; }
+        toast.success("تم تحديث البيانات بنجاح");
+      } else {
+        await createCourse(form);
+      }
       navigate("/admin/courses");
     } catch (err) {
       if (err.response?.data?.errors) {
         setErrors(err.response.data.errors);
       } else {
-        alert(err.response?.data?.message || "حدث خطأ أثناء حفظ المساق");
+        toast.error(err.response?.data?.message || "حدث خطأ أثناء حفظ المساق");
       }
     }
   };

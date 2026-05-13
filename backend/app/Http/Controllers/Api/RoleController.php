@@ -35,8 +35,30 @@ class RoleController extends Controller
 
     public function update(UpdateRoleRequest $request, Role $role)
     {
-        $role->update($request->only('name'));
+        $nameChanged = false;
+        $permissionsChanged = false;
+
+        // Check name change
+        $role->fill($request->only('name'));
+        if ($role->isDirty('name')) {
+            $nameChanged = true;
+        }
+
+        // Check permissions change
         if ($request->has('permissions')) {
+            $currentIds = $role->permissions()->pluck('permissions.id')->sort()->values()->toArray();
+            $newIds = collect($request->permissions)->sort()->values()->toArray();
+            $permissionsChanged = $currentIds !== $newIds;
+        }
+
+        if (!$nameChanged && !$permissionsChanged) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+
+        if ($nameChanged) {
+            $role->save();
+        }
+        if ($permissionsChanged) {
             $role->permissions()->sync($request->permissions);
         }
         return new RoleResource($role->load('permissions'));

@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingPeriod, createTrainingPeriod, updateTrainingPeriod } from "../../../services/api";
 import useAppToast from "../../../hooks/useAppToast";
+import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function TrainingPeriodForm() {
   const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
+  const originalRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -19,12 +21,14 @@ export default function TrainingPeriodForm() {
   useEffect(() => {
     if (id) {
       getTrainingPeriod(id).then((data) => {
-        setForm({
+        const loaded = {
           name: data.name || "",
           start_date: data.start_date || "",
           end_date: data.end_date || "",
-          is_active: data.is_active || false,
-        });
+          is_active: data.is_active ?? false,
+        };
+        originalRef.current = loaded;
+        setForm(loaded);
       }).catch(console.error);
     }
   }, [id]);
@@ -40,11 +44,19 @@ export default function TrainingPeriodForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
+      return;
+    }
+
     setLoading(true);
     setErrors({});
     try {
       if (id) {
-        await updateTrainingPeriod(id, form);
+        const res = await updateTrainingPeriod(id, form);
+        if (res?.status === 'no_changes') { toast.info("لم تقم بتغيير أي بيانات"); return; }
+        toast.success("تم تحديث البيانات بنجاح");
       } else {
         await createTrainingPeriod(form);
       }

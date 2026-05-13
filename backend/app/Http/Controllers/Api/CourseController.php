@@ -51,7 +51,11 @@ class CourseController extends Controller
 
     public function update(UpdateCourseRequest $request, Course $course)
     {
-        $course->update($request->validated());
+        $course->fill($request->validated());
+        if (!$course->isDirty()) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+        $course->save();
         return new CourseResource($course);
     }
 

@@ -43,10 +43,11 @@
 }
 
 .filters-bar {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 12px;
-  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 14px 16px;
   background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -55,13 +56,35 @@
 
 .filters-bar input,
 .filters-bar select {
-  width: 100%;
-  min-height: 46px;
+  flex: 0 1 auto;
+  min-width: 180px;
+  max-width: 260px;
+  width: auto;
+  min-height: 44px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   background: #fff;
   transition: var(--transition);
+}
+
+/* Search inputs get a bit more room */
+.filters-bar input[type="text"],
+.filters-bar input[type="search"] {
+  min-width: 220px;
+  max-width: 340px;
+}
+
+/* Date inputs stay compact */
+.filters-bar input[type="date"] {
+  min-width: 160px;
+  max-width: 200px;
+}
+
+/* Buttons inside filters should not stretch */
+.filters-bar > button,
+.filters-bar > a {
+  flex: 0 0 auto;
 }
 
 .page-content input:not([type="checkbox"]):not([type="radio"]),
@@ -567,5 +590,23 @@
   .form-actions .btn-primary,
   .form-actions .btn-secondary {
     width: 100%;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-bar input,
+  .filters-bar select {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+  }
+
+  .filters-bar > button,
+  .filters-bar > a {
+    width: 100%;
+    text-align: center;
   }
 }

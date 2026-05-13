@@ -13,7 +13,19 @@ class ChatService
     public function __construct(private ChatPermissionService $permissions) {}
 
     /**
-     * Returns an existing direct chat between two users, or creates one.
+     * Find an existing direct chat between two users WITHOUT creating one.
+     * Returns null if none exists.
+     */
+    public function findDirectChat(User $userA, User $userB): ?Chat
+    {
+        return Chat::where('type', 'direct')
+            ->whereHas('participants', fn($q) => $q->where('user_id', $userA->id))
+            ->whereHas('participants', fn($q) => $q->where('user_id', $userB->id))
+            ->first();
+    }
+
+    /**
+     * Find an existing direct chat or create one. Still used by legacy code.
      * Throws \RuntimeException when messaging is not permitted.
      */
     public function createOrGetDirectChat(User $userA, User $userB): Chat
@@ -22,12 +34,7 @@ class ChatService
             throw new \RuntimeException('غير مسموح لك بمراسلة هذا المستخدم.', 403);
         }
 
-        // Look for an existing direct chat that contains exactly these two users
-        $existing = Chat::where('type', 'direct')
-            ->whereHas('participants', fn($q) => $q->where('user_id', $userA->id))
-            ->whereHas('participants', fn($q) => $q->where('user_id', $userB->id))
-            ->first();
-
+        $existing = $this->findDirectChat($userA, $userB);
         if ($existing) {
             return $existing;
         }
@@ -41,12 +48,52 @@ class ChatService
     }
 
     /**
+     * Start a conversation with the first message in one atomic operation.
+     * Creates the chat only if it doesn't already exist.
+     * Throws \RuntimeException for permission violations.
+     */
+    public function startWithMessage(User $userA, User $userB, string $message, string $type = 'text'): array
+    {
+        if (! $this->permissions->canMessage($userA, $userB)) {
+            throw new \RuntimeException('غير مسموح لك بمراسلة هذا المستخدم.', 403);
+        }
+
+        return DB::transaction(function () use ($userA, $userB, $message, $type) {
+            $chat = $this->findDirectChat($userA, $userB);
+            if (! $chat) {
+                $chat = Chat::create(['type' => 'direct']);
+                ChatParticipant::create(['chat_id' => $chat->id, 'user_id' => $userA->id]);
+                ChatParticipant::create(['chat_id' => $chat->id, 'user_id' => $userB->id]);
+            }
+            $msg = $this->sendMessage($chat, $userA, $message, $type);
+            return [$chat, $msg];
+        });
+    }
+
+    /**
      * Send a message and mark as read for sender.
+     * Also enforces current communication permission so old broken-relation convos become read-only.
      */
     public function sendMessage(Chat $chat, User $sender, string $message, string $type = 'text'): ChatMessage
     {
         if (! $chat->participants()->where('user_id', $sender->id)->exists()) {
             throw new \RuntimeException('لست مشاركاً في هذه المحادثة.', 403);
+        }
+
+        // Enforce permission check against the other participant (skip for admin senders)
+        if ($sender->role?->name !== 'admin') {
+            $otherParticipant = $chat->participants()
+                ->where('user_id', '!=', $sender->id)
+                ->with('user.role')
+                ->first()
+                ?->user;
+
+            if ($otherParticipant && ! $this->permissions->canMessage($sender, $otherParticipant)) {
+                throw new \RuntimeException(
+                    'هذه المحادثة قديمة ولا يمكن إرسال رسائل جديدة لأنها لم تعد ضمن نطاق التواصل المسموح.',
+                    403
+                );
+            }
         }
 
         $msg = ChatMessage::create([
@@ -84,10 +131,12 @@ class ChatService
 
     /**
      * Load chats for a user with last message + unread count.
+     * Only returns chats that have at least one message (no empty drafts).
      */
     public function getUserChats(User $user): \Illuminate\Support\Collection
     {
         return Chat::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
+            ->whereHas('messages')
             ->with([
                 'participants.user:id,name,role_id',
                 'participants.user.role:id,name',

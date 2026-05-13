@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import useAppToast from "../../../hooks/useAppToast";
 import { useRoles, useDepartments } from "../../../hooks/useSharedData";
@@ -8,12 +8,14 @@ import {
   updateAnnouncement,
   getUsers,
 } from "../../../services/api";
+import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function AnnouncementForm() {
   const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
 
+  const originalRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const { data: roles } = useRoles();
   const { data: departments } = useDepartments();
@@ -55,12 +57,14 @@ export default function AnnouncementForm() {
             targetIds = deptIds;
           }
 
-          setForm({
+          const loaded = {
             title: data.title,
             content: data.content,
             target_type: targetType,
             target_ids: targetIds,
-          });
+          };
+          originalRef.current = loaded;
+          setForm(loaded);
         } catch (error) {
           console.error(error);
         }
@@ -101,6 +105,11 @@ export default function AnnouncementForm() {
       return;
     }
     
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
+      return;
+    }
+
     setLoading(true);
     setErrors({});
 
@@ -119,7 +128,9 @@ export default function AnnouncementForm() {
       }
 
       if (id) {
-        await updateAnnouncement(id, payload);
+        const res = await updateAnnouncement(id, payload);
+        if (res?.status === 'no_changes') { toast.info("لم تقم بتغيير أي بيانات"); return; }
+        toast.success("تم تحديث البيانات بنجاح");
       } else {
         await createAnnouncement(payload);
       }

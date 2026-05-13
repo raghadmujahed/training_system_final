@@ -45,7 +45,11 @@ class TrainingPeriodController extends Controller
         if ($request->has('is_active') && $request->is_active) {
             TrainingPeriod::where('is_active', true)->where('id', '!=', $trainingPeriod->id)->update(['is_active' => false]);
         }
-        $trainingPeriod->update($request->validated());
+        $trainingPeriod->fill($request->validated());
+        if (!$trainingPeriod->isDirty()) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+        $trainingPeriod->save();
         return new TrainingPeriodResource($trainingPeriod);
     }
 

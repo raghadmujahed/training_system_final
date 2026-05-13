@@ -1,19 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getDepartment, createDepartment, updateDepartment } from "../../../services/api";
 import useAppToast from "../../../hooks/useAppToast";
 import { isRequired, getNameErrorMessage } from "../../../utils/validation";
 import { apiCache } from "../../../services/apiCache";
+import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function DepartmentForm() {
   const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
+  const originalRef = useRef(null);
   const [name, setName] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   
   useEffect(() => { 
-    if (id) getDepartment(id).then(data => setName(data.name)); 
+    if (id) getDepartment(id).then(data => {
+      originalRef.current = { name: data.name ?? "" };
+      setName(data.name ?? "");
+    }); 
   }, [id]);
 
   const handleChange = (e) => {
@@ -45,9 +50,19 @@ export default function DepartmentForm() {
       return;
     }
 
+    if (id && !hasFormChanged(originalRef.current, { name })) {
+      toast.info("لم تقم بتغيير أي بيانات");
+      return;
+    }
+
     try {
-      if (id) await updateDepartment(id, { name });
-      else await createDepartment({ name });
+      if (id) {
+        const res = await updateDepartment(id, { name });
+        if (res?.status === 'no_changes') { toast.info("لم تقم بتغيير أي بيانات"); return; }
+        toast.success("تم تحديث البيانات بنجاح");
+      } else {
+        await createDepartment({ name });
+      }
       // Invalidate departments cache to refresh the list
       apiCache.invalidate("departments:list");
       navigate("/admin/departments");

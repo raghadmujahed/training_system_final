@@ -173,7 +173,7 @@ export default function HeadOfDepartmentDashboard() {
         </div>
       </div>
 
-      {stats.students_per_section && stats.students_per_section.length > 0 && (
+      {stats?.students_per_section && stats.students_per_section.length > 0 && (
         <div className="dashboard-card full-width">
           <div className="card-header">
             <h2>الطلاب لكل شعبة</h2>

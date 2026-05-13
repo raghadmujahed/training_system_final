@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Archive, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Database, Eye, ShieldAlert } from "lucide-react";
+import { Archive, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Database, Eye, ShieldAlert, Lock } from "lucide-react";
 import { getArchiveBatches, getArchiveActivePeriod, getArchivePreview, archivePeriod } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useAppToast from "../../hooks/useAppToast";
+import { useAuth } from "../../stores/AuthContext";
 
 const TABLE_LABELS = {
   sections: "الشعب",
@@ -40,38 +41,79 @@ const STATUS_COLORS = {
 export default function AdminArchive() {
   const toast = useAppToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const isAdmin = user?.role?.name === "admin";
+
   const [batches, setBatches] = useState([]);
   const [activePeriod, setActivePeriod] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [archiving, setArchiving] = useState(false);
-  const [error, setError] = useState(null);
+  const [batchesError, setBatchesError] = useState(null);
+  const [periodError, setPeriodError] = useState(null);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [batchesData, activeData] = await Promise.all([
-        getArchiveBatches(),
-        getArchiveActivePeriod(),
-      ]);
-      setBatches(batchesData?.batches || []);
+    if (!isAdmin) {
+      setUnauthorized(true);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setBatchesError(null);
+    setPeriodError(null);
+    setUnauthorized(false);
+
+    // Fetch batches and active period independently so one failure doesn't kill both
+    const [batchesResult, activeResult] = await Promise.allSettled([
+      getArchiveBatches(),
+      getArchiveActivePeriod(),
+    ]);
+
+    // Handle batches result
+    if (batchesResult.status === "fulfilled") {
+      setBatches(batchesResult.value?.batches || []);
+    } else {
+      const err = batchesResult.reason;
+      const status = err?.response?.status;
+      if (status === 403) {
+        setUnauthorized(true);
+      } else {
+        setBatchesError(err?.response?.data?.message || "حدث خطأ أثناء جلب سجل الأرشفة");
+      }
+    }
+
+    // Handle active period result
+    if (activeResult.status === "fulfilled") {
+      const activeData = activeResult.value;
       setActivePeriod(activeData);
       if (activeData?.period?.id && !activeData?.is_archived) {
-        const previewData = await getArchivePreview(activeData.period.id);
-        setPreview(previewData);
+        try {
+          const previewData = await getArchivePreview(activeData.period.id);
+          setPreview(previewData);
+        } catch {
+          // Preview failure is non-critical, just skip
+        }
       }
-    } catch (err) {
-      console.error("Archive load error:", err);
-      setError(err?.response?.data?.message || "فشل في تحميل بيانات الأرشفة");
-    } finally {
-      setLoading(false);
+    } else {
+      const err = activeResult.reason;
+      const status = err?.response?.status;
+      if (status === 403) {
+        setUnauthorized(true);
+      } else {
+        setPeriodError(err?.response?.data?.message || "حدث خطأ أثناء جلب الفترة النشطة");
+      }
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   const handleArchive = async () => {
     if (!activePeriod?.period?.id) {
@@ -105,6 +147,26 @@ export default function AdminArchive() {
     return <LoadingSpinner size="section" text="جاري تحميل البيانات..." />;
   }
 
+  // Show unauthorized screen if not admin
+  if (unauthorized) {
+    return (
+      <div className="p-6 max-w-[1200px] mx-auto">
+        <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+          <h1 className="m-0 flex items-center gap-2 text-2xl font-bold">
+            <Archive size={28} /> إدارة الأرشفة
+          </h1>
+        </div>
+        <div className="bg-[#fee2e2] border border-[#fca5a5] rounded-xl p-8 flex flex-col items-center gap-4 text-center">
+          <Lock size={48} className="text-[#dc2626]" />
+          <h2 className="m-0 text-xl font-bold text-[#dc2626]">غير مصرح بالوصول</h2>
+          <p className="m-0 text-[#666] max-w-md">
+            صفحة إدارة الأرشفة متاحة فقط لمسؤول النظام. إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع المسؤول.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const totalToArchive = preview?.counts
     ? Object.values(preview.counts).reduce((sum, n) => sum + (n || 0), 0)
     : 0;
@@ -125,20 +187,13 @@ export default function AdminArchive() {
         </button>
       </div>
 
-      {error && (
-        <div className="bg-[#fee] text-[#c00] p-4 rounded-lg mb-4 flex items-center gap-2">
-          <AlertTriangle size={20} /> {error}
-        </div>
-      )}
-
-      {/* Admin-only warning banner */}
+      {/* Admin-only notice banner */}
       <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-lg p-4 mb-6 flex items-center gap-3">
         <ShieldAlert size={24} className="text-[#1e40af]" />
         <div>
-          <p className="m-0 font-semibold text-[#1e40af]">صلاحية مسؤول النظام مطلوبة</p>
+          <p className="m-0 font-semibold text-[#1e40af]">تنبيه: عملية حساسة</p>
           <p className="m-0 text-sm text-[#666]">
-            أرشفة البيانات عملية حساسة ولا يمكن تنفيذها إلا من قبل مسؤول النظام.
-            تأكد من مراجعة البيانات جيداً قبل التنفيذ.
+            أرشفة البيانات عملية لا يمكن التراجع عنها. تأكد من مراجعة البيانات جيداً قبل التنفيذ.
           </p>
         </div>
       </div>
@@ -149,7 +204,11 @@ export default function AdminArchive() {
           <Calendar size={20} /> الفترة النشطة الحالية
         </h2>
 
-        {activePeriod?.period ? (
+        {periodError ? (
+          <div className="flex items-center gap-2 text-[#c00] bg-[#fee] p-3 rounded-lg">
+            <AlertTriangle size={18} /> {periodError}
+          </div>
+        ) : activePeriod?.period ? (
           <>
             <div className="flex gap-4 items-center mb-4 flex-wrap">
               <div className="bg-[#eff6ff] py-3 px-5 rounded-lg border border-[#bfdbfe]">
@@ -216,17 +275,29 @@ export default function AdminArchive() {
             </button>
           </>
         ) : (
-          <p className="text-[#666]">{activePeriod?.message || "لا توجد فترة تدريبية نشطة حالياً."}</p>
+          <div className="bg-[#fef3c7] border border-[#fde68a] rounded-lg p-4 flex items-start gap-3">
+            <AlertTriangle size={20} className="text-[#92400e] mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="m-0 font-semibold text-[#92400e]">لا توجد فترة تدريبية نشطة حالياً</p>
+              <p className="m-0 text-sm text-[#666] mt-1">
+                يرجى تفعيل فترة تدريبية من صفحة إدارة الفترات التدريبية قبل تنفيذ الأرشفة.
+              </p>
+            </div>
+          </div>
         )}
       </div>
 
       {/* Archive batches history */}
       <div className="bg-white rounded-xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
         <h2 className="mt-0 flex items-center gap-2 text-xl font-semibold">
-          <Database size={20} /> سجل عمليات الأرشفة ({batches.length})
+          <Database size={20} /> سجل عمليات الأرشفة {!batchesError && `(${batches.length})`}
         </h2>
 
-        {batches.length === 0 ? (
+        {batchesError ? (
+          <div className="flex items-center gap-2 text-[#c00] bg-[#fee] p-3 rounded-lg">
+            <AlertTriangle size={18} /> {batchesError}
+          </div>
+        ) : batches.length === 0 ? (
           <p className="text-[#666] text-center p-6">لا توجد عمليات أرشفة مسجلة بعد.</p>
         ) : (
           <div className="overflow-x-auto">

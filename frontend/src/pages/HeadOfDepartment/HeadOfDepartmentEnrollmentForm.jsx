@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { getEnrollment, createEnrollment, updateEnrollment, getSections, getStudents, bulkEnrollStudents, searchStudentsHeadDepartment } from "../../services/api";
+import { getEnrollment, createEnrollment, updateEnrollment, getSections, bulkEnrollStudents, searchStudentsHeadDepartment } from "../../services/api";
 import { Upload, FileSpreadsheet, Search, X } from "lucide-react";
 import useAppToast from "../../hooks/useAppToast";
 
@@ -13,7 +13,6 @@ export default function HeadOfDepartmentEnrollmentForm() {
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [sections, setSections] = useState([]);
-  const [students, setStudents] = useState([]);
   const [form, setForm] = useState({
     user_id: "",
     section_id: "",
@@ -27,6 +26,10 @@ export default function HeadOfDepartmentEnrollmentForm() {
     semester: "first",
   });
   const [selectedStudents, setSelectedStudents] = useState([]);
+  const [bulkStudents, setBulkStudents] = useState([]);
+  const [bulkSearch, setBulkSearch] = useState("");
+  const [bulkSearchResults, setBulkSearchResults] = useState([]);
+  const [bulkSearching, setBulkSearching] = useState(false);
   const [errors, setErrors] = useState({});
   const [bulkError, setBulkError] = useState(null);
   const [bulkSuccess, setBulkSuccess] = useState(null);
@@ -45,9 +48,6 @@ export default function HeadOfDepartmentEnrollmentForm() {
         const sectionsData = await getSections();
         const sectionsList = sectionsData.data?.data || sectionsData.data || [];
         setSections(sectionsList);
-
-        const studentsData = await getStudents();
-        setStudents(studentsData.data?.data || studentsData.data || []);
 
         // If section_id is provided in URL, auto-fill section and its academic_year/semester
         if (!id && preselectedSectionId) {
@@ -77,11 +77,15 @@ export default function HeadOfDepartmentEnrollmentForm() {
             semester: enrollmentData.semester,
             status: enrollmentData.status,
           });
-          // Set the student display text for editing
-          const allStudents = studentsData.data?.data || studentsData.data || [];
-          const student = allStudents.find(s => s.id === enrollmentData.user_id);
-          if (student) {
-            setSelectedStudentDisplay(`${student.name} (${student.university_id})`);
+          // Search for student display name using department-scoped endpoint
+          if (enrollmentData.user?.name) {
+            setSelectedStudentDisplay(`${enrollmentData.user.name} (${enrollmentData.user.university_id || ''})`);
+          } else if (enrollmentData.user_id) {
+            try {
+              const res = await searchStudentsHeadDepartment(String(enrollmentData.user_id));
+              const found = (res.data || [])[0];
+              if (found) setSelectedStudentDisplay(`${found.name} (${found.university_id})`);
+            } catch {}
           }
         }
       } catch (error) {
@@ -191,6 +195,38 @@ export default function HeadOfDepartmentEnrollmentForm() {
     }
   };
 
+  const handleBulkSearch = async (e) => {
+    const value = e.target.value;
+    setBulkSearch(value);
+    if (value.trim().length >= 2) {
+      setBulkSearching(true);
+      try {
+        const res = await searchStudentsHeadDepartment(value);
+        setBulkSearchResults(res.data || []);
+      } catch {
+        setBulkSearchResults([]);
+      } finally {
+        setBulkSearching(false);
+      }
+    } else {
+      setBulkSearchResults([]);
+    }
+  };
+
+  const addBulkStudent = (student) => {
+    if (!bulkStudents.find(s => s.id === student.id)) {
+      setBulkStudents(prev => [...prev, student]);
+      setSelectedStudents(prev => [...prev, student.id]);
+    }
+    setBulkSearch("");
+    setBulkSearchResults([]);
+  };
+
+  const removeBulkStudent = (studentId) => {
+    setBulkStudents(prev => prev.filter(s => s.id !== studentId));
+    setSelectedStudents(prev => prev.filter(id => id !== studentId));
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -199,19 +235,20 @@ export default function HeadOfDepartmentEnrollmentForm() {
     reader.onload = (event) => {
       const data = event.target.result;
       const rows = data.split('\n').map(row => row.trim()).filter(row => row);
-      
       // Assuming first column contains university IDs
       const studentIds = rows.slice(1).map(row => {
         const columns = row.split(',');
         return columns[0].trim();
       }).filter(id => id);
-
-      // Find students by university ID
-      const foundStudents = students.filter(student => 
-        studentIds.includes(student.university_id?.toString())
-      ).map(student => student.id);
-
-      setSelectedStudents(foundStudents);
+      // Resolve each university_id via search and add to bulk list
+      Promise.all(studentIds.map(uid => searchStudentsHeadDepartment(uid)))
+        .then(results => {
+          const found = results.flatMap(r => r.data || []).filter(Boolean);
+          const unique = found.filter((s, i, arr) => arr.findIndex(x => x.id === s.id) === i);
+          setBulkStudents(unique);
+          setSelectedStudents(unique.map(s => s.id));
+        })
+        .catch(() => {});
     };
     reader.readAsText(file);
   };
@@ -238,18 +275,11 @@ export default function HeadOfDepartmentEnrollmentForm() {
 
       setBulkSuccess(`تم تسجيل ${result.success_count} طالب بنجاح. فشل ${result.failed_count}.`);
       setSelectedStudents([]);
+      setBulkStudents([]);
     } catch (err) {
       setBulkError(err.response?.data?.message || "فشل في التسجيل الجماعي");
     } finally {
       setBulkLoading(false);
-    }
-  };
-
-  const toggleStudent = (studentId) => {
-    if (selectedStudents.includes(studentId)) {
-      setSelectedStudents(selectedStudents.filter(id => id !== studentId));
-    } else {
-      setSelectedStudents([...selectedStudents, studentId]);
     }
   };
 
@@ -418,21 +448,50 @@ export default function HeadOfDepartmentEnrollmentForm() {
           </div>
 
           <div className="section-card mb-4">
-            <h3>اختيار الطلاب يدوياً</h3>
-            <div className="max-h-[200px] overflow-y-auto border border-[#ddd] rounded p-2">
-              {students.map(student => (
-                <label key={student.id} className="flex items-center gap-2 p-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    id={`hod-enroll-bulk-student-${student.id}`}
-                    name={`bulk_student_${student.id}`}
-                    checked={selectedStudents.includes(student.id)}
-                    onChange={() => toggleStudent(student.id)}
-                  />
-                  <span>{student.name} ({student.university_id})</span>
-                </label>
-              ))}
+            <h3>إضافة طلاب يدوياً (بحث)</h3>
+            <div className="relative mb-3">
+              <input
+                type="text"
+                placeholder="ابحث عن طالب بالاسم أو الرقم الجامعي..."
+                value={bulkSearch}
+                onChange={handleBulkSearch}
+                className="w-full p-2 border border-[#ddd] rounded"
+              />
+              {bulkSearching && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded p-2 z-[100]">
+                  جاري البحث...
+                </div>
+              )}
+              {bulkSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-[#ddd] rounded max-h-[160px] overflow-y-auto z-[100]">
+                  {bulkSearchResults.map(s => (
+                    <div
+                      key={s.id}
+                      onClick={() => addBulkStudent(s)}
+                      className="p-2 cursor-pointer hover:bg-[#f5f5f5]"
+                    >
+                      {s.name} ({s.university_id})
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+            {bulkStudents.length > 0 && (
+              <div className="max-h-[200px] overflow-y-auto border border-[#ddd] rounded p-2">
+                {bulkStudents.map(student => (
+                  <div key={student.id} className="flex items-center justify-between p-1">
+                    <span>{student.name} ({student.university_id})</span>
+                    <button
+                      type="button"
+                      onClick={() => removeBulkStudent(student.id)}
+                      className="text-[#dc3545] text-xs"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="form-row">
