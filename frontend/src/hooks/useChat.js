@@ -4,6 +4,7 @@ import {
   getChatMessages,
   getChats,
   sendChatMessage,
+  startWithMessage,
 } from "../services/chatApi";
 
 const POLL_INTERVAL_MS = 4000;
@@ -27,16 +28,20 @@ const sortChats = (chats) =>
 export default function useChat() {
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
+  // draftUser: { id, name, role } — set when user selected but no conversation exists yet
+  const [draftUser, setDraftUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingChats, setLoadingChats] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [lastSendError, setLastSendError] = useState(null);
 
-  const pollRef        = useRef(null);
-  const sendQueueRef   = useRef(Promise.resolve());
-  const activeChatRef  = useRef(null);  // always holds latest activeChat
-  const pendingByChatRef = useRef({});  // only pending (unsent) messages per chat
+  const pollRef          = useRef(null);
+  const sendQueueRef     = useRef(Promise.resolve());
+  const activeChatRef    = useRef(null);  // always holds latest activeChat
+  const draftUserRef     = useRef(null);  // always holds latest draftUser
+  const pendingByChatRef = useRef({});    // only pending (unsent) messages per chat
 
   const fetchChats = useCallback(async (silent = false) => {
     if (!silent) setLoadingChats(true);
@@ -60,28 +65,58 @@ export default function useChat() {
   const openChat = useCallback(async (chatOrUserId, isUserId = false) => {
     setLoadingMessages(true);
     setError(null);
+    setLastSendError(null);
+    setDraftUser(null);
+    draftUserRef.current = null;
 
     try {
-      let chat = chatOrUserId;
       if (isUserId) {
-        chat = await createOrGetChat(chatOrUserId);
-      }
+        // Ask backend: does a conversation already exist with this user?
+        const res = await createOrGetChat(chatOrUserId);
 
-      activeChatRef.current = chat;
-      setMessages([]);
-      setActiveChat(chat);
+        if (res.draft) {
+          // No existing conversation — enter draft mode
+          const receiver = res.receiver;
+          draftUserRef.current = receiver;
+          setDraftUser(receiver);
+          activeChatRef.current = null;
+          setActiveChat(null);
+          setMessages([]);
+          setLoadingMessages(false);
+          return;
+        }
 
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === chat.id ? { ...c, unread_count: 0, _locallyRead: true } : c
-        )
-      );
-
-      const msgs = await getChatMessages(chat.id);
-      if (activeChatRef.current?.id === chat.id) {
-        const pending = pendingByChatRef.current[chat.id] ?? [];
-        const merged  = sortMessages([...msgs, ...pending]);
-        setMessages(merged);
+        // Existing conversation found
+        const chat = res.data;
+        activeChatRef.current = chat;
+        setMessages([]);
+        setActiveChat(chat);
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === chat.id ? { ...c, unread_count: 0, _locallyRead: true } : c
+          )
+        );
+        const msgs = await getChatMessages(chat.id);
+        if (activeChatRef.current?.id === chat.id) {
+          const pending = pendingByChatRef.current[chat.id] ?? [];
+          setMessages(sortMessages([...msgs, ...pending]));
+        }
+      } else {
+        // chatOrUserId is a full chat object (selected from sidebar)
+        const chat = chatOrUserId;
+        activeChatRef.current = chat;
+        setMessages([]);
+        setActiveChat(chat);
+        setChats((prev) =>
+          prev.map((c) =>
+            c.id === chat.id ? { ...c, unread_count: 0, _locallyRead: true } : c
+          )
+        );
+        const msgs = await getChatMessages(chat.id);
+        if (activeChatRef.current?.id === chat.id) {
+          const pending = pendingByChatRef.current[chat.id] ?? [];
+          setMessages(sortMessages([...msgs, ...pending]));
+        }
       }
     } catch (err) {
       setError(err?.response?.data?.message || "فشل فتح المحادثة");
@@ -91,8 +126,13 @@ export default function useChat() {
   }, []);
 
   const sendMessage = useCallback((text) => {
-    const chat = activeChatRef.current;
-    if (!chat || !text.trim()) return;
+    if (!text.trim()) return;
+
+    const chat   = activeChatRef.current;
+    const draft  = draftUserRef.current;
+
+    // Must have either a real chat or a draft user
+    if (!chat && !draft) return;
 
     const tempId = `temp_${Date.now()}_${Math.random()}`;
     const optimisticMsg = {
@@ -106,46 +146,56 @@ export default function useChat() {
       _pending: true,
     };
 
-    // Track pending per chat
-    pendingByChatRef.current[chat.id] = [
-      ...(pendingByChatRef.current[chat.id] ?? []),
-      optimisticMsg,
-    ];
-    if (activeChatRef.current?.id === chat.id) {
-      setMessages((prev) => sortMessages([...prev, optimisticMsg]));
-    }
+    // Show optimistic message immediately
+    setMessages((prev) => sortMessages([...prev, optimisticMsg]));
 
     sendQueueRef.current = sendQueueRef.current.then(async () => {
       setSending(true);
       try {
-        const msg = await sendChatMessage(chat.id, text.trim());
-
-        // Remove from pending cache (confirmed by server)
-        pendingByChatRef.current[chat.id] = (pendingByChatRef.current[chat.id] ?? []).filter(
-          (m) => m.id !== tempId
-        );
-        if (activeChatRef.current?.id === chat.id) {
-          setMessages((prev) => sortMessages(prev.map((m) => (m.id === tempId ? msg : m))));
-        }
-
-        setChats((prev) =>
-          sortChats(
-            prev.map((c) =>
-              c.id === chat.id
-                ? { ...c, last_message: { message: text, created_at: msg.created_at } }
-                : c
+        if (chat) {
+          // ── Normal send on existing chat ──
+          const msg = await sendChatMessage(chat.id, text.trim());
+          pendingByChatRef.current[chat.id] = (pendingByChatRef.current[chat.id] ?? []).filter(
+            (m) => m.id !== tempId
+          );
+          if (activeChatRef.current?.id === chat.id) {
+            setMessages((prev) => sortMessages(prev.map((m) => (m.id === tempId ? msg : m))));
+          }
+          setChats((prev) =>
+            sortChats(
+              prev.map((c) =>
+                c.id === chat.id
+                  ? { ...c, last_message: { message: text, created_at: msg.created_at } }
+                  : c
+              )
             )
-          )
-        );
-      } catch (err) {
-        // Remove failed from pending
-        pendingByChatRef.current[chat.id] = (pendingByChatRef.current[chat.id] ?? []).filter(
-          (m) => m.id !== tempId
-        );
-        if (activeChatRef.current?.id === chat.id) {
-          setMessages((prev) => prev.filter((m) => m.id !== tempId));
+          );
+        } else {
+          // ── Draft send: create chat + message atomically ──
+          const res = await startWithMessage(draft.id, text.trim());
+          const newChat = res.data;
+          const confirmedMsg = res.message;
+
+          // Promote from draft to real chat
+          draftUserRef.current = null;
+          setDraftUser(null);
+          activeChatRef.current = newChat;
+          setActiveChat(newChat);
+
+          // Replace optimistic message with the confirmed one
+          setMessages((prev) =>
+            sortMessages(prev.map((m) => (m.id === tempId ? { ...confirmedMsg, is_mine: true } : m)))
+          );
+
+          // Add to chats list
+          setChats((prev) => sortChats([newChat, ...prev.filter((c) => c.id !== newChat.id)]));
         }
-        setError(err?.response?.data?.message || "فشل إرسال الرسالة");
+      } catch (err) {
+        // Remove failed optimistic message
+        setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        const msg = err?.response?.data?.message || "فشل إرسال الرسالة";
+        setLastSendError(msg);
+        setError(msg);
       } finally {
         setSending(false);
       }
@@ -153,14 +203,11 @@ export default function useChat() {
   }, []);
 
   const startChatWithUser = useCallback(
-    async (userId) => {
-      await openChat(userId, true);
-      await fetchChats();
-    },
-    [openChat, fetchChats],
+    (userId) => openChat(userId, true),
+    [openChat],
   );
 
-  // Poll messages for active chat
+  // Poll messages for active chat (only when it's a real saved chat, not a draft)
   useEffect(() => {
     if (!activeChat) return;
 
@@ -172,8 +219,7 @@ export default function useChat() {
         const msgs = await getChatMessages(chat.id);
         if (activeChatRef.current?.id !== chat.id) return;
         const pending = pendingByChatRef.current[chat.id] ?? [];
-        const merged  = sortMessages([...msgs, ...pending]);
-        setMessages(merged);
+        setMessages(sortMessages([...msgs, ...pending]));
       } catch {
         // silently ignore
       }
@@ -205,11 +251,13 @@ export default function useChat() {
   return {
     chats,
     activeChat,
+    draftUser,
     messages,
     loadingChats,
     loadingMessages,
     sending,
     error,
+    lastSendError,
     fetchChats,
     openChat,
     sendMessage,

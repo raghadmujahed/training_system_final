@@ -6,7 +6,7 @@ import {
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import {
   createStudentTrainingRequest, deleteStudentTrainingRequest,
-  getStudentTrainingRequests, getTrainingSites,
+  getStudentTrainingRequests, getAvailableTrainingSites,
   itemsFromPagedResponse, updateStudentTrainingRequest,
 } from "../../services/api";
 import { apiCache } from "../../services/apiCache";
@@ -68,6 +68,7 @@ export default function TrainingRequest() {
   const [myRequests, setMyRequests] = useState([]);
   const [directorates, setDirectorates] = useState([]);
   const [schools, setSchools] = useState([]);
+  const [sitesLoading, setSitesLoading] = useState(false);
   const [siteSearch, setSiteSearch] = useState("");
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [highlightedSiteIndex, setHighlightedSiteIndex] = useState(-1);
@@ -104,30 +105,39 @@ export default function TrainingRequest() {
   }, [isEducationFlow, isPsychologyFlow]);
 
   useEffect(() => {
-    (async () => {
-      if (isEducationFlow || isPsychologyFlow) { setDirectorates(educationDirectorates); return; }
-      if (filters.governing_body !== "directorate_of_education" || filters.site_type !== "school") { setDirectorates([]); return; }
-      try {
-        const cacheKey = `training-sites:${JSON.stringify({ governing_body: "directorate_of_education", site_type: "school", is_active: true, has_manager_account: true, per_page: 400, include_occupancy: true })}`;
-        const res = await apiCache.get(cacheKey, () => getTrainingSites({ governing_body: "directorate_of_education", site_type: "school", is_active: true, has_manager_account: true, per_page: 400, include_occupancy: true }), 2 * 60_000);
-        setDirectorates(Array.from(new Set(itemsFromPagedResponse(res).map(s => String(s?.directorate || "").trim()).filter(Boolean))));
-      } catch { setDirectorates([]); }
-    })();
-  }, [filters.governing_body, filters.site_type, isEducationFlow, isPsychologyFlow]);
+    // Populate directorate list from static list for education/psychology flows
+    if (isEducationFlow || isPsychologyFlow) { setDirectorates(educationDirectorates); return; }
+    setDirectorates([]);
+  }, [isEducationFlow, isPsychologyFlow]);
 
   useEffect(() => {
-    (async () => {
-      setFormData((prev) => ({ ...prev, training_site_id: "" }));
-      if (!filters.governing_body || !filters.site_type || !filters.directorate) { setSchools([]); return; }
-      try {
-        const params = { governing_body: filters.governing_body, site_type: filters.site_type, directorate: filters.directorate, is_active: true, has_manager_account: true, per_page: 200, include_occupancy: true };
-        if (filters.gender_classification) params.gender_classification = filters.gender_classification;
-        if (filters.school_level) params.school_level = filters.school_level;
-        const cacheKey2 = `training-sites:${JSON.stringify(params)}`;
-        const res = await apiCache.get(cacheKey2, () => getTrainingSites(params), 2 * 60_000);
-        setSchools(itemsFromPagedResponse(res));
-      } catch (e) { setError(e?.response?.data?.message || "فشل تحميل المدارس"); }
-    })();
+    // Reset selected site whenever any filter changes
+    setFormData((prev) => ({ ...prev, training_site_id: "" }));
+    setSiteSearch("");
+
+    // Do not fetch if required base filters are missing
+    if (!filters.governing_body || !filters.site_type || !filters.directorate) {
+      setSchools([]);
+      return;
+    }
+
+    const params = {
+      governing_body: filters.governing_body,
+      site_type: filters.site_type,
+      directorate: filters.directorate,
+      per_page: 300,
+    };
+    if (filters.gender_classification) params.gender_classification = filters.gender_classification;
+    if (filters.school_level) params.school_level = filters.school_level;
+
+    const cacheKey = `available-sites:${JSON.stringify(params)}`;
+    setSitesLoading(true);
+    setSchools([]);
+
+    apiCache.get(cacheKey, () => getAvailableTrainingSites(params), 2 * 60_000)
+      .then((res) => setSchools(itemsFromPagedResponse(res)))
+      .catch((e) => { setError(e?.response?.data?.message || "فشل تحميل أماكن التدريب"); setSchools([]); })
+      .finally(() => setSitesLoading(false));
   }, [filters.governing_body, filters.site_type, filters.directorate, filters.gender_classification, filters.school_level]);
 
   const validationErrors = useMemo(() => {
@@ -168,7 +178,10 @@ export default function TrainingRequest() {
       const payload = {
         training_site_id: Number(formData.training_site_id),
         training_period_id: activePeriod?.id ? Number(activePeriod.id) : null,
-        governing_body: filters.governing_body, directorate: filters.directorate || null,
+        governing_body: filters.governing_body,
+        directorate: filters.directorate || null,
+        gender_classification: filters.gender_classification || null,
+        school_level: filters.school_level || null,
         start_date: activePeriod?.start_date || today.toISOString().slice(0, 10),
         end_date: activePeriod?.end_date || tomorrow.toISOString().slice(0, 10),
         notes: formData.notes || null,
@@ -185,7 +198,7 @@ export default function TrainingRequest() {
   const startEdit = (req) => {
     const site = req.training_site || req.trainingSite;
     setEditingId(req.id);
-    setFilters(prev => ({ ...prev, governing_body: site?.governing_body || req.governing_body || prev.governing_body, site_type: site?.site_type || prev.site_type, directorate: site?.directorate || "", gender_classification: site?.gender_classification || "", school_level: site?.school_level || "" }));
+    setFilters(prev => ({ ...prev, governing_body: site?.governing_body || req.governing_body || prev.governing_body, site_type: site?.site_type || prev.site_type, directorate: site?.directorate || "", gender_classification: site?.gender_classification || "", school_level: (site?.school_level && site.school_level !== 'both') ? site.school_level : "" }));
     setFormData({ training_site_id: site?.id ? String(site.id) : "", notes: req.students?.[0]?.notes || "" });
     setSiteSearch(site?.name || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -388,7 +401,7 @@ export default function TrainingRequest() {
                   <label className={labelStyle}><Search size={13} /> {config.siteSearchLabel}</label>
                   <div className="relative">
                     <input
-                      placeholder={!filters.directorate ? "اختر المديرية أولاً" : "اكتب للبحث ثم اختر الجهة"}
+                      placeholder={!filters.directorate ? "اختر المديرية أولاً لعرض أماكن التدريب" : sitesLoading ? "جاري التحميل..." : schools.length === 0 && !sitesLoading ? "لا توجد أماكن تدريب مطابقة" : "اكتب للبحث ثم اختر جهة التدريب"}
                       value={siteSearch}
                       onChange={(e) => { setSiteSearch(e.target.value); setIsSiteMenuOpen(true); setHighlightedSiteIndex(-1); setFormData(prev => ({ ...prev, training_site_id: "" })); }}
                       onFocus={() => { if (filters.directorate) setIsSiteMenuOpen(true); }}
@@ -410,8 +423,12 @@ export default function TrainingRequest() {
                     />
                     {isSiteMenuOpen && filters.directorate && (
                       <div className="absolute top-[calc(100%+6px)] right-0 left-0 max-h-[240px] overflow-y-auto bg-white border border-[#e2e8f0] rounded-xl z-25 shadow-[0_8px_24px_rgba(0,0,0,0.1)]">
-                        {filteredSchools.length === 0 ? (
-                          <div className="py-4 px-4 text-[#94a3b8] text-[0.88rem] text-center">لا توجد نتائج مطابقة</div>
+                        {sitesLoading ? (
+                          <div className="py-4 px-4 text-[#94a3b8] text-[0.88rem] text-center flex items-center justify-center gap-2">
+                            <Loader2 size={15} className="spin" /> جاري تحميل أماكن التدريب...
+                          </div>
+                        ) : filteredSchools.length === 0 ? (
+                          <div className="py-4 px-4 text-[#94a3b8] text-[0.88rem] text-center">لا توجد أماكن تدريب مطابقة للبيانات المختارة</div>
                         ) : filteredSchools.map((s, idx) => {
                           const isSelected = String(s.id) === String(formData.training_site_id);
                           const isHighlighted = idx === highlightedSiteIndex;
@@ -438,7 +455,14 @@ export default function TrainingRequest() {
                       </div>
                     )}
                   </div>
-                  {validationErrors.training_site_id && <div className="text-[0.75rem] text-[#dc2626] mt-1">{validationErrors.training_site_id}</div>}
+                  {/* Persistent hint messages outside dropdown */}
+                  {!filters.directorate && (
+                    <div className="text-[0.75rem] text-[#64748b] mt-1">يرجى اختيار المديرية والتصنيف والمرحلة لعرض أماكن التدريب المناسبة</div>
+                  )}
+                  {filters.directorate && !sitesLoading && schools.length === 0 && (
+                    <div className="text-[0.75rem] text-[#dc2626] mt-1 font-semibold">لا توجد أماكن تدريب مطابقة للبيانات المختارة</div>
+                  )}
+                  {validationErrors.training_site_id && schools.length > 0 && <div className="text-[0.75rem] text-[#dc2626] mt-1">{validationErrors.training_site_id}</div>}
                 </div>
               </div>
 

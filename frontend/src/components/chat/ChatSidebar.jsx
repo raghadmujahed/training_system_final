@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getChatAllowedUsers } from "../../services/chatApi";
 import UserProfileModal from "./UserProfileModal";
 
@@ -27,17 +27,12 @@ function getChatDisplayName(chat, currentUserId) {
   return others.map((p) => p.name).join(", ");
 }
 
-function getRoleLabel(role) {
-  const labels = {
-    student: "طالب",
-    academic_supervisor: "مشرف أكاديمي",
-    field_supervisor: "مشرف ميداني",
-    training_coordinator: "منسق تدريب",
-    head_of_department: "رئيس قسم",
-    admin: "مدير النظام",
-  };
-  return labels[role] || role || "";
-}
+const PROFILE_ICON = (
+  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+    fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+  </svg>
+);
 
 export default function ChatSidebar({
   chats,
@@ -48,35 +43,55 @@ export default function ChatSidebar({
   onStartNewChat,
 }) {
   const [tab, setTab] = useState("chats");
-  const [allowedUsers, setAllowedUsers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [search, setSearch] = useState("");
-  const [profileUser, setProfileUser] = useState(null);
+
+  // ── Chats tab state ──────────────────────────────────────────
+  const [chatSearch, setChatSearch] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-  useEffect(() => {
-    if (tab === "new") {
-      setLoadingUsers(true);
-      getChatAllowedUsers()
-        .then(setAllowedUsers)
-        .catch(() => setAllowedUsers([]))
-        .finally(() => setLoadingUsers(false));
-    }
-  }, [tab]);
+  // ── New tab state ────────────────────────────────────────────
+  const [newSearch, setNewSearch] = useState("");
+  const [allowedUsers, setAllowedUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState(null);
 
+  const [profileUser, setProfileUser] = useState(null);
+  const debounceRef = useRef(null);
+
+  // Load allowed users whenever the "new" tab is opened or search changes (debounced)
+  const fetchAllowed = useCallback((query) => {
+    setLoadingUsers(true);
+    setUsersError(null);
+    getChatAllowedUsers(query)
+      .then(setAllowedUsers)
+      .catch(() => {
+        setUsersError("تعذّر تحميل جهات الاتصال");
+        setAllowedUsers([]);
+      })
+      .finally(() => setLoadingUsers(false));
+  }, []);
+
+  useEffect(() => {
+    if (tab !== "new") return;
+    // Initial load (no query)
+    fetchAllowed("");
+  }, [tab, fetchAllowed]);
+
+  const handleNewSearch = (e) => {
+    const val = e.target.value;
+    setNewSearch(val);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchAllowed(val.trim()), 350);
+  };
+
+  // ── Filtered chats (client-side) ─────────────────────────────
   const filteredChats = chats.filter((c) => {
     if (showUnreadOnly && !(c.unread_count > 0)) return false;
-    if (!search) return true;
+    if (!chatSearch) return true;
     const name = getChatDisplayName(c, currentUserId).toLowerCase();
-    return name.includes(search.toLowerCase());
+    return name.includes(chatSearch.toLowerCase());
   });
 
   const unreadChatsCount = chats.filter((c) => c.unread_count > 0).length;
-
-  const filteredUsers = allowedUsers.filter((u) => {
-    if (!search) return true;
-    return u.name.toLowerCase().includes(search.toLowerCase());
-  });
 
   return (
     <div className="chat-sidebar">
@@ -85,29 +100,41 @@ export default function ChatSidebar({
         <div className="chat-sidebar-tabs">
           <button
             className={`chat-tab-btn ${tab === "chats" ? "active" : ""}`}
-            onClick={() => setTab("chats")}
+            onClick={() => { setTab("chats"); }}
           >
             محادثاتي
           </button>
           <button
             className={`chat-tab-btn ${tab === "new" ? "active" : ""}`}
-            onClick={() => setTab("new")}
+            onClick={() => { setTab("new"); setNewSearch(""); }}
           >
             + جديد
           </button>
         </div>
       </div>
 
+      {/* ── Search bar ─────────────────────────────────────── */}
       <div className="chat-sidebar-search">
-        <input
-          type="text"
-          placeholder={tab === "chats" ? "بحث باسم الشخص..." : "بحث باسم جهة الاتصال..."}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="chat-search-input"
-        />
+        {tab === "chats" ? (
+          <input
+            type="text"
+            placeholder="بحث باسم الشخص..."
+            value={chatSearch}
+            onChange={(e) => setChatSearch(e.target.value)}
+            className="chat-search-input"
+          />
+        ) : (
+          <input
+            type="text"
+            placeholder="بحث بالاسم أو الرقم الجامعي..."
+            value={newSearch}
+            onChange={handleNewSearch}
+            className="chat-search-input"
+          />
+        )}
       </div>
 
+      {/* ── Chats tab filter bar ────────────────────────────── */}
       {tab === "chats" && (
         <div className="chat-filter-bar">
           <button
@@ -128,15 +155,16 @@ export default function ChatSidebar({
       )}
 
       <div className="chat-sidebar-list">
+        {/* ── Chats list ──────────────────────────────────── */}
         {tab === "chats" && (
           <>
             {loadingChats && (
-              <div className="chat-sidebar-loading">
-                <div className="chat-spinner" />
-              </div>
+              <div className="chat-sidebar-loading"><div className="chat-spinner" /></div>
             )}
             {!loadingChats && filteredChats.length === 0 && (
-              <div className="chat-sidebar-empty">لا توجد محادثات بعد</div>
+              <div className="chat-sidebar-empty">
+                {chatSearch ? "لا توجد نتائج مطابقة" : "لا توجد محادثات بعد"}
+              </div>
             )}
             {filteredChats.map((chat) => {
               const name = getChatDisplayName(chat, currentUserId);
@@ -144,10 +172,7 @@ export default function ChatSidebar({
               const otherParticipant = chat.participants?.find((p) => p.id !== currentUserId);
               return (
                 <div key={chat.id} className={`chat-sidebar-item-wrap ${isActive ? "active" : ""}`}>
-                  <button
-                    className="chat-sidebar-item"
-                    onClick={() => onSelectChat(chat)}
-                  >
+                  <button className="chat-sidebar-item" onClick={() => onSelectChat(chat)}>
                     <div className="chat-item-avatar">
                       {name.charAt(0).toUpperCase()}
                       {chat.unread_count > 0 && (
@@ -157,18 +182,20 @@ export default function ChatSidebar({
                     <div className="chat-item-info">
                       <span className="chat-item-name">{name}</span>
                       <span className="chat-item-preview" dir="auto">
-                        {chat.last_message
-                          ? <>
-                              {chat.last_message.sender_id === currentUserId
-                                ? <span className="chat-preview-label">أنت: </span>
-                                : chat.last_message.sender
-                                  ? <span className="chat-preview-label">{chat.last_message.sender.split(" ")[0]}: </span>
-                                  : null
-                              }
-                              {chat.last_message.message}
-                            </>
-                          : "ابدأ المحادثة"
-                        }
+                        {chat.last_message ? (
+                          <>
+                            {chat.last_message.sender_id === currentUserId ? (
+                              <span className="chat-preview-label">أنت: </span>
+                            ) : chat.last_message.sender ? (
+                              <span className="chat-preview-label">
+                                {chat.last_message.sender.split(" ")[0]}:{" "}
+                              </span>
+                            ) : null}
+                            {chat.last_message.message}
+                          </>
+                        ) : (
+                          "ابدأ المحادثة"
+                        )}
                       </span>
                     </div>
                     <span className="chat-item-time">
@@ -181,9 +208,7 @@ export default function ChatSidebar({
                       title="عرض الملف الشخصي"
                       onClick={(e) => { e.stopPropagation(); setProfileUser(otherParticipant); }}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                      </svg>
+                      {PROFILE_ICON}
                     </button>
                   )}
                 </div>
@@ -192,32 +217,41 @@ export default function ChatSidebar({
           </>
         )}
 
+        {/* ── New conversation list ────────────────────────── */}
         {tab === "new" && (
           <>
             {loadingUsers && (
-              <div className="chat-sidebar-loading">
-                <div className="chat-spinner" />
+              <div className="chat-sidebar-loading"><div className="chat-spinner" /></div>
+            )}
+            {usersError && !loadingUsers && (
+              <div className="chat-sidebar-empty">{usersError}</div>
+            )}
+            {!loadingUsers && !usersError && allowedUsers.length === 0 && (
+              <div className="chat-sidebar-empty">
+                {newSearch
+                  ? "لا توجد نتائج مطابقة للبحث"
+                  : "لا يوجد مستخدمون متاحون للمراسلة حالياً"}
               </div>
             )}
-            {!loadingUsers && filteredUsers.length === 0 && (
-              <div className="chat-sidebar-empty">لا توجد جهات اتصال متاحة</div>
-            )}
-            {filteredUsers.map((user) => (
+            {!loadingUsers && !usersError && allowedUsers.map((user) => (
               <div key={user.id} className="chat-sidebar-item-wrap">
                 <button
                   className="chat-sidebar-item"
                   onClick={() => {
+                    if (!user.id) return;
                     onStartNewChat(user.id);
                     setTab("chats");
-                    setSearch("");
+                    setNewSearch("");
                   }}
                 >
                   <div className="chat-item-avatar">
-                    {user.name.charAt(0).toUpperCase()}
+                    {(user.name || "؟").charAt(0).toUpperCase()}
                   </div>
                   <div className="chat-item-info">
                     <span className="chat-item-name">{user.name}</span>
-                    <span className="chat-item-preview">{getRoleLabel(user.role)}</span>
+                    <span className="chat-item-preview">
+                      {user.role_label || user.role || ""}
+                    </span>
                   </div>
                 </button>
                 <button
@@ -225,9 +259,7 @@ export default function ChatSidebar({
                   title="عرض الملف الشخصي"
                   onClick={(e) => { e.stopPropagation(); setProfileUser(user); }}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                  </svg>
+                  {PROFILE_ICON}
                 </button>
               </div>
             ))}

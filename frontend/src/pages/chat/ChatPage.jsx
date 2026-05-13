@@ -18,11 +18,13 @@ export default function ChatPage() {
   const {
     chats,
     activeChat,
+    draftUser,
     messages,
     loadingChats,
     loadingMessages,
     sending,
     error,
+    lastSendError,
     openChat,
     sendMessage,
     startChatWithUser,
@@ -58,11 +60,13 @@ export default function ChatPage() {
 
       <ChatWindow
         chat={activeChat}
+        draftUser={draftUser}
         messages={messages}
         loadingMessages={loadingMessages}
         sending={sending}
         onSend={sendMessage}
         currentUserId={currentUserId}
+        lastError={lastSendError}
       />
     </div>
     </div>

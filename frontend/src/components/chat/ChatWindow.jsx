@@ -22,10 +22,13 @@ function getRoleLabel(role) {
   return labels[role] || role || "";
 }
 
-export default function ChatWindow({ chat, messages, loadingMessages, sending, onSend, currentUserId }) {
+const OLD_CONVO_MSG = "هذه المحادثة قديمة ولا يمكن إرسال رسائل جديدة لأنها لم تعد ضمن نطاق التواصل المسموح.";
+
+export default function ChatWindow({ chat, draftUser, messages, loadingMessages, sending, onSend, currentUserId, lastError }) {
   const [profileUser, setProfileUser] = useState(null);
 
-  if (!chat) {
+  // Nothing open at all
+  if (!chat && !draftUser) {
     return (
       <div className="chat-window chat-window-empty">
         <div className="chat-window-placeholder">
@@ -50,6 +53,33 @@ export default function ChatWindow({ chat, messages, loadingMessages, sending, o
     );
   }
 
+  // Draft mode: user selected but no real conversation yet
+  if (!chat && draftUser) {
+    return (
+      <div className="chat-window">
+        <div className="chat-window-header">
+          <div className="chat-window-header-btn" style={{ cursor: 'default' }}>
+            <div className="chat-window-avatar">
+              {draftUser.name?.charAt(0).toUpperCase()}
+            </div>
+            <div className="chat-window-title">
+              <span className="chat-window-name">{draftUser.name}</span>
+              {draftUser.role && (
+                <span className="chat-window-role">{getRoleLabel(draftUser.role)}</span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="chat-messages-area">
+          <div className="chat-draft-hint">ابدأ المحادثة بإرسال أول رسالة</div>
+          <MessageList messages={messages} loading={false} />
+        </div>
+        <MessageInput onSend={onSend} disabled={sending} />
+      </div>
+    );
+  }
+
+  // Normal mode: real conversation
   const chatName = getChatName(chat, currentUserId);
   const otherParticipant = chat.participants?.find((p) => p.id !== currentUserId);
 
@@ -92,7 +122,13 @@ export default function ChatWindow({ chat, messages, loadingMessages, sending, o
 
       <MessageList messages={messages} loading={loadingMessages} />
 
-      <MessageInput onSend={onSend} disabled={false} />
+      {lastError === OLD_CONVO_MSG ? (
+        <div className="chat-readonly-notice">
+          {OLD_CONVO_MSG}
+        </div>
+      ) : (
+        <MessageInput onSend={onSend} disabled={sending} />
+      )}
 
       {profileUser && (
         <UserProfileModal

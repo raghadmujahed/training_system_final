@@ -499,15 +499,17 @@ class TrainingRequestController extends Controller
         }
 
         $data = $request->validate([
-            'training_site_id' => 'required|exists:training_sites,id',
-            'training_period_id' => 'nullable|exists:training_periods,id',
-            'course_id' => 'nullable|exists:courses,id',
-            'directorate' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'attachment_path' => 'nullable|string|max:2048',
-            'governing_body' => 'nullable|in:directorate_of_education,ministry_of_health',
+            'training_site_id'      => 'required|exists:training_sites,id',
+            'training_period_id'    => 'nullable|exists:training_periods,id',
+            'course_id'             => 'nullable|exists:courses,id',
+            'directorate'           => 'nullable|string',
+            'gender_classification' => 'nullable|in:boys,girls,mixed',
+            'school_level'          => 'nullable|in:lower,upper,both',
+            'notes'                 => 'nullable|string',
+            'start_date'            => 'nullable|date',
+            'end_date'              => 'nullable|date|after:start_date',
+            'attachment_path'       => 'nullable|string|max:2048',
+            'governing_body'        => 'nullable|in:directorate_of_education,ministry_of_health',
         ]);
 
         $data['training_period_id'] = $data['training_period_id'] ?? $this->resolveAutoTrainingPeriodId();
@@ -561,6 +563,42 @@ class TrainingRequestController extends Controller
             ], 422);
         }
 
+        // Re-validate that the site is active
+        if (! $site->is_active) {
+            return response()->json([
+                'message' => 'مكان التدريب المختار غير متاح حالياً.',
+            ], 422);
+        }
+
+        // Re-validate gender_classification matches site (if submitted)
+        if (! empty($data['gender_classification']) && $site->gender_classification !== null) {
+            if ($site->gender_classification !== $data['gender_classification']) {
+                return response()->json([
+                    'message' => 'مكان التدريب المختار لا يتطابق مع تصنيف الجنس المحدد.',
+                ], 422);
+            }
+        }
+
+        // Re-validate school_level matches site (if submitted)
+        // A site with school_level = 'both' is valid for any requested level.
+        if (! empty($data['school_level']) && in_array($data['school_level'], ['lower', 'upper'], true)) {
+            if ($site->school_level !== null && ! in_array($site->school_level, [$data['school_level'], 'both'], true)) {
+                return response()->json([
+                    'message' => 'مكان التدريب المختار لا يتطابق مع المرحلة الدراسية المحددة.',
+                ], 422);
+            }
+        }
+
+        // Capacity check
+        $activeCount = $site->trainingAssignments()
+            ->whereIn('status', ['assigned', 'ongoing'])
+            ->count();
+        if ($site->capacity > 0 && $activeCount >= $site->capacity) {
+            return response()->json([
+                'message' => 'لا توجد سعة متاحة في مكان التدريب المختار.',
+            ], 422);
+        }
+
         $trainingRequest = TrainingRequest::create([
             'requested_by' => auth()->id(),
             'training_site_id' => $data['training_site_id'],
@@ -607,14 +645,16 @@ class TrainingRequestController extends Controller
         $this->authorize('updateAsStudent', $trainingRequest);
 
         $data = $request->validate([
-            'training_site_id' => 'required|exists:training_sites,id',
-            'training_period_id' => 'nullable|exists:training_periods,id',
-            'course_id' => 'nullable|exists:courses,id',
-            'directorate' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'attachment_path' => 'nullable|string|max:2048',
+            'training_site_id'      => 'required|exists:training_sites,id',
+            'training_period_id'    => 'nullable|exists:training_periods,id',
+            'course_id'             => 'nullable|exists:courses,id',
+            'directorate'           => 'nullable|string',
+            'gender_classification' => 'nullable|in:boys,girls,mixed',
+            'school_level'          => 'nullable|in:lower,upper,both',
+            'notes'                 => 'nullable|string',
+            'start_date'            => 'nullable|date',
+            'end_date'              => 'nullable|date|after:start_date',
+            'attachment_path'       => 'nullable|string|max:2048',
         ]);
 
         $data['training_period_id'] = $data['training_period_id'] ?? $this->resolveAutoTrainingPeriodId();
@@ -659,6 +699,41 @@ class TrainingRequestController extends Controller
         if (! $this->hasManagerAccountForSite($site)) {
             return response()->json([
                 'message' => 'المدرسة/جهة التدريب المختارة غير مربوطة بحساب مدير. يرجى اختيار جهة أخرى أو مراجعة الإدارة.',
+            ], 422);
+        }
+
+        // Re-validate that the site is active
+        if (! $site->is_active) {
+            return response()->json([
+                'message' => 'مكان التدريب المختار غير متاح حالياً.',
+            ], 422);
+        }
+
+        // Re-validate gender_classification matches site (if submitted)
+        if (! empty($data['gender_classification']) && $site->gender_classification !== null) {
+            if ($site->gender_classification !== $data['gender_classification']) {
+                return response()->json([
+                    'message' => 'مكان التدريب المختار لا يتطابق مع بيانات الطلب (تصنيف الجنس).',
+                ], 422);
+            }
+        }
+
+        // Re-validate school_level matches site (if submitted)
+        if (! empty($data['school_level']) && in_array($data['school_level'], ['lower', 'upper'], true)) {
+            if ($site->school_level !== null && ! in_array($site->school_level, [$data['school_level'], 'both'], true)) {
+                return response()->json([
+                    'message' => 'مكان التدريب المختار لا يتطابق مع بيانات الطلب (المرحلة الدراسية).',
+                ], 422);
+            }
+        }
+
+        // Capacity check
+        $activeCount = $site->trainingAssignments()
+            ->whereIn('status', ['assigned', 'ongoing'])
+            ->count();
+        if ($site->capacity > 0 && $activeCount >= $site->capacity) {
+            return response()->json([
+                'message' => 'لا توجد سعة متاحة في مكان التدريب المختار.',
             ], 422);
         }
 

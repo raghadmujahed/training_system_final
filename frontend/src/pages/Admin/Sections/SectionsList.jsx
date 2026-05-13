@@ -103,11 +103,10 @@ export default function SectionsList() {
       </div>
 
       {/* Filters - Department and Academic Supervisor only */}
-      <div className="filters-bar" style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="filters-bar">
         <select
           value={filters.department_id}
           onChange={(e) => setFilters({ ...filters, department_id: e.target.value })}
-          style={{ minWidth: '180px' }}
         >
           <option value="">جميع الأقسام</option>
           {departments.map((dept) => (
@@ -120,7 +119,6 @@ export default function SectionsList() {
         <select
           value={filters.academic_supervisor_id}
           onChange={(e) => setFilters({ ...filters, academic_supervisor_id: e.target.value })}
-          style={{ minWidth: '200px' }}
         >
           <option value="">جميع المشرفين الأكاديميين</option>
           {supervisors.map((supervisor) => (

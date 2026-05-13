@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getRole, createRole, updateRole, refreshCurrentUser } from "../../../services/api";
 import { usePermissions } from "../../../hooks/useSharedData";
@@ -42,6 +42,7 @@ export default function RoleForm() {
   const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
+  const originalRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [roleName, setRoleName] = useState("");
@@ -65,7 +66,12 @@ export default function RoleForm() {
             permsArray = roleData.role_permissions;
           }
           const grantedIds = permsArray.map(p => p.id);
-          setGrantedPermissions(allPerms.filter(p => grantedIds.includes(p.id)));
+          const grantedPerms = allPerms.filter(p => grantedIds.includes(p.id));
+          originalRef.current = {
+            name: roleData.name || "",
+            permissionIds: [...grantedIds].sort(),
+          };
+          setGrantedPermissions(grantedPerms);
           setAvailablePermissions(allPerms.filter(p => !grantedIds.includes(p.id)));
         } else {
           setAvailablePermissions(allPerms);
@@ -98,11 +104,23 @@ export default function RoleForm() {
       const permissionIds = grantedPermissions.map(p => p.id);
 
       if (id) {
+        // Check no-changes before submitting
+        const origName = originalRef.current?.name ?? "";
+        const origPerms = [...(originalRef.current?.permissionIds ?? [])].sort();
+        const newPerms = [...permissionIds].sort();
+        const nameChanged = roleName !== origName;
+        const permsChanged = JSON.stringify(origPerms) !== JSON.stringify(newPerms);
+        if (!nameChanged && !permsChanged) {
+          toast.info("لم تقم بتغيير أي بيانات");
+          setLoading(false);
+          return;
+        }
         // تحديث الدور مع الصلاحيات
-        await updateRole(id, {
+        const res = await updateRole(id, {
           name: roleName,
           permissions: permissionIds
         });
+        if (res?.status === 'no_changes') { toast.info("لم تقم بتغيير أي بيانات"); setLoading(false); return; }
         toast.success(`تم تحديث الصلاحيات بنجاح. عدد الصلاحيات: ${permissionIds.length}`);
       } else {
         await createRole({

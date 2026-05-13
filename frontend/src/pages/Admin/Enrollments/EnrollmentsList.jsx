@@ -212,11 +212,10 @@ export default function EnrollmentsList() {
       )}
 
       {/* Filters */}
-      <div className="filters-bar" style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+      <div className="filters-bar">
         <select
           value={filters.section_id}
           onChange={(e) => setFilters({ ...filters, section_id: e.target.value })}
-          style={{ minWidth: '200px' }}
         >
           <option value="">جميع الشعب</option>
           {sections.map((section) => (

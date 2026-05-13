@@ -72,30 +72,25 @@ export default function CoursesList() {
   return (
     <div>
       <PageHeader title="المساقات" />
-      <div className="flex gap-2.5 mb-4 flex-wrap">
-        <Link to="/admin/courses/create" className="btn-primary">
-          + إضافة مساق
-        </Link>
+      <div className="filters-bar">
+        <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
+          <option value="">جميع الأقسام</option>
+          {departments.map(dept => (
+            <option key={dept.id} value={dept.id}>{dept.name}</option>
+          ))}
+        </select>
         <select
           value={perPage}
           onChange={(e) => setPerPage(Number(e.target.value))}
-          className="w-auto"
         >
           <option value="10">10 مساقات</option>
           <option value="20">20 مساق</option>
           <option value="50">50 مساق</option>
           <option value="100">100 مساق</option>
         </select>
-      </div>
-
-      <div className="mb-4">
-        <label className="text-text-soft">فلترة حسب القسم: </label>
-        <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)}>
-          <option value="">الكل</option>
-          {departments.map(dept => (
-            <option key={dept.id} value={dept.id}>{dept.name}</option>
-          ))}
-        </select>
+        <Link to="/admin/courses/create" className="btn-primary">
+          + إضافة مساق
+        </Link>
       </div>
 
       <div className="rounded-xl overflow-hidden border border-[#e2e8f0] mb-4">

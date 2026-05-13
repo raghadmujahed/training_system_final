@@ -68,11 +68,15 @@ export default function HeadOfDepartmentReports() {
   };
 
   const renderStudentsPerSection = () => {
-    if (!reports || !reports.students_per_section) return null;
-    
+    if (!reports) return null;
+    // Backend returns plain array for students_per_section report type
+    const items = Array.isArray(reports) ? reports : (reports.students_per_section || []);
+    if (items.length === 0) {
+      return <EmptyState title="لا توجد بيانات" description="لا توجد شعب مسجلة في القسم" />;
+    }
     return (
       <div className="activity-list">
-        {reports.students_per_section.map((section) => (
+        {items.map((section) => (
           <div className="activity-item" key={section.section_id}>
             <div className="flex justify-between items-start">
               <div>
@@ -94,32 +98,34 @@ export default function HeadOfDepartmentReports() {
   };
 
   const renderDistributionStatus = () => {
-    if (!reports || !reports.distribution_overview) return null;
-    
-    const overview = reports.distribution_overview;
-    
+    if (!reports) return null;
+    // Backend returns array of student-section assignments for distribution_status report
+    const items = Array.isArray(reports) ? reports : (reports.data || []);
+    if (items.length === 0) {
+      return <EmptyState title="لا توجد بيانات" description="لا يوجد طلاب موزعين على الشعب" />;
+    }
     return (
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>إجمالي الطلاب</h3>
-          <p className="stat-value">{overview.total_students || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>مع مكان تدريب</h3>
-          <p className="stat-value">{overview.with_training_site || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>بدون مكان تدريب</h3>
-          <p className="stat-value">{overview.without_training_site || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>مسجلين في شعب</h3>
-          <p className="stat-value">{overview.assigned_to_sections || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>غير مسجلين</h3>
-          <p className="stat-value">{overview.not_assigned_to_sections || 0}</p>
-        </div>
+      <div className="activity-list">
+        {items.map((item, idx) => (
+          <div className="activity-item" key={idx}>
+            <div className="flex justify-between items-start">
+              <div>
+                <h6>{item.student_name || '—'}</h6>
+                <div className="activity-meta">
+                  الرقم الجامعي: {item.university_id || '—'} ·
+                  المساق: {item.course || '—'} ·
+                  الشعبة: {item.section || '—'}
+                </div>
+                {item.training_place && item.training_place !== 'غير محدد' && (
+                  <div className="activity-meta">مكان التدريب: {item.training_place}</div>
+                )}
+              </div>
+              <span className={`status-badge ${item.status}`}>
+                {item.status === 'accepted' ? 'مقبول' : item.status === 'rejected' ? 'مرفوض' : item.status === 'pending' ? 'معلق' : item.status}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     );
   };

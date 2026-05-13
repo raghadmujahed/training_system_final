@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateBackupRequest;
-use App\Http\Requests\RestoreBackupRequest;
 use App\Models\Backup;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class BackupController extends Controller
@@ -28,17 +26,15 @@ class BackupController extends Controller
         try {
             // توليد اسم الملف
             $filename = 'backup_' . date('Ymd_His') . '_' . Str::random(8) . '.sql';
-            $filepath = 'backups/' . $filename;
 
-            // استخدام public disk للتخزين
-            $disk = Storage::disk('public');
-
-            // تأكد من وجود مجلد النسخ الاحتياطية
-            if (!$disk->exists('backups')) {
-                $disk->makeDirectory('backups');
+            // استخدام مجلد storage/app/backups (يعمل على Railway بدون symlink)
+            $backupDir = storage_path('app/backups');
+            if (!is_dir($backupDir)) {
+                mkdir($backupDir, 0755, true);
             }
+            $fullPath = $backupDir . DIRECTORY_SEPARATOR . $filename;
 
-            // استخدام Laravel DB facade لإنشاء نسخة احتياطية بدلاً من mysqldump
+            // إنشاء محتوى SQL عبر Laravel DB facade (بدون mysqldump)
             $sqlContent = $this->generateDatabaseDump();
 
             if (empty($sqlContent)) {
@@ -47,80 +43,91 @@ class BackupController extends Controller
                 ], 500);
             }
 
-            // حفظ المحتوى في الملف
-            $disk->put($filepath, $sqlContent);
-
-            // التحقق من نجاح العملية
-            if (!$disk->exists($filepath)) {
+            // حفظ الملف
+            if (file_put_contents($fullPath, $sqlContent) === false) {
                 return response()->json([
                     'message' => 'فشل حفظ ملف النسخة الاحتياطية',
                 ], 500);
             }
 
             $backup = Backup::create([
-                'user_id' => $request->user()->id,
-                'type' => $request->type,
-                'name' => $filename,
-                'file_path' => $filepath,
-                'size' => $disk->size($filepath),
-                'status' => 'completed',
-                'notes' => $request->notes,
+                'user_id'   => $request->user()->id,
+                'type'      => $request->type,
+                'name'      => $filename,
+                'file_path' => $fullPath,
+                'size'      => filesize($fullPath),
+                'status'    => 'completed',
+                'notes'     => $request->notes,
             ]);
 
             return response()->json([
-                'backup' => $backup,
+                'backup'       => $backup,
                 'download_url' => url('/api/backups/' . $backup->id . '/download'),
             ], 201);
         } catch (\Exception $e) {
             \Log::error('Backup creation failed: ' . $e->getMessage());
             return response()->json([
-                'message' => 'فشل إنشاء النسخة الاحتياطية',
-                'error' => $e->getMessage(),
+                'message' => 'فشل إنشاء النسخة الاحتياطية، يرجى مراجعة إعدادات الخادم',
             ], 500);
         }
     }
 
     /**
-     * Generate SQL dump using Laravel DB facade (works on Railway without mysqldump)
+     * Generate SQL dump using Laravel DB facade (works on Railway without mysqldump).
+     * Uses the active database connection — no hardcoded credentials.
      */
-    private function generateDatabaseDump()
+    private function generateDatabaseDump(): string
     {
-        $db = config('database.connections.mysql.database');
-        $sql = "-- Database Backup: {$db}\n";
-        $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+        $connection = config('database.default');
+        $db = config("database.connections.{$connection}.database");
 
-        // Get all tables
-        $tables = \DB::select("SHOW TABLES");
-        $tableKey = 'Tables_in_' . $db;
+        $sql  = "-- Database Backup: {$db}\n";
+        $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
+        $sql .= "-- Connection: {$connection}\n\n";
+        $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
 
-        foreach ($tables as $table) {
-            $tableName = $table->$tableKey;
-            $sql .= "-- Table: {$tableName}\n";
+        // SHOW TABLES returns a stdClass with a dynamic property name.
+        // Use array_values(get_object_vars()) to extract the table name safely.
+        $tables = \DB::select('SHOW TABLES');
 
-            // Get CREATE TABLE statement
-            $createTable = \DB::select("SHOW CREATE TABLE {$tableName}");
-            if (!empty($createTable)) {
-                $sql .= $createTable[0]->{'Create Table'} . ";\n\n";
+        foreach ($tables as $tableRow) {
+            $vars      = get_object_vars($tableRow);
+            $tableName = array_values($vars)[0];
+
+            $sql .= "-- ----------------------------\n";
+            $sql .= "-- Table: `{$tableName}`\n";
+            $sql .= "-- ----------------------------\n";
+            $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
+
+            // CREATE TABLE
+            $createResult = \DB::select("SHOW CREATE TABLE `{$tableName}`");
+            if (!empty($createResult)) {
+                $createVars = get_object_vars($createResult[0]);
+                // Second value is always 'Create Table'
+                $createStmt = array_values($createVars)[1] ?? '';
+                $sql .= $createStmt . ";\n\n";
             }
 
-            // Get table data
-            $rows = \DB::select("SELECT * FROM {$tableName}");
+            // INSERT rows
+            $rows = \DB::select("SELECT * FROM `{$tableName}`");
             if (!empty($rows)) {
+                $sql .= "LOCK TABLES `{$tableName}` WRITE;\n";
                 foreach ($rows as $row) {
                     $values = [];
-                    foreach ($row as $value) {
+                    foreach ((array) $row as $value) {
                         if ($value === null) {
                             $values[] = 'NULL';
                         } else {
-                            $values[] = "'" . addslashes($value) . "'";
+                            $values[] = "'" . addslashes((string) $value) . "'";
                         }
                     }
-                    $sql .= "INSERT INTO {$tableName} VALUES (" . implode(', ', $values) . ");\n";
+                    $sql .= "INSERT INTO `{$tableName}` VALUES (" . implode(', ', $values) . ");\n";
                 }
-                $sql .= "\n";
+                $sql .= "UNLOCK TABLES;\n\n";
             }
         }
 
+        $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
         return $sql;
     }
 
@@ -128,11 +135,10 @@ class BackupController extends Controller
     {
         $backup = Backup::with('user')->findOrFail($id);
         $tables = [];
-        $disk = Storage::disk('public');
 
         // Try to parse SQL file to extract table names
-        if ($backup->file_path && $disk->exists($backup->file_path)) {
-            $content = $disk->get($backup->file_path);
+        if ($backup->file_path && file_exists($backup->file_path)) {
+            $content = file_get_contents($backup->file_path);
             $fileSize = strlen($content);
             
             // Extract CREATE TABLE statements - handle multi-line definitions
@@ -180,16 +186,15 @@ class BackupController extends Controller
         }
 
         return response()->json([
-            'id' => $backup->id,
-            'name' => $backup->name,
-            'created_at' => $backup->created_at,
-            'size' => $backup->size,
-            'type' => $backup->type,
-            'notes' => $backup->notes,
-            'user' => $backup->user,
-            'tables' => $tables,
-            'file_exists' => $backup->file_path && $disk->exists($backup->file_path),
-            'file_path' => $backup->file_path,
+            'id'          => $backup->id,
+            'name'        => $backup->name,
+            'created_at'  => $backup->created_at,
+            'size'        => $backup->size,
+            'type'        => $backup->type,
+            'notes'       => $backup->notes,
+            'user'        => $backup->user,
+            'tables'      => $tables,
+            'file_exists' => $backup->file_path && file_exists($backup->file_path),
         ]);
     }
 
@@ -237,13 +242,12 @@ class BackupController extends Controller
     public function getTableData($id, $tableName)
     {
         $backup = Backup::findOrFail($id);
-        $disk = Storage::disk('public');
 
-        if (!$backup->file_path || !$disk->exists($backup->file_path)) {
+        if (!$backup->file_path || !file_exists($backup->file_path)) {
             return response()->json(['message' => 'ملف النسخة غير موجود'], 404);
         }
 
-        $content = $disk->get($backup->file_path);
+        $content = file_get_contents($backup->file_path);
 
         // Extract INSERT statements for this table and parse them
         $pattern = '/INSERT INTO\s+[`\']?' . preg_quote($tableName, '/') . '[`\']?\s*\(([^)]+)\)\s*VALUES/i';
@@ -291,45 +295,66 @@ class BackupController extends Controller
 
     public function destroy(Backup $backup)
     {
-        $disk = Storage::disk('public');
-        $disk->delete($backup->file_path);
+        if ($backup->file_path && file_exists($backup->file_path)) {
+            @unlink($backup->file_path);
+        }
         $backup->delete();
         return response()->json(['message' => 'تم حذف النسخة الاحتياطية']);
     }
 
     public function restore(Request $request, $backup_id)
     {
+        // Only admin can restore
+        if ($request->user()->role?->name !== 'admin') {
+            return response()->json(['message' => 'صلاحية مسؤول النظام مطلوبة لتنفيذ هذه العملية'], 403);
+        }
+
         $backup = Backup::findOrFail($backup_id);
-        $disk = Storage::disk('public');
-        $filepath = $disk->path($backup->file_path);
 
-        // تنفيذ استعادة (mysql)
-        $db = config('database.connections.mysql.database');
-        $user = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
-        $command = sprintf('mysql --user=%s --password=%s %s < %s',
-            escapeshellarg($user), escapeshellarg($password), escapeshellarg($db), escapeshellarg($filepath));
-        system($command, $output);
+        if (!$backup->file_path || !file_exists($backup->file_path)) {
+            return response()->json(['message' => 'ملف النسخة الاحتياطية غير موجود'], 404);
+        }
 
-        return response()->json(['message' => 'تم استعادة النسخة الاحتياطية بنجاح']);
+        // Restore by executing SQL statements via Laravel DB facade (no mysql CLI needed)
+        try {
+            $sql = file_get_contents($backup->file_path);
+            // Split on statement boundaries and execute each
+            $statements = array_filter(
+                array_map('trim', explode(";
+", $sql)),
+                fn($s) => strlen($s) > 0 && !str_starts_with(ltrim($s), '--')
+            );
+            \DB::beginTransaction();
+            foreach ($statements as $statement) {
+                \DB::statement($statement);
+            }
+            \DB::commit();
+            return response()->json(['message' => 'تم استعادة النسخة الاحتياطية بنجاح']);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Backup restore failed: ' . $e->getMessage());
+            return response()->json(['message' => 'فشل استعادة النسخة الاحتياطية، يرجى التحقق من الملف'], 500);
+        }
     }
 
     public function download(Request $request, $id)
     {
+        // Only admin can download
+        if ($request->user()->role?->name !== 'admin') {
+            return response()->json(['message' => 'صلاحية مسؤول النظام مطلوبة لتنفيذ هذه العملية'], 403);
+        }
+
         try {
             $backup = Backup::findOrFail($id);
-            $disk = Storage::disk('public');
-            
-            // تخطي التحقق من الصلاحيات مؤقتاً للتشخيص
-            // $this->authorize('download', $backup);
 
-            if (!$backup->file_path || !$disk->exists($backup->file_path)) {
-                return response()->json(['message' => 'ملف النسخة غير موجود'], 404);
+            if (!$backup->file_path || !file_exists($backup->file_path)) {
+                return response()->json(['message' => 'ملف النسخة غير موجود على الخادم'], 404);
             }
 
-            return $disk->download($backup->file_path, $backup->name);
+            return response()->download($backup->file_path, $backup->name ?? basename($backup->file_path));
         } catch (\Exception $e) {
-            return response()->json(['message' => 'خطأ في التحميل: ' . $e->getMessage()], 500);
+            \Log::error('Backup download failed: ' . $e->getMessage());
+            return response()->json(['message' => 'فشل تحميل النسخة الاحتياطية'], 500);
         }
     }
 }

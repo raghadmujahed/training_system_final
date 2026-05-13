@@ -28,7 +28,7 @@ class UpdateSectionRequest extends FormRequest
                 })->ignore($sectionId)
             ],
             'academic_year' => 'sometimes|digits:4|integer|min:2000|max:2100',
-            'academic_supervisor_id' => 'sometimes|required|integer|exists:users,id',
+            'academic_supervisor_id' => 'required|integer|exists:users,id',
             'semester' => 'sometimes|in:first,second,summer',
             'course_id' => 'sometimes|exists:courses,id',
             'capacity' => 'nullable|integer|min:1|max:1000',
@@ -39,7 +39,7 @@ class UpdateSectionRequest extends FormRequest
     {
         return [
             'name.unique' => 'يوجد شعبة بهذا الاسم في نفس المساق والفصل الدراسي والعام الدراسي.',
-            'academic_supervisor_id.required' => 'يجب اختيار مشرف أكاديمي للشعبة',
+            'academic_supervisor_id.required' => 'يجب تعيين مشرف أكاديمي للشعبة',
             'academic_supervisor_id.exists' => 'المشرف الأكاديمي المحدد غير موجود',
         ];
     }
@@ -53,13 +53,8 @@ class UpdateSectionRequest extends FormRequest
         $validator->after(function ($validator) {
             $supervisorId = $this->input('academic_supervisor_id');
 
-            // Only validate if supervisor_id is being updated
-            if (! $this->has('academic_supervisor_id')) {
-                return;
-            }
-
             if (empty($supervisorId)) {
-                $validator->errors()->add('academic_supervisor_id', 'يجب اختيار مشرف أكاديمي للشعبة');
+                $validator->errors()->add('academic_supervisor_id', 'يجب تعيين مشرف أكاديمي للشعبة');
                 return;
             }
 
@@ -73,6 +68,18 @@ class UpdateSectionRequest extends FormRequest
 
             if ($supervisor->role?->name !== 'academic_supervisor') {
                 $validator->errors()->add('academic_supervisor_id', 'المستخدم المحدد ليس مشرفاً أكاديمياً');
+                return;
+            }
+
+            // Validate supervisor belongs to same department as course (if course is known)
+            $section   = $this->route('section');
+            $courseId  = $this->input('course_id') ?? $section?->course_id;
+
+            if ($courseId && $supervisor->department_id) {
+                $courseDeptId = \App\Models\Course::where('id', $courseId)->value('department_id');
+                if ($courseDeptId && (int) $courseDeptId !== (int) $supervisor->department_id) {
+                    $validator->errors()->add('academic_supervisor_id', 'المشرف الأكاديمي يجب أن يكون من نفس قسم المساق.');
+                }
             }
         });
     }

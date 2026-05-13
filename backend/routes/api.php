@@ -44,7 +44,8 @@ use App\Http\Controllers\Api\{
     StudentEFormController,
     StudentEvaluationController,
     HeadOfDepartmentController,
-    SchoolManagerTeacherController
+    SchoolManagerTeacherController,
+    ExportController
 };
 
 // Routes publiques
@@ -56,6 +57,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [UserController::class, 'logout']);
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     Route::get('/admin/reports', [DashboardController::class, 'adminReports']);
+    Route::get('/admin/export/users', [ExportController::class, 'exportUsers'])->middleware('role:admin');
+    Route::get('/admin/export/training-requests', [ExportController::class, 'exportTrainingRequests'])->middleware('role:admin');
     Route::get('/user', [UserController::class, 'currentUser']);
 
     // Utilisateurs, rôles, départements
@@ -74,6 +77,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('courses', CourseController::class);
     Route::post('courses/{course}/archive', [CourseController::class, 'archive']);
     Route::apiResource('sections', SectionController::class);
+    Route::get('sections/active-training-period', [SectionController::class, 'getActiveTrainingPeriod']);
     Route::get('sections/{section}/enrollments', [SectionController::class, 'getEnrollments']);
     Route::post('sections/{section}/add-student', [SectionController::class, 'addStudent']);
     Route::post('sections/{section}/remove-student', [SectionController::class, 'removeStudent']);
@@ -95,13 +99,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('archive/public-periods/{periodId}/details', [ArchiveController::class, 'publicPeriodDetails']);
 
     // Sites et périodes de stage
+    // Static sub-routes MUST be declared before apiResource to avoid {training_site} wildcard capture
+    Route::get('training-sites/available', [TrainingSiteController::class, 'availableForStudent']);
+    Route::get('training-sites/without-manager', [TrainingSiteController::class, 'schoolsWithoutManager']);
+    Route::get('users/school-managers/available', [TrainingSiteController::class, 'availableSchoolManagers']);
     Route::apiResource('training-sites', TrainingSiteController::class);
     Route::apiResource('training-periods', TrainingPeriodController::class);
     Route::patch('training-periods/{training_period}/set-active', [TrainingPeriodController::class, 'setActive']);
-    
-    // Schools without manager functionality
-    Route::get('training-sites/without-manager', [TrainingSiteController::class, 'schoolsWithoutManager']);
-    Route::get('users/school-managers/available', [TrainingSiteController::class, 'availableSchoolManagers']);
     Route::post('training-sites/{training_site}/assign-manager', [TrainingSiteController::class, 'assignManager']);
 
     // Training Site Staff Management
@@ -416,6 +420,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::prefix('')->group(function () {
         Route::get('/chats', [\App\Http\Controllers\Api\Chat\ChatController::class, 'index']);
         Route::post('/chats/create-or-get', [\App\Http\Controllers\Api\Chat\ChatController::class, 'createOrGet']);
+        Route::post('/chats/start-with-message', [\App\Http\Controllers\Api\Chat\ChatController::class, 'startWithMessage']);
         Route::get('/chat/unread-count', [\App\Http\Controllers\Api\Chat\ChatController::class, 'unreadCount']);
         Route::get('/chat/allowed-users', [\App\Http\Controllers\Api\Chat\ChatController::class, 'allowedUsers']);
         Route::get('/chat/user-profile/{id}', [\App\Http\Controllers\Api\Chat\UserProfileController::class, 'show']);

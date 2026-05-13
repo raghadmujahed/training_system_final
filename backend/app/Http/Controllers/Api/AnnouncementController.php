@@ -154,11 +154,39 @@ class AnnouncementController extends Controller
 
     public function update(UpdateAnnouncementRequest $request, Announcement $announcement)
     {
-        $announcement->update($request->only([
+        // Check field-level changes
+        $announcement->fill($request->only([
             'title', 'content', 'status', 'published_at', 'expires_at', 'all_students',
         ]));
+        $fieldsChanged = $announcement->isDirty();
 
+        // Check targets change
+        $targetsChanged = false;
         if ($request->has('target_roles') || $request->has('target_users') || $request->has('target_departments')) {
+            $currentTargets = $announcement->targets()
+                ->selectRaw('COALESCE(role_id,0) as role_id, COALESCE(user_id,0) as user_id, COALESCE(department_id,0) as department_id')
+                ->get()
+                ->map(fn($t) => "{$t->role_id}_{$t->user_id}_{$t->department_id}")
+                ->sort()->values()->toArray();
+
+            $newTargets = collect()
+                ->merge(collect($request->target_roles ?? [])->map(fn($id) => "{$id}_0_0"))
+                ->merge(collect($request->target_users ?? [])->map(fn($id) => "0_{$id}_0"))
+                ->merge(collect($request->target_departments ?? [])->map(fn($id) => "0_0_{$id}"))
+                ->sort()->values()->toArray();
+
+            $targetsChanged = $currentTargets !== $newTargets;
+        }
+
+        if (!$fieldsChanged && !$targetsChanged) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
+        }
+
+        if ($fieldsChanged) {
+            $announcement->save();
+        }
+
+        if ($targetsChanged && ($request->has('target_roles') || $request->has('target_users') || $request->has('target_departments'))) {
             $announcement->targets()->delete();
 
             if ($request->has('target_roles')) {

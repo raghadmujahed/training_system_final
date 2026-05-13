@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Users } from "lucide-react";
-import { getUsers, deleteUser, changeUserStatus } from "../../../services/api";
+import { getUsers, deleteUser, changeUserStatus, exportUsers } from "../../../services/api";
 import { useRoles } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import useAppToast from "../../../hooks/useAppToast";
@@ -18,6 +18,7 @@ export default function UsersList() {
   const [filters, setFilters] = useState({ role_id: "", status: "", search: "" });
   const [sort, setSort] = useState({ sort_by: "created_at", sort_direction: "desc" });
 
+  const [exportLoading, setExportLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -110,6 +111,27 @@ export default function UsersList() {
     fetchUsers(page);
   };
 
+  const handleExport = async () => {
+    if (exportLoading) return;
+    setExportLoading(true);
+    try {
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value !== "")
+      );
+      await exportUsers(cleanFilters);
+      toast.success("تم تصدير المستخدمين بنجاح");
+    } catch (err) {
+      const msg = err?.message || err?.response?.data?.message;
+      if (err?.response?.status === 403 || msg?.includes('صلاحية')) {
+        toast.error("لا تملك صلاحية التصدير");
+      } else {
+        toast.error(msg || "فشل تصدير المستخدمين");
+      }
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من حذف هذا المستخدم؟")) {
       try {
@@ -172,6 +194,9 @@ export default function UsersList() {
           <button onClick={() => navigate("/admin/users/add/counselor")} className="btn-add-counselor">+ إضافة مرشد</button>
           <button onClick={() => navigate("/admin/users/add/psychologist")} className="btn-add-psychologist">+ إضافة أخصائي نفسي</button>
           <button onClick={() => navigate("/admin/users/add/academic-supervisor")} className="btn-add-supervisor">+ إضافة مشرف أكاديمي</button>
+          <button onClick={handleExport} disabled={exportLoading} className="btn-secondary" style={{marginRight:'auto'}}>
+            {exportLoading ? "جاري تجهيز الملف..." : "⬇ تصدير CSV"}
+          </button>
         </div>
 
       {/* فلاتر البحث */}

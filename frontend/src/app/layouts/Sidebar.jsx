@@ -178,7 +178,7 @@ const menus = {
     { name: "\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a", path: "/principal/profile" },
     { name: "\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u062a\u062f\u0631\u064a\u0628", path: "/principal/training-requests" },
     { name: "\u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u062d\u0636\u0648\u0631", path: "/principal/attendance-approval" },
-    { name: "\u0627\u0644\u062a\u0642\u064a\u064a\u0645\u0627\u062a", path: "/principal/student-evaluation" },
+    { name: "تقييم الطلبة", path: "/principal/student-evaluation" },
   ],
   
   field_supervisor: buildFieldSupervisorMenu(),
@@ -230,6 +230,7 @@ const menus = {
     { name: "الملف الشخصي", path: "/psychology-center/profile" },
     { name: "طلبات التدريب", path: "/psychology-center/mentor-assignment" },
     { name: "المتدربون في المركز", path: "/psychology-center/trainee-students" },
+    { name: "تقييم الطلبة", path: "/principal/student-evaluation" },
   ],
 
   health_directorate: [
@@ -254,8 +255,10 @@ export default function Sidebar({ isOpen, onClose }) {
   const role =
     normalizedRole === ROLES.COORDINATOR
       ? "coordinator"
-      : normalizedRole === ROLES.PRINCIPAL
-        ? "principal"
+      : normalizedRole === ROLES.SCHOOL_MANAGER
+        ? "school_manager"
+      : normalizedRole === ROLES.PSYCHOLOGY_CENTER_MANAGER
+        ? "psychology_center_manager"
       : getFieldStaffRoleKey(normalizedRole);
   const userName = savedUser?.name || "مستخدم تجريبي";
   const roleName = getRoleLabel(rawRole);

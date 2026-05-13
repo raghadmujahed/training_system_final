@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/ui/Button";
@@ -11,11 +11,14 @@ import {
   deleteTemplateItem,
 } from "../../../services/api";
 import useAppToast from "../../../hooks/useAppToast";
+import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function EvaluationTemplateForm() {
   const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
+  const originalRef = useRef(null);
+  const originalItemsRef = useRef([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -35,13 +38,16 @@ export default function EvaluationTemplateForm() {
         try {
           const data = await getEvaluationTemplate(id);
           // التأكد من وجود البيانات
-          setForm({
+          const loaded = {
             name: data.name || "",
             form_type: data.form_type || "evaluation",
             description: data.description || "",
             target_role: data.target_role || "",
             department_key: data.department_key || "",
-          });
+          };
+          originalRef.current = loaded;
+          originalItemsRef.current = data.items || [];
+          setForm(loaded);
           // التأكد من أن items هي مصفوفة
           setItems(data.items || []);
         } catch (err) {
@@ -138,6 +144,18 @@ export default function EvaluationTemplateForm() {
         target_role: form.target_role || null,
         department_key: form.department_key || null,
       };
+
+      // Check header no-changes
+      if (id) {
+        const headerChanged = hasFormChanged(originalRef.current, formPayload);
+        const newItems = items.filter(item => item._isNew && item.title?.trim());
+        const deletedItems = originalItemsRef.current.filter(orig => !items.find(i => i.id === orig.id));
+        if (!headerChanged && newItems.length === 0 && deletedItems.length === 0) {
+          toast.info("لم تقم بتغيير أي بيانات");
+          setLoading(false);
+          return;
+        }
+      }
 
       // 1. إنشاء أو تحديث القالب الأساسي
       if (!id) {
