@@ -255,7 +255,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const role =
     normalizedRole === ROLES.COORDINATOR
       ? "coordinator"
-      : normalizedRole === ROLES.SCHOOL_MANAGER
+      : normalizedRole === ROLES.PRINCIPAL || normalizedRole === ROLES.SCHOOL_MANAGER
         ? "school_manager"
       : normalizedRole === ROLES.PSYCHOLOGY_CENTER_MANAGER
         ? "psychology_center_manager"
