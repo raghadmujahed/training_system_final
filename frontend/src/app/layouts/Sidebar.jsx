@@ -222,6 +222,7 @@ const menus = {
     { name: "الملف الشخصي", path: "/principal/profile" },
     { name: "طلبات التدريب", path: "/principal/training-requests" },
     { name: "اعتماد الحضور", path: "/principal/attendance-approval" },
+    { name: "التقييمات", path: "/principal/student-evaluation" },
   ],
 
   psychology_center_manager: [

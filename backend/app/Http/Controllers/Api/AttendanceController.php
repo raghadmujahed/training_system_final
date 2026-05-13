@@ -193,6 +193,41 @@ class AttendanceController extends Controller
                 $request->user()->id,
                 $data['rejection_reason'] ?? null
             );
+
+            // تحميل العلاقات المطلوبة
+            $attendance->load(['trainingAssignment.enrollment.user', 'trainingAssignment.teacher']);
+
+            // إرسال إشعار للطالب
+            $student = $attendance->trainingAssignment?->enrollment?->user;
+            if ($student) {
+                Notification::create([
+                    'user_id' => $student->id,
+                    'type' => 'attendance_rejected',
+                    'message' => 'تم رفض سجل الحضور بتاريخ ' . $attendance->date . ($data['rejection_reason'] ? '. السبب: ' . $data['rejection_reason'] : ''),
+                    'data' => [
+                        'attendance_id' => $attendance->id,
+                        'date' => $attendance->date,
+                        'rejection_reason' => $data['rejection_reason'],
+                    ],
+                ]);
+            }
+
+            // إرسال إشعار للمعلم المرشد
+            $teacher = $attendance->trainingAssignment?->teacher;
+            if ($teacher) {
+                Notification::create([
+                    'user_id' => $teacher->id,
+                    'type' => 'attendance_rejected',
+                    'message' => 'تم رفض سجل الحضور للطالب ' . ($student?->name ?? 'الطالب') . ' بتاريخ ' . $attendance->date . ($data['rejection_reason'] ? '. السبب: ' . $data['rejection_reason'] : ''),
+                    'data' => [
+                        'attendance_id' => $attendance->id,
+                        'date' => $attendance->date,
+                        'student_name' => $student?->name,
+                        'rejection_reason' => $data['rejection_reason'],
+                    ],
+                ]);
+            }
+
             return new AttendanceResource($attendance->load(['user', 'trainingAssignment']));
         } catch (\Exception $e) {
             return response()->json(['message' => 'حدث خطأ أثناء رفض سجل الحضور: ' . $e->getMessage()], 500);
