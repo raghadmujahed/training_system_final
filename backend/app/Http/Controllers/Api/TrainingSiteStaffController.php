@@ -43,6 +43,10 @@ class TrainingSiteStaffController extends Controller
         }
 
         if (in_array($roleName, self::DIRECTORATE_ROLES, true)) {
+            // Directorate user with no linked directorate cannot access anything
+            if (empty($user->directorate)) {
+                return false;
+            }
             return $directorate === $user->directorate;
         }
 
@@ -57,8 +61,25 @@ class TrainingSiteStaffController extends Controller
     {
         $user = $request->user();
         $roleName = $user?->role?->name;
-        if (in_array($roleName, self::DIRECTORATE_ROLES, true) && $user->directorate) {
-            return $user->directorate;
+        if (in_array($roleName, self::DIRECTORATE_ROLES, true)) {
+            return $user->directorate ?: '';
+        }
+        return null;
+    }
+
+    /**
+     * Ensure a directorate-role user has their directorate set.
+     * Returns a 403 response if not, null otherwise.
+     */
+    private function ensureDirectorateLinked(Request $request): ?\Illuminate\Http\JsonResponse
+    {
+        $user = $request->user();
+        $roleName = $user?->role?->name;
+        if (in_array($roleName, self::DIRECTORATE_ROLES, true) && empty($user->directorate)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام',
+            ], 403);
         }
         return null;
     }
@@ -85,6 +106,11 @@ class TrainingSiteStaffController extends Controller
         try {
             $this->requirePermission($request, 'training_sites.staff.view');
 
+            // Block directorate users not linked to any directorate
+            if ($check = $this->ensureDirectorateLinked($request)) {
+                return $check;
+            }
+
             $validated = $request->validate([
                 'search' => 'nullable|string|max:255',
                 'directorate' => 'nullable|string|max:50',
@@ -104,7 +130,8 @@ class TrainingSiteStaffController extends Controller
 
             // Directorate restriction — enforced in backend for all directorate roles
             $directorateRestriction = $this->getDirectorateRestriction($request);
-            if ($directorateRestriction) {
+            if ($directorateRestriction !== null) {
+                // Directorate users: always filter by their own directorate (empty string = no results)
                 $query->whereHas('trainingSite', function ($q) use ($directorateRestriction) {
                     $q->where('directorate', $directorateRestriction);
                 });
@@ -191,6 +218,10 @@ class TrainingSiteStaffController extends Controller
     {
         try {
             $this->requirePermission($request, 'training_sites.staff.assign');
+
+            if ($check = $this->ensureDirectorateLinked($request)) {
+                return $check;
+            }
 
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
@@ -292,6 +323,10 @@ class TrainingSiteStaffController extends Controller
         try {
             $this->requirePermission($request, 'training_sites.staff.transfer');
 
+            if ($check = $this->ensureDirectorateLinked($request)) {
+                return $check;
+            }
+
             $validated = $request->validate([
                 'user_id' => 'required|exists:users,id',
                 'training_site_id' => 'required|exists:training_sites,id',
@@ -331,13 +366,13 @@ class TrainingSiteStaffController extends Controller
             if ($oldSite && !$this->canAccessDirectorate($oldSite->directorate, $request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لا تملك صلاحية نقل المستخدم من موقعه الحالي',
+                    'message' => 'لا تملك صلاحية نقل هذا الكادر (لا يتبع لمديريتك)',
                 ], 403);
             }
             if (!$this->canAccessDirectorate($newSite->directorate, $request)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لا تملك صلاحية نقل المستخدم إلى هذا الموقع (توجد قيود المديرية)',
+                    'message' => 'لا يمكنك نقل الكادر إلى مدرسة خارج مديريتك',
                 ], 403);
             }
 
@@ -408,6 +443,10 @@ class TrainingSiteStaffController extends Controller
     {
         try {
             $this->requirePermission($request, 'training_sites.staff.remove');
+
+            if ($check = $this->ensureDirectorateLinked($request)) {
+                return $check;
+            }
 
             $user = User::with('role')->findOrFail($userId);
             $oldSiteId = $user->training_site_id;

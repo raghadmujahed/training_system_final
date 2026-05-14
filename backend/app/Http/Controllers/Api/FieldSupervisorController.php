@@ -122,6 +122,7 @@ class FieldSupervisorController extends Controller
         Notification::create([
             'user_id' => $recipientUserId,
             'type' => $type,
+            'title' => mb_substr($message, 0, 60),
             'message' => $message,
             'notifiable_type' => User::class,
             'notifiable_id' => $recipientUserId,
@@ -205,7 +206,7 @@ class FieldSupervisorController extends Controller
                 'sessions_documented' => $this->getSessionsCount($studentIds),
                 'notes_pending_review' => DailyReport::whereIn('student_id', $studentIds)
                     ->whereHas('template', fn($q) => $q->where('applies_to', 'psychologist'))
-                    ->whereIn('status', [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW])
+                    ->where('status', DailyReport::STATUS_SUBMITTED)
                     ->count(),
             ],
             default => [],
@@ -566,7 +567,7 @@ class FieldSupervisorController extends Controller
 
         $dailyReports = DailyReport::query()
             ->whereIn('training_assignment_id', $assignmentIds)
-            ->whereIn('status', [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW])
+            ->where('status', DailyReport::STATUS_SUBMITTED)
             ->with(['student:id,name,university_id', 'template:id,name,code'])
             ->orderByDesc('report_date')
             ->orderByDesc('id')
@@ -695,7 +696,7 @@ class FieldSupervisorController extends Controller
                 'status_label' => $r->status_label,
                 'status_color' => $r->status_color,
                 'has_attachments' => $r->attachments()->exists(),
-                'can_review' => in_array($r->status, [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW]),
+                'can_review' => $r->status === DailyReport::STATUS_SUBMITTED,
             ]);
 
         return response()->json($reports);
@@ -715,18 +716,18 @@ class FieldSupervisorController extends Controller
             'id' => $report->id,
             'date' => $report->report_date->format('Y-m-d'),
             'template' => $report->template,
-            'content' => $report->content,
+            'content' => $report->data,
             'status' => $report->status,
             'status_label' => $report->status_label,
-            'supervisor_comment' => $report->supervisor_comment,
+            'supervisor_comment' => $report->supervisor_notes,
             'reviewed_at' => $report->reviewed_at?->format('Y-m-d H:i'),
             'student' => [
                 'id' => $report->student->id,
                 'name' => $report->student->name,
             ],
             'attachments' => $report->attachments,
-            'can_confirm' => in_array($report->status, [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW]),
-            'can_return' => in_array($report->status, [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW]),
+            'can_confirm' => $report->status === DailyReport::STATUS_SUBMITTED,
+            'can_return' => $report->status === DailyReport::STATUS_SUBMITTED,
         ]);
     }
 
@@ -739,7 +740,7 @@ class FieldSupervisorController extends Controller
         $report = DailyReport::where('field_supervisor_id', $request->user()->id)
             ->findOrFail($reportId);
 
-        if (!in_array($report->status, [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW])) {
+        if ($report->status !== DailyReport::STATUS_SUBMITTED) {
             return response()->json(['error' => 'لا يمكن تأكيد هذا التقرير'], 422);
         }
 
@@ -772,7 +773,7 @@ class FieldSupervisorController extends Controller
         $report = DailyReport::where('field_supervisor_id', $request->user()->id)
             ->findOrFail($reportId);
 
-        if (!in_array($report->status, [DailyReport::STATUS_SUBMITTED, DailyReport::STATUS_UNDER_REVIEW])) {
+        if ($report->status !== DailyReport::STATUS_SUBMITTED) {
             return response()->json(['error' => 'لا يمكن إعادة هذا التقرير'], 422);
         }
 
@@ -1212,12 +1213,12 @@ class FieldSupervisorController extends Controller
             $events[] = [
                 'type' => 'report',
                 'title' => $r->status === DailyReport::STATUS_SUBMITTED ? 'رفع تقرير' : 
-                    ($r->status === DailyReport::STATUS_CONFIRMED ? 'تأكيد تقرير' : 'إعادة تقرير'),
+                    ($r->status === DailyReport::STATUS_REVIEWED ? 'تأكيد تقرير' : 'إعادة تقرير'),
                 'description' => "تقرير يوم {$r->report_date->format('Y-m-d')}",
                 'date' => $r->report_date->format('Y-m-d'),
                 'time' => $r->created_at->format('H:i'),
                 'icon' => 'file-text',
-                'color' => $r->status === DailyReport::STATUS_CONFIRMED ? 'green' : 
+                'color' => $r->status === DailyReport::STATUS_REVIEWED ? 'green' : 
                     ($r->status === DailyReport::STATUS_RETURNED ? 'red' : 'blue'),
             ];
         }
@@ -1529,7 +1530,7 @@ class FieldSupervisorController extends Controller
         // يمكن ربطها بجدول محدد لاحقاً
         return DailyReport::whereIn('student_id', $studentIds)
             ->whereHas('template', fn($q) => $q->where('applies_to', 'mentor_teacher'))
-            ->where('status', DailyReport::STATUS_CONFIRMED)
+            ->where('status', DailyReport::STATUS_REVIEWED)
             ->count();
     }
 
@@ -1548,7 +1549,7 @@ class FieldSupervisorController extends Controller
     {
         return DailyReport::whereIn('student_id', $studentIds)
             ->whereHas('template', fn($q) => $q->where('applies_to', 'school_counselor'))
-            ->where('status', DailyReport::STATUS_CONFIRMED)
+            ->where('status', DailyReport::STATUS_REVIEWED)
             ->count();
     }
 
@@ -1577,7 +1578,7 @@ class FieldSupervisorController extends Controller
     {
         return DailyReport::whereIn('student_id', $studentIds)
             ->whereHas('template', fn($q) => $q->where('applies_to', 'psychologist'))
-            ->where('status', DailyReport::STATUS_CONFIRMED)
+            ->where('status', DailyReport::STATUS_REVIEWED)
             ->count();
     }
 

@@ -73,6 +73,7 @@ export default function TrainingSiteStaffManagement() {
   const [availableStaff, setAvailableStaff] = useState([]);
   const [loadingModal, setLoadingModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState("");
 
   const [assignForm, setAssignForm] = useState({
     user_id: "",
@@ -201,23 +202,33 @@ export default function TrainingSiteStaffManagement() {
     setSelectedUser(null);
     setAssignForm({ user_id: "", training_site_id: "" });
     setTransferForm({ training_site_id: "", reason: "" });
+    setModalError("");
   };
 
   const handleAssign = async (e) => {
     e.preventDefault();
+    setModalError("");
     if (!assignForm.user_id || !assignForm.training_site_id) {
-      toastRef.current.error("الرجاء اختيار المستخدم والموقع");
+      setModalError("الرجاء اختيار المستخدم والموقع");
       return;
     }
     setSubmitting(true);
     try {
-      await assignStaff(assignForm);
+      const res = await assignStaff(assignForm);
       toastRef.current.success("تم تعيين المستخدم بنجاح");
       closeModals();
-      fetchStaff(pagination.current_page);
-      apiCache.invalidatePrefix("training-site-staff:");
+      // Add new staff member to local state if returned
+      const newPerson = res?.data;
+      if (newPerson?.id) {
+        setStaff(prev => [newPerson, ...prev]);
+        setPagination(p => ({ ...p, total: p.total + 1 }));
+      } else {
+        fetchStaff(pagination.current_page);
+      }
+      apiCache.invalidatePrefix("training-sites:staff-mgmt:");
     } catch (err) {
-      toastRef.current.error(err?.response?.data?.message || "فشل تعيين المستخدم");
+      const msg = err?.response?.data?.message || "فشل تعيين المستخدم";
+      setModalError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -225,43 +236,62 @@ export default function TrainingSiteStaffManagement() {
 
   const handleTransfer = async (e) => {
     e.preventDefault();
+    setModalError("");
     if (!transferForm.training_site_id) {
-      toastRef.current.error("الرجاء اختيار الموقع الجديد");
+      setModalError("الرجاء اختيار الموقع الجديد");
       return;
     }
     // Detect no change
     if (String(transferForm.training_site_id) === String(selectedUser?.training_site_id)) {
-      toastRef.current.error("لم تقم بتغيير أي بيانات — الموقع المختار هو نفس الموقع الحالي");
+      setModalError("لم تقم بتغيير المدرسة — الموقع المختار هو نفس الموقع الحالي");
       return;
     }
     setSubmitting(true);
     try {
-      await transferStaff({
+      const res = await transferStaff({
         user_id: selectedUser.id,
         training_site_id: transferForm.training_site_id,
         reason: transferForm.reason,
       });
-      toastRef.current.success("تم نقل المستخدم بنجاح");
+      const updatedPerson = res?.data;
+      toastRef.current.success("تم نقل الكادر بنجاح");
       closeModals();
-      fetchStaff(pagination.current_page);
-      apiCache.invalidatePrefix("training-site-staff:");
+      // Update local state directly — no full reload needed
+      if (updatedPerson?.id) {
+        setStaff(prev =>
+          prev.map(p =>
+            p.id === updatedPerson.id ? { ...p, ...updatedPerson } : p
+          )
+        );
+      } else {
+        fetchStaff(pagination.current_page);
+      }
+      apiCache.invalidatePrefix("training-sites:staff-mgmt:");
     } catch (err) {
-      toastRef.current.error(err?.response?.data?.message || "فشل نقل المستخدم");
+      // Do NOT close modal on error — show error inside modal
+      const msg = err?.response?.data?.message || "فشل نقل الكادر";
+      setModalError(msg);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleRemove = async () => {
+    setModalError("");
     setSubmitting(true);
     try {
       await removeStaff(selectedUser.id);
-      toastRef.current.success("تم إزالة المستخدم من الموقع بنجاح");
+      const removedId = selectedUser.id;
+      toastRef.current.success("تم إزالة الكادر من الموقع بنجاح");
       closeModals();
-      fetchStaff(pagination.current_page);
-      apiCache.invalidatePrefix("training-site-staff:");
+      // Remove from local state directly
+      setStaff(prev => prev.filter(p => p.id !== removedId));
+      setPagination(p => ({ ...p, total: Math.max(0, p.total - 1) }));
+      apiCache.invalidatePrefix("training-sites:staff-mgmt:");
     } catch (err) {
-      toastRef.current.error(err?.response?.data?.message || "فشل إزالة المستخدم");
+      const msg = err?.response?.data?.message || "فشل إزالة الكادر";
+      setModalError(msg);
+      toastRef.current.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -274,6 +304,22 @@ export default function TrainingSiteStaffManagement() {
 
   // trainingSites is already filtered by backend for directorate users
   const filteredSites = trainingSites;
+
+  // Block directorate users not linked to a directorate
+  if (isDirectorate && !userDirectorate) {
+    return (
+      <div className="page-container">
+        <PageHeader title="إدارة كوادر مواقع التدريب" />
+        <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-xl p-6 mt-4 flex items-start gap-3">
+          <span className="text-2xl">⚠️</span>
+          <div>
+            <p className="font-semibold text-lg mb-1">الحساب غير مرتبط بمديرية</p>
+            <p className="text-sm">لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام لربط حسابك بالمديرية الصحيحة.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -446,43 +492,54 @@ export default function TrainingSiteStaffManagement() {
       {showAssignModal && (
         <div className="modal-overlay" onClick={closeModals}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>تعيين مستخدم جديد</h3>
+            <h3>تعيين كادر جديد في موقع تدريبي</h3>
             {loadingModal ? (
               <LoadingSpinner />
             ) : (
               <form onSubmit={handleAssign}>
+                {modalError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-3">
+                    {modalError}
+                  </div>
+                )}
                 <div className="form-group">
                   <label>المستخدم *</label>
                   <select
                     value={assignForm.user_id}
-                    onChange={(e) =>
-                      setAssignForm((prev) => ({ ...prev, user_id: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setModalError("");
+                      setAssignForm((prev) => ({ ...prev, user_id: e.target.value }));
+                    }}
                     className="form-select"
                     required
                   >
                     <option value="">اختر مستخدم...</option>
-                    {availableStaff.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({getRoleLabel(u.role?.name)})
-                      </option>
-                    ))}
+                    {availableStaff.length === 0 ? (
+                      <option disabled value="">لا يوجد مستخدمون متاحون حالياً</option>
+                    ) : (
+                      availableStaff.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name} — {getRoleLabel(u.role?.name)}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div className="form-group">
                   <label>الموقع التدريبي *</label>
                   <select
                     value={assignForm.training_site_id}
-                    onChange={(e) =>
-                      setAssignForm((prev) => ({ ...prev, training_site_id: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setModalError("");
+                      setAssignForm((prev) => ({ ...prev, training_site_id: e.target.value }));
+                    }}
                     className="form-select"
                     required
                   >
                     <option value="">اختر موقع...</option>
                     {filteredSites.map((site) => (
                       <option key={site.id} value={site.id}>
-                        {site.name} ({site.directorate})
+                        {site.name}{isAdmin && site.directorate ? ` (${site.directorate})` : ""}
                       </option>
                     ))}
                   </select>
@@ -491,7 +548,7 @@ export default function TrainingSiteStaffManagement() {
                   <Button type="submit" variant="primary" disabled={submitting}>
                     {submitting ? "جاري الحفظ..." : "تعيين"}
                   </Button>
-                  <Button type="button" variant="secondary" onClick={closeModals}>
+                  <Button type="button" variant="secondary" onClick={closeModals} disabled={submitting}>
                     إلغاء
                   </Button>
                 </div>
@@ -505,19 +562,53 @@ export default function TrainingSiteStaffManagement() {
       {showTransferModal && selectedUser && (
         <div className="modal-overlay" onClick={closeModals}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>نقل المستخدم</h3>
-            <p>
-              نقل <strong>{selectedUser.name}</strong> من{" "}
-              <strong>{selectedUser.training_site?.name}</strong>
-            </p>
+            <h3>نقل الكادر</h3>
+
+            {/* Staff info summary */}
+            <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm">
+              <div className="flex flex-wrap gap-x-6 gap-y-1">
+                <span><strong>الاسم:</strong> {selectedUser.name}</span>
+                <span><strong>الدور:</strong> {getRoleLabel(selectedUser.role?.name)}</span>
+                <span><strong>الموقع الحالي:</strong> {selectedUser.training_site?.name || "—"}</span>
+                {isAdmin && (
+                  <span><strong>المديرية الحالية:</strong> {selectedUser.training_site?.directorate || "—"}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Manager warning */}
+            {(() => {
+              const newSite = filteredSites.find(
+                (s) => String(s.id) === String(transferForm.training_site_id)
+              );
+              const isManagerRole = ["school_manager", "principal"].includes(
+                selectedUser.role?.name
+              );
+              if (isManagerRole && newSite?.manager_id && newSite.manager_id !== selectedUser.id) {
+                return (
+                  <div className="bg-orange-50 border border-orange-300 text-orange-800 rounded-lg px-3 py-2 text-sm mb-3">
+                    ⚠️ هذه المدرسة لديها مدير حالي — لن يتم النقل حتى يتم نقل أو إزالة المدير الحالي أولاً.
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {modalError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-3">
+                {modalError}
+              </div>
+            )}
+
             <form onSubmit={handleTransfer}>
               <div className="form-group">
                 <label>الموقع الجديد *</label>
                 <select
                   value={transferForm.training_site_id}
-                  onChange={(e) =>
-                    setTransferForm((prev) => ({ ...prev, training_site_id: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setModalError("");
+                    setTransferForm((prev) => ({ ...prev, training_site_id: e.target.value }));
+                  }}
                   className="form-select"
                   required
                 >
@@ -526,7 +617,7 @@ export default function TrainingSiteStaffManagement() {
                     .filter((s) => s.id !== selectedUser.training_site_id)
                     .map((site) => (
                       <option key={site.id} value={site.id}>
-                        {site.name} ({site.directorate})
+                        {site.name}{isAdmin && site.directorate ? ` (${site.directorate})` : ""}
                       </option>
                     ))}
                 </select>
@@ -539,14 +630,15 @@ export default function TrainingSiteStaffManagement() {
                     setTransferForm((prev) => ({ ...prev, reason: e.target.value }))
                   }
                   className="form-textarea"
-                  rows={3}
+                  rows={2}
+                  placeholder="اختياري..."
                 />
               </div>
               <div className="modal-actions">
                 <Button type="submit" variant="primary" disabled={submitting}>
-                  {submitting ? "جاري الحفظ..." : "نقل"}
+                  {submitting ? "جاري النقل..." : "تنفيذ النقل"}
                 </Button>
-                <Button type="button" variant="secondary" onClick={closeModals}>
+                <Button type="button" variant="secondary" onClick={closeModals} disabled={submitting}>
                   إلغاء
                 </Button>
               </div>
@@ -559,16 +651,23 @@ export default function TrainingSiteStaffManagement() {
       {showRemoveModal && selectedUser && (
         <div className="modal-overlay" onClick={closeModals}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>إزالة المستخدم</h3>
-            <p>
-              هل أنت متأكد من إزالة <strong>{selectedUser.name}</strong> من{" "}
-              <strong>{selectedUser.training_site?.name}</strong>؟
+            <h3>إزالة الكادر من الموقع</h3>
+            <p className="mb-1">
+              هل أنت متأكد من إزالة <strong>{selectedUser.name}</strong>
+              {" "}(<span className="text-gray-600">{getRoleLabel(selectedUser.role?.name)}</span>)
+              {" "}من <strong>{selectedUser.training_site?.name || "الموقع الحالي"}</strong>؟
             </p>
+            <p className="text-sm text-gray-500 mb-3">لن يتم حذف الحساب — فقط إلغاء ربطه بهذا الموقع.</p>
+            {modalError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-3">
+                {modalError}
+              </div>
+            )}
             <div className="modal-actions">
               <Button variant="danger" onClick={handleRemove} disabled={submitting}>
-                {submitting ? "جاري الحذف..." : "إزالة"}
+                {submitting ? "جاري الإزالة..." : "تأكيد الإزالة"}
               </Button>
-              <Button variant="secondary" onClick={closeModals}>
+              <Button variant="secondary" onClick={closeModals} disabled={submitting}>
                 إلغاء
               </Button>
             </div>

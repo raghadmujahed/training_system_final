@@ -62,6 +62,9 @@ public function index(Request $request)
         } elseif (in_array($user->role?->name, ['school_manager', 'principal'], true)) {
             $query->whereHas('trainingAssignment', fn ($q) => $q->where('training_site_id', $user->training_site_id));
         }
+    } elseif (!in_array($user->role?->name, ['admin', 'coordinator'], true)) {
+        // أي دور غير معروف لا يُعطى بيانات
+        $query->whereRaw('1 = 0');
     }
 
     $query->with(['trainingAssignment.enrollment.user']);
@@ -90,19 +93,52 @@ public function index(Request $request)
         return new TrainingLogResource($log);
     }
 
-    public function show(TrainingLog $trainingLog)
+    public function show(Request $request, TrainingLog $trainingLog)
     {
-        return new TrainingLogResource($trainingLog->load(['trainingAssignment']));
+        $user = $request->user();
+        $trainingLog->loadMissing('trainingAssignment.enrollment');
+        $assignment = $trainingLog->trainingAssignment;
+
+        $isOwner = $assignment && $assignment->enrollment?->user_id === $user->id;
+        $isFieldActor = $assignment && (
+            (int) $assignment->teacher_id === (int) $user->id
+            || ($assignment->field_supervisor_id && (int) $assignment->field_supervisor_id === (int) $user->id)
+        );
+        $isAcademic = in_array($user->role?->name, ['academic_supervisor', 'admin', 'coordinator'], true);
+
+        if (!$isOwner && !$isFieldActor && !$isAcademic) {
+            return response()->json(['message' => 'لا تملك صلاحية عرض هذا السجل'], 403);
+        }
+
+        return new TrainingLogResource($trainingLog->load(['trainingAssignment.enrollment.user']));
     }
 
     public function update(UpdateTrainingLogRequest $request, TrainingLog $trainingLog)
     {
+        $user = $request->user();
+        $trainingLog->loadMissing('trainingAssignment.enrollment');
+        $assignment = $trainingLog->trainingAssignment;
+
+        $isOwner = $assignment && $assignment->enrollment?->user_id === $user->id;
+        if (!$isOwner) {
+            return response()->json(['message' => 'لا تملك صلاحية تعديل هذا السجل'], 403);
+        }
+
         $trainingLog->update($request->validated());
         return new TrainingLogResource($trainingLog);
     }
 
-    public function submit(TrainingLog $trainingLog)
+    public function submit(Request $request, TrainingLog $trainingLog)
     {
+        $user = $request->user();
+        $trainingLog->loadMissing('trainingAssignment.enrollment');
+        $assignment = $trainingLog->trainingAssignment;
+
+        $isOwner = $assignment && $assignment->enrollment?->user_id === $user->id;
+        if (!$isOwner) {
+            return response()->json(['message' => 'لا تملك صلاحية إرسال هذا السجل'], 403);
+        }
+
         $log = $this->trainingLogService->submitLog($trainingLog);
         return new TrainingLogResource($log);
     }
@@ -110,12 +146,30 @@ public function index(Request $request)
     public function review(ReviewTrainingLogRequest $request, TrainingLog $trainingLog)
     {
         try {
+            $user = $request->user();
             $trainingLog->loadMissing('trainingAssignment.enrollment');
+
+            // التحقق من أن المستخدم هو المعلم المرشد أو المشرف الميداني لهذا السجل
+            $assignment = $trainingLog->trainingAssignment;
+            if (!$assignment) {
+                return response()->json(['message' => 'لا تملك صلاحية مراجعة هذا السجل'], 403);
+            }
+
+            $uid = (int) $user->id;
+            $isFieldActor = (int) $assignment->teacher_id === $uid
+                || ($assignment->field_supervisor_id && (int) $assignment->field_supervisor_id === $uid);
+
+            if (!$isFieldActor) {
+                return response()->json(['message' => 'لا تملك صلاحية مراجعة هذا السجل'], 403);
+            }
+
             $log = $this->trainingLogService->reviewLog(
                 $trainingLog,
                 $request->status,
                 $request->supervisor_notes
             );
+
+            $log->load('trainingAssignment.enrollment.user');
 
             $message = $request->status === 'approved'
                 ? 'تمت مراجعة السجل اليومي بنجاح'
@@ -136,8 +190,19 @@ public function index(Request $request)
         }
     }
 
-    public function destroy(TrainingLog $trainingLog)
+    public function destroy(Request $request, TrainingLog $trainingLog)
     {
+        $user = $request->user();
+        $trainingLog->loadMissing('trainingAssignment.enrollment');
+        $assignment = $trainingLog->trainingAssignment;
+
+        $isOwner = $assignment && $assignment->enrollment?->user_id === $user->id;
+        $isAdmin = in_array($user->role?->name, ['admin', 'coordinator'], true);
+
+        if (!$isOwner && !$isAdmin) {
+            return response()->json(['message' => 'لا تملك صلاحية حذف هذا السجل'], 403);
+        }
+
         $trainingLog->delete();
         return response()->json(['message' => 'تم حذف السجل']);
     }

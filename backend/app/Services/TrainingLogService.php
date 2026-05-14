@@ -39,6 +39,7 @@ class TrainingLogService
             Notification::create([
                 'user_id' => $studentId,
                 'type' => 'training_log_reviewed',
+                'title' => $status === 'approved' ? 'تمت مراجعة سجل التدريب' : 'تم إرجاع سجل التدريب',
                 'message' => $msg,
                 'data' => ['log_id' => $log->id, 'status' => $status],
             ]);

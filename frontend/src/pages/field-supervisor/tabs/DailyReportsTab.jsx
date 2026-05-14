@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 function reportStatusBadge(status) {
-  if (status === "confirmed") return "badge-success";
+  if (status === "reviewed") return "badge-success";
   if (status === "returned") return "badge-danger";
   if (status === "submitted") return "badge-info";
   return "badge-primary";
@@ -29,7 +29,7 @@ export default function DailyReportsTab({ studentId }) {
   const [success, setSuccess] = useState(false);
 
   const list = Array.isArray(reports) ? reports : [];
-  const pendingReports = list.filter((r) => r.status === "submitted" || r.status === "under_review");
+  const pendingReports = list.filter((r) => r.status === "submitted");
 
   const closeDialog = () => {
     setShowReviewDialog(false);
@@ -130,7 +130,7 @@ export default function DailyReportsTab({ studentId }) {
                     className="w-11 h-11 rounded-full flex items-center justify-center"
                     style={{
                       background:
-                        report.status === "confirmed"
+                        report.status === "reviewed"
                           ? "rgba(25, 135, 84, 0.15)"
                           : report.status === "returned"
                             ? "rgba(220, 53, 69, 0.15)"
@@ -139,10 +139,10 @@ export default function DailyReportsTab({ studentId }) {
                               : "#f7f9fc",
                     }}
                   >
-                    {report.status === "confirmed" && <CheckCircle size={22} color="var(--success)" />}
+                    {report.status === "reviewed" && <CheckCircle size={22} color="var(--success)" />}
                     {report.status === "returned" && <RotateCcw size={22} color="var(--danger)" />}
                     {report.status === "submitted" && <Clock size={22} color="var(--primary)" />}
-                    {!["confirmed", "returned", "submitted"].includes(report.status) && <FileText size={22} />}
+                    {!["reviewed", "returned", "submitted"].includes(report.status) && <FileText size={22} />}
                   </div>
                   <div>
                     <strong>{report.template_name}</strong>

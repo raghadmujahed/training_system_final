@@ -12,8 +12,9 @@ class Notification extends Model
     use HasFactory, HidesArchived;
 
     protected $fillable = [
-        'user_id', 'type', 'message', 'notifiable_type', 'notifiable_id',
-        'read_at', 'data'
+        'user_id', 'type', 'title', 'content', 'message',
+        'notifiable_type', 'notifiable_id',
+        'action_url', 'is_read', 'read_at', 'data',
     ];
 
     protected $casts = [

@@ -73,17 +73,25 @@ export default function DailyReports() {
         status: reviewStatus,
         supervisor_notes: supervisorNotes || null,
       });
-      // Update the log in local state without full reload
+      // updatedLog يحتوي student_name مباشرةً من Backend بعد الإصلاح
       const updatedLog = res?.data || res;
       if (updatedLog?.id) {
-        setLogs(prev => prev.map(l => l.id === updatedLog.id ? { ...l, ...updatedLog } : l));
+        setLogs(prev => prev.map(l => {
+          if (l.id !== updatedLog.id) return l;
+          // نحافظ على بيانات الطالب من السجل القديم إذا لم ترجع في updatedLog
+          return {
+            ...l,
+            ...updatedLog,
+            student_name: updatedLog.student_name ?? l.student_name,
+            training_assignment: updatedLog.training_assignment ?? l.training_assignment,
+          };
+        }));
       }
       const successMsg = reviewStatus === "approved"
         ? "تمت مراجعة السجل اليومي بنجاح"
         : "تم إرجاع السجل اليومي للطالب";
       closeModal();
       toast.success(successMsg);
-      await load();
     } catch (e) {
       const msg = e?.response?.data?.message || "فشل مراجعة السجل اليومي";
       setFormError(msg);
@@ -115,12 +123,14 @@ export default function DailyReports() {
       ) : (
         <div className="list-clean">
           {logs.map((log) => {
-            const stu = log.training_assignment?.enrollment?.user;
+            const stuName = log.student_name
+              || log.training_assignment?.enrollment?.user?.name
+              || null;
             return (
               <div className="list-item-card" key={log.id}>
                 <div className="panel-header items-center">
                   <div>
-                    <h4 className="panel-title">{stu?.name || "طالب"}</h4>
+                    <h4 className="panel-title">{stuName || "طالب غير محدد"}</h4>
                     <p className="panel-subtitle">
                       التاريخ: {log.log_date ? new Date(log.log_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}
                     </p>
@@ -168,7 +178,7 @@ export default function DailyReports() {
                 {formError && <p className="text-danger">{formError}</p>}
 
                 <div className="mb-3">
-                  <p><strong>الطالب:</strong> {selectedLog.training_assignment?.enrollment?.user?.name || "—"}</p>
+                  <p><strong>الطالب:</strong> {selectedLog.student_name || selectedLog.training_assignment?.enrollment?.user?.name || "—"}</p>
                   <p><strong>التاريخ:</strong> {selectedLog.log_date ? new Date(selectedLog.log_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' }) : "—"}</p>
                   <p><strong>الأنشطة:</strong> {selectedLog.activities_performed || "—"}</p>
                   {selectedLog.student_reflection && (

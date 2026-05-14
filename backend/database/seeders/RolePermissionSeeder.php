@@ -111,11 +111,26 @@ class RolePermissionSeeder extends Seeder
             $psychologist->permissions()->sync($psychologistPerms);
         }
 
-        // 8b. مديريات التربية
+        // 8b. مديريات التربية — تستطيع إدارة كوادر مواقعها (Backend يمنع الخروج عن المديرية)
         if ($educationDirectorate) {
             $educationDirectorate->permissions()->sync(
                 Permission::whereIn('name', [
                     'training_sites.staff.view',
+                    'training_sites.staff.assign',
+                    'training_sites.staff.transfer',
+                    'training_sites.staff.remove',
+                ])->get()
+            );
+        }
+
+        // 8c. مديريات الصحة — نفس صلاحيات مديريات التربية
+        if ($healthDirectorate) {
+            $healthDirectorate->permissions()->sync(
+                Permission::whereIn('name', [
+                    'training_sites.staff.view',
+                    'training_sites.staff.assign',
+                    'training_sites.staff.transfer',
+                    'training_sites.staff.remove',
                 ])->get()
             );
         }

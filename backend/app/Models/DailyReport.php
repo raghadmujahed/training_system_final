@@ -16,24 +16,29 @@ class DailyReport extends Model
         'training_assignment_id',
         'template_id',
         'report_date',
-        'content',
+        'data',
+        'student_notes',
+        'supervisor_notes',
         'status',
-        'supervisor_comment',
+        'submitted_at',
         'reviewed_at',
-        'reviewed_by',
     ];
 
     protected $casts = [
         'report_date' => 'date',
-        'content' => 'array',
+        'data' => 'array',
         'reviewed_at' => 'datetime',
+        'submitted_at' => 'datetime',
     ];
 
     const STATUS_DRAFT = 'draft';
     const STATUS_SUBMITTED = 'submitted';
-    const STATUS_UNDER_REVIEW = 'under_review';
-    const STATUS_CONFIRMED = 'confirmed';
+    const STATUS_REVIEWED = 'reviewed';
     const STATUS_RETURNED = 'returned';
+
+    // Aliases kept for backward compatibility with FieldSupervisorController calls
+    const STATUS_UNDER_REVIEW = 'submitted';
+    const STATUS_CONFIRMED = 'reviewed';
 
     /**
      * الطالب
@@ -120,7 +125,7 @@ class DailyReport extends Model
      */
     public function scopePendingReview($query)
     {
-        return $query->whereIn('status', [self::STATUS_SUBMITTED, self::STATUS_UNDER_REVIEW]);
+        return $query->where('status', self::STATUS_SUBMITTED);
     }
 
     /**
@@ -129,10 +134,9 @@ class DailyReport extends Model
     public function confirm(int $reviewerId, ?string $comment = null): void
     {
         $this->update([
-            'status' => self::STATUS_CONFIRMED,
-            'supervisor_comment' => $comment,
+            'status' => self::STATUS_REVIEWED,
+            'supervisor_notes' => $comment,
             'reviewed_at' => now(),
-            'reviewed_by' => $reviewerId,
         ]);
     }
 
@@ -143,9 +147,8 @@ class DailyReport extends Model
     {
         $this->update([
             'status' => self::STATUS_RETURNED,
-            'supervisor_comment' => $comment,
+            'supervisor_notes' => $comment,
             'reviewed_at' => now(),
-            'reviewed_by' => $reviewerId,
         ]);
     }
 
@@ -157,8 +160,7 @@ class DailyReport extends Model
         return match($this->status) {
             self::STATUS_DRAFT => 'مسودة',
             self::STATUS_SUBMITTED => 'مُرسل',
-            self::STATUS_UNDER_REVIEW => 'قيد المراجعة',
-            self::STATUS_CONFIRMED => 'مُعتمد',
+            self::STATUS_REVIEWED => 'مُعتمد',
             self::STATUS_RETURNED => 'مُعاد للتعديل',
             default => $this->status,
         };
@@ -170,9 +172,8 @@ class DailyReport extends Model
     public function getStatusColorAttribute(): string
     {
         return match($this->status) {
-            self::STATUS_CONFIRMED => 'green',
+            self::STATUS_REVIEWED => 'green',
             self::STATUS_RETURNED => 'red',
-            self::STATUS_UNDER_REVIEW => 'yellow',
             self::STATUS_SUBMITTED => 'blue',
             self::STATUS_DRAFT => 'gray',
             default => 'gray',
