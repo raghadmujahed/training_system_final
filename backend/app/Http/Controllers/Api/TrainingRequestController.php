@@ -443,12 +443,24 @@ class TrainingRequestController extends Controller
         }
 
         $user = auth()->user();
+
+        // تحميل بيانات الشعبة/المساق/القسم/المشرف الأكاديمي من تسجيل الطالب الحالي
+        $enrollment = $user->currentEnrollment();
+        if ($enrollment) {
+            $enrollment->loadMissing([
+                'section.course.department',
+                'section.academicSupervisor',
+                'section.trainingPeriod',
+            ]);
+        }
+
         $requests = TrainingRequest::with([
             'trainingSite',
             'trainingPeriod',
+            'requestedBy',
             'trainingRequestStudents' => function ($query) use ($user) {
                 $query->where('user_id', $user->id)
-                    ->with(['user', 'course', 'assignedTeacher']);
+                    ->with(['user', 'course.department', 'assignedTeacher']);
             },
         ])
             ->where(function ($q) use ($user) {
@@ -458,7 +470,42 @@ class TrainingRequestController extends Controller
             ->latest()
             ->paginate(15);
 
-        return TrainingRequestResource::collection($requests);
+        // إضافة بيانات الشعبة/القسم/المشرف الأكاديمي لكل طلب
+        $sectionInfo = null;
+        if ($enrollment) {
+            $section = $enrollment->section;
+            $sectionInfo = [
+                'section_id'          => $section?->id,
+                'section_name'        => $section?->name,
+                'academic_year'       => $section?->academic_year ?? $enrollment->academic_year,
+                'semester'            => $section?->semester ?? $enrollment->semester,
+                'semester_label'      => $section?->semester
+                    ? (\App\Enums\Semester::tryFrom($section->semester)?->label() ?? $section->semester)
+                    : null,
+                'course_id'           => $section?->course?->id,
+                'course_name'         => $section?->course?->name,
+                'course_code'         => $section?->course?->code,
+                'department_id'       => $section?->course?->department?->id,
+                'department_name'     => $section?->course?->department?->name,
+                'academic_supervisor' => $section?->academicSupervisor ? [
+                    'id'    => $section->academicSupervisor->id,
+                    'name'  => $section->academicSupervisor->name,
+                    'email' => $section->academicSupervisor->email,
+                    'phone' => $section->academicSupervisor->phone,
+                ] : null,
+                'section_training_period' => $section?->trainingPeriod ? [
+                    'id'   => $section->trainingPeriod->id,
+                    'name' => $section->trainingPeriod->name,
+                ] : null,
+            ];
+        }
+
+        $collection = TrainingRequestResource::collection($requests);
+
+        // نضيف section_info كمعلومة إضافية في الـ response
+        $collection->additional(['section_info' => $sectionInfo]);
+
+        return $collection;
     }
 
     public function studentStore(Request $request)

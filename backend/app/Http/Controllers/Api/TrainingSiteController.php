@@ -24,7 +24,12 @@ class TrainingSiteController extends Controller
         // Automatically scope to the authenticated user's directorate when applicable
         $user = $request->user();
         $role = $user?->role?->name;
-        if (in_array($role, ['education_directorate', 'health_directorate'], true) && $user->directorate) {
+        if (in_array($role, ['education_directorate', 'health_directorate'], true)) {
+            if (empty($user->directorate)) {
+                return response()->json([
+                    'message' => 'لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام',
+                ], 403);
+            }
             $query->where('directorate', $user->directorate);
         }
 

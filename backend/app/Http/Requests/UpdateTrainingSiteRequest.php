@@ -22,6 +22,13 @@ class UpdateTrainingSiteRequest extends FormRequest
         if ($this->input('manager_id') === '') {
             $this->merge(['manager_id' => null]);
         }
+
+        // Force-overwrite directorate for directorate users — cannot change to another directorate
+        $user = $this->user();
+        $role = $user?->role?->name;
+        if (in_array($role, ['education_directorate', 'health_directorate'], true) && $user->directorate) {
+            $this->merge(['directorate' => $user->directorate]);
+        }
     }
 
     public function authorize(): bool

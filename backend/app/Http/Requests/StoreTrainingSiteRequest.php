@@ -26,6 +26,13 @@ class StoreTrainingSiteRequest extends FormRequest
         if ($this->input('manager_id') === '') {
             $this->merge(['manager_id' => null]);
         }
+
+        // Force-overwrite directorate for directorate users — they cannot submit a different one
+        $user = $this->user();
+        $role = $user?->role?->name;
+        if (in_array($role, ['education_directorate', 'health_directorate'], true) && $user->directorate) {
+            $this->merge(['directorate' => $user->directorate]);
+        }
     }
 
     public function authorize(): bool
@@ -91,13 +98,21 @@ class StoreTrainingSiteRequest extends FormRequest
             $user = $this->user();
             $role = $user?->role?->name;
 
-            // Directorate restriction: education_directorate can only create sites for their directorate
-            if ($role === 'education_directorate' && $user->directorate) {
+            // Directorate restriction: must be linked to a directorate
+            if (in_array($role, ['education_directorate', 'health_directorate'], true)) {
+                if (empty($user->directorate)) {
+                    $validator->errors()->add(
+                        'directorate',
+                        'لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام'
+                    );
+                    return;
+                }
+                // Prevent any submitted directorate that differs from user's own
                 $submitted = $this->input('directorate');
                 if ($submitted && $submitted !== $user->directorate) {
                     $validator->errors()->add(
                         'directorate',
-                        'لا يمكنك إضافة مكان تدريب تابع لمديرية أخرى. مديريتك: ' . $user->directorate
+                        'لا تملك صلاحية إدارة أماكن تدريب خارج مديريتك. مديريتك: ' . $user->directorate
                     );
                     return;
                 }

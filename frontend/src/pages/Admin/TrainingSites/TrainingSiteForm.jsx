@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getTrainingSite, createTrainingSite, updateTrainingSite } from "../../../services/api";
+import { getTrainingSite, createTrainingSite, updateTrainingSite, getAvailableSchoolManagers } from "../../../services/api";
+import { apiCache } from "../../../services/apiCache";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
 import { readStoredUser } from "../../../utils/session";
@@ -37,10 +38,20 @@ export default function TrainingSiteForm() {
   });
   const originalRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [availableManagers, setAvailableManagers] = useState([]);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkFile, setBulkFile] = useState(null);
   const [bulkResults, setBulkResults] = useState(null);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  useEffect(() => {
+    getAvailableSchoolManagers()
+      .then(data => {
+        const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        setAvailableManagers(list);
+      })
+      .catch(() => {});
+  }, []);
 
   // تحميل البيانات إذا كان تعديل
   useEffect(() => {
@@ -155,6 +166,7 @@ export default function TrainingSiteForm() {
         await createTrainingSite(form);
         toast.success("تم إضافة مكان التدريب بنجاح.");
       }
+      apiCache.invalidatePrefix("training-sites:");
       navigate("/admin/training-sites");
     } catch (err) {
       console.error(err);
@@ -442,7 +454,10 @@ export default function TrainingSiteForm() {
             value={form.manager_id} 
             onChange={handleChange}
           >
-            <option value="">اختر مدير المدرسة من الحسابات الموجودة</option>
+            <option value="">-- اختر مدير المدرسة --</option>
+          {availableManagers.map(m => (
+            <option key={m.id} value={m.id}>{m.name} ({m.email || m.phone || ''})</option>
+          ))}
           </select>
           <small className="form-help text-muted">
             يمكن ترك هذا الحقل فارغاً وربط المدرسة بمدير لاحقاً.

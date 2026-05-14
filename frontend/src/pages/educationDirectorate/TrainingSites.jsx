@@ -77,8 +77,9 @@ export default function TrainingPlaces() {
   const user = readStoredUser();
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
+  const [fetchError, setFetchError] = useState("");
 
-  const userDirectorate = user?.directorate || "وسط";
+  const userDirectorate = user?.directorate || null;
 
   const [formData, setFormData] = useState({
     name: "",
@@ -112,8 +113,14 @@ export default function TrainingPlaces() {
   }, []);
 
   const fetchPlaces = async () => {
+    if (!userDirectorate) {
+      setFetchError("لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام");
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
+      setFetchError("");
       const data = await getTrainingSites();
 
       const list = Array.isArray(data?.data)
@@ -125,7 +132,12 @@ export default function TrainingPlaces() {
       setPlaces(list.map(normalizePlace));
     } catch (error) {
       console.error("Failed to load training sites:", error);
-      toast.error("تعذر تحميل أماكن التدريب.");
+      const msg = error?.response?.data?.message;
+      if (error?.response?.status === 403) {
+        setFetchError(msg || "لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام");
+      } else {
+        toast.error(msg || "تعذر تحميل أماكن التدريب.");
+      }
     } finally {
       setLoading(false);
     }
@@ -150,12 +162,16 @@ export default function TrainingPlaces() {
   const handleAddPlace = async (e) => {
     e.preventDefault();
 
+    if (!userDirectorate) {
+      toast.error("لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام");
+      return;
+    }
+
     if (
       !formData.name ||
       !formData.school_type ||
       !formData.city ||
       !formData.capacity ||
-      !formData.directorate ||
       !formData.school_level
     ) {
       toast.warning("يرجى تعبئة جميع الحقول المطلوبة.");
@@ -236,12 +252,16 @@ export default function TrainingPlaces() {
   };
 
   const handleUpdatePlace = async (id) => {
+    if (!userDirectorate) {
+      toast.error("لم يتم ربط حسابك بمديرية، يرجى التواصل مع مدير النظام");
+      return;
+    }
+
     if (
       !editFormData.name ||
       !editFormData.school_type ||
       !editFormData.city ||
       !editFormData.capacity ||
-      !editFormData.directorate ||
       !editFormData.school_level
     ) {
       toast.warning("يرجى تعبئة جميع حقول التعديل المطلوبة.");
@@ -300,6 +320,15 @@ export default function TrainingPlaces() {
   const activeCount = places.filter((p) => p.status === "متاح").length;
   const inactiveCount = places.filter((p) => p.status !== "متاح").length;
   const totalCapacity = places.reduce((sum, p) => sum + p.capacity, 0);
+
+  if (fetchError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <AlertCircle size={48} className="text-red-400" />
+        <p className="text-lg font-semibold text-red-600">{fetchError}</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -390,13 +419,19 @@ export default function TrainingPlaces() {
 
             <div>
               <label className="block text-[0.85rem] font-semibold text-[#475569] mb-1.5">المديرية</label>
-              <input
-                type="text"
-                value={userDirectorate}
-                readOnly
-                disabled
-                className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f1f5f9] text-[#64748b] cursor-not-allowed outline-none"
-              />
+              {userDirectorate ? (
+                <input
+                  type="text"
+                  value={userDirectorate}
+                  readOnly
+                  disabled
+                  className="w-full py-2.5 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f1f5f9] text-[#64748b] cursor-not-allowed outline-none"
+                />
+              ) : (
+                <div className="flex items-center gap-2 py-2.5 px-3 rounded-[10px] border border-[#fca5a5] bg-[#fef2f2] text-[#dc2626] text-[0.85rem]">
+                  <AlertCircle size={14} /> لم يتم ربط حسابك بمديرية
+                </div>
+              )}
             </div>
 
             <div>
@@ -537,7 +572,7 @@ export default function TrainingPlaces() {
                         />
                       </td>
                       <td className="py-3 px-4 border-b border-[#e2e8f0]">
-                        <span className="text-[0.85rem] text-[#64748b] font-semibold">{userDirectorate}</span>
+                        <span className="text-[0.85rem] text-[#64748b] font-semibold">{userDirectorate || place.directorate}</span>
                       </td>
                       <td className="py-3 px-4 border-b border-[#e2e8f0]">
                         <label className="flex gap-1.5 items-center text-[0.85rem] cursor-pointer">

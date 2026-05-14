@@ -10,6 +10,9 @@ class TrainingRequestStudentResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $course = $this->relationLoaded('course') ? $this->course : null;
+        $department = ($course && $course->relationLoaded('department')) ? $course->department : null;
+
         return [
             'id' => $this->id,
             'start_date' => $this->start_date?->toDateString(),
@@ -20,6 +23,8 @@ class TrainingRequestStudentResource extends JsonResource
             'status_label' => TrainingRequestStudentStatus::tryFrom($this->status)?->label() ?? $this->status,
             'user' => new UserResource($this->whenLoaded('user')),
             'course' => new CourseResource($this->whenLoaded('course')),
+            'department_id' => $department?->id ?? $course?->department_id,
+            'department_name' => $department?->name,
             'assigned_teacher' => new UserResource($this->whenLoaded('assignedTeacher')),
             'training_request' => new TrainingRequestResource($this->whenLoaded('trainingRequest')),
             'created_at' => $this->created_at?->toDateTimeString(),

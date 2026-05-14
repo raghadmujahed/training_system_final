@@ -1,22 +1,36 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { deleteTrainingSite, getTrainingSite } from "../../../services/api";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { deleteTrainingSite, getTrainingSite, getTrainingSites } from "../../../services/api";
 import { apiCache } from "../../../services/apiCache";
-import { useTrainingSites } from "../../../hooks/useSharedData";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 export default function TrainingSitesList() {
-  const { data: cachedSites, loading } = useTrainingSites();
-  const [removedIds, setRemovedIds] = useState([]);
+  const location = useLocation();
+  const [sites, setSites] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedSite, setSelectedSite] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const sites = cachedSites.filter((s) => !removedIds.includes(s.id));
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getTrainingSites()
+      .then(data => {
+        if (!cancelled) {
+          const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+          setSites(list);
+          setLoading(false);
+        }
+      })
+      .catch(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [location.key]);
 
   const handleDelete = async (id) => {
     if (window.confirm("هل أنت متأكد من حذف موقع التدريب؟")) {
       await deleteTrainingSite(id);
-      setRemovedIds((prev) => [...prev, id]);
+      setSites(prev => prev.filter(s => s.id !== id));
       apiCache.invalidatePrefix("training-sites:");
     }
   };
