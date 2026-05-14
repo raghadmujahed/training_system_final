@@ -14,7 +14,7 @@ class UpdateTrainingLogRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'status' => 'sometimes|in:draft,submitted,approved,returned',
+            'status' => 'sometimes|in:draft,submitted,reviewed,approved,returned',
             'supervisor_notes' => 'nullable|string',
             'student_reflection' => 'nullable|string',
         ];

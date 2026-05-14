@@ -109,14 +109,31 @@ public function index(Request $request)
 
     public function review(ReviewTrainingLogRequest $request, TrainingLog $trainingLog)
     {
-        $trainingLog->loadMissing('trainingAssignment.enrollment');
-        $log = $this->trainingLogService->reviewLog(
-            $trainingLog,
-            $request->status,
-            $request->supervisor_notes
-        );
+        try {
+            $trainingLog->loadMissing('trainingAssignment.enrollment');
+            $log = $this->trainingLogService->reviewLog(
+                $trainingLog,
+                $request->status,
+                $request->supervisor_notes
+            );
 
-        return new TrainingLogResource($log);
+            $message = $request->status === 'approved'
+                ? 'تمت مراجعة السجل اليومي بنجاح'
+                : 'تم إرجاع السجل اليومي للطالب';
+
+            return (new TrainingLogResource($log))
+                ->additional(['message' => $message]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('TrainingLog review DB error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'حدث خطأ أثناء حفظ المراجعة، يرجى المحاولة مرة أخرى.',
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error('TrainingLog review error: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.',
+            ], 500);
+        }
     }
 
     public function destroy(TrainingLog $trainingLog)

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
+import useAppToast from "../../hooks/useAppToast";
 import {
   getTrainingLogs,
   reviewTrainingLog,
@@ -10,9 +11,10 @@ import useFieldStaffRole from "../../hooks/useFieldStaffRole";
 
 const LOG_STATUS = {
   draft: { label: "مسودة", cls: "badge-secondary" },
-  submitted: { label: "مُقدَّم", cls: "badge-info" },
+  submitted: { label: "مُقدَّم", cls: "badge-info" },
   reviewed: { label: "تمت المراجعة", cls: "badge-success" },
-  rejected: { label: "مرفوض", cls: "badge-danger" },
+  approved: { label: "معتمد", cls: "badge-success" },
+  returned: { label: "مُعاد للطالب", cls: "badge-warning" },
 };
 
 // ─── Field label mappings for structured form display ────────────────────
@@ -246,6 +248,7 @@ function StructuredFormContent({ data, formKey }) {
 }
 
 export default function FieldStaffDailyReports() {
+  const toast = useAppToast();
   const { isFieldSupervisor, terms, label } = useFieldStaffRole();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -254,7 +257,7 @@ export default function FieldStaffDailyReports() {
   // Review modal
   const [showModal, setShowModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
-  const [reviewStatus, setReviewStatus] = useState("reviewed");
+  const [reviewStatus, setReviewStatus] = useState("approved");
   const [supervisorNotes, setSupervisorNotes] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -295,14 +298,23 @@ export default function FieldStaffDailyReports() {
     setSaving(true);
     setFormError("");
     try {
-      await reviewTrainingLog(selectedLog.id, {
+      const res = await reviewTrainingLog(selectedLog.id, {
         status: reviewStatus,
         supervisor_notes: supervisorNotes || null,
       });
+      const updatedLog = res?.data || res;
+      if (updatedLog?.id) {
+        setLogs(prev => prev.map(l => l.id === updatedLog.id ? { ...l, ...updatedLog } : l));
+      }
+      const successMsg = reviewStatus === "approved"
+        ? "تمت مراجعة السجل اليومي بنجاح"
+        : "تم إرجاع السجل اليومي للطالب";
       closeModal();
+      toast.success(successMsg);
       await load();
     } catch (e) {
-      setFormError(e?.response?.data?.message || "فشل مراجعة السجل");
+      const msg = e?.response?.data?.message || "فشل مراجعة السجل اليومي";
+      setFormError(msg);
     } finally {
       setSaving(false);
     }
@@ -411,8 +423,8 @@ export default function FieldStaffDailyReports() {
                 <div className="form-group">
                   <label className="form-label">قرار المراجعة *</label>
                   <select className="form-control-custom" value={reviewStatus} onChange={(e) => setReviewStatus(e.target.value)} required>
-                    <option value="approved">قبول</option>
-                    <option value="returned">إرجاع</option>
+                    <option value="approved">قبول (اعتماد السجل)</option>
+                    <option value="returned">إرجاع (إعادة للطالب)</option>
                   </select>
                 </div>
 
@@ -432,7 +444,7 @@ export default function FieldStaffDailyReports() {
                   إلغاء
                 </button>
                 <button type="submit" className="btn-primary-custom" disabled={saving}>
-                  {saving ? "جاري الحفظ..." : "حفظ المراجعة"}
+                  {saving ? "جاري الحفظ..." : reviewStatus === "approved" ? "اعتماد السجل" : "إرجاع السجل"}
                 </button>
               </div>
             </form>
