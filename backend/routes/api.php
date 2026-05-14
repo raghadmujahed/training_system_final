@@ -65,6 +65,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('users/search', [UserController::class, 'search']);
     Route::apiResource('users', UserController::class);
     Route::put('profile', [UserController::class, 'updateProfile']);
+    Route::post('profile/avatar', [UserController::class, 'uploadProfileAvatar']);
+    Route::delete('profile/avatar', [UserController::class, 'deleteProfileAvatar']);
     Route::post('change-password', [UserController::class, 'changePassword']);
     Route::get('staff-directory', [UserController::class, 'getStaffDirectory']);
     Route::patch('users/{user}/status', [UserController::class, 'changeStatus']);
@@ -260,6 +262,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/visits/{visitId}', [SupervisorWorkspaceController::class, 'showVisit']);
         Route::get('/students/{studentId}/tasks', [SupervisorWorkspaceController::class, 'studentTasks']);
         Route::post('/tasks', [SupervisorWorkspaceController::class, 'storeTask']);
+        Route::get('/task-bundles/{distributionKey}/overview', [SupervisorWorkspaceController::class, 'taskBundleOverview']);
+        Route::post('/task-bundles/{distributionKey}/grades', [SupervisorWorkspaceController::class, 'saveTaskBundleGrades']);
         Route::put('/tasks/{taskId}', [SupervisorWorkspaceController::class, 'updateTask']);
         Route::delete('/tasks/{taskId}', [SupervisorWorkspaceController::class, 'deleteTask']);
         Route::get('/students/{studentId}/task-submissions', [SupervisorWorkspaceController::class, 'studentTaskSubmissions']);

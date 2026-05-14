@@ -42,14 +42,23 @@ class TaskSubmissionPolicy
 
     public function update(User $user, TaskSubmission $submission): bool
     {
-        // يمكن للطالب تعديل تسليمه فقط إذا لم يتم تقييمه بعد
-        return $user->id === $submission->user_id && is_null($submission->grade);
+        if ($user->id !== $submission->user_id) {
+            return false;
+        }
+        if (! $submission->submitted_at) {
+            return true;
+        }
+        if ($submission->needs_resubmission) {
+            return true;
+        }
+
+        return ! in_array((string) $submission->review_status, ['graded', 'accepted'], true);
     }
 
     public function delete(User $user, TaskSubmission $submission): bool
     {
-        // يمكن للأدمن فقط حذف التسليمات (أو الطالب قبل التقييم)
-        return $user->role?->name === 'admin' || ($user->id === $submission->user_id && is_null($submission->grade));
+        return $user->role?->name === 'admin'
+            || ($user->id === $submission->user_id && ! $submission->submitted_at);
     }
 
     public function grade(User $user, TaskSubmission $submission): bool

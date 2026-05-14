@@ -39,6 +39,7 @@ class UserProfileController extends Controller
             'role_label' => $this->roleLabel($role),
             'department' => $target->department?->name,
             'status'     => $target->status,
+            'avatar_url' => $target->publicAvatarUrl(),
         ];
 
         // ─── Role-specific fields ────────────────────────────

@@ -12,7 +12,7 @@ class TaskSubmission extends Model
     use HasFactory, HidesArchived;
 
     protected $fillable = [
-        'task_id', 'user_id', 'file_path', 'notes', 'submitted_at',
+        'task_id', 'user_id', 'file_path', 'notes', 'submitted_at', 'status',
         'review_status', 'score', 'feedback', 'needs_resubmission', 'reviewed_by', 'reviewed_at',
     ];
 

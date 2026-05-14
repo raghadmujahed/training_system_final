@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
             $table->string('phone')->nullable();
+            $table->string('avatar_path')->nullable();
             $table->string('directorate')->nullable();
             $table->string('major')->nullable();
             $table->foreignId('department_id')->nullable()->constrained()->nullOnDelete();

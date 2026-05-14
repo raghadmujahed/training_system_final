@@ -27,7 +27,7 @@ class MessageController extends Controller
         $this->chatService->markAsRead($chat, $user);
 
         $messages = $chat->messages()
-            ->with('sender:id,name,role_id')
+            ->with('sender:id,name,role_id,avatar_path')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn($m) => [
@@ -37,8 +37,9 @@ class MessageController extends Controller
                 'is_read'    => $m->is_read,
                 'created_at' => $m->getRawOriginal('created_at') ? str_replace(' ', 'T', $m->getRawOriginal('created_at')) . 'Z' : null,
                 'sender'     => [
-                    'id'   => $m->sender?->id,
-                    'name' => $m->sender?->name,
+                    'id'         => $m->sender?->id,
+                    'name'       => $m->sender?->name,
+                    'avatar_url' => $m->sender?->publicAvatarUrl(),
                 ],
                 'is_mine' => $m->sender_id === $user->id,
             ]);
@@ -81,8 +82,9 @@ class MessageController extends Controller
                 'is_read'    => $msg->is_read,
                 'created_at' => $msg->getRawOriginal('created_at') ? str_replace(' ', 'T', $msg->getRawOriginal('created_at')) . 'Z' : null,
                 'sender'     => [
-                    'id'   => $msg->sender?->id,
-                    'name' => $msg->sender?->name,
+                    'id'         => $msg->sender?->id,
+                    'name'       => $msg->sender?->name,
+                    'avatar_url' => $msg->sender?->publicAvatarUrl(),
                 ],
                 'is_mine' => true,
             ],

@@ -18,6 +18,7 @@ class UserResource extends JsonResource
             'status' => $this->status,
             'status_label' => UserStatus::tryFrom($this->status)?->label() ?? $this->status,
             'phone' => $this->phone,
+            'avatar_url' => $this->resource->publicAvatarUrl(),
             'role_id' => $this->role_id,
             'department_id' => $this->department_id,
             'training_site_id' => $this->training_site_id,

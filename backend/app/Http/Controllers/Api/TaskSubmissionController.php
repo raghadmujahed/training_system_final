@@ -52,27 +52,45 @@ class TaskSubmissionController extends Controller
             abort(403, 'هذه المهمة لا تخصك.');
         }
 
-        if ($request->hasFile('file')) {
-            $data['file_path'] = $request->file('file')->store('task_submissions', 'public');
+        $existing = TaskSubmission::query()
+            ->where('task_id', $task->id)
+            ->where('user_id', $studentId)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($existing?->submitted_at && ! $task->allow_resubmission) {
+            abort(422, 'تم تسليم هذه المهمة مسبقاً.');
+        }
+        if ($existing?->submitted_at && $task->allow_resubmission) {
+            abort(422, 'لإعادة التسليم استخدم تحديث التسليم.');
         }
 
-        $data['submitted_at'] = now();
-        $data['user_id'] = $studentId;
-        unset($data['task_id']);
+        $filePath = $existing?->file_path;
+        if ($request->hasFile('file')) {
+            if ($existing?->file_path) {
+                Storage::disk('public')->delete($existing->file_path);
+            }
+            $filePath = $request->file('file')->store('task_submissions', 'public');
+        }
 
-        $submission = TaskSubmission::create([
-            'task_id' => $task->id,
-            'user_id' => $data['user_id'],
-            'file_path' => $data['file_path'] ?? null,
-            'notes' => $data['notes'] ?? null,
-            'submitted_at' => $data['submitted_at'],
-        ]);
+        $submission = TaskSubmission::updateOrCreate(
+            [
+                'task_id' => $task->id,
+                'user_id' => $studentId,
+            ],
+            [
+                'file_path' => $filePath,
+                'notes' => array_key_exists('notes', $data) ? $data['notes'] : $existing?->notes,
+                'submitted_at' => now(),
+                'status' => 'submitted',
+            ]
+        );
 
         // تحديث حالة المهمة إلى "submitted" إذا كانت لا تزال pending أو in_progress
         if ($task && in_array($task->status, ['pending', 'in_progress'])) {
             $task->update(['status' => 'submitted']);
         }
-        
+
         return new TaskSubmissionResource($submission);
     }
 
@@ -94,8 +112,11 @@ class TaskSubmissionController extends Controller
             abort(403, 'هذا التسليم لا يخصك.');
         }
 
-        // لا يمكن تعديل التسليم بعد التقييم
-        if ($taskSubmission->grade !== null) {
+        // لا يمكن تعديل التسليم بعد اعتماده، ما لم يُطلب إعادة تسليم
+        $locked = $taskSubmission->submitted_at
+            && ! $taskSubmission->needs_resubmission
+            && in_array((string) $taskSubmission->review_status, ['graded', 'accepted'], true);
+        if ($locked) {
             abort(422, 'لا يمكن تعديل التسليم بعد التقييم.');
         }
 
@@ -150,7 +171,7 @@ class TaskSubmissionController extends Controller
         $this->authorize('grade', $taskSubmission);
         
         $taskSubmission->update([
-            'grade' => $request->grade,
+            'score' => $request->grade,
             'feedback' => $request->feedback,
         ]);
         

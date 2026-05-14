@@ -21,7 +21,8 @@ return new class extends Migration
             $table->json('attachments')->nullable();
             $table->decimal('grading_weight', 5, 2)->nullable();
             $table->date('due_date')->nullable();
-            $table->enum('status', ['draft', 'published', 'submitted', 'archived', 'pending'])->default('draft');
+            // نص حر يتوافق مع TaskStatus والـ API (pending, in_progress, graded, …) — تجنّب ENUM في MySQL
+            $table->string('status', 32)->default('pending');
             $table->boolean('allow_resubmission')->default(false);
             $table->boolean('is_required')->default(true);
             $table->string('distribution_key')->nullable();

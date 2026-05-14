@@ -85,7 +85,7 @@ class TaskService
     public function gradeSubmission(TaskSubmission $submission, float $grade, ?string $feedback = null): TaskSubmission
     {
         $submission->update([
-            'grade' => $grade,
+            'score' => $grade,
             'feedback' => $feedback,
         ]);
 

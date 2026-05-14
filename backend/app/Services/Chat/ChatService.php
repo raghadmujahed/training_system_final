@@ -138,9 +138,9 @@ class ChatService
         return Chat::whereHas('participants', fn($q) => $q->where('user_id', $user->id))
             ->whereHas('messages')
             ->with([
-                'participants.user:id,name,role_id',
+                'participants.user:id,name,role_id,avatar_path',
                 'participants.user.role:id,name',
-                'latestMessage.sender:id,name',
+                'latestMessage.sender:id,name,avatar_path',
             ])
             ->get()
             ->map(function (Chat $chat) use ($user) {
@@ -152,9 +152,10 @@ class ChatService
                     'id'           => $chat->id,
                     'type'         => $chat->type,
                     'participants' => $otherParticipants->map(fn($p) => [
-                        'id'   => $p->user?->id,
+                        'id' => $p->user?->id,
                         'name' => $p->user?->name,
                         'role' => $p->user?->role?->name,
+                        'avatar_url' => $p->user?->publicAvatarUrl(),
                     ])->values(),
                     'last_message'  => $chat->latestMessage ? [
                         'id'         => $chat->latestMessage->id,

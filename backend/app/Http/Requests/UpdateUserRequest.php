@@ -23,11 +23,14 @@ class UpdateUserRequest extends FormRequest
     {
         $routeUser = $this->route('user');
         $routeUserId = $routeUser instanceof User ? $routeUser->id : (int) $routeUser;
+        $isAdmin = $this->user()->role?->name === 'admin';
 
         return [
             'university_id' => ['sometimes', 'nullable', 'numeric', 'digits_between:6,20', Rule::unique('users', 'university_id')->ignore($routeUserId)],
             'name' => 'sometimes|string|max:255',
-            'email' => ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($routeUserId)],
+            'email' => $isAdmin
+                ? ['sometimes', 'required', 'email', Rule::unique('users', 'email')->ignore($routeUserId)]
+                : ['prohibited'],
             'password' => 'sometimes|nullable|string|min:8',
             'status' => 'sometimes|in:active,inactive,suspended',
             'role_id' => 'sometimes|exists:roles,id',
@@ -154,9 +157,8 @@ class UpdateUserRequest extends FormRequest
                     $validator->errors()->add('university_id', 'الرقم الجامعي يجب أن يحتوي على أرقام فقط.');
                 }
             } else {
-                // للموظفين، يجب ألا يتم إرسال الرقم الجامعي أو يجب أن يكون فارغاً
-                $universityId = $this->input('university_id', $current?->university_id);
-                if (!empty($universityId)) {
+                // رفض فقط إذا حاول الطلب تعيين رقم جامعي لغير طالب (لا نستخدم القيمة المخزّنة عند غياب الحقل في الطلب)
+                if ($this->has('university_id') && filled((string) $this->input('university_id'))) {
                     $validator->errors()->add('university_id', 'الرقم الجامعي مخصص للطلاب فقط.');
                 }
             }
@@ -174,5 +176,12 @@ class UpdateUserRequest extends FormRequest
     private function getStudentRoleId(): ?string
     {
         return (string) Role::where('name', 'student')->value('id');
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.prohibited' => 'لا يُسمح بتغيير البريد الإلكتروني من هنا. يعدّل البريد مسؤول النظام فقط.',
+        ];
     }
 }

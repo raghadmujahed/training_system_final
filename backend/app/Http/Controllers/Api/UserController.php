@@ -14,8 +14,13 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\TrainingTrackResolver;
 use App\Services\UserService;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -304,10 +309,11 @@ class UserController extends Controller
     public function updateProfile(Request $request)
     {
         $user = $request->user();
-        
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+        $user->loadMissing('role');
+
+        $isStudent = $user->role?->name === 'student';
+
+        $rules = [
             'phone' => [
                 'nullable',
                 'string',
@@ -320,24 +326,33 @@ class UserController extends Controller
                     }
                 },
             ],
-        ]);
+        ];
+
+        if (! $isStudent) {
+            $rules['name'] = 'required|string|max:255';
+        }
+
+        $request->validate($rules);
 
         $newPhone = $request->phone ?? '';
         $oldPhone = $user->phone ?? '';
 
-        if (
-            $user->name === $request->name &&
-            $user->email === $request->email &&
-            $oldPhone === $newPhone
-        ) {
+        $nameChanged = ! $isStudent && $user->name !== (string) $request->input('name', '');
+        $phoneChanged = $oldPhone !== $newPhone;
+
+        if (! $nameChanged && ! $phoneChanged) {
             return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات'], 200);
         }
 
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
+        $data = [
             'phone' => $request->phone,
-        ]);
+        ];
+
+        if (! $isStudent) {
+            $data['name'] = $request->input('name');
+        }
+
+        $user->update($data);
 
         ActivityLogger::log(
             'user',
@@ -349,6 +364,80 @@ class UserController extends Controller
         );
 
         return new UserResource($user->fresh(['role', 'department', 'trainingSite']));
+    }
+
+    /**
+     * يمنع 500 عندما يكون جدول users قديماً دون عمود avatar_path بعد تعديل migration الأساسي دون إعادة الهجرة.
+     */
+    protected function ensureUsersAvatarColumn(): ?JsonResponse
+    {
+        if (! Schema::hasColumn('users', 'avatar_path')) {
+            return response()->json([
+                'message' => 'عمود الصورة الشخصية غير موجود في قاعدة البيانات. بما أننا عدّلنا ملف إنشاء جدول المستخدمين أثناء التطوير، نفّذ على بيئة البيانات التجريبية: php artisan migrate:fresh --seed لإعادة إنشاء الجداول، أو أضف العمود يدوياً بما يوافق المشروع.',
+            ], 422);
+        }
+
+        return null;
+    }
+
+    public function uploadProfileAvatar(Request $request)
+    {
+        if ($blocking = $this->ensureUsersAvatarColumn()) {
+            return $blocking;
+        }
+
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+        $file = $request->file('avatar');
+
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+            return response()->json(['message' => 'نوع الملف غير مسموح.'], 422);
+        }
+
+        $name = Str::uuid()->toString().'.'.$ext;
+        $path = $file->storeAs('avatars', $name, 'public');
+
+        if ($user->avatar_path && Storage::disk('public')->exists($user->avatar_path)) {
+            Storage::disk('public')->delete($user->avatar_path);
+        }
+
+        try {
+            $user->update(['avatar_path' => $path]);
+        } catch (QueryException $e) {
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+            if (str_contains($e->getMessage(), 'avatar_path') || str_contains($e->getMessage(), 'Unknown column')) {
+                return response()->json([
+                    'message' => 'عمود الصورة الشخصية غير موجود في قاعدة البيانات. على بيئة التطوير بعد تعديل migration الأساسي شغّل: php artisan migrate:fresh --seed',
+                ], 422);
+            }
+
+            throw $e;
+        }
+
+        return new UserResource($user->fresh(['role.permissions', 'department', 'trainingSite', 'enrollments.section.course']));
+    }
+
+    public function deleteProfileAvatar(Request $request)
+    {
+        if ($blocking = $this->ensureUsersAvatarColumn()) {
+            return $blocking;
+        }
+
+        $user = $request->user();
+
+        if ($user->avatar_path && Storage::disk('public')->exists($user->avatar_path)) {
+            Storage::disk('public')->delete($user->avatar_path);
+        }
+
+        $user->update(['avatar_path' => null]);
+
+        return new UserResource($user->fresh(['role.permissions', 'department', 'trainingSite', 'enrollments.section.course']));
     }
 
     public function changePassword(Request $request)

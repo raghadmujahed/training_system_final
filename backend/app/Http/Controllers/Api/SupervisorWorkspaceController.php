@@ -11,6 +11,7 @@ use App\Http\Requests\ReviewPortfolioSectionRequest;
 use App\Http\Requests\ReviewTaskSubmissionRequest;
 use App\Http\Requests\SaveAcademicEvaluationDraftRequest;
 use App\Http\Requests\SendSupervisorMessageRequest;
+use App\Http\Requests\SaveTaskBundleGradesRequest;
 use App\Http\Requests\StoreAcademicTaskRequest;
 use App\Http\Requests\StoreSupervisorVisitRequest;
 use App\Http\Requests\SubmitAcademicEvaluationRequest;
@@ -36,6 +37,7 @@ use App\Models\User;
 use App\Models\SupervisorVisit;
 use App\Models\Attendance;
 use App\Models\TrainingLog;
+use App\Http\Resources\TaskSubmissionResource;
 use App\Models\Task;
 use App\Models\TaskSubmission;
 use App\Models\Evaluation;
@@ -1344,6 +1346,158 @@ class SupervisorWorkspaceController extends Controller
         $task->delete();
 
         return $this->successResponse(null, 'Task deleted successfully.');
+    }
+
+    /**
+     * ملخص تسليمات مهمة موزّعة على شعبة/مجموعة (نفس distribution_key).
+     */
+    public function taskBundleOverview(Request $request, string $distributionKey)
+    {
+        $user = $request->user();
+        abort_unless($user->role?->name === 'academic_supervisor', 403, 'غير مصرح.');
+
+        $tasks = Task::query()
+            ->where('distribution_key', $distributionKey)
+            ->where('assigned_by', $user->id)
+            ->whereIn('target_type', ['section', 'group'])
+            ->with([
+                'trainingAssignment.enrollment.user',
+                'submissions' => fn ($q) => $q->orderByDesc('id'),
+            ])
+            ->orderBy('id')
+            ->get();
+
+        abort_if($tasks->isEmpty(), 404, 'لم يُعثر على مهمة بهذا المفتاح.');
+
+        $lead = $tasks->first();
+        $submitted = [];
+        $notSubmitted = [];
+
+        foreach ($tasks as $task) {
+            $student = $task->trainingAssignment?->enrollment?->user;
+            if (! $student) {
+                continue;
+            }
+
+            $submission = $task->submissions->first();
+            $hasSubmitted = $submission && $submission->submitted_at !== null;
+
+            $row = [
+                'user_id' => (int) $student->id,
+                'name' => $student->name,
+                'university_id' => $student->university_id,
+                'task_id' => (int) $task->id,
+                'submission' => $submission ? (new TaskSubmissionResource($submission))->resolve() : null,
+                'has_submitted' => $hasSubmitted,
+            ];
+
+            if ($hasSubmitted) {
+                $submitted[] = $row;
+            } else {
+                $notSubmitted[] = $row;
+            }
+        }
+
+        return $this->successResponse([
+            'bundle' => [
+                'distribution_key' => $distributionKey,
+                'title' => $lead->title,
+                'description' => $lead->description,
+                'instructions' => $lead->instructions,
+                'due_date' => $lead->due_date?->toDateString(),
+                'target_type' => $lead->target_type,
+                'target_ids' => $lead->target_ids ?? [],
+                'task_type' => $lead->task_type,
+                'status' => $lead->status,
+                'task_count' => $tasks->count(),
+            ],
+            'submitted' => $submitted,
+            'not_submitted' => $notSubmitted,
+        ], 'Task bundle overview loaded successfully.');
+    }
+
+    /**
+     * حفظ أو تحديث علامات الطلبة ضمن حزمة مهام (سجل task_submissions لكل طالب/مهمة).
+     */
+    public function saveTaskBundleGrades(SaveTaskBundleGradesRequest $request, string $distributionKey)
+    {
+        $user = $request->user();
+        abort_unless($user->role?->name === 'academic_supervisor', 403, 'غير مصرح.');
+
+        $tasks = Task::query()
+            ->where('distribution_key', $distributionKey)
+            ->where('assigned_by', $user->id)
+            ->whereIn('target_type', ['section', 'group'])
+            ->with(['trainingAssignment.enrollment.user'])
+            ->get();
+
+        abort_if($tasks->isEmpty(), 404, 'لم يُعثر على مهمة بهذا المفتاح.');
+
+        $taskByStudentId = [];
+        foreach ($tasks as $task) {
+            $sid = (int) ($task->trainingAssignment?->enrollment?->user_id ?? 0);
+            if ($sid > 0) {
+                $taskByStudentId[$sid] = $task;
+            }
+        }
+
+        $saved = [];
+
+        DB::transaction(function () use ($request, $user, $taskByStudentId, &$saved) {
+            foreach ($request->validated()['grades'] as $row) {
+                $studentId = (int) $row['user_id'];
+                $task = $taskByStudentId[$studentId] ?? null;
+                if (! $task) {
+                    continue;
+                }
+
+                $submission = TaskSubmission::query()
+                    ->where('task_id', $task->id)
+                    ->where('user_id', $studentId)
+                    ->orderByDesc('id')
+                    ->first();
+
+                $hasScore = array_key_exists('score', $row) && $row['score'] !== '' && $row['score'] !== null;
+                $hasFeedback = array_key_exists('feedback', $row) && $row['feedback'] !== null && $row['feedback'] !== '';
+                if (! $hasScore && ! $hasFeedback) {
+                    continue;
+                }
+
+                $score = $hasScore ? (float) $row['score'] : null;
+                $feedback = array_key_exists('feedback', $row) ? $row['feedback'] : null;
+
+                if (! $submission) {
+                    $submission = new TaskSubmission([
+                        'task_id' => $task->id,
+                        'user_id' => $studentId,
+                        'status' => 'draft',
+                    ]);
+                }
+
+                if ($hasScore) {
+                    $submission->score = $score;
+                }
+                if (array_key_exists('feedback', $row)) {
+                    $submission->feedback = $feedback;
+                }
+                $submission->review_status = 'graded';
+                $submission->reviewed_by = $user->id;
+                $submission->reviewed_at = now();
+                $submission->needs_resubmission = false;
+                $submission->save();
+
+                $saved[] = [
+                    'user_id' => $studentId,
+                    'task_id' => (int) $task->id,
+                    'submission_id' => (int) $submission->id,
+                    'score' => $submission->score,
+                ];
+            }
+        });
+
+        return $this->successResponse([
+            'updated' => $saved,
+        ], 'Grades saved successfully.');
     }
 
     public function studentTaskSubmissions(Request $request, $studentId)

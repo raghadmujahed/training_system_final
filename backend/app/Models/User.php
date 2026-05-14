@@ -6,6 +6,7 @@ use App\Services\TrainingTrackResolver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -14,7 +15,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'university_id', 'name', 'email', 'password', 'status',
-        'department_id', 'role_id', 'phone', 'training_site_id', 'directorate', 'major',
+        'department_id', 'role_id', 'phone', 'avatar_path', 'training_site_id', 'directorate', 'major',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -339,5 +340,23 @@ public function enrollments()
     public function getFieldSupervisorType(): ?string
     {
         return $this->fieldSupervisorProfile?->supervisor_type;
+    }
+
+    /**
+     * رابط الصورة العامة تحت ‎/storage‎ (يطابق منفذ الطلب الحالي، مثل ‎:8000‎ في التطوير).
+     */
+    public function publicAvatarUrl(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        $path = ltrim(str_replace('\\', '/', $this->avatar_path), '/');
+
+        if (! app()->runningInConsole() && request() && request()->getSchemeAndHttpHost()) {
+            return rtrim(request()->getSchemeAndHttpHost(), '/').'/storage/'.$path;
+        }
+
+        return Storage::disk('public')->url($this->avatar_path);
     }
 }

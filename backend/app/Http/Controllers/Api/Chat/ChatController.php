@@ -52,7 +52,12 @@ class ChatController extends Controller
                 'success'  => true,
                 'data'     => null,
                 'draft'    => true,
-                'receiver' => ['id' => $userB->id, 'name' => $userB->name, 'role' => $userB->role?->name],
+                'receiver' => [
+                    'id' => $userB->id,
+                    'name' => $userB->name,
+                    'role' => $userB->role?->name,
+                    'avatar_url' => $userB->publicAvatarUrl(),
+                ],
             ]);
         }
 
@@ -64,7 +69,12 @@ class ChatController extends Controller
                 'success'  => true,
                 'data'     => null,
                 'draft'    => true,
-                'receiver' => ['id' => $userB->id, 'name' => $userB->name, 'role' => $userB->role?->name],
+                'receiver' => [
+                    'id' => $userB->id,
+                    'name' => $userB->name,
+                    'role' => $userB->role?->name,
+                    'avatar_url' => $userB->publicAvatarUrl(),
+                ],
             ]);
         }
 
@@ -110,7 +120,11 @@ class ChatController extends Controller
                 'type'       => $msg->type,
                 'is_read'    => $msg->is_read,
                 'created_at' => $msg->getRawOriginal('created_at') ? str_replace(' ', 'T', $msg->getRawOriginal('created_at')) . 'Z' : null,
-                'sender'     => ['id' => $msg->sender?->id, 'name' => $msg->sender?->name],
+                'sender'     => [
+                    'id'         => $msg->sender?->id,
+                    'name'       => $msg->sender?->name,
+                    'avatar_url' => $msg->sender?->publicAvatarUrl(),
+                ],
                 'is_mine'    => true,
             ],
         ], 201);
@@ -161,6 +175,7 @@ class ChatController extends Controller
                 'role_label'    => $roleLabels[$u->role?->name] ?? ($u->role?->name ?? ''),
                 'department_id' => $u->department_id,
                 'university_id' => $u->university_id,
+                'avatar_url'    => $u->publicAvatarUrl(),
             ])->values();
 
             return response()->json(['success' => true, 'data' => $result]);

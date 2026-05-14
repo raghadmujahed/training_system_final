@@ -45,16 +45,21 @@ class ActivityLogger
         $newData = $properties['new'] ?? null;
         unset($properties['old'], $properties['new']);
 
+        $actorId = $causer?->getKey() ?? auth()->id();
+
         $activityLog = ActivityLog::create([
-            'user_id'     => $causer?->getKey() ?? auth()->id(),
-            'action'      => $type . '.' . $action,
-            'description' => $description,
-            'ip_address'  => Request::ip(),
-            'old_data'    => self::sanitizeData($oldData),
-            'new_data'    => self::sanitizeData($newData ?? $properties),
-            'method'      => Request::method(),
-            'route'       => Request::path(),
-            'user_agent'  => Request::userAgent(),
+            'user_id'       => $actorId,
+            'causer_id'     => $actorId,
+            'subject_type'  => $subject ? $type : null,
+            'subject_id'    => $subject?->getKey(),
+            'action'        => $type . '.' . $action,
+            'description'   => $description,
+            'ip_address'    => Request::ip(),
+            'old_data'      => self::sanitizeData($oldData),
+            'new_data'      => self::sanitizeData($newData ?? $properties),
+            'method'        => Request::method(),
+            'route'         => Request::path(),
+            'user_agent'    => Request::userAgent(),
         ]);
 
         self::storeFieldLevelDetails($activityLog, $oldData, $newData ?? $properties);

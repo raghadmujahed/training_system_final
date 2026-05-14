@@ -10,8 +10,18 @@ class ActivityLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'action', 'description', 'ip_address', 'old_data',
-        'new_data', 'method', 'route', 'user_agent'
+        'user_id',
+        'causer_id',
+        'subject_type',
+        'subject_id',
+        'action',
+        'description',
+        'ip_address',
+        'old_data',
+        'new_data',
+        'method',
+        'route',
+        'user_agent',
     ];
 
     protected $casts = [
@@ -22,6 +32,11 @@ class ActivityLog extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function causer()
+    {
+        return $this->belongsTo(User::class, 'causer_id');
     }
 
     public function details()
