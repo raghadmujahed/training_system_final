@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('major')->nullable();
             $table->foreignId('department_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('role_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('training_site_id')->nullable()->constrained()->nullOnDelete();
+            $table->unsignedBigInteger('training_site_id')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

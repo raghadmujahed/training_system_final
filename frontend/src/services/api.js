@@ -420,7 +420,8 @@ export const getTrainingPeriods = (params = {}) =>
 export const createTrainingPeriod = (data) => apiClient.post('/training-periods', data).then(res => res.data);
 export const updateTrainingPeriod = (id, data) => apiClient.put(`/training-periods/${id}`, data).then(res => res.data);
 export const deleteTrainingPeriod = (id) => apiClient.delete(`/training-periods/${id}`).then(res => res.data);
-export const setActivePeriod = (id) => apiClient.patch(`/training-periods/${id}/set-active`).then(res => res.data);
+export const setActivePeriod = (id, autoArchive = false) =>
+  apiClient.patch(`/training-periods/${id}/set-active`, { auto_archive: autoArchive }).then(res => res.data);
 export const getActiveTrainingPeriod = () => apiClient.get('/sections/active-training-period').then(res => res.data);
 
 // ==================== Announcements ====================

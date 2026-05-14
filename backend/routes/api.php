@@ -76,8 +76,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Cours, sections, inscriptions
     Route::apiResource('courses', CourseController::class);
     Route::post('courses/{course}/archive', [CourseController::class, 'archive']);
-    Route::apiResource('sections', SectionController::class);
+    // Static sub-routes MUST be declared before apiResource to avoid {section} wildcard capture
     Route::get('sections/active-training-period', [SectionController::class, 'getActiveTrainingPeriod']);
+    Route::apiResource('sections', SectionController::class);
     Route::get('sections/{section}/enrollments', [SectionController::class, 'getEnrollments']);
     Route::post('sections/{section}/add-student', [SectionController::class, 'addStudent']);
     Route::post('sections/{section}/remove-student', [SectionController::class, 'removeStudent']);

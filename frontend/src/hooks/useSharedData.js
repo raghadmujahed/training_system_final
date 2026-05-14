@@ -5,6 +5,7 @@
 import { useState, useEffect } from "react";
 import { apiCache } from "../services/apiCache";
 import { getDepartments, getRoles, getTrainingSites, getTrainingPeriods, getCourses, getPermissions, getAnnouncements, getCurrentUser } from "../services/api";
+import { readStoredUser } from "../utils/session";
 
 // TTLs
 const TTL_STATIC = 5 * 60_000;   // 5 min — rarely changes (departments, roles, courses)
@@ -96,9 +97,11 @@ export function useTrainingPeriods(params = {}) {
   );
 }
 
-/** Courses list — cached 5 min */
+/** Courses list — cached 5 min. Cache key is user-scoped to prevent admin/head cache pollution. */
 export function useCourses(params = {}) {
-  const key = `courses:list:${JSON.stringify(params)}`;
+  const savedUser = readStoredUser();
+  const userScope = `${savedUser?.role?.name || savedUser?.role || ""}:${savedUser?.department_id || ""}`;
+  const key = `courses:list:${userScope}:${JSON.stringify(params)}`;
   return useApiData(
     key,
     () => getCourses(params),

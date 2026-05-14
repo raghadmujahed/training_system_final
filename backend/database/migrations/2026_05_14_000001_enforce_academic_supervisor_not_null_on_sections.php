@@ -10,16 +10,13 @@ use Illuminate\Support\Facades\Schema;
  * Safe migration: enforces academic_supervisor_id NOT NULL on sections.
  *
  * Safety strategy:
- * 1. Find all sections where academic_supervisor_id IS NULL.
- * 2. For each such section, try to find an academic_supervisor in the same
- *    department as the section's course. If found, assign them.
- * 3. If no department match found, assign the first available
- *    academic_supervisor in the system (test/seed data only).
- * 4. If NO academic supervisors exist at all, the migration ABORTS with a
- *    clear message rather than silently corrupting data.
- * 5. After cleanup, alter the column to NOT NULL.
+ * 1. Count sections where academic_supervisor_id IS NULL.
+ * 2. If any exist, throw a RuntimeException — do not silently fix data.
+ * 3. Drop the existing FK (which uses ON DELETE SET NULL).
+ * 4. Alter the column to NOT NULL.
+ * 5. Re-add the FK with ON DELETE RESTRICT.
  *
- * This migration is idempotent — safe to run multiple times.
+ * down() reverses: drop restrict FK → nullable → nullOnDelete FK.
  */
 return new class extends Migration
 {
@@ -29,106 +26,53 @@ return new class extends Migration
             return;
         }
 
-        // ── 1. Find sections with null academic_supervisor_id ──────────────
-        $nullSections = DB::table('sections')
-            ->whereNull('academic_supervisor_id')
-            ->select('id', 'name', 'course_id')
-            ->get();
+        // ── 1. Abort if any sections have no supervisor ────────────────────
+        $nullCount = DB::table('sections')->whereNull('academic_supervisor_id')->count();
 
-        if ($nullSections->isNotEmpty()) {
-            Log::warning('Migration enforce_academic_supervisor_not_null: found sections without supervisor', [
-                'count' => $nullSections->count(),
-                'section_ids' => $nullSections->pluck('id')->toArray(),
-            ]);
+        if ($nullCount > 0) {
+            $ids = DB::table('sections')
+                ->whereNull('academic_supervisor_id')
+                ->pluck('id')
+                ->implode(', ');
 
-            // Resolve the academic_supervisor role id
-            $supervisorRoleId = DB::table('roles')
-                ->where('name', 'academic_supervisor')
-                ->value('id');
-
-            if (! $supervisorRoleId) {
-                throw new \RuntimeException(
-                    'Migration aborted: no academic_supervisor role found in the roles table. ' .
-                    'Please seed roles before running this migration.'
-                );
-            }
-
-            // Global fallback supervisor (first available)
-            $fallbackSupervisor = DB::table('users')
-                ->where('role_id', $supervisorRoleId)
-                ->whereNotNull('id')
-                ->value('id');
-
-            if (! $fallbackSupervisor) {
-                // No supervisors exist at all — log affected IDs and abort.
-                // Do not alter the column; let the admin handle this manually.
-                Log::error(
-                    'Migration enforce_academic_supervisor_not_null: ABORTED. ' .
-                    'No academic supervisors found. Affected section IDs: ' .
-                    $nullSections->pluck('id')->implode(', ')
-                );
-                throw new \RuntimeException(
-                    'Migration aborted: sections exist without an academic_supervisor_id, ' .
-                    'but no academic supervisor users were found. ' .
-                    'Affected section IDs: ' . $nullSections->pluck('id')->implode(', ') . '. ' .
-                    'Please create at least one academic supervisor user and assign them to these ' .
-                    'sections before running this migration.'
-                );
-            }
-
-            foreach ($nullSections as $section) {
-                // Try department-matched supervisor first
-                $deptId = DB::table('courses')
-                    ->where('id', $section->course_id)
-                    ->value('department_id');
-
-                $assignedSupervisorId = $fallbackSupervisor;
-
-                if ($deptId) {
-                    $deptSupervisor = DB::table('users')
-                        ->where('role_id', $supervisorRoleId)
-                        ->where('department_id', $deptId)
-                        ->value('id');
-
-                    if ($deptSupervisor) {
-                        $assignedSupervisorId = $deptSupervisor;
-                    }
-                }
-
-                DB::table('sections')
-                    ->where('id', $section->id)
-                    ->update(['academic_supervisor_id' => $assignedSupervisorId]);
-
-                Log::info("Migration: assigned supervisor {$assignedSupervisorId} to section {$section->id} ({$section->name})");
-            }
-        }
-
-        // ── 2. Verify no nulls remain before altering column ───────────────
-        $remaining = DB::table('sections')->whereNull('academic_supervisor_id')->count();
-        if ($remaining > 0) {
             throw new \RuntimeException(
-                "Migration aborted: {$remaining} sections still have null academic_supervisor_id after cleanup attempt."
+                "Migration aborted: {$nullCount} section(s) have a NULL academic_supervisor_id " .
+                "(IDs: {$ids}). Assign an academic supervisor to each section before running " .
+                'this migration. A section cannot exist without an academic supervisor.'
             );
         }
 
-        // ── 3. Alter column to NOT NULL ────────────────────────────────────
-        // We only alter if the column is currently nullable.
-        // Detect nullability via information_schema (MySQL/MariaDB).
-        $isNullable = DB::selectOne(
+        // ── 2. Check current nullability — skip if already NOT NULL ────────
+        $columnInfo = DB::selectOne(
             "SELECT IS_NULLABLE FROM information_schema.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'sections'
-               AND COLUMN_NAME = 'academic_supervisor_id'"
+               AND TABLE_NAME   = 'sections'
+               AND COLUMN_NAME  = 'academic_supervisor_id'"
         );
 
-        if ($isNullable && strtoupper($isNullable->IS_NULLABLE) === 'YES') {
-            Schema::table('sections', function (Blueprint $table) {
-                // Change to NOT NULL, keep existing foreign key reference
-                $table->foreignId('academic_supervisor_id')
-                    ->nullable(false)
-                    ->change();
-            });
+        if (! $columnInfo || strtoupper($columnInfo->IS_NULLABLE) !== 'YES') {
+            // Column is already NOT NULL — nothing to do.
+            Log::info('Migration enforce_academic_supervisor_not_null: column already NOT NULL, skipping.');
+            return;
         }
+
+        // ── 3. Drop the existing foreign key (SET NULL constraint) ─────────
+        Schema::table('sections', function (Blueprint $table) {
+            $table->dropForeign(['academic_supervisor_id']);
+        });
+
+        // ── 4. Change column to NOT NULL ───────────────────────────────────
+        Schema::table('sections', function (Blueprint $table) {
+            $table->unsignedBigInteger('academic_supervisor_id')->nullable(false)->change();
+        });
+
+        // ── 5. Re-add foreign key with RESTRICT (no SET NULL) ──────────────
+        Schema::table('sections', function (Blueprint $table) {
+            $table->foreign('academic_supervisor_id')
+                ->references('id')
+                ->on('users')
+                ->restrictOnDelete();
+        });
     }
 
     public function down(): void
@@ -137,11 +81,22 @@ return new class extends Migration
             return;
         }
 
-        // Revert to nullable
+        // ── Drop the restrict FK ───────────────────────────────────────────
         Schema::table('sections', function (Blueprint $table) {
-            $table->foreignId('academic_supervisor_id')
-                ->nullable()
-                ->change();
+            $table->dropForeign(['academic_supervisor_id']);
+        });
+
+        // ── Revert column to nullable ──────────────────────────────────────
+        Schema::table('sections', function (Blueprint $table) {
+            $table->unsignedBigInteger('academic_supervisor_id')->nullable()->change();
+        });
+
+        // ── Re-add FK with SET NULL ────────────────────────────────────────
+        Schema::table('sections', function (Blueprint $table) {
+            $table->foreign('academic_supervisor_id')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
         });
     }
 };

@@ -9,7 +9,7 @@ class TrainingPeriod extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'start_date', 'end_date', 'is_active', 'archived_at'];
+    protected $fillable = ['name', 'start_date', 'end_date', 'is_active', 'archived_at', 'department_id'];
 
     protected $casts = [
         'start_date' => 'date',

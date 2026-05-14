@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getUser, createUser, updateUser } from "../../../services/api";
 import { useRoles, useDepartments } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
+import { hasFormChanged } from "../../../utils/formChanged";
 import {
   isValidMobilePhone,
   getMobilePhoneErrorMessage,
@@ -27,6 +28,7 @@ export default function UserForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const originalRef = useRef(null);
   const { data: roles } = useRoles();
   const { data: departments } = useDepartments();
   const [form, setForm] = useState({
@@ -48,7 +50,7 @@ export default function UserForm() {
       const fetchUser = async () => {
         try {
           const userData = await getUser(id);
-          setForm({
+          const loaded = {
             university_id: userData.university_id || "",
             name: userData.name,
             email: userData.email,
@@ -58,7 +60,9 @@ export default function UserForm() {
             department_id: userData.department_id || "",
             phone: userData.phone || "",
             status: userData.status || "active",
-          });
+          };
+          originalRef.current = loaded;
+          setForm(loaded);
         } catch (err) {
           console.error(err);
         }
@@ -217,6 +221,17 @@ export default function UserForm() {
       setLoading(false);
       toast.error("يرجى تصحيح الأخطاء قبل المتابعة");
       return;
+    }
+
+    // No-change check for edit mode (ignore password fields which are always blank on load)
+    if (id) {
+      const comparableOrig = { ...originalRef.current, password: "", password_confirmation: "" };
+      const comparableCurr = { ...form, password: "", password_confirmation: "" };
+      if (!hasFormChanged(comparableOrig, comparableCurr) && !form.password) {
+        setLoading(false);
+        toast.info("لم تقم بتغيير أي بيانات");
+        return;
+      }
     }
 
     try {

@@ -146,8 +146,8 @@ class ArchiveService
 
                 // Mark period as archived/inactive
                 $period->update([
-                    'is_active' => false,
-                    // Add archived_at if the column exists
+                    'is_active'   => false,
+                    'archived_at' => $now,
                 ]);
 
                 return $archived;

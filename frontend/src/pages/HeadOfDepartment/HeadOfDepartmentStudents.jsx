@@ -111,13 +111,16 @@ export default function HeadOfDepartmentStudents() {
   }
 
   if (error) {
+    const isNoDept = error.includes("قسم") || error.includes("department");
     return (
       <div className="students-error">
-        <div className="error-icon">⚠️</div>
-        <p>{error}</p>
-        <button onClick={fetchStudents} className="btn-primary">
-          إعادة المحاولة
-        </button>
+        <div className="error-icon">{isNoDept ? "🏫" : "⚠️"}</div>
+        <p>{isNoDept ? "لم يتم ربط حسابك بقسم أكاديمي بعد، يرجى التواصل مع مدير النظام" : error}</p>
+        {!isNoDept && (
+          <button onClick={fetchStudents} className="btn-primary">
+            إعادة المحاولة
+          </button>
+        )}
       </div>
     );
   }

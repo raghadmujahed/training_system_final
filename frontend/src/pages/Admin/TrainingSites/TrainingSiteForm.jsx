@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getTrainingSite, createTrainingSite, updateTrainingSite } from "../../../services/api";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
-import { useAuth } from "../../../stores/AuthContext";
+import { readStoredUser } from "../../../utils/session";
 import PageHeader from "../../../components/common/PageHeader";
 import Button from "../../../components/ui/Button";
 import { isRequired, isMinValue, isValidEmail, isValidLandlinePhone, getLandlinePhoneErrorMessage, isValidMobilePhone, getMobilePhoneErrorMessage } from "../../../utils/validation";
@@ -11,7 +11,7 @@ import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function TrainingSiteForm() {
   const toast = useAppToast();
-  const { user } = useAuth();
+  const user = readStoredUser();
   const { id } = useParams();
   const navigate = useNavigate();
   const userRoleName = user?.role?.name ?? user?.role ?? '';

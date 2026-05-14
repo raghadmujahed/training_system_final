@@ -99,11 +99,13 @@ const ROUTE_ICON = {
   "/health/dashboard": "home",
   "/health/training-requests": "fileText",
   "/health/training-sites": "mapPin",
+  "/health/staff": "users",
   "/health/official-letters": "document",
 
   "/education/dashboard": "home",
   "/education/training-requests": "fileText",
   "/education/training-sites": "school",
+  "/education/staff": "users",
   "/education/official-letters": "document",
 
   "/head-department/dashboard": "home",

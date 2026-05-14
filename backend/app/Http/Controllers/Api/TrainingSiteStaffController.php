@@ -23,7 +23,15 @@ class TrainingSiteStaffController extends Controller
     private const MANAGER_ROLES = ['school_manager', 'principal'];
 
     /**
-     * Check if the current user can manage the given directorate.
+     * Directorate roles that must be restricted to their own directorate.
+     */
+    private const DIRECTORATE_ROLES = ['education_directorate', 'health_directorate'];
+
+    /**
+     * Check if the current user can manage the given training site directorate.
+     * Admin: unrestricted.
+     * Directorate roles: only their own directorate.
+     * Others (training_coordinator, etc.): unrestricted within their permissions.
      */
     private function canAccessDirectorate(?string $directorate, Request $request): bool
     {
@@ -34,11 +42,25 @@ class TrainingSiteStaffController extends Controller
             return true;
         }
 
-        if ($roleName === 'education_directorate') {
+        if (in_array($roleName, self::DIRECTORATE_ROLES, true)) {
             return $directorate === $user->directorate;
         }
 
         return true;
+    }
+
+    /**
+     * Get the directorate restriction for the current user, if any.
+     * Returns the directorate string, or null if unrestricted.
+     */
+    private function getDirectorateRestriction(Request $request): ?string
+    {
+        $user = $request->user();
+        $roleName = $user?->role?->name;
+        if (in_array($roleName, self::DIRECTORATE_ROLES, true) && $user->directorate) {
+            return $user->directorate;
+        }
+        return null;
     }
 
     /**
@@ -80,11 +102,11 @@ class TrainingSiteStaffController extends Controller
             $staffRoleIds = Role::whereIn('name', self::STAFF_ROLES)->pluck('id');
             $query->whereIn('role_id', $staffRoleIds);
 
-            // Directorate restriction for education_directorate users
-            $user = $request->user();
-            if ($user?->role?->name === 'education_directorate' && $user->directorate) {
-                $query->whereHas('trainingSite', function ($q) use ($user) {
-                    $q->where('directorate', $user->directorate);
+            // Directorate restriction — enforced in backend for all directorate roles
+            $directorateRestriction = $this->getDirectorateRestriction($request);
+            if ($directorateRestriction) {
+                $query->whereHas('trainingSite', function ($q) use ($directorateRestriction) {
+                    $q->where('directorate', $directorateRestriction);
                 });
             } elseif (!empty($validated['directorate'])) {
                 $query->whereHas('trainingSite', function ($q) use ($validated) {
@@ -463,12 +485,14 @@ class TrainingSiteStaffController extends Controller
                 ->where('status', 'active')
                 ->with('role');
 
-            // Directorate restriction for education_directorate users
+            // Directorate restriction — filter by training site directorate (not user.directorate field)
+            // Staff users may not have directorate set on their own record, but their potential
+            // sites are the source of truth. For directorate users, only show unassigned staff
+            // who don't have a site, so we can't pre-filter by site. Instead, we show all
+            // unassigned valid-role users; the assign step enforces directorate via canAccessDirectorate.
+            // Optional: if admin passes a directorate filter param, filter by user.directorate.
             $user = $request->user();
-            if ($user?->role?->name === 'education_directorate' && $user->directorate) {
-                // Filter users by their directorate field if they have one
-                $query->where('directorate', $user->directorate);
-            } elseif (!empty($validated['directorate'])) {
+            if (!empty($validated['directorate'])) {
                 $query->where('directorate', $validated['directorate']);
             }
 

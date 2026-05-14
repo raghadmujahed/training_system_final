@@ -31,7 +31,8 @@ export default function HeadOfDepartmentReports() {
       const response = await getHeadDepartmentReports(params);
       setReports(response);
     } catch (err) {
-      setError('فشل في جلب بيانات التقارير');
+      const apiMsg = err.response?.data?.message;
+      setError(apiMsg || 'فشل في جلب بيانات التقارير');
       console.error('Reports error:', err);
     } finally {
       setLoading(false);
@@ -190,7 +191,11 @@ export default function HeadOfDepartmentReports() {
 
       {error && (
         <div className="section-card mb-3">
-          <p className="text-danger">{error}</p>
+          <p className="text-danger">
+            {error.includes("قسم") || error.includes("department")
+              ? "لم يتم ربط حسابك بقسم أكاديمي بعد، يرجى التواصل مع مدير النظام"
+              : error}
+          </p>
         </div>
       )}
 

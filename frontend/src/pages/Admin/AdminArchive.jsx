@@ -4,7 +4,7 @@ import { Archive, RefreshCw, AlertTriangle, CheckCircle2, Calendar, Database, Ey
 import { getArchiveBatches, getArchiveActivePeriod, getArchivePreview, archivePeriod } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useAppToast from "../../hooks/useAppToast";
-import { useAuth } from "../../stores/AuthContext";
+import { readStoredUser } from "../../utils/session";
 
 const TABLE_LABELS = {
   sections: "الشعب",
@@ -41,7 +41,7 @@ const STATUS_COLORS = {
 export default function AdminArchive() {
   const toast = useAppToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const user = readStoredUser();
 
   const isAdmin = user?.role?.name === "admin";
 
@@ -89,7 +89,11 @@ export default function AdminArchive() {
     if (activeResult.status === "fulfilled") {
       const activeData = activeResult.value;
       setActivePeriod(activeData);
-      if (activeData?.period?.id && !activeData?.is_archived) {
+      // The active-period endpoint already embeds preview counts — use them directly
+      if (activeData?.preview) {
+        setPreview(activeData.preview);
+      } else if (activeData?.period?.id && !activeData?.is_archived) {
+        // Fallback: fetch preview separately only if not embedded
         try {
           const previewData = await getArchivePreview(activeData.period.id);
           setPreview(previewData);

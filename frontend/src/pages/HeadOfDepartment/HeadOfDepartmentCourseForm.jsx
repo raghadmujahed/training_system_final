@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCourse, createCourse, updateCourse } from "../../services/api";
 import useAppToast from "../../hooks/useAppToast";
+import { hasFormChanged } from "../../utils/formChanged";
 
 export default function HeadOfDepartmentCourseForm() {
   const toast = useAppToast();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const originalRef = useRef(null);
   const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 0, type: "practical" });
   const [errors, setErrors] = useState({});
 
@@ -15,14 +17,18 @@ export default function HeadOfDepartmentCourseForm() {
     if (id) {
       setLoading(true);
       getCourse(id)
-        .then(data => setForm({
-          code: data?.code ?? "",
-          name: data?.name ?? "",
-          description: data?.description ?? "",
-          credit_hours: data?.credit_hours ?? 3,
-          training_hours: data?.training_hours ?? 0,
-          type: data?.type ?? "practical",
-        }))
+        .then(data => {
+          const loaded = {
+            code: data?.code ?? "",
+            name: data?.name ?? "",
+            description: data?.description ?? "",
+            credit_hours: data?.credit_hours ?? 3,
+            training_hours: data?.training_hours ?? 0,
+            type: data?.type ?? "practical",
+          };
+          originalRef.current = loaded;
+          setForm(loaded);
+        })
         .catch(err => console.error(err))
         .finally(() => setLoading(false));
     }
@@ -35,6 +41,12 @@ export default function HeadOfDepartmentCourseForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
+      return;
+    }
+
     setLoading(true);
     setErrors({});
     try {

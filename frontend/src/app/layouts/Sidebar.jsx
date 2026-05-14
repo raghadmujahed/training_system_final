@@ -236,12 +236,14 @@ const menus = {
   health_directorate: [
     { name: "الرئيسية", path: "/health/dashboard" },
     { name: "أماكن التدريب", path: "/health/training-sites" },
+    { name: "إدارة كوادر المواقع", path: "/health/staff" },
     { name: "طلبات التدريب", path: "/health/official-letters" },
   ],
 
   education_directorate: [
     { name: "الرئيسية", path: "/education/dashboard" },
     { name: "أماكن التدريب", path: "/education/training-sites" },
+    { name: "إدارة كوادر المواقع", path: "/education/staff" },
     { name: "طلبات التدريب", path: "/education/official-letters" },
   ],
 };

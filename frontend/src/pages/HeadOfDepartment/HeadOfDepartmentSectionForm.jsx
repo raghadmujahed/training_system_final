@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSection, createSection, updateSection, getUsers, getActiveTrainingPeriod } from "../../services/api";
 import { useCourses, useRoles } from "../../hooks/useSharedData";
 import useAppToast from "../../hooks/useAppToast";
 import { apiCache } from "../../services/apiCache";
+import { hasFormChanged } from "../../utils/formChanged";
 
 export default function HeadOfDepartmentSectionForm() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function HeadOfDepartmentSectionForm() {
   const [supervisors, setSupervisors] = useState([]);
   const [supervisorsLoading, setSupervisorsLoading] = useState(false);
   const [activePeriod, setActivePeriod] = useState(null);
+  const originalRef = useRef(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -33,8 +35,11 @@ export default function HeadOfDepartmentSectionForm() {
     if (id) return;
     getActiveTrainingPeriod()
       .then((res) => {
-        const period = res?.data;
-        if (period) {
+        // API returns { data: { id, name, academic_year, semester, is_active, status, ... } }
+        // getActiveTrainingPeriod() does res.data (axios), so res here = { data: {...} }
+        const period = res?.data ?? res;
+        const isValid = period && period.id && (period.is_active !== false);
+        if (isValid) {
           setActivePeriod(period);
           setForm((prev) => ({
             ...prev,
@@ -51,14 +56,16 @@ export default function HeadOfDepartmentSectionForm() {
     if (!id) return;
     getSection(id)
       .then((sectionData) => {
-        setForm({
+        const loaded = {
           name: sectionData.name,
           academic_year: sectionData.academic_year,
           academic_supervisor_id: sectionData.academic_supervisor_id || "",
           semester: sectionData.semester,
           course_id: sectionData.course_id,
           capacity: sectionData.capacity || 30,
-        });
+        };
+        originalRef.current = loaded;
+        setForm(loaded);
       })
       .catch(() => {});
   }, [id]);
@@ -126,6 +133,11 @@ export default function HeadOfDepartmentSectionForm() {
 
     if (!validateForm()) {
       toast.error("يرجى تصحيح الأخطاء في النموذج");
+      return;
+    }
+
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
       return;
     }
 

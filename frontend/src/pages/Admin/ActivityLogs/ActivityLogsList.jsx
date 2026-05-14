@@ -15,13 +15,14 @@ export default function ActivityLogsList() {
     to_date: "",
   });
 
+  const PER_PAGE = 20;
+
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
-    per_page: 10,
+    per_page: PER_PAGE,
     total: 0,
   });
-  const [perPage, setPerPage] = useState(10);
 
   const fetchUsers = async () => {
     try {
@@ -43,7 +44,7 @@ export default function ActivityLogsList() {
       const response = await getActivityLogs({
         ...cleanFilters,
         page,
-        per_page: perPage,
+        per_page: PER_PAGE,
       });
 
       const logsData = response.data || [];
@@ -53,7 +54,7 @@ export default function ActivityLogsList() {
       setPagination({
         current_page: meta.current_page || 1,
         last_page: meta.last_page || 1,
-        per_page: meta.per_page || perPage,
+        per_page: meta.per_page || PER_PAGE,
         total: meta.total || 0,
       });
     } catch (err) {
@@ -66,7 +67,7 @@ export default function ActivityLogsList() {
 
   useEffect(() => {
     fetchLogs(1);
-  }, [filters, perPage]);
+  }, [filters]);
 
   useEffect(() => {
     fetchUsers();
@@ -125,16 +126,6 @@ export default function ActivityLogsList() {
           إعادة تعيين
         </button>
 
-        <select
-          value={perPage}
-          onChange={(e) => setPerPage(Number(e.target.value))}
-          className="w-auto"
-        >
-          <option value="10">10 سجلات</option>
-          <option value="20">20 سجل</option>
-          <option value="50">50 سجل</option>
-          <option value="100">100 سجل</option>
-        </select>
       </div>
 
       {loading ? (

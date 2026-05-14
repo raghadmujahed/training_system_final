@@ -33,14 +33,21 @@ export default function HeadOfDepartmentDashboard() {
   }
 
   if (error) {
+    const isNoDept = error.includes("قسم") || error.includes("department");
     return (
       <div className="dashboard-error">
-        <div className="error-icon">⚠️</div>
-        <h2>{error}</h2>
-        <p>يرجى المحاولة مرة أخرى</p>
-        <button onClick={() => window.location.reload()} className="btn-primary">
-          إعادة المحاولة
-        </button>
+        <div className="error-icon">{isNoDept ? "🏫" : "⚠️"}</div>
+        <h2>{isNoDept ? "لم يتم ربط حسابك بقسم أكاديمي بعد" : error}</h2>
+        {isNoDept ? (
+          <p>يرجى التواصل مع مدير النظام لربط حسابك بالقسم الصحيح</p>
+        ) : (
+          <>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()} className="btn-primary">
+              إعادة المحاولة
+            </button>
+          </>
+        )}
       </div>
     );
   }

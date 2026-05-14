@@ -7,6 +7,7 @@ use App\Http\Requests\StoreSectionRequest;
 use App\Http\Requests\UpdateSectionRequest;
 use App\Http\Resources\SectionResource;
 use App\Http\Resources\EnrollmentResource;
+use App\Http\Resources\TrainingPeriodResource;
 use App\Models\Course;
 use App\Models\Notification as AppNotification;
 use App\Models\Section;
@@ -18,7 +19,9 @@ class SectionController extends Controller
 {
     public function __construct()
     {
-        $this->authorizeResource(Section::class, 'section');
+        $this->authorizeResource(Section::class, 'section', [
+            'except' => ['getActiveTrainingPeriod'],
+        ]);
     }
 
     public function index(Request $request)
@@ -81,7 +84,7 @@ class SectionController extends Controller
         // Always use the active period values — override whatever the frontend sent
         $data['training_period_id'] = $activePeriod->id;
         $data['academic_year'] = (int) $activePeriod->start_date->format('Y');
-        $data['semester'] = $this->resolveSemesterFromDates($activePeriod->start_date, $activePeriod->end_date);
+        $data['semester'] = $this->resolveSemesterFromMonth((int) $activePeriod->start_date->format('n'));
 
         // Remove department_id — not a sections column, only used for filtering
         unset($data['department_id']);
@@ -126,7 +129,8 @@ class SectionController extends Controller
     }
 
     /**
-     * Get the currently active training period
+     * Get the currently active training period.
+     * Returns the same shape as TrainingPeriodResource (unified across all endpoints).
      */
     public function getActiveTrainingPeriod()
     {
@@ -135,19 +139,12 @@ class SectionController extends Controller
         if (! $activePeriod) {
             return response()->json([
                 'message' => 'لا توجد فترة تدريبية مفعلة حالياً',
-                'data' => null
+                'data'    => null,
             ], 404);
         }
 
         return response()->json([
-            'data' => [
-                'id' => $activePeriod->id,
-                'name' => $activePeriod->name,
-                'academic_year' => $activePeriod->start_date->format('Y'),
-                'semester' => $this->resolveSemesterFromDates($activePeriod->start_date, $activePeriod->end_date),
-                'start_date' => $activePeriod->start_date->toDateString(),
-                'end_date' => $activePeriod->end_date->toDateString(),
-            ]
+            'data' => (new TrainingPeriodResource($activePeriod))->toArray(request()),
         ]);
     }
 
@@ -393,23 +390,16 @@ class SectionController extends Controller
     }
 
     /**
-     * Resolve semester from date range
+     * Resolve semester from start month.
      */
-    private function resolveSemesterFromDates($startDate, $endDate): string
+    private function resolveSemesterFromMonth(int $startMonth): string
     {
-        $startMonth = (int) $startDate->format('n');
-
-        // Summer: June-August (6-8)
         if ($startMonth >= 6 && $startMonth <= 8) {
             return 'summer';
         }
-
-        // Second semester: January-May (1-5)
         if ($startMonth >= 1 && $startMonth <= 5) {
             return 'second';
         }
-
-        // First semester: September-December (9-12)
         return 'first';
     }
 }

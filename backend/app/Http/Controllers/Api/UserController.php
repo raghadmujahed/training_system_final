@@ -58,16 +58,38 @@ class UserController extends Controller
             }
         }
 
-        // منسق التدريب والأخصائي النفسي ورئيس القسم يُسمح لهم بجلب الطلبة فقط (قائمة مرجعية).
-        if (in_array($request->user()->role?->name, ['training_coordinator', 'coordinator', 'psychologist', 'head_of_department'], true)) {
+        // منسق التدريب والأخصائي النفسي يُسمح لهم بجلب الطلبة فقط (قائمة مرجعية).
+        if (in_array($request->user()->role?->name, ['training_coordinator', 'coordinator', 'psychologist'], true)) {
             $users->whereHas('role', function ($q) {
                 $q->where('name', 'student');
             });
             $users->where('status', 'active');
         }
 
-        if ($request->user()->role?->name === 'head_of_department' && $request->user()->department_id) {
-            $users->where('users.department_id', $request->user()->department_id);
+        // رئيس القسم: يجلب الطلبة أو المشرفين الأكاديميين من قسمه فقط.
+        if ($request->user()->role?->name === 'head_of_department') {
+            $requestedRole = null;
+            if ($validated['role_id'] ?? null) {
+                $requestedRole = \App\Models\Role::find($validated['role_id'])?->name;
+            } elseif ($validated['role'] ?? null) {
+                $requestedRole = $validated['role'];
+            }
+
+            $allowedRoles = ['student', 'academic_supervisor'];
+            if ($requestedRole && !in_array($requestedRole, $allowedRoles)) {
+                return response()->json(['message' => 'لا تملك صلاحية الوصول إلى هذا النوع من المستخدمين'], 403);
+            }
+
+            if (!$requestedRole || $requestedRole === 'student') {
+                $users->whereHas('role', function ($q) { $q->where('name', 'student'); });
+                $users->where('status', 'active');
+            } else {
+                $users->whereHas('role', function ($q) { $q->where('name', 'academic_supervisor'); });
+            }
+
+            if ($request->user()->department_id) {
+                $users->where('users.department_id', $request->user()->department_id);
+            }
         }
 
         $users->when($validated['role_id'] ?? null, function ($q, $roleId) {
@@ -300,6 +322,17 @@ class UserController extends Controller
             ],
         ]);
 
+        $newPhone = $request->phone ?? '';
+        $oldPhone = $user->phone ?? '';
+
+        if (
+            $user->name === $request->name &&
+            $user->email === $request->email &&
+            $oldPhone === $newPhone
+        ) {
+            return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات'], 200);
+        }
+
         $user->update([
             'name' => $request->name,
             'email' => $request->email,
@@ -330,6 +363,10 @@ class UserController extends Controller
 
         if (!Hash::check($request->current_password, $user->password)) {
             return response()->json(['message' => 'كلمة المرور الحالية غير صحيحة'], 422);
+        }
+
+        if (Hash::check($request->new_password, $user->password)) {
+            return response()->json(['message' => 'كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية'], 422);
         }
 
         $user->update([

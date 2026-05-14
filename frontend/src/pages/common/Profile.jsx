@@ -159,24 +159,23 @@ export default function Profile() {
       setTimeout(() => setPasswordSuccess(false), 3000);
     } catch (err) {
       const errorMessage = err.response?.data?.message || "فشل في تغيير كلمة المرور";
-      setPasswordError(errorMessage);
-      
-      // Handle validation errors from backend
+      const mappedErrors = {};
+
       if (err.response?.data?.errors) {
         const backendErrors = err.response.data.errors;
-        const mappedErrors = {};
-        
-        if (backendErrors.current_password) {
-          mappedErrors.current_password = backendErrors.current_password[0];
-        }
-        if (backendErrors.new_password) {
-          mappedErrors.new_password = backendErrors.new_password[0];
-        }
-        if (backendErrors.new_password_confirmation) {
-          mappedErrors.new_password_confirmation = backendErrors.new_password_confirmation[0];
-        }
-        
+        if (backendErrors.current_password) mappedErrors.current_password = backendErrors.current_password[0];
+        if (backendErrors.new_password) mappedErrors.new_password = backendErrors.new_password[0];
+        if (backendErrors.new_password_confirmation) mappedErrors.new_password_confirmation = backendErrors.new_password_confirmation[0];
+      } else if (errorMessage === "كلمة المرور الحالية غير صحيحة") {
+        mappedErrors.current_password = errorMessage;
+      } else if (errorMessage === "كلمة المرور الجديدة يجب أن تكون مختلفة عن كلمة المرور الحالية") {
+        mappedErrors.new_password = errorMessage;
+      }
+
+      if (Object.keys(mappedErrors).length > 0) {
         setPasswordFieldErrors(mappedErrors);
+      } else {
+        setPasswordError(errorMessage);
       }
     } finally {
       setPasswordLoading(false);

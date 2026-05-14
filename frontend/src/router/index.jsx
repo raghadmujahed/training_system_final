@@ -484,11 +484,21 @@ export default function AppRouter() {
           <Route path="/health/dashboard" element={<HealthDirectorateDashboard />} />
           <Route path="/health/training-sites" element={<HealthTrainingSites />} />
           <Route path="/health/official-letters" element={<HealthOfficialLetters siteType="health_center" />} />
+          <Route path="/health/staff" element={
+            <PermissionProtectedRoute permission="training_sites.staff.view">
+              <TrainingSiteStaffManagement />
+            </PermissionProtectedRoute>
+          } />
 
           {/* Education */}
           <Route path="/education/dashboard" element={<EducationDirectorateDashboard />} />
           <Route path="/education/training-sites" element={<TrainingSites />} />
           <Route path="/education/official-letters" element={<EducationOfficialLetters siteType="school" />} />
+          <Route path="/education/staff" element={
+            <PermissionProtectedRoute permission="training_sites.staff.view">
+              <TrainingSiteStaffManagement />
+            </PermissionProtectedRoute>
+          } />
 
           {/* Common */}
           <Route path="/profile" element={<Profile />} />

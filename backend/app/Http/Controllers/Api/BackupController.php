@@ -23,6 +23,10 @@ class BackupController extends Controller
 
     public function store(CreateBackupRequest $request)
     {
+        // Raise memory limit for large databases
+        @ini_set('memory_limit', '512M');
+        @set_time_limit(300);
+
         try {
             // توليد اسم الملف
             $filename = 'backup_' . date('Ymd_His') . '_' . Str::random(8) . '.sql';
@@ -30,29 +34,33 @@ class BackupController extends Controller
             // استخدام مجلد storage/app/backups (يعمل على Railway بدون symlink)
             $backupDir = storage_path('app/backups');
             if (!is_dir($backupDir)) {
-                mkdir($backupDir, 0755, true);
+                if (!mkdir($backupDir, 0755, true) && !is_dir($backupDir)) {
+                    return response()->json([
+                        'message' => 'فشل إنشاء مجلد النسخ الاحتياطية — تأكد من صلاحيات الكتابة على storage/',
+                    ], 500);
+                }
             }
-            $fullPath = $backupDir . DIRECTORY_SEPARATOR . $filename;
 
-            // إنشاء محتوى SQL عبر Laravel DB facade (بدون mysqldump)
-            $sqlContent = $this->generateDatabaseDump();
-
-            if (empty($sqlContent)) {
+            if (!is_writable($backupDir)) {
                 return response()->json([
-                    'message' => 'فشل إنشاء النسخة الاحتياطية: لم يتم إنشاء محتوى SQL',
+                    'message' => 'مجلد النسخ الاحتياطية غير قابل للكتابة — تحقق من صلاحيات المجلد',
                 ], 500);
             }
 
-            // حفظ الملف
-            if (file_put_contents($fullPath, $sqlContent) === false) {
+            $fullPath = $backupDir . DIRECTORY_SEPARATOR . $filename;
+
+            // إنشاء محتوى SQL عبر Laravel DB facade (بدون mysqldump) — يعمل على Railway
+            $this->writeDatabaseDump($fullPath);
+
+            if (!file_exists($fullPath) || filesize($fullPath) === 0) {
                 return response()->json([
-                    'message' => 'فشل حفظ ملف النسخة الاحتياطية',
+                    'message' => 'فشل إنشاء النسخة الاحتياطية: الملف فارغ أو لم يُنشأ',
                 ], 500);
             }
 
             $backup = Backup::create([
                 'user_id'   => $request->user()->id,
-                'type'      => $request->type,
+                'type'      => $request->type ?? 'full',
                 'name'      => $filename,
                 'file_path' => $fullPath,
                 'size'      => filesize($fullPath),
@@ -64,71 +72,108 @@ class BackupController extends Controller
                 'backup'       => $backup,
                 'download_url' => url('/api/backups/' . $backup->id . '/download'),
             ], 201);
-        } catch (\Exception $e) {
-            \Log::error('Backup creation failed: ' . $e->getMessage());
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Backup DB error: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
             return response()->json([
-                'message' => 'فشل إنشاء النسخة الاحتياطية، يرجى مراجعة إعدادات الخادم',
+                'message' => 'فشل الاتصال بقاعدة البيانات أثناء إنشاء النسخة الاحتياطية',
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error('Backup creation failed: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine()]);
+            return response()->json([
+                'message' => 'فشل إنشاء النسخة الاحتياطية: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Generate SQL dump using Laravel DB facade (works on Railway without mysqldump).
-     * Uses the active database connection — no hardcoded credentials.
+     * Write SQL dump directly to file using chunked queries to avoid memory exhaustion.
+     * Works on Railway without mysqldump — reads DB_* credentials from env automatically.
      */
-    private function generateDatabaseDump(): string
+    private function writeDatabaseDump(string $filePath): void
     {
         $connection = config('database.default');
         $db = config("database.connections.{$connection}.database");
 
-        $sql  = "-- Database Backup: {$db}\n";
-        $sql .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
-        $sql .= "-- Connection: {$connection}\n\n";
-        $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
-
-        // SHOW TABLES returns a stdClass with a dynamic property name.
-        // Use array_values(get_object_vars()) to extract the table name safely.
-        $tables = \DB::select('SHOW TABLES');
-
-        foreach ($tables as $tableRow) {
-            $vars      = get_object_vars($tableRow);
-            $tableName = array_values($vars)[0];
-
-            $sql .= "-- ----------------------------\n";
-            $sql .= "-- Table: `{$tableName}`\n";
-            $sql .= "-- ----------------------------\n";
-            $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
-
-            // CREATE TABLE
-            $createResult = \DB::select("SHOW CREATE TABLE `{$tableName}`");
-            if (!empty($createResult)) {
-                $createVars = get_object_vars($createResult[0]);
-                // Second value is always 'Create Table'
-                $createStmt = array_values($createVars)[1] ?? '';
-                $sql .= $createStmt . ";\n\n";
-            }
-
-            // INSERT rows
-            $rows = \DB::select("SELECT * FROM `{$tableName}`");
-            if (!empty($rows)) {
-                $sql .= "LOCK TABLES `{$tableName}` WRITE;\n";
-                foreach ($rows as $row) {
-                    $values = [];
-                    foreach ((array) $row as $value) {
-                        if ($value === null) {
-                            $values[] = 'NULL';
-                        } else {
-                            $values[] = "'" . addslashes((string) $value) . "'";
-                        }
-                    }
-                    $sql .= "INSERT INTO `{$tableName}` VALUES (" . implode(', ', $values) . ");\n";
-                }
-                $sql .= "UNLOCK TABLES;\n\n";
-            }
+        $handle = fopen($filePath, 'w');
+        if ($handle === false) {
+            throw new \RuntimeException("لا يمكن فتح الملف للكتابة: {$filePath}");
         }
 
-        $sql .= "SET FOREIGN_KEY_CHECKS=1;\n";
-        return $sql;
+        try {
+            fwrite($handle, "-- Database Backup: {$db}\n");
+            fwrite($handle, "-- Generated: " . date('Y-m-d H:i:s') . "\n");
+            fwrite($handle, "-- Connection: {$connection}\n\n");
+            fwrite($handle, "SET FOREIGN_KEY_CHECKS=0;\n\n");
+
+            // SHOW TABLES returns stdClass with a dynamic property per connection
+            $tables = \DB::select('SHOW TABLES');
+
+            foreach ($tables as $tableRow) {
+                $vars      = get_object_vars($tableRow);
+                $tableName = array_values($vars)[0];
+
+                fwrite($handle, "-- ----------------------------\n");
+                fwrite($handle, "-- Table: `{$tableName}`\n");
+                fwrite($handle, "-- ----------------------------\n");
+                fwrite($handle, "DROP TABLE IF EXISTS `{$tableName}`;\n");
+
+                // CREATE TABLE statement
+                $createResult = \DB::select("SHOW CREATE TABLE `{$tableName}`");
+                if (!empty($createResult)) {
+                    $createVars = get_object_vars($createResult[0]);
+                    $createStmt = array_values($createVars)[1] ?? '';
+                    fwrite($handle, $createStmt . ";\n\n");
+                }
+
+                // INSERT rows in chunks of 500 to avoid memory exhaustion
+                $offset = 0;
+                $chunkSize = 500;
+                $hasRows = false;
+
+                while (true) {
+                    $rows = \DB::select("SELECT * FROM `{$tableName}` LIMIT {$chunkSize} OFFSET {$offset}");
+                    if (empty($rows)) {
+                        break;
+                    }
+
+                    if (!$hasRows) {
+                        fwrite($handle, "LOCK TABLES `{$tableName}` WRITE;\n");
+                        $hasRows = true;
+                    }
+
+                    foreach ($rows as $row) {
+                        $values = [];
+                        foreach ((array) $row as $value) {
+                            if ($value === null) {
+                                $values[] = 'NULL';
+                            } else {
+                                $escaped = str_replace(
+                                    ["\\", "'", "\n", "\r", "\0"],
+                                    ["\\\\", "\\'", "\\n", "\\r", "\\0"],
+                                    (string) $value
+                                );
+                                $values[] = "'{$escaped}'";
+                            }
+                        }
+                        fwrite($handle, "INSERT INTO `{$tableName}` VALUES (" . implode(', ', $values) . ");\n");
+                    }
+
+                    $offset += $chunkSize;
+
+                    // Free memory after each chunk
+                    unset($rows);
+                }
+
+                if ($hasRows) {
+                    fwrite($handle, "UNLOCK TABLES;\n\n");
+                }
+            }
+
+            fwrite($handle, "SET FOREIGN_KEY_CHECKS=1;\n");
+        } finally {
+            fclose($handle);
+        }
     }
 
     public function show($id)

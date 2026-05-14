@@ -16,7 +16,8 @@ export default function HeadOfDepartmentRejectedCases() {
       const response = await getRejectedCases();
       setRejectedCases(response.data?.data || response.data || []);
     } catch (err) {
-      setError('فشل في جلب بيانات الحالات المرفوضة');
+      const apiMsg = err.response?.data?.message;
+      setError(apiMsg || 'فشل في جلب بيانات الحالات المرفوضة');
       console.error('Rejected cases error:', err);
     } finally {
       setLoading(false);
@@ -64,7 +65,11 @@ export default function HeadOfDepartmentRejectedCases() {
 
       {error && (
         <div className="section-card mb-3">
-          <p className="text-danger">{error}</p>
+          <p className="text-danger">
+            {error.includes("قسم") || error.includes("department")
+              ? "لم يتم ربط حسابك بقسم أكاديمي بعد، يرجى التواصل مع مدير النظام"
+              : error}
+          </p>
         </div>
       )}
 

@@ -62,6 +62,7 @@ export default function BackupsList() {
 
   const handleRestore = async (id) => {
     if (!window.confirm("تحذير: استعادة النسخة ستؤدي إلى فقدان البيانات الحالية. هل أنت متأكد؟")) return;
+    setError(null);
     try {
       await restoreBackup(id);
       toast.success("تمت استعادة النسخة بنجاح");
@@ -75,6 +76,7 @@ export default function BackupsList() {
 
   const handleDelete = async (id) => {
     if (!window.confirm("هل أنت متأكد من حذف هذه النسخة؟")) return;
+    setError(null);
     try {
       await deleteBackup(id);
       toast.success("تم حذف النسخة بنجاح");
@@ -98,16 +100,20 @@ export default function BackupsList() {
 
   if (loading) return <LoadingSpinner size="page" text="جاري التحميل..." />;
 
-  if (error) return <div className="text-center text-danger">{error}</div>;
-
   return (
     <div>
       <div className="page-header">
         <h1>النسخ الاحتياطية</h1>
-        <Button onClick={handleCreate} disabled={creating}>
+        <Button onClick={handleCreate} disabled={creating || loading}>
           {creating ? "جاري الإنشاء..." : "+ إنشاء نسخة احتياطية جديدة"}
         </Button>
       </div>
+
+      {error && (
+        <div className="alert alert-danger mb-3" role="alert">
+          {error}
+        </div>
+      )}
 
       {backups.length === 0 ? (
         <p>لا توجد نسخ احتياطية حتى الآن. قم بإنشاء نسخة جديدة.</p>

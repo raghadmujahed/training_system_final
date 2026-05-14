@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSection, createSection, updateSection, getUsers, getActiveTrainingPeriod } from "../../../services/api";
 import { useCourses, useRoles } from "../../../hooks/useSharedData";
 import useAppToast from "../../../hooks/useAppToast";
 import { apiCache } from "../../../services/apiCache";
+import { hasFormChanged } from "../../../utils/formChanged";
 
 export default function SectionForm() {
   const toast = useAppToast();
@@ -15,6 +16,7 @@ export default function SectionForm() {
   const supervisorRoleId = allRoles.find((r) => r.name === "academic_supervisor")?.id;
   const [supervisors, setSupervisors] = useState([]);
   const [activePeriod, setActivePeriod] = useState(null);
+  const originalRef = useRef(null);
   const [form, setForm] = useState({
     name: "",
     academic_year: new Date().getFullYear(),
@@ -30,8 +32,11 @@ export default function SectionForm() {
     if (id) return; // عند التعديل لا نحتاج لتغيير السنة والفصل
     getActiveTrainingPeriod()
       .then(res => {
-        const period = res?.data;
-        if (period) {
+        // API returns { data: { id, name, academic_year, semester, ... } }
+        // getActiveTrainingPeriod() already does res.data (axios), so res here = { data: {...} }
+        const period = res?.data ?? res;
+        const isValid = period && period.id && (period.is_active !== false);
+        if (isValid) {
           setActivePeriod(period);
           setForm(prev => ({
             ...prev,
@@ -49,14 +54,16 @@ export default function SectionForm() {
   useEffect(() => {
     if (!id) return;
     getSection(id).then(sectionData => {
-      setForm({
+      const loaded = {
         name: sectionData.name,
         academic_year: sectionData.academic_year,
         academic_supervisor_id: sectionData.academic_supervisor_id || "",
         semester: sectionData.semester,
         course_id: sectionData.course_id,
         department_id: sectionData.course?.department_id || "",
-      });
+      };
+      originalRef.current = loaded;
+      setForm(loaded);
     }).catch(() => {});
   }, [id]);
 
@@ -134,6 +141,11 @@ export default function SectionForm() {
 
     if (!validateForm()) {
       toast.error("يرجى تصحيح الأخطاء في النموذج");
+      return;
+    }
+
+    if (id && !hasFormChanged(originalRef.current, form)) {
+      toast.info("لم تقم بتغيير أي بيانات");
       return;
     }
 

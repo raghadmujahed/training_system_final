@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ArchiveBatch;
 use App\Models\TrainingPeriod;
 use App\Services\ArchiveService;
 use Illuminate\Http\Request;
@@ -122,7 +123,7 @@ class ArchiveController extends Controller
         $this->authorizeAdmin();
 
         try {
-            $period = TrainingPeriod::with(['archiveBatches'])->find($periodId);
+            $period = TrainingPeriod::find($periodId);
 
             if (!$period) {
                 return response()->json([
@@ -146,7 +147,7 @@ class ArchiveController extends Controller
                     ];
                 });
 
-            $latestBatch = $period->archiveBatches()->latest()->first();
+            $latestBatch = ArchiveBatch::where('training_period_id', $periodId)->latest()->first();
 
             return response()->json([
                 'period' => [

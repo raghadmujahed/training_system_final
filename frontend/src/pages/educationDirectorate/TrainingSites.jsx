@@ -28,7 +28,7 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 import PageHeader from "../../components/common/PageHeader";
 import useAppToast from "../../hooks/useAppToast";
-import { useAuth } from "../../stores/AuthContext";
+import { readStoredUser } from "../../utils/session";
 
 const getSchoolTypeFromItem = (item) => {
   if (item.school_type === "private") return "خاصة";
@@ -74,7 +74,7 @@ const extractValidationMessage = (error, fallback) => {
 export default function TrainingPlaces() {
   const [places, setPlaces] = useState([]);
   const toast = useAppToast();
-  const { user } = useAuth();
+  const user = readStoredUser();
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
 

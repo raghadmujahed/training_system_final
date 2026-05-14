@@ -27,7 +27,8 @@ export default function HeadOfDepartmentDistributionStatus() {
       const response = await getDistributionStatus(params);
       setDistribution(response.data?.data || response.data || []);
     } catch (err) {
-      setError('فشل في جلب بيانات حالة التوزيع');
+      const apiMsg = err.response?.data?.message;
+      setError(apiMsg || 'فشل في جلب بيانات حالة التوزيع');
       console.error('Distribution status error:', err);
     } finally {
       setLoading(false);
@@ -73,7 +74,11 @@ export default function HeadOfDepartmentDistributionStatus() {
 
       {error && (
         <div className="section-card mb-3">
-          <p className="text-danger">{error}</p>
+          <p className="text-danger">
+            {error.includes("قسم") || error.includes("department")
+              ? "لم يتم ربط حسابك بقسم أكاديمي بعد، يرجى التواصل مع مدير النظام"
+              : error}
+          </p>
         </div>
       )}
 

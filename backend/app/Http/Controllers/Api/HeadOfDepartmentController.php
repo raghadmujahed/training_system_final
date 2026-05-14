@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Role;
 use App\Models\Section;
 use App\Models\User;
 use App\Models\SectionStudent;
@@ -16,6 +17,15 @@ class HeadOfDepartmentController extends Controller
     public function __construct()
     {
         $this->middleware('auth:sanctum');
+    }
+
+    private function studentRoleId(): int
+    {
+        static $id = null;
+        if ($id === null) {
+            $id = Role::where('name', 'student')->value('id') ?? 2;
+        }
+        return $id;
     }
 
     // Test endpoint
@@ -51,9 +61,9 @@ class HeadOfDepartmentController extends Controller
             }
 
             $stats = [
-                'total_students' => User::where('role_id', 2) // students
+                'total_students' => User::where('role_id', $this->studentRoleId())
                     ->where('department_id', $departmentId)
-                    ->where('status', 'active') // Only active accounts
+                    ->where('status', 'active')
                     ->count(),
                 'total_courses' => Course::where('department_id', $departmentId)->count(),
                 'total_sections' => Section::whereHas('course', function ($query) use ($departmentId) {
@@ -92,9 +102,9 @@ class HeadOfDepartmentController extends Controller
                 ], 403);
             }
 
-            $query = User::where('role_id', 2) // students
+            $query = User::where('role_id', $this->studentRoleId())
                 ->where('department_id', $departmentId)
-                ->where('status', 'active') // Only active accounts
+                ->where('status', 'active')
                 ->with(['sectionStudents.section.course', 'trainingSite']);
 
             // Filters
@@ -147,7 +157,7 @@ class HeadOfDepartmentController extends Controller
             }
 
             $student = User::where('id', $studentId)
-                ->where('role_id', 2)
+                ->where('role_id', $this->studentRoleId())
                 ->where('department_id', $departmentId)
                 ->with(['sectionStudents.section.course', 'trainingSite'])
                 ->firstOrFail();
@@ -303,7 +313,7 @@ class HeadOfDepartmentController extends Controller
     private function getDistributionOverview($departmentId)
     {
         try {
-            $students = User::where('role_id', 2)
+            $students = User::where('role_id', $this->studentRoleId())
                 ->where('department_id', $departmentId)
                 ->with(['trainingSite', 'sectionStudents.section.course'])
                 ->get();
@@ -344,7 +354,7 @@ class HeadOfDepartmentController extends Controller
     {
         try {
             $stats = [
-                'total_students' => User::where('role_id', 2)
+                'total_students' => User::where('role_id', $this->studentRoleId())
                     ->where('department_id', $departmentId)
                     ->count(),
                 'total_courses' => Course::where('department_id', $departmentId)->count(),
@@ -527,7 +537,7 @@ class HeadOfDepartmentController extends Controller
             }
 
             $student = User::where('id', $studentId)
-                ->where('role_id', 2)
+                ->where('role_id', $this->studentRoleId())
                 ->where('department_id', $departmentId)
                 ->firstOrFail();
 
@@ -581,7 +591,7 @@ class HeadOfDepartmentController extends Controller
             }
 
             // Get student IDs in this department
-            $studentIds = User::where('role_id', 2)
+            $studentIds = User::where('role_id', $this->studentRoleId())
                 ->where('department_id', $departmentId)
                 ->pluck('id');
 
@@ -717,9 +727,9 @@ class HeadOfDepartmentController extends Controller
             foreach ($request->students as $studentId) {
                 try {
                     $student = User::where('id', $studentId)
-                        ->where('role_id', 2)
+                        ->where('role_id', $this->studentRoleId())
                         ->where('department_id', $departmentId)
-                        ->where('status', 'active') // Only enroll active accounts
+                        ->where('status', 'active')
                         ->first();
 
                     if (!$student) {

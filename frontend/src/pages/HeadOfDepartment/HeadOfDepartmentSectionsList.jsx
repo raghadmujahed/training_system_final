@@ -28,7 +28,8 @@ export default function HeadOfDepartmentSectionsList() {
       const grouped = groupSectionsByPeriod(sectionsData);
       setSections(grouped);
     } catch (err) {
-      setError("فشل في جلب بيانات الشعب");
+      const apiMsg = err.response?.data?.message;
+      setError(apiMsg || "فشل في جلب بيانات الشعب");
       console.error("Sections fetch error:", err);
     } finally {
       setLoading(false);
@@ -107,13 +108,16 @@ export default function HeadOfDepartmentSectionsList() {
   }
 
   if (error) {
+    const isNoDept = error.includes("قسم") || error.includes("department");
     return (
       <div className="enrollments-list">
         <div className="page-header">
           <h1>إدارة الشعب</h1>
           <p>عرض وإدارة الشعب الدراسية</p>
         </div>
-        <div className="text-center p-10 text-[#dc3545]">{error}</div>
+        <div className="text-center p-10 text-[#dc3545]">
+          {isNoDept ? "لم يتم ربط حسابك بقسم أكاديمي بعد، يرجى التواصل مع مدير النظام" : error}
+        </div>
       </div>
     );
   }

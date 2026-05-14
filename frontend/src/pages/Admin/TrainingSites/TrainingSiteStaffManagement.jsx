@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
 import useAppToast from "../../../hooks/useAppToast";
-import { useAuth } from "../../../stores/AuthContext";
+import { readStoredUser } from "../../../utils/session";
 import PageHeader from "../../../components/common/PageHeader";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import EmptyState from "../../../components/common/EmptyState";
@@ -34,10 +33,11 @@ const DIRECTORATES = [
   { value: "يطا", label: "يطا" },
 ];
 
+const DIRECTORATE_ROLES = ["education_directorate", "health_directorate"];
+
 export default function TrainingSiteStaffManagement() {
   const toast = useAppToast();
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const user = readStoredUser();
 
   const [loading, setLoading] = useState(true);
   const [staff, setStaff] = useState([]);
@@ -49,9 +49,16 @@ export default function TrainingSiteStaffManagement() {
     last_page: 1,
   });
 
+  const userRoleName = user?.role?.name ?? user?.role ?? "";
+  const isAdmin = userRoleName === "admin";
+  // Both education_directorate and health_directorate are treated as directorate accounts
+  const isDirectorate = DIRECTORATE_ROLES.includes(userRoleName);
+  const userDirectorate = isDirectorate ? (user?.directorate ?? "") : "";
+
   const [filters, setFilters] = useState({
     search: "",
-    directorate: user?.directorate || "",
+    // Directorate users: lock filter to their own directorate (backend enforces it too)
+    directorate: userDirectorate,
     training_site_id: "",
     role: "",
   });
@@ -73,9 +80,6 @@ export default function TrainingSiteStaffManagement() {
     reason: "",
   });
 
-  const userRoleName = user?.role?.name ?? user?.role ?? "";
-  const isAdmin = userRoleName === "admin";
-  const isEducationDirectorate = userRoleName === "education_directorate";
   const canAssign = isAdmin || user?.hasPermission?.("training_sites.staff.assign");
   const canTransfer = isAdmin || user?.hasPermission?.("training_sites.staff.transfer");
   const canRemove = isAdmin || user?.hasPermission?.("training_sites.staff.remove");
@@ -84,11 +88,8 @@ export default function TrainingSiteStaffManagement() {
     async (page = 1) => {
       try {
         setLoading(true);
-        const params = {
-          page,
-          per_page: pagination.per_page,
-          ...filters,
-        };
+        const params = { page, per_page: pagination.per_page, ...filters };
+        // Strip empty values
         Object.keys(params).forEach((key) => {
           if (params[key] === "" || params[key] === null || params[key] === undefined) {
             delete params[key];
@@ -114,22 +115,21 @@ export default function TrainingSiteStaffManagement() {
 
   const fetchTrainingSites = useCallback(async () => {
     try {
-      const cacheKey = "training-sites:{\"per_page\":500}";
+      // For directorate accounts: pass directorate filter to backend so we only get their sites
+      const params = { per_page: 500 };
+      if (userDirectorate) params.directorate = userDirectorate;
+      const cacheKey = `training-sites:staff-mgmt:${userDirectorate || "all"}`;
       const response = await apiCache.get(
         cacheKey,
-        () => getTrainingSites({ per_page: 500 }),
+        () => getTrainingSites(params),
         5 * 60_000
       );
       const sites = response?.data || response || [];
-      if (isEducationDirectorate && user?.directorate) {
-        setTrainingSites(sites.filter((s) => s.directorate === user.directorate));
-      } else {
-        setTrainingSites(sites);
-      }
+      setTrainingSites(sites);
     } catch (err) {
       console.error("Failed to load training sites", err);
     }
-  }, [isEducationDirectorate, user?.directorate]);
+  }, [userDirectorate]);
 
   useEffect(() => {
     fetchStaff(1);
@@ -243,61 +243,70 @@ export default function TrainingSiteStaffManagement() {
     return role?.label || roleName;
   };
 
-  const filteredSites = useMemo(() => {
-    if (isEducationDirectorate && user?.directorate) {
-      return trainingSites.filter((s) => s.directorate === user.directorate);
-    }
-    return trainingSites;
-  }, [trainingSites, isEducationDirectorate, user?.directorate]);
+  // trainingSites is already filtered by backend for directorate users
+  const filteredSites = trainingSites;
 
   return (
     <div className="page-container">
-      <PageHeader title="إدارة كوادر مواقع التدريب" />
+      <PageHeader
+        title="إدارة كوادر مواقع التدريب"
+        subtitle={isDirectorate ? `المديرية: ${userDirectorate}` : undefined}
+      />
 
-      <div className="filters-bar">
-          <input
-            type="text"
-            placeholder="بحث بالاسم أو البريد أو الهاتف..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange("search", e.target.value)}
-          />
+      <div className="filters-bar flex flex-wrap gap-2 items-center mb-4">
+        <input
+          type="text"
+          className="form-input w-56"
+          placeholder="بحث بالاسم أو البريد أو الهاتف..."
+          value={filters.search}
+          onChange={(e) => handleFilterChange("search", e.target.value)}
+        />
+
+        {/* Admin: show directorate dropdown. Directorate users: locked to their own */}
+        {isAdmin && (
           <select
+            className="form-select w-36"
             value={filters.directorate}
             onChange={(e) => handleFilterChange("directorate", e.target.value)}
-            disabled={isEducationDirectorate}
           >
             {DIRECTORATES.map((d) => (
-              <option key={d.value} value={d.value}>
-                {d.label}
-              </option>
+              <option key={d.value} value={d.value}>{d.label}</option>
             ))}
           </select>
-          <select
-            value={filters.training_site_id}
-            onChange={(e) => handleFilterChange("training_site_id", e.target.value)}
-          >
-            <option value="">كل المواقع</option>
-            {filteredSites.map((site) => (
-              <option key={site.id} value={site.id}>
-                {site.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.role}
-            onChange={(e) => handleFilterChange("role", e.target.value)}
-          >
-            {STAFF_ROLES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-          {canAssign && (
-            <Button variant="primary" onClick={openAssignModal}>
-              + تعيين جديد
-            </Button>
-          )}
+        )}
+
+        <select
+          className="form-select w-48"
+          value={filters.training_site_id}
+          onChange={(e) => handleFilterChange("training_site_id", e.target.value)}
+        >
+          <option value="">كل المواقع</option>
+          {filteredSites.map((site) => (
+            <option key={site.id} value={site.id}>
+              {site.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="form-select w-36"
+          value={filters.role}
+          onChange={(e) => handleFilterChange("role", e.target.value)}
+        >
+          {STAFF_ROLES.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
+
+        {canAssign && (
+          <Button variant="primary" onClick={openAssignModal}>
+            + تعيين جديد
+          </Button>
+        )}
+
+        <span className="text-sm text-gray-500 mr-auto">
+          {pagination.total > 0 ? `إجمالي: ${pagination.total} كادر` : ""}
+        </span>
       </div>
 
       {loading ? (

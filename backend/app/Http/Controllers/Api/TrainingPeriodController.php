@@ -9,6 +9,7 @@ use App\Http\Resources\TrainingPeriodResource;
 use App\Models\TrainingPeriod;
 use App\Services\ArchiveService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TrainingPeriodController extends Controller
 {
@@ -27,11 +28,12 @@ class TrainingPeriodController extends Controller
 
     public function store(StoreTrainingPeriodRequest $request)
     {
-        // إذا كان is_active = true، قم بتعطيل الفترات الأخرى أولاً
-        if ($request->is_active) {
-            TrainingPeriod::where('is_active', true)->update(['is_active' => false]);
-        }
-        $period = TrainingPeriod::create($request->validated());
+        $period = DB::transaction(function () use ($request) {
+            if ($request->boolean('is_active')) {
+                TrainingPeriod::where('is_active', true)->update(['is_active' => false]);
+            }
+            return TrainingPeriod::create($request->validated());
+        });
         return new TrainingPeriodResource($period);
     }
 
@@ -42,15 +44,21 @@ class TrainingPeriodController extends Controller
 
     public function update(UpdateTrainingPeriodRequest $request, TrainingPeriod $trainingPeriod)
     {
-        if ($request->has('is_active') && $request->is_active) {
-            TrainingPeriod::where('is_active', true)->where('id', '!=', $trainingPeriod->id)->update(['is_active' => false]);
-        }
         $trainingPeriod->fill($request->validated());
         if (!$trainingPeriod->isDirty()) {
             return response()->json(['status' => 'no_changes', 'message' => 'لم تقم بتغيير أي بيانات']);
         }
-        $trainingPeriod->save();
-        return new TrainingPeriodResource($trainingPeriod);
+
+        DB::transaction(function () use ($request, $trainingPeriod) {
+            if ($request->has('is_active') && $request->boolean('is_active')) {
+                TrainingPeriod::where('is_active', true)
+                    ->where('id', '!=', $trainingPeriod->id)
+                    ->update(['is_active' => false]);
+            }
+            $trainingPeriod->save();
+        });
+
+        return new TrainingPeriodResource($trainingPeriod->fresh());
     }
 
     public function destroy(TrainingPeriod $trainingPeriod)
@@ -60,31 +68,50 @@ class TrainingPeriodController extends Controller
     }
 
     /**
-     * Activate a training period. Optionally archive the previously active period first.
+     * Activate a training period.
+     * - Deactivates all other active periods inside a transaction.
+     * - Optionally archives (sets archived_at) the previously active period via ArchiveService.
+     * - Returns the updated period in the unified TrainingPeriodResource shape.
      */
     public function setActive(Request $request, TrainingPeriod $trainingPeriod, ArchiveService $archiveService)
     {
+        if ($trainingPeriod->is_active) {
+            return response()->json([
+                'message' => 'هذه الفترة التدريبية مفعّلة بالفعل.',
+                'data'    => new TrainingPeriodResource($trainingPeriod),
+            ]);
+        }
+
         $autoArchive = $request->boolean('auto_archive');
 
+        // Optional: archive the currently active period before switching
         if ($autoArchive) {
-            // Find the currently active period and archive it
             $currentActive = TrainingPeriod::where('is_active', true)->first();
             if ($currentActive && $currentActive->id !== $trainingPeriod->id) {
                 try {
                     $archiveService->archivePeriod($currentActive->id, auth()->id());
                 } catch (\Exception $e) {
-                    // If already archived or other error, log but continue
-                    // We don't want to block activation if archive fails for some reason
                     \Illuminate\Support\Facades\Log::warning('Auto-archive failed during period activation', [
                         'period_id' => $currentActive->id,
-                        'error' => $e->getMessage(),
+                        'error'     => $e->getMessage(),
                     ]);
+                    // Don't block activation if archive fails (data is never deleted)
                 }
             }
         }
 
-        TrainingPeriod::where('is_active', true)->update(['is_active' => false]);
-        $trainingPeriod->update(['is_active' => true]);
+        DB::transaction(function () use ($trainingPeriod) {
+            // Deactivate all other active periods
+            TrainingPeriod::where('is_active', true)
+                ->where('id', '!=', $trainingPeriod->id)
+                ->update(['is_active' => false]);
+
+            // Activate the target period (clear archived_at if it was previously archived)
+            $trainingPeriod->update([
+                'is_active'   => true,
+                'archived_at' => null,
+            ]);
+        });
 
         return new TrainingPeriodResource($trainingPeriod->fresh());
     }

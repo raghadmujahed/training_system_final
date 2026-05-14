@@ -79,18 +79,20 @@ export default function HeadOfDepartmentCoursesList() {
   }
 
   if (error) {
+    const errMsg = error?.response?.data?.message || error?.message || String(error);
+    const isNoDept = errMsg.includes("قسم") || errMsg.includes("department");
     return (
       <div className="container">
-        <div
-          className="bg-[#fee] text-[#c33] p-4 rounded-lg mb-4"
-        >
-          {error}
-          <button
-            onClick={fetchCourses}
-            className="mr-3 py-[6px] px-3 bg-[#c33] text-white border-none rounded cursor-pointer"
-          >
-            إعادة المحاولة
-          </button>
+        <div className="bg-[#fee] text-[#c33] p-4 rounded-lg mb-4">
+          {isNoDept ? "لم يتم ربط حسابك بقسم أكاديمي بعد، يرجى التواصل مع مدير النظام" : errMsg}
+          {!isNoDept && (
+            <button
+              onClick={fetchCourses}
+              className="mr-3 py-[6px] px-3 bg-[#c33] text-white border-none rounded cursor-pointer"
+            >
+              إعادة المحاولة
+            </button>
+          )}
         </div>
       </div>
     );
