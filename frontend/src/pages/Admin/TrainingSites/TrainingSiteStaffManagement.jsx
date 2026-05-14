@@ -83,9 +83,12 @@ export default function TrainingSiteStaffManagement() {
     reason: "",
   });
 
-  const canAssign = isAdmin || user?.hasPermission?.("training_sites.staff.assign");
-  const canTransfer = isAdmin || user?.hasPermission?.("training_sites.staff.transfer");
-  const canRemove = isAdmin || user?.hasPermission?.("training_sites.staff.remove");
+  const userPermissions = user?.role?.permissions || [];
+  const hasPermission = (name) =>
+    isAdmin || userPermissions.some((p) => (p?.name ?? p) === name);
+  const canAssign = hasPermission("training_sites.staff.assign");
+  const canTransfer = hasPermission("training_sites.staff.transfer");
+  const canRemove = hasPermission("training_sites.staff.remove");
 
   const fetchStaff = useCallback(
     async (page = 1) => {
@@ -165,7 +168,13 @@ export default function TrainingSiteStaffManagement() {
       const list = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
       setAvailableStaff(list);
     } catch (err) {
-      toastRef.current.error("فشل تحميل قائمة المستخدمين المتاحين");
+      const status = err?.response?.status;
+      if (status === 403) {
+        toastRef.current.error("لا تملك صلاحية تعيين الكوادر");
+        setShowAssignModal(false);
+      } else {
+        toastRef.current.error(err?.response?.data?.message || "فشل تحميل قائمة المستخدمين المتاحين");
+      }
     } finally {
       setLoadingModal(false);
     }
@@ -218,6 +227,11 @@ export default function TrainingSiteStaffManagement() {
     e.preventDefault();
     if (!transferForm.training_site_id) {
       toastRef.current.error("الرجاء اختيار الموقع الجديد");
+      return;
+    }
+    // Detect no change
+    if (String(transferForm.training_site_id) === String(selectedUser?.training_site_id)) {
+      toastRef.current.error("لم تقم بتغيير أي بيانات — الموقع المختار هو نفس الموقع الحالي");
       return;
     }
     setSubmitting(true);

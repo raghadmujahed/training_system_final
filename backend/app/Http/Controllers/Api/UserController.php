@@ -522,9 +522,9 @@ class UserController extends Controller
                 'total' => count($staff),
             ]);
         } catch (\Exception $e) {
+            \Log::error('UserController@getStaffDirectory error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'حدث خطأ في تحميل دليل الموظفين',
-                'error' => $e->getMessage()
             ], 500);
         }
     }

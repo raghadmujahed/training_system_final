@@ -290,7 +290,8 @@ class TrainingRequestController extends Controller
             } catch (ValidationException $e) {
                 return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
             } catch (\Exception $e) {
-                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+                \Log::error('directorateApprove@reject error: ' . $e->getMessage());
+                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب'], 500);
             }
         }
         try {
@@ -309,7 +310,8 @@ class TrainingRequestController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'فشل اعتماد الطلب', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب: ' . $e->getMessage()], 500);
+            \Log::error('directorateApprove error: ' . $e->getMessage());
+            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب'], 500);
         }
     }
 
@@ -336,7 +338,8 @@ class TrainingRequestController extends Controller
             } catch (ValidationException $e) {
                 return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
             } catch (\Exception $e) {
-                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+                \Log::error('schoolApprove@reject error: ' . $e->getMessage());
+                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب'], 500);
             }
         }
         try {
@@ -345,7 +348,8 @@ class TrainingRequestController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'فشل اعتماد الطلب', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب: ' . $e->getMessage()], 500);
+            \Log::error('schoolApprove error: ' . $e->getMessage());
+            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب'], 500);
         }
     }
 
@@ -358,7 +362,8 @@ class TrainingRequestController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+            \Log::error('reject error: ' . $e->getMessage());
+            return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب'], 500);
         }
     }
 
@@ -901,7 +906,8 @@ class TrainingRequestController extends Controller
             } catch (ValidationException $e) {
                 return response()->json(['message' => 'فشل رفض الطلب', 'errors' => $e->errors()], 422);
             } catch (\Exception $e) {
-                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب: ' . $e->getMessage()], 500);
+                \Log::error('schoolManagerApprove@reject error: ' . $e->getMessage());
+                return response()->json(['message' => 'حدث خطأ أثناء رفض الطلب'], 500);
             }
         }
 
@@ -911,7 +917,8 @@ class TrainingRequestController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'فشل اعتماد الطلب', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب: ' . $e->getMessage()], 500);
+            \Log::error('schoolManagerApprove error: ' . $e->getMessage());
+            return response()->json(['message' => 'حدث خطأ أثناء اعتماد الطلب'], 500);
         }
     }
 }

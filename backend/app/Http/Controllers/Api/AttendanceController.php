@@ -230,7 +230,8 @@ class AttendanceController extends Controller
 
             return new AttendanceResource($attendance->load(['user', 'trainingAssignment']));
         } catch (\Exception $e) {
-            return response()->json(['message' => 'حدث خطأ أثناء رفض سجل الحضور: ' . $e->getMessage()], 500);
+            \Log::error('AttendanceController@reject error: ' . $e->getMessage());
+            return response()->json(['message' => 'حدث خطأ أثناء رفض سجل الحضور'], 500);
         }
     }
 
