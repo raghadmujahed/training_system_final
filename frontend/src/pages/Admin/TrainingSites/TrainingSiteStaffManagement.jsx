@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import useAppToast from "../../../hooks/useAppToast";
 import { readStoredUser } from "../../../utils/session";
 import PageHeader from "../../../components/common/PageHeader";
@@ -37,9 +37,12 @@ const DIRECTORATE_ROLES = ["education_directorate", "health_directorate"];
 
 export default function TrainingSiteStaffManagement() {
   const toast = useAppToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
   const user = readStoredUser();
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [staff, setStaff] = useState([]);
   const [trainingSites, setTrainingSites] = useState([]);
   const [pagination, setPagination] = useState({
@@ -88,7 +91,8 @@ export default function TrainingSiteStaffManagement() {
     async (page = 1) => {
       try {
         setLoading(true);
-        const params = { page, per_page: pagination.per_page, ...filters };
+        setError(null);
+        const params = { page, per_page: 20, ...filters };
         // Strip empty values
         Object.keys(params).forEach((key) => {
           if (params[key] === "" || params[key] === null || params[key] === undefined) {
@@ -97,20 +101,30 @@ export default function TrainingSiteStaffManagement() {
         });
 
         const response = await getTrainingSiteStaff(params);
-        setStaff(response.data || []);
+        const items = Array.isArray(response?.data) ? response.data : [];
+        setStaff(items);
         setPagination({
-          current_page: response.current_page || 1,
-          per_page: response.per_page || 20,
-          total: response.total || 0,
-          last_page: response.last_page || 1,
+          current_page: response?.current_page || 1,
+          per_page: response?.per_page || 20,
+          total: response?.total || 0,
+          last_page: response?.last_page || 1,
         });
       } catch (err) {
-        toast.error(err?.response?.data?.message || "فشل تحميل بيانات الكوادر");
+        const status = err?.response?.status;
+        const msg = err?.response?.data?.message;
+        if (status === 403) {
+          setError(msg || "لا تملك صلاحية الوصول إلى إدارة كوادر التدريب");
+        } else if (status === 401) {
+          setError("يرجى تسجيل الدخول أولاً");
+        } else {
+          setError(msg || "فشل تحميل بيانات الكوادر، يرجى المحاولة مجدداً");
+        }
+        toastRef.current.error(msg || "فشل تحميل بيانات الكوادر");
       } finally {
         setLoading(false);
       }
     },
-    [filters, pagination.per_page, toast]
+    [filters]
   );
 
   const fetchTrainingSites = useCallback(async () => {
@@ -148,9 +162,10 @@ export default function TrainingSiteStaffManagement() {
     setLoadingModal(true);
     try {
       const response = await getAvailableStaff({ per_page: 100 });
-      setAvailableStaff(response?.data || response || []);
+      const list = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+      setAvailableStaff(list);
     } catch (err) {
-      toast.error("فشل تحميل قائمة المستخدمين المتاحين");
+      toastRef.current.error("فشل تحميل قائمة المستخدمين المتاحين");
     } finally {
       setLoadingModal(false);
     }
@@ -182,18 +197,18 @@ export default function TrainingSiteStaffManagement() {
   const handleAssign = async (e) => {
     e.preventDefault();
     if (!assignForm.user_id || !assignForm.training_site_id) {
-      toast.error("الرجاء اختيار المستخدم والموقع");
+      toastRef.current.error("الرجاء اختيار المستخدم والموقع");
       return;
     }
     setSubmitting(true);
     try {
       await assignStaff(assignForm);
-      toast.success("تم تعيين المستخدم بنجاح");
+      toastRef.current.success("تم تعيين المستخدم بنجاح");
       closeModals();
       fetchStaff(pagination.current_page);
       apiCache.invalidatePrefix("training-site-staff:");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "فشل تعيين المستخدم");
+      toastRef.current.error(err?.response?.data?.message || "فشل تعيين المستخدم");
     } finally {
       setSubmitting(false);
     }
@@ -202,7 +217,7 @@ export default function TrainingSiteStaffManagement() {
   const handleTransfer = async (e) => {
     e.preventDefault();
     if (!transferForm.training_site_id) {
-      toast.error("الرجاء اختيار الموقع الجديد");
+      toastRef.current.error("الرجاء اختيار الموقع الجديد");
       return;
     }
     setSubmitting(true);
@@ -212,12 +227,12 @@ export default function TrainingSiteStaffManagement() {
         training_site_id: transferForm.training_site_id,
         reason: transferForm.reason,
       });
-      toast.success("تم نقل المستخدم بنجاح");
+      toastRef.current.success("تم نقل المستخدم بنجاح");
       closeModals();
       fetchStaff(pagination.current_page);
       apiCache.invalidatePrefix("training-site-staff:");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "فشل نقل المستخدم");
+      toastRef.current.error(err?.response?.data?.message || "فشل نقل المستخدم");
     } finally {
       setSubmitting(false);
     }
@@ -227,12 +242,12 @@ export default function TrainingSiteStaffManagement() {
     setSubmitting(true);
     try {
       await removeStaff(selectedUser.id);
-      toast.success("تم إزالة المستخدم من الموقع بنجاح");
+      toastRef.current.success("تم إزالة المستخدم من الموقع بنجاح");
       closeModals();
       fetchStaff(pagination.current_page);
       apiCache.invalidatePrefix("training-site-staff:");
     } catch (err) {
-      toast.error(err?.response?.data?.message || "فشل إزالة المستخدم");
+      toastRef.current.error(err?.response?.data?.message || "فشل إزالة المستخدم");
     } finally {
       setSubmitting(false);
     }
@@ -309,10 +324,28 @@ export default function TrainingSiteStaffManagement() {
         </span>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 mb-4 flex items-start gap-3">
+          <span className="text-xl">⚠️</span>
+          <div>
+            <p className="font-semibold mb-1">تعذّر تحميل البيانات</p>
+            <p className="text-sm">{error}</p>
+            {!error.includes("صلاحية") && (
+              <button
+                onClick={() => fetchStaff(1)}
+                className="mt-2 text-sm underline text-red-700 hover:text-red-900"
+              >
+                إعادة المحاولة
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <LoadingSpinner />
-      ) : staff.length === 0 ? (
-        <EmptyState message="لا يوجد كوادر مسجلة في مواقع التدريب" />
+      ) : error ? null : staff.length === 0 ? (
+        <EmptyState title="لا توجد كوادر مضافة حالياً" description="لم يتم تسجيل أي كادر في مواقع التدريب بعد" />
       ) : (
         <>
           <table className="data-table">
