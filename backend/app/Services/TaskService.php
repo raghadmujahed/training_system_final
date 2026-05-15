@@ -10,28 +10,58 @@ use Illuminate\Support\Facades\Storage;
 
 class TaskService
 {
+    /**
+     * إشعار الطلبة المستهدفين بعد إنشاء مهمة/مهام (صف واحد لكل طالب — بدون تكرار).
+     *
+     * @param  iterable<int, Task>  $tasks
+     */
+    public function notifyStudentsForNewTasks(iterable $tasks): void
+    {
+        $notifiedUserIds = [];
+
+        foreach ($tasks as $task) {
+            if (! $task instanceof Task) {
+                continue;
+            }
+
+            $task->loadMissing('trainingAssignment.enrollment');
+            $studentId = (int) ($task->trainingAssignment?->enrollment?->user_id ?? 0);
+            if ($studentId <= 0 || isset($notifiedUserIds[$studentId])) {
+                continue;
+            }
+
+            $notifiedUserIds[$studentId] = true;
+            $this->createTaskAssignedNotification($task, $studentId);
+        }
+    }
+
+    private function createTaskAssignedNotification(Task $task, int $studentId): void
+    {
+        $dueLabel = $task->due_date
+            ? $task->due_date->format('Y-m-d')
+            : null;
+
+        AppNotification::create([
+            'user_id' => $studentId,
+            'type' => 'task_assigned',
+            'message' => 'تم تكليفك بمهمة جديدة: "'.$task->title.'"'.($dueLabel ? ' — موعد التسليم: '.$dueLabel : ''),
+            'notifiable_type' => Task::class,
+            'notifiable_id' => $task->id,
+            'data' => [
+                'task_id' => $task->id,
+                'distribution_key' => $task->distribution_key,
+                'due_date' => $dueLabel,
+            ],
+        ]);
+    }
+
     public function createTask(array $data, int $assignedBy): Task
     {
         $data['assigned_by'] = $assignedBy;
         $data['status'] = TaskStatus::PENDING->value;
         $task = Task::create($data);
 
-        // إشعار الطالب المعني (عن طريق training_assignment.enrollment.user_id)
-        $task->loadMissing('trainingAssignment.enrollment');
-        $studentId = $task->trainingAssignment?->enrollment?->user_id;
-        if ($studentId) {
-            AppNotification::create([
-                'user_id' => $studentId,
-                'type' => 'task_assigned',
-                'message' => "تم تكليفك بمهمة جديدة: \"{$task->title}\"" . ($task->due_date ? " — موعد التسليم: {$task->due_date}" : ''),
-                'notifiable_type' => Task::class,
-                'notifiable_id' => $task->id,
-                'data' => [
-                    'task_id' => $task->id,
-                    'due_date' => $task->due_date,
-                ],
-            ]);
-        }
+        $this->notifyStudentsForNewTasks(collect([$task]));
 
         return $task;
     }
@@ -63,33 +93,45 @@ class TaskService
             $task->update(['status' => TaskStatus::SUBMITTED->value]);
         }
 
-        // إشعار من كلّف المهمة بأن الطالب رفع التسليم
-        if ($task->assigned_by) {
-            $studentName = $submission->user?->name ?? 'الطالب';
-            AppNotification::create([
-                'user_id' => $task->assigned_by,
-                'type' => 'task_submitted',
-                'message' => "قام {$studentName} بتسليم المهمة \"{$task->title}\".",
-                'notifiable_type' => Task::class,
-                'notifiable_id' => $task->id,
-                'data' => [
-                    'task_id' => $task->id,
-                    'submission_id' => $submission->id,
-                ],
-            ]);
-        }
+        $this->notifySupervisorOfSubmission($task, $submission);
 
         return $submission;
     }
 
+    public function notifySupervisorOfSubmission(Task $task, TaskSubmission $submission): void
+    {
+        if (! $task->assigned_by) {
+            return;
+        }
+
+        $submission->loadMissing('user');
+        $studentName = $submission->user?->name ?? 'الطالب';
+
+        AppNotification::create([
+            'user_id' => $task->assigned_by,
+            'type' => 'task_submitted',
+            'message' => "قام {$studentName} بتسليم المهمة \"{$task->title}\".",
+            'notifiable_type' => Task::class,
+            'notifiable_id' => $task->id,
+            'data' => [
+                'task_id' => $task->id,
+                'submission_id' => $submission->id,
+            ],
+        ]);
+    }
+
     public function gradeSubmission(TaskSubmission $submission, float $grade, ?string $feedback = null): TaskSubmission
     {
+        $submission->loadMissing('task');
+        if (! $submission->task) {
+            return $submission;
+        }
+
         $submission->update([
             'score' => $grade,
             'feedback' => $feedback,
         ]);
 
-        // تحديث حالة المهمة إلى graded
         $submission->task->update(['status' => TaskStatus::GRADED->value]);
 
         // إشعار الطالب بالتقييم

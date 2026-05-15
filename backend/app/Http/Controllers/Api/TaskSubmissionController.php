@@ -10,12 +10,13 @@ use App\Http\Requests\StudentUpdateTaskSubmissionRequest;
 use App\Http\Resources\TaskSubmissionResource;
 use App\Models\TaskSubmission;
 use App\Models\Task;
+use App\Services\TaskService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class TaskSubmissionController extends Controller
 {
-    public function __construct()
+    public function __construct(private readonly TaskService $taskService)
     {
         // تطبيق سياسة الصلاحيات على جميع دوال الـ Resource
         $this->authorizeResource(TaskSubmission::class, 'task_submission');
@@ -90,6 +91,8 @@ class TaskSubmissionController extends Controller
         if ($task && in_array($task->status, ['pending', 'in_progress'])) {
             $task->update(['status' => 'submitted']);
         }
+
+        $this->taskService->notifySupervisorOfSubmission($task, $submission);
 
         return new TaskSubmissionResource($submission);
     }

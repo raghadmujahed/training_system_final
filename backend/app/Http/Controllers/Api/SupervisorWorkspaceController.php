@@ -31,6 +31,7 @@ use App\Models\PortfolioEntry;
 use App\Models\Role;
 use App\Models\Section;
 use App\Services\AcademicSupervisorStudentService;
+use App\Services\TaskService;
 use App\Services\TrainingTrackResolver;
 use App\Support\ApiResponse;
 use App\Models\User;
@@ -59,7 +60,8 @@ class SupervisorWorkspaceController extends Controller
 
     public function __construct(
         private readonly AcademicSupervisorStudentService $studentService,
-        private readonly TrainingTrackResolver $trackResolver
+        private readonly TrainingTrackResolver $trackResolver,
+        private readonly TaskService $taskService,
     ) {
         $this->middleware('auth:sanctum');
     }
@@ -1323,6 +1325,8 @@ class SupervisorWorkspaceController extends Controller
 
         $this->createActivity($user->id, 'task_created', 'Supervisor created new task(s).');
 
+        $this->taskService->notifyStudentsForNewTasks($created);
+
         return $this->successResponse($created, 'Task(s) created successfully.', 201);
     }
 
@@ -1587,17 +1591,25 @@ class SupervisorWorkspaceController extends Controller
             'score' => 'required|numeric|min:0|max:100',
             'feedback' => 'nullable|string|max:2000',
         ]);
-        $submission = TaskSubmission::findOrFail($submissionId);
+        $submission = TaskSubmission::with('task')->findOrFail($submissionId);
         $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $submission->user_id);
+
         $submission->update([
             'review_status' => 'graded',
-            'score' => $request->input('score'),
-            'feedback' => $request->input('feedback'),
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
             'needs_resubmission' => false,
         ]);
-        return $this->successResponse($submission, 'Submission graded successfully.');
+
+        if ($submission->task) {
+            $this->taskService->gradeSubmission(
+                $submission,
+                (float) $request->input('score'),
+                $request->input('feedback')
+            );
+        }
+
+        return $this->successResponse($submission->fresh(['task', 'user']), 'Submission graded successfully.');
     }
 
     public function studentFieldEvaluations(Request $request, $studentId)
