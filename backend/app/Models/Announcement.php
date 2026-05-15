@@ -18,6 +18,8 @@ class Announcement extends Model
         'published_at',
         'expires_at',
         'all_students',
+        'target_type',
+        'target_student_id',
     ];
 
     protected $casts = [
@@ -25,6 +27,11 @@ class Announcement extends Model
         'expires_at' => 'datetime',
         'all_students' => 'boolean',
     ];
+
+    public function targetStudent()
+    {
+        return $this->belongsTo(User::class, 'target_student_id');
+    }
 
     public function user()
     {

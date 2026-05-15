@@ -9,7 +9,7 @@ class AnnouncementTarget extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['announcement_id', 'role_id', 'user_id', 'department_id'];
+    protected $fillable = ['announcement_id', 'role_id', 'user_id', 'department_id', 'section_id'];
 
     public function announcement()
     {
@@ -29,5 +29,10 @@ class AnnouncementTarget extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function section()
+    {
+        return $this->belongsTo(Section::class);
     }
 }

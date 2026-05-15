@@ -430,6 +430,8 @@ export const getAnnouncements = (params = {}) =>
 export const createAnnouncement = (data) => apiClient.post('/announcements', data).then(res => res.data);
 export const updateAnnouncement = (id, data) => apiClient.put(`/announcements/${id}`, data).then(res => res.data);
 export const deleteAnnouncement = (id) => apiClient.delete(`/announcements/${id}`).then(res => res.data);
+export const getCoordinatorSections = () => apiClient.get('/announcements/coordinator-sections').then(res => res.data);
+export const getCoordinatorStudents = (search = '') => apiClient.get('/announcements/coordinator-students', { params: { search } }).then(res => res.data);
 
 // ==================== Backups ====================
 export const getBackups = () => apiClient.get('/backups').then(res => res.data);

@@ -14,6 +14,10 @@ class AnnouncementTargetResource extends JsonResource
             'role' => new RoleResource($this->whenLoaded('role')),
             'user' => new UserResource($this->whenLoaded('user')),
             'department' => new DepartmentResource($this->whenLoaded('department')),
+            'section_id' => $this->section_id,
+            'section' => $this->whenLoaded('section', function () {
+                return ['id' => $this->section->id, 'name' => $this->section->name];
+            }),
         ];
     }
 }

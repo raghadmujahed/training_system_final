@@ -206,8 +206,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('conversations', ConversationController::class);
     Route::post('conversations/{conversation}/messages', [ConversationController::class, 'sendMessage']);
 
-    // Annonces — الإنشاء مُصرَّح به لأدوار محددة في FormRequest (لا يعتمد على feature flag)
+    // Annonces — الإنشاء مُصرَّح به لأدوار محددة في FormRequest (لا يعتمد على feature flag)
     Route::post('announcements', [AnnouncementController::class, 'store']);
+    Route::get('announcements/coordinator-sections', [AnnouncementController::class, 'coordinatorSections']);
+    Route::get('announcements/coordinator-students', [AnnouncementController::class, 'coordinatorStudents']);
     Route::apiResource('announcements', AnnouncementController::class)->except(['store']);
 
     // Notifications
