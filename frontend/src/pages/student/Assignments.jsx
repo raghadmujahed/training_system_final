@@ -117,6 +117,7 @@ export default function Assignments() {
     setSuccess("");
     try {
       const fd = new FormData();
+      fd.append("task_id", String(id));
       if (files[id]) {
         fd.append("file", files[id]);
       }

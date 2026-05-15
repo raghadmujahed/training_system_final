@@ -14,9 +14,20 @@ class StoreTaskSubmissionRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->filled('task_id')) {
+            return;
+        }
+
         $task = $this->route('task');
         if ($task instanceof Task) {
             $this->merge(['task_id' => $task->id]);
+
+            return;
+        }
+
+        // مسار الطالب: /student/tasks/{task}/submit — قد يصل المعامل كرقم وليس نموذجاً مربوطاً
+        if (is_numeric($task)) {
+            $this->merge(['task_id' => (int) $task]);
         }
     }
 
