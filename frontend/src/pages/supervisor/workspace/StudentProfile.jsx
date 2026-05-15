@@ -11,7 +11,6 @@ import TasksTab from "./tabs/TasksTab";
 import TaskSubmissionsTab from "./tabs/TaskSubmissionsTab";
 import FieldVisitsTab from "./tabs/FieldVisitsTab";
 import EvaluationsTab from "./tabs/EvaluationsTab";
-import CommunicationTab from "./tabs/CommunicationTab";
 import ActivityTimelineTab from "./tabs/ActivityTimelineTab";
 import ScheduleTab from "./tabs/ScheduleTab";
 
@@ -25,7 +24,6 @@ const TABS = [
   { key: "submissions", label: "حلول الطلبة", icon: "📩" },
   { key: "field-visits", label: "الزيارات الميدانية", icon: "🏫" },
   { key: "evaluations", label: "التقييمات", icon: "📊" },
-  { key: "communication", label: "التواصل", icon: "💬" },
   { key: "timeline", label: "سجل النشاط", icon: "🕐" },
 ];
 
@@ -50,7 +48,14 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
     }
     return tabs;
   }, [isPsychSupervisor]);
+
   const [activeTab, setActiveTab] = useState("overview");
+
+  useEffect(() => {
+    if (!visibleTabs.some((t) => t.key === activeTab)) {
+      setActiveTab("overview");
+    }
+  }, [visibleTabs, activeTab]);
   const [student, setStudent] = useState(null);
   const [academicSupervision, setAcademicSupervision] = useState(null);
   const [statusForm, setStatusForm] = useState({ academic_status: "not_started", note: "" });
@@ -107,7 +112,6 @@ export default function StudentProfile({ studentId, onBack, onRefresh }) {
       case "submissions": return <TaskSubmissionsTab {...props} />;
       case "field-visits": return <FieldVisitsTab {...props} />;
       case "evaluations": return <EvaluationsTab {...props} />;
-      case "communication": return <CommunicationTab {...props} />;
       case "timeline": return <ActivityTimelineTab {...props} />;
       default: return <OverviewTab {...props} />;
     }

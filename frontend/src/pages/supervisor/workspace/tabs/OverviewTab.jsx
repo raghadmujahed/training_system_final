@@ -34,12 +34,6 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
 
   const handleQuickAction = async (action) => {
     switch (action) {
-      case "message_student":
-        onOpenTab?.("communication");
-        break;
-      case "message_mentor":
-        onOpenTab?.("communication");
-        break;
       case "schedule_visit":
         onOpenTab?.("field-visits");
         break;
@@ -106,8 +100,6 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
           ⚡ إجراءات سريعة
         </h4>
         <div className="flex flex-col gap-[10px]">
-          <ActionButton icon="💬" label="إرسال رسالة للطالب" onClick={() => handleQuickAction("message_student")} />
-          <ActionButton icon="👨‍🏫" label="إرسال رسالة للمشرف الميداني" onClick={() => handleQuickAction("message_mentor")} />
           <ActionButton icon="🗓️" label="جدولة زيارة ميدانية" onClick={() => handleQuickAction("schedule_visit")} color="#6f42c1" />
           <ActionButton icon="📝" label="إضافة مهمة" onClick={() => handleQuickAction("add_task")} color="#0d6efd" />
           <ActionButton icon="📊" label="فتح التقييم الأكاديمي" onClick={() => handleQuickAction("open_evaluation")} color="#28a745" />

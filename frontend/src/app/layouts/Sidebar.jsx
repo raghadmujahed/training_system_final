@@ -74,6 +74,14 @@ function buildFieldStaffMenu(roleKey) {
       const next = supervisorFieldStaffPaths[menu[i].path];
       if (next) menu[i] = { ...menu[i], path: next };
     }
+
+    // المشرف الأكاديمي يدير الطلبة من مساحة العمل فقط — بدون صفحة «ملفات الطلبة» المنفصلة
+    const studentsIdx = menu.findIndex(
+      (item) => item.path === "/supervisor/students" || item.path === "/field-staff/students"
+    );
+    if (studentsIdx >= 0) {
+      menu.splice(studentsIdx, 1);
+    }
   }
 
   // الجدول الأسبوعي: للمعلم فقط
