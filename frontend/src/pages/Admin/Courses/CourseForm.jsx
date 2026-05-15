@@ -12,7 +12,8 @@ export default function CourseForm() {
   const navigate = useNavigate();
   const { data: departments } = useDepartments();
   const originalRef = useRef(null);
-  const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 0, type: "practical", department_id: "" });
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 1, type: "practical", department_id: "" });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -47,8 +48,8 @@ export default function CourseForm() {
     }
     if (name === 'training_hours' && value) {
       const numValue = Number(value);
-      if (!isInteger(value) || !isMinValue(numValue, 0) || !isMaxValue(numValue, 500)) {
-        setErrors({ ...errors, training_hours: "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا بين 0 و 500" });
+      if (!isInteger(value) || !isMinValue(numValue, 1) || !isMaxValue(numValue, 500)) {
+        setErrors({ ...errors, training_hours: "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا أكبر من صفر ولا يتجاوز 500" });
       }
     }
   };
@@ -74,8 +75,8 @@ export default function CourseForm() {
     }
     
     const trainingHours = Number(form.training_hours);
-    if (!isInteger(form.training_hours) || !isMinValue(trainingHours, 0) || !isMaxValue(trainingHours, 500)) {
-      newErrors.training_hours = "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا بين 0 و 500";
+    if (!isInteger(form.training_hours) || !isMinValue(trainingHours, 1) || !isMaxValue(trainingHours, 500)) {
+      newErrors.training_hours = "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا أكبر من صفر ولا يتجاوز 500";
     }
     
     setErrors(newErrors);
@@ -84,7 +85,7 @@ export default function CourseForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -93,7 +94,8 @@ export default function CourseForm() {
       toast.info("لم تقم بتغيير أي بيانات");
       return;
     }
-    
+
+    setLoading(true);
     setErrors({});
     try {
       if (id) {
@@ -102,6 +104,7 @@ export default function CourseForm() {
         toast.success("تم تحديث البيانات بنجاح");
       } else {
         await createCourse(form);
+        toast.success("تم إضافة المساق بنجاح");
       }
       navigate("/admin/courses");
     } catch (err) {
@@ -110,6 +113,8 @@ export default function CourseForm() {
       } else {
         toast.error(err.response?.data?.message || "حدث خطأ أثناء حفظ المساق");
       }
+    } finally {
+      setLoading(false);
     }
   };
   return (
@@ -184,16 +189,16 @@ export default function CourseForm() {
         </div>
         <div className="form-group">
           <label>الساعات التدريبية *</label>
-          <input 
-            type="number" 
-            name="training_hours" 
-            value={form.training_hours} 
-            onChange={handleChange} 
+          <input
+            type="number"
+            name="training_hours"
+            value={form.training_hours}
+            onChange={handleChange}
             onBlur={handleChange}
             className={errors.training_hours ? 'border-red-500' : ''}
-            min="0" 
-            max="500" 
-            required 
+            min="1"
+            max="500"
+            required
           />
           {errors.training_hours && <p className="mt-1 text-sm text-red-600">{Array.isArray(errors.training_hours) ? errors.training_hours[0] : errors.training_hours}</p>}
         </div>
@@ -213,7 +218,9 @@ export default function CourseForm() {
         </div>
       </div>
       <div className="form-actions">
-        <button type="submit" className="btn-primary">حفظ</button>
+        <button type="submit" className="btn-primary" disabled={loading}>
+          {loading ? "جاري الحفظ..." : "حفظ"}
+        </button>
         <button type="button" onClick={() => navigate("/admin/courses")} className="btn-secondary">إلغاء</button>
       </div>
     </form>

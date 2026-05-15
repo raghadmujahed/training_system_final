@@ -35,15 +35,20 @@ export default function HeadOfDepartmentDashboard() {
   if (error) {
     const isNoDept = error.includes("قسم") || error.includes("department");
     return (
-      <div className="dashboard-error">
-        <div className="error-icon">{isNoDept ? "🏫" : "⚠️"}</div>
-        <h2>{isNoDept ? "لم يتم ربط حسابك بقسم أكاديمي بعد" : error}</h2>
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+        <div className="text-5xl mb-4">{isNoDept ? "🏫" : "⚠️"}</div>
+        <h2 className="text-xl font-bold text-red-800 mb-2">
+          {isNoDept ? "لم يتم ربط حسابك بقسم أكاديمي بعد" : "حدث خطأ"}
+        </h2>
         {isNoDept ? (
-          <p>يرجى التواصل مع مدير النظام لربط حسابك بالقسم الصحيح</p>
+          <p className="text-red-700 mb-4">يرجى التواصل مع مدير النظام لربط حسابك بالقسم الصحيح</p>
         ) : (
           <>
-            <p>{error}</p>
-            <button onClick={() => window.location.reload()} className="btn-primary">
+            <p className="text-red-700 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors"
+            >
               إعادة المحاولة
             </button>
           </>
@@ -60,37 +65,94 @@ export default function HeadOfDepartmentDashboard() {
         icon={LayoutDashboard}
       />
 
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">👥</div>
+      <div className="stats-grid mb-6">
+        <div className="stat-card border-r-blue-500">
+          <div className="stat-icon">
+            <Users size={32} className="text-blue-600" />
+          </div>
           <div className="stat-content">
             <h3>{stats?.total_students || 0}</h3>
             <p>إجمالي الطلاب</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">📚</div>
+        <div className="stat-card border-r-green-500">
+          <div className="stat-icon">
+            <BookOpen size={32} className="text-green-600" />
+          </div>
           <div className="stat-content">
             <h3>{stats?.total_courses || 0}</h3>
             <p>إجمالي المساقات</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">📋</div>
+        <div className="stat-card border-r-purple-500">
+          <div className="stat-icon">
+            <ClipboardList size={32} className="text-purple-600" />
+          </div>
           <div className="stat-content">
             <h3>{stats?.total_sections || 0}</h3>
             <p>إجمالي الشعب</p>
           </div>
         </div>
 
-        <div className="stat-card">
-          <div className="stat-icon">✅</div>
+        <div className="stat-card border-r-orange-500">
+          <div className="stat-icon">
+            <BarChart3 size={32} className="text-orange-600" />
+          </div>
           <div className="stat-content">
             <h3>{stats?.accepted_rejected_ratio?.accepted_percentage || 0}%</h3>
             <p>نسبة القبول</p>
           </div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h3 className="text-lg font-extrabold text-secondary mb-4">الوصول السريع</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <Link
+            to="/department-head/sections"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ClipboardList size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">شعب القسم</h4>
+            <p className="text-sm text-text-faint">إدارة شعب التدريب</p>
+          </Link>
+
+          <Link
+            to="/department-head/students"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <GraduationCap size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">طلاب القسم</h4>
+            <p className="text-sm text-text-faint">إدارة الطلاب المسجلين</p>
+          </Link>
+
+          <Link
+            to="/department-head/supervisors"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <UserCheck size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">المشرفون</h4>
+            <p className="text-sm text-text-faint">إدارة المشرفين الأكاديميين</p>
+          </Link>
+
+          <Link
+            to="/department-head/training-requests"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <FileText size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">طلبات التدريب</h4>
+            <p className="text-sm text-text-faint">متابعة طلبات التدريب</p>
+          </Link>
         </div>
       </div>
 

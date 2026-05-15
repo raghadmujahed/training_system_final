@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import EmptyState from "../../components/common/EmptyState";
 import PageHeader from "../../components/common/PageHeader";
 import {
   getCurrentUser,
@@ -22,6 +24,9 @@ import {
   Activity,
   Users,
   AlertTriangle,
+  Settings,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
 
@@ -257,10 +262,11 @@ const EducationDirectorateDashboard = () => {
               ))}
               {officialLetters.length === 0 && (
                 <tr><td colSpan={4} className="py-8 px-4 text-center">
-                  <div className="text-text-faint">
-                    <Inbox size={40} className="mb-2 opacity-50 mx-auto" />
-                    <p className="m-0">{"لا توجد كتب رسمية مسجلة حاليًا"}</p>
-                  </div>
+                  <EmptyState
+                    title="لا توجد كتب رسمية"
+                    description="لم يتم تسجيل أي كتب رسمية حالياً"
+                    icon={Inbox}
+                  />
                 </td></tr>
               )}
             </tbody>
@@ -312,10 +318,11 @@ const EducationDirectorateDashboard = () => {
               ))}
               {trainingPlaces.length === 0 && (
                 <tr><td colSpan={5} className="py-8 px-4 text-center">
-                  <div className="text-text-faint">
-                    <School size={40} className="mb-2 opacity-50 mx-auto" />
-                    <p className="m-0">{"لا توجد أماكن تدريب مسجلة حاليًا"}</p>
-                  </div>
+                  <EmptyState
+                    title="لا توجد أماكن تدريب"
+                    description="لم يتم تسجيل أي أماكن تدريب حالياً"
+                    icon={School}
+                  />
                 </td></tr>
               )}
             </tbody>
@@ -336,10 +343,11 @@ const EducationDirectorateDashboard = () => {
         </div>
         <div className="flex flex-col gap-3">
           {latestActivities.length === 0 || (latestActivities.length === 1 && latestActivities[0] === "لا توجد أنشطة حديثة حاليًا.") ? (
-            <div className="text-center py-6 text-text-faint">
-              <Activity size={32} className="mb-2 opacity-40 mx-auto" />
-              <p className="m-0 text-[0.9rem]">{"لا توجد أنشطة حديثة حاليًا"}</p>
-            </div>
+            <EmptyState
+              title="لا توجد أنشطة حديثة"
+              description="لم يتم تسجيل أي أنشطة حديثة"
+              icon={Activity}
+            />
           ) : (
             latestActivities.map((activity, index) => (
               <div key={index} className="p-3.5 bg-[#f8fafc] rounded-[10px] border border-[#e2e8f0] flex items-center gap-3">

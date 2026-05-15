@@ -11,15 +11,16 @@ class Section extends Model
     use HasFactory, HidesArchived;
 
     protected $fillable = [
-        'name', 
-        'academic_year', 
-        'academic_supervisor_id', 
-        'semester', 
+        'name',
+        'academic_year',
+        'academic_supervisor_id',
+        'semester',
         'course_id',
         'capacity',
         'supervisor_id',
         'created_by',
         'training_period_id',
+        'department_id',
     ];
 
     protected $casts = [
@@ -34,6 +35,11 @@ class Section extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function academicSupervisor()

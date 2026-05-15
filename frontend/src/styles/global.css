@@ -1644,3 +1644,194 @@ html, body {
   align-items: center;
   gap: 5px;
 }
+
+/* ==================== ENHANCED FORM STYLES ==================== */
+
+/* Improved form field labels with helper text */
+.form-label-with-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.form-label-with-hint .label-text {
+  color: var(--secondary);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.form-label-with-hint .hint-text {
+  color: var(--text-faint);
+  font-size: 0.82rem;
+}
+
+/* Enhanced input focus states */
+.form-control-custom:hover,
+.form-input-custom:hover,
+.form-select-custom:hover,
+.form-textarea-custom:hover {
+  border-color: rgba(176, 141, 87, 0.4);
+}
+
+/* Form section dividers */
+.form-section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 24px 0;
+}
+
+/* Form field groups */
+.form-field-group {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: var(--transition);
+}
+
+.form-field-group:hover {
+  border-color: rgba(176, 141, 87, 0.3);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-field-group-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+/* ==================== ENHANCED TABLE STYLES ==================== */
+
+/* Table with better visual hierarchy */
+.table-custom thead th,
+.data-table thead th {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  color: var(--secondary);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+  padding: 16px;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.table-custom tbody tr,
+.data-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table-custom tbody tr:hover,
+.data-table tbody tr:hover {
+  background: linear-gradient(90deg, rgba(176, 141, 87, 0.06), rgba(176, 141, 87, 0.02));
+  transform: translateX(2px);
+}
+
+/* Table row selection */
+.table-custom tbody tr.selected,
+.data-table tbody tr.selected {
+  background: rgba(176, 141, 87, 0.12);
+  border-left: 3px solid var(--accent);
+}
+
+/* Table cell actions */
+.table-cell-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.6;
+  transition: var(--transition);
+}
+
+.table-custom tbody tr:hover .table-cell-actions,
+.data-table tbody tr:hover .table-cell-actions {
+  opacity: 1;
+}
+
+/* Empty table state */
+.table-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-faint);
+}
+
+.table-empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.table-empty-state-text {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.table-empty-state-hint {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* ==================== ENHANCED RESPONSIVE STYLES ==================== */
+
+/* Improved mobile navigation */
+@media (max-width: 768px) {
+  .mobile-nav-toggle {
+    display: flex !important;
+  }
+
+  .sidebar {
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Stack form fields on mobile */
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-row .form-field {
+    width: 100%;
+  }
+}
+
+/* Touch-friendly button sizes */
+@media (max-width: 768px) {
+  .btn-custom,
+  .btn-primary-custom,
+  .btn-secondary-custom {
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 1rem;
+  }
+}
+
+/* Improved table responsiveness */
+@media (max-width: 768px) {
+  .table-custom,
+  .data-table {
+    font-size: 0.9rem;
+  }
+
+  .table-custom th,
+  .table-custom td,
+  .data-table th,
+  .data-table td {
+    padding: 12px 10px;
+  }
+
+  /* Hide less important columns on mobile */
+  .table-custom .hide-mobile,
+  .data-table .hide-mobile {
+    display: none;
+  }
+}

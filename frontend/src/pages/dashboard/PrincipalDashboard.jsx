@@ -206,7 +206,7 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
           return (
             <div
               key={index}
-              className="bg-white border border-[#e2e8f0] rounded-2xl p-5 flex items-center gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg"
+              className="bg-gradient-to-br from-white to-[#f8fafc] border border-[#e2e8f0] rounded-2xl p-5 flex items-center gap-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-accent/30"
             >
               <div
                 className="w-[52px] h-[52px] rounded-[14px] flex items-center justify-center shrink-0"
@@ -226,6 +226,100 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
             </div>
           );
         })}
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mb-6">
+        <h3 className="text-lg font-extrabold text-secondary mb-4">الوصول السريع</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <Link
+            to="/principal/training-requests"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Inbox size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">طلبات التدريب</h4>
+            <p className="text-sm text-text-faint">مراجعة واعتماد الطلبات</p>
+          </Link>
+
+          <Link
+            to="/principal/trainee-students"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Users size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">الطلبة المتدربون</h4>
+            <p className="text-sm text-text-faint">إدارة الطلبة المقبولين</p>
+          </Link>
+
+          <Link
+            to="/principal/mentor-assignment"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Briefcase size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">تعيين المرشدين</h4>
+            <p className="text-sm text-text-faint">تعيين المشرفين للطلبة</p>
+          </Link>
+
+          <Link
+            to="/principal/student-evaluation"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ClipboardCheck size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">تقييم الطلبة</h4>
+            <p className="text-sm text-text-faint">إدخال التقييمات</p>
+          </Link>
+
+          <Link
+            to="/principal/attendance-approval"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <FileCheck size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">اعتماد الحضور</h4>
+            <p className="text-sm text-text-faint">مراجعة سجلات الحضور</p>
+          </Link>
+
+          <Link
+            to="/principal/official-letters"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <FileText size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">المعاملات الرسمية</h4>
+            <p className="text-sm text-text-faint">عرض الكتب الواردة</p>
+          </Link>
+
+          <Link
+            to="/principal/school-teachers"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <School size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">المعلمون</h4>
+            <p className="text-sm text-text-faint">إدارة المعلمين</p>
+          </Link>
+
+          <Link
+            to="/principal/profile"
+            className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+          >
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Settings size={24} className="text-white" />
+            </div>
+            <h4 className="font-bold text-secondary mb-1">الإعدادات</h4>
+            <p className="text-sm text-text-faint">إعدادات المدرسة</p>
+          </Link>
+        </div>
       </div>
 
       {/* Training Requests Table */}
@@ -282,10 +376,11 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
               {pendingRequests.length === 0 && (
                 <tr>
                   <td colSpan={3} className="py-8 px-4 text-center">
-                    <div className="text-text-faint">
-                      <Inbox size={40} className="mb-2 opacity-50 mx-auto" />
-                      <p className="m-0">{"لا توجد طلبات تدريب حديثة"}</p>
-                    </div>
+                    <EmptyState
+                      title="لا توجد طلبات تدريب حديثة"
+                      description="لم يتم استلام أي طلبات تدريب جديدة"
+                      icon={Inbox}
+                    />
                   </td>
                 </tr>
               )}

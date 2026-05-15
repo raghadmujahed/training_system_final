@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCourse, createCourse, updateCourse } from "../../services/api";
 import useAppToast from "../../hooks/useAppToast";
 import { hasFormChanged } from "../../utils/formChanged";
+import { isRequired, isMinValue, isMaxValue, isInteger } from "../../utils/validation";
 
 export default function HeadOfDepartmentCourseForm() {
   const toast = useAppToast();
@@ -10,7 +11,7 @@ export default function HeadOfDepartmentCourseForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const originalRef = useRef(null);
-  const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 0, type: "practical" });
+  const [form, setForm] = useState({ code: "", name: "", description: "", credit_hours: 3, training_hours: 1, type: "practical" });
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -35,12 +36,56 @@ export default function HeadOfDepartmentCourseForm() {
   }, [id]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (errors[name]) setErrors({ ...errors, [name]: null });
+
+    // Real-time validation for numeric fields
+    if (name === 'credit_hours' && value) {
+      const numValue = Number(value);
+      if (!isInteger(value) || !isMinValue(numValue, 1) || !isMaxValue(numValue, 6)) {
+        setErrors({ ...errors, credit_hours: "عدد الساعات الجامعية يجب أن يكون عددًا صحيحًا بين 1 و 6" });
+      }
+    }
+    if (name === 'training_hours' && value) {
+      const numValue = Number(value);
+      if (!isInteger(value) || !isMinValue(numValue, 0) || !isMaxValue(numValue, 500)) {
+        setErrors({ ...errors, training_hours: "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا أكبر من أو يساوي صفر ولا يتجاوز 500" });
+      }
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!isRequired(form.code)) {
+      newErrors.code = "كود المساق مطلوب";
+    }
+
+    if (!isRequired(form.name)) {
+      newErrors.name = "اسم المساق مطلوب";
+    }
+
+    const creditHours = Number(form.credit_hours);
+    if (!isInteger(form.credit_hours) || !isMinValue(creditHours, 1) || !isMaxValue(creditHours, 6)) {
+      newErrors.credit_hours = "عدد الساعات الجامعية يجب أن يكون عددًا صحيحًا بين 1 و 6";
+    }
+
+    const trainingHours = Number(form.training_hours);
+    if (!isInteger(form.training_hours) || !isMinValue(trainingHours, 1) || !isMaxValue(trainingHours, 500)) {
+      newErrors.training_hours = "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا أكبر من صفر ولا يتجاوز 500";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     if (id && !hasFormChanged(originalRef.current, form)) {
       toast.info("لم تقم بتغيير أي بيانات");
@@ -78,14 +123,14 @@ export default function HeadOfDepartmentCourseForm() {
       <form onSubmit={handleSubmit} className="form">
         <div className="form-group">
           <label htmlFor="hod-course-code">الكود *</label>
-          <input id="hod-course-code" type="text" name="code" value={form.code} onChange={handleChange} required />
-          {errors.code && <span className="error">{errors.code[0]}</span>}
+          <input id="hod-course-code" type="text" name="code" value={form.code} onChange={handleChange} onBlur={handleChange} required />
+          {errors.code && <span className="error">{Array.isArray(errors.code) ? errors.code[0] : errors.code}</span>}
         </div>
 
         <div className="form-group">
           <label htmlFor="hod-course-name">الاسم *</label>
-          <input id="hod-course-name" type="text" name="name" value={form.name} onChange={handleChange} required />
-          {errors.name && <span className="error">{errors.name[0]}</span>}
+          <input id="hod-course-name" type="text" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} required />
+          {errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}
         </div>
 
         <div className="form-group">
@@ -97,14 +142,14 @@ export default function HeadOfDepartmentCourseForm() {
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="hod-course-credit-hours">الساعات الجامعية *</label>
-            <input id="hod-course-credit-hours" type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} min="1" max="6" required />
-            {errors.credit_hours && <span className="error">{errors.credit_hours[0]}</span>}
+            <input id="hod-course-credit-hours" type="number" name="credit_hours" value={form.credit_hours} onChange={handleChange} onBlur={handleChange} min="1" max="6" required />
+            {errors.credit_hours && <span className="error">{Array.isArray(errors.credit_hours) ? errors.credit_hours[0] : errors.credit_hours}</span>}
           </div>
 
           <div className="form-group">
             <label htmlFor="hod-course-training-hours">الساعات التدريبية *</label>
-            <input id="hod-course-training-hours" type="number" name="training_hours" value={form.training_hours} onChange={handleChange} min="0" max="500" required />
-            {errors.training_hours && <span className="error">{errors.training_hours[0]}</span>}
+            <input id="hod-course-training-hours" type="number" name="training_hours" value={form.training_hours} onChange={handleChange} onBlur={handleChange} min="1" max="500" required />
+            {errors.training_hours && <span className="error">{Array.isArray(errors.training_hours) ? errors.training_hours[0] : errors.training_hours}</span>}
           </div>
 
           <div className="form-group">
