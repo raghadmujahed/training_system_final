@@ -20,7 +20,18 @@ class EnrollmentPolicy
      */
     public function view(User $user, Enrollment $enrollment): bool
     {
-        return in_array($user->role?->name, ['admin', 'head_of_department', 'coordinator', 'academic_supervisor']);
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $enrollment->section
+                && $enrollment->section->course
+                && (int) $enrollment->section->course->department_id === (int) $user->department_id;
+        }
+        
+        return in_array($user->role?->name, ['coordinator', 'academic_supervisor']);
     }
 
     /**
@@ -36,7 +47,18 @@ class EnrollmentPolicy
      */
     public function update(User $user, Enrollment $enrollment): bool
     {
-        return in_array($user->role?->name, ['admin', 'head_of_department', 'coordinator', 'academic_supervisor']);
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $enrollment->section
+                && $enrollment->section->course
+                && (int) $enrollment->section->course->department_id === (int) $user->department_id;
+        }
+        
+        return in_array($user->role?->name, ['coordinator', 'academic_supervisor']);
     }
 
     /**
@@ -44,7 +66,18 @@ class EnrollmentPolicy
      */
     public function delete(User $user, Enrollment $enrollment): bool
     {
-        return in_array($user->role?->name, ['admin', 'head_of_department', 'coordinator']);
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        
+        if ($user->role?->name === 'head_of_department') {
+            return $user->department_id
+                && $enrollment->section
+                && $enrollment->section->course
+                && (int) $enrollment->section->course->department_id === (int) $user->department_id;
+        }
+        
+        return $user->role?->name === 'coordinator';
     }
 
     /**

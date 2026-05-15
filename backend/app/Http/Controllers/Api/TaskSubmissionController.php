@@ -24,6 +24,7 @@ class TaskSubmissionController extends Controller
 
     /**
      * عرض جميع تسليمات المهام (يمكن تصفيتها حسب task_id أو user_id)
+     * المشرف الأكاديمي يرى فقط تسليمات المهام التي أسندها
      */
     public function index(Request $request)
     {
@@ -34,6 +35,14 @@ class TaskSubmissionController extends Controller
         }
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
+        }
+        
+        // فلترة للمشرف الأكاديمي: يرى فقط تسليمات المهام التي أسندها
+        $user = $request->user();
+        if ($user->role?->name === 'academic_supervisor') {
+            $query->whereHas('task', function ($q) use ($user) {
+                $q->where('assigned_by', $user->id);
+            });
         }
         
         $submissions = $query->latest()->paginate($request->per_page ?? 15);

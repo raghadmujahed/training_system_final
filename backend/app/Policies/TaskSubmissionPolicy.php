@@ -22,16 +22,24 @@ class TaskSubmissionPolicy
 
     public function view(User $user, TaskSubmission $submission): bool
     {
-        // يمكن للطالب صاحب التسليم، أو المعلم، أو المشرف، أو الأدمن
-        return $user->id === $submission->user_id
-            || in_array($user->role?->name, [
-                'admin',
-                'academic_supervisor',
-                'teacher',
-                'adviser',
-                'psychologist',
-                'field_supervisor',
-            ]);
+        // يمكن للطالب صاحب التسليم
+        if ($user->id === $submission->user_id) {
+            return true;
+        }
+        
+        // للمشرف الأكاديمي: يرى فقط تسليمات المهام التي أسندها
+        if ($user->role?->name === 'academic_supervisor') {
+            return $submission->task && $submission->task->assigned_by === $user->id;
+        }
+        
+        // للأدمن والمعلمين الآخرين
+        return in_array($user->role?->name, [
+            'admin',
+            'teacher',
+            'adviser',
+            'psychologist',
+            'field_supervisor',
+        ]);
     }
 
     public function create(User $user): bool
@@ -63,10 +71,18 @@ class TaskSubmissionPolicy
 
     public function grade(User $user, TaskSubmission $submission): bool
     {
-        // يمكن للمعلم أو المشرف الأكاديمي أو الأدمن تقييم التسليم
+        // للأدمن دائماً
+        if ($user->role?->name === 'admin') {
+            return true;
+        }
+        
+        // للمشرف الأكاديمي: يقيّم فقط تسليمات المهام التي أسندها
+        if ($user->role?->name === 'academic_supervisor') {
+            return $submission->task && $submission->task->assigned_by === $user->id;
+        }
+        
+        // للمعلمين الآخرين
         return in_array($user->role?->name, [
-            'admin',
-            'academic_supervisor',
             'teacher',
             'adviser',
             'psychologist',

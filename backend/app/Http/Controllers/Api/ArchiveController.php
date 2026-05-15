@@ -212,6 +212,7 @@ class ArchiveController extends Controller
     /**
      * Public read-only details for a specific archived period.
      * Any authenticated user can view archive details.
+     * Head of department sees only their department's data.
      */
     public function publicPeriodDetails(Request $request, $periodId)
     {
@@ -229,11 +230,20 @@ class ArchiveController extends Controller
             }
 
             // Get archived sections for this period
-            $sections = \App\Models\Section::withArchived()
+            $sectionsQuery = \App\Models\Section::withArchived()
                 ->where('training_period_id', $periodId)
                 ->whereNotNull('archived_at')
-                ->with(['course', 'academicSupervisor'])
-                ->get()
+                ->with(['course', 'academicSupervisor']);
+
+            // Filter by department for head_of_department
+            $user = auth()->user();
+            if ($user->role?->name === 'head_of_department' && $user->department_id) {
+                $sectionsQuery->whereHas('course', function ($q) use ($user) {
+                    $q->where('department_id', $user->department_id);
+                });
+            }
+
+            $sections = $sectionsQuery->get()
                 ->map(function ($s) {
                     return [
                         'id' => $s->id,

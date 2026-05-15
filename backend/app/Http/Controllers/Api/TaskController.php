@@ -154,4 +154,29 @@ class TaskController extends Controller
             'message' => 'تم تقييم المهمة بنجاح'
         ]);
     }
+
+    /**
+     * Get submissions for a specific task (for academic supervisor)
+     */
+    public function getTaskSubmissions(Request $request, Task $task)
+    {
+        // التحقق من أن المشرف الأكاديمي يرى فقط مهامه
+        if ($request->user()->role?->name === 'academic_supervisor') {
+            if ($task->assigned_by !== $request->user()->id) {
+                return response()->json([
+                    'message' => 'لا تملك صلاحية عرض حلول هذه المهمة'
+                ], 403);
+            }
+        }
+
+        $submissions = TaskSubmission::with(['user'])
+            ->where('task_id', $task->id)
+            ->latest('submitted_at')
+            ->get();
+
+        return response()->json([
+            'task' => new TaskResource($task),
+            'submissions' => TaskSubmissionResource::collection($submissions),
+        ]);
+    }
 }

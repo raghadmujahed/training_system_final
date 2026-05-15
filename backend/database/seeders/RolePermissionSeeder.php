@@ -147,5 +147,16 @@ class RolePermissionSeeder extends Seeder
             ])->get();
             $fieldSupervisor->permissions()->sync($fieldSupervisorPerms);
         }
+
+        // 9. رئيس القسم - يدير المساقات والشعب والتسجيلات في قسمه فقط
+        if ($headOfDepartment) {
+            $hodPerms = Permission::whereIn('name', [
+                'manage_courses',
+                'manage_sections',
+                'manage_enrollments',
+                'view_reports',
+            ])->get();
+            $headOfDepartment->permissions()->sync($hodPerms);
+        }
     }
 }

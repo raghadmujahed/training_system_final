@@ -47,6 +47,17 @@ export default function TasksTab({ studentId }) {
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
+  const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
+  const [submissionsError, setSubmissionsError] = useState("");
+  
+  // الفلاتر
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterWithSubmissions, setFilterWithSubmissions] = useState(false);
+  const [sortBy, setSortBy] = useState("newest");
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
@@ -219,6 +230,24 @@ export default function TasksTab({ studentId }) {
     }
   };
 
+  const handleViewSubmissions = async (task) => {
+    setSelectedTask(task);
+    setShowSubmissionsModal(true);
+    setSubmissionsLoading(true);
+    setSubmissionsError("");
+    setSubmissions([]);
+    
+    try {
+      const res = await apiClient.get(`/tasks/${task.id}/submissions`);
+      setSubmissions(res.data?.submissions || []);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "فشل تحميل الحلول";
+      setSubmissionsError(msg);
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
   const openEdit = (task) => {
     setForm({
       title: task.title || "",
@@ -241,6 +270,35 @@ export default function TasksTab({ studentId }) {
     submitted: { label: "مُسلَّمة", color: "#17a2b8", bg: "#e0f7fa" },
     graded: { label: "مُقيَّمة", color: "#28a745", bg: "#e8f5e9" },
   };
+
+  // فلترة وترتيب المهام
+  const filteredTasks = tasks.filter(task => {
+    // فلتر البحث
+    if (searchTerm && !task.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    // فلتر الحالة
+    if (filterStatus && task.status !== filterStatus) {
+      return false;
+    }
+    // فلتر المهام التي عليها حلول
+    if (filterWithSubmissions && (!task.submissions || task.submissions.length === 0)) {
+      return false;
+    }
+    return true;
+  });
+
+  // ترتيب المهام
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.created_at) - new Date(a.created_at);
+    } else if (sortBy === "due_date") {
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date) - new Date(b.due_date);
+    }
+    return 0;
+  });
 
   if (loading) return <LoadingSpinner size="section" text="جاري التحميل..." />;
 
@@ -265,6 +323,57 @@ export default function TasksTab({ studentId }) {
       {error && (
         <p className="text-[#dc3545] text-[0.9rem]">{error}</p>
       )}
+
+      {/* الفلاتر */}
+      <div className="bg-[#f8f9fa] p-4 rounded-lg mb-4 border border-[#e9ecef]">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="text-sm text-[#666] block mb-1">بحث باسم المهمة</label>
+            <input
+              type="text"
+              className="form-input-custom"
+              placeholder="ابحث عن مهمة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm text-[#666] block mb-1">حالة المهمة</label>
+            <select
+              className="form-select-custom"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="">الكل</option>
+              <option value="pending">معلّقة</option>
+              <option value="in_progress">قيد التنفيذ</option>
+              <option value="submitted">مُسلَّمة</option>
+              <option value="graded">مُقيَّمة</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm text-[#666] block mb-1">الترتيب</label>
+            <select
+              className="form-select-custom"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="newest">الأحدث</option>
+              <option value="due_date">أقرب موعد</option>
+            </select>
+          </div>
+          <div className="flex items-end">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={filterWithSubmissions}
+                onChange={(e) => setFilterWithSubmissions(e.target.checked)}
+              />
+              <span className="text-sm">المهام التي عليها حلول فقط</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
       {showForm && (
         <div className="section-card mb-4 border border-[#4361ee]">
@@ -435,14 +544,14 @@ export default function TasksTab({ studentId }) {
         </div>
       )}
 
-      {!tasks.length ? (
+      {!sortedTasks.length ? (
         <div className="text-center p-10 text-[#999]">
           <div className="text-[2rem] mb-3">📭</div>
-          لا توجد مهام بعد
+          {searchTerm || filterStatus || filterWithSubmissions ? "لا توجد مهام تطابق الفلاتر" : "لا توجد مهام بعد"}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {tasks.map((task) => {
+          {sortedTasks.map((task) => {
             const sc = statusConfig[task.status] || statusConfig.pending;
             const due = task.due_date ? new Date(task.due_date) : null;
             const isOverdue =
@@ -491,6 +600,13 @@ export default function TasksTab({ studentId }) {
                 <div className="flex gap-2 mt-[10px]">
                   <button
                     type="button"
+                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#28a745] bg-[#28a745] text-white cursor-pointer hover:bg-[#218838]"
+                    onClick={() => handleViewSubmissions(task)}
+                  >
+                    👁️ عرض حلول الطلبة
+                  </button>
+                  <button
+                    type="button"
                     className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-[#4361ee] text-white cursor-pointer hover:bg-[#3651de]"
                     onClick={() => openEdit(task)}
                   >
@@ -507,6 +623,101 @@ export default function TasksTab({ studentId }) {
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+
+      {/* Modal لعرض حلول الطلبة */}
+      {showSubmissionsModal && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold m-0">حلول الطلبة</h3>
+                <button
+                  type="button"
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                  onClick={() => setShowSubmissionsModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mb-4 p-3 bg-[#f0f7ff] rounded-lg">
+                <div className="font-semibold">عنوان المهمة:</div>
+                <div>{selectedTask.title}</div>
+                {selectedTask.due_date && (
+                  <div className="text-sm text-gray-600 mt-1">آخر موعد للتسليم: {selectedTask.due_date}</div>
+                )}
+              </div>
+
+              {submissionsLoading && <LoadingSpinner size="section" text="جاري تحميل الحلول..." />}
+              
+              {submissionsError && (
+                <div className="text-[#dc3545] p-4 bg-[#ffebee] rounded-lg mb-4">
+                  ⚠️ {submissionsError}
+                </div>
+              )}
+
+              {!submissionsLoading && !submissionsError && submissions.length === 0 && (
+                <div className="text-center p-8 text-[#999]">
+                  <div className="text-[2rem] mb-3">📭</div>
+                  لا توجد حلول مسلّمة لهذه المهمة حتى الآن
+                </div>
+              )}
+
+              {!submissionsLoading && !submissionsError && submissions.length > 0 && (
+                <div className="flex flex-col gap-3">
+                  {submissions.map((sub) => {
+                    const studentName = sub.user?.name || "طالب";
+                    const submittedAt = sub.submitted_at ? new Date(sub.submitted_at).toLocaleString('ar-SA') : "لم يسلّم";
+                    const status = sub.status === 'submitted' ? 'تم التسليم' : 
+                                 sub.status === 'draft' ? 'مسودة' : sub.status;
+                    
+                    return (
+                      <div key={sub.id} className="border border-[#e9ecef] rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="font-semibold">{studentName}</div>
+                            <div className="text-sm text-gray-600">وقت التسليم: {submittedAt}</div>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-sm bg-[#e0f7fa] text-[#0d6efd]">
+                            {status}
+                          </span>
+                        </div>
+
+                        {sub.file_path && (
+                          <div className="mt-3">
+                            <a
+                              href={sub.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-[#0d6efd] hover:text-[#0a58ca] text-sm"
+                            >
+                              📎 تحميل الملف
+                            </a>
+                          </div>
+                        )}
+
+                        {sub.notes && (
+                          <div className="mt-3 p-3 bg-[#f8f9fa] rounded-lg">
+                            <div className="text-sm text-gray-600 mb-1">ملاحظات الطالب:</div>
+                            <div className="text-sm">{sub.notes}</div>
+                          </div>
+                        )}
+
+                        {sub.score != null && (
+                          <div className="mt-3 text-sm">
+                            <span className="font-semibold text-[#28a745]">الدرجة: {sub.score}</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

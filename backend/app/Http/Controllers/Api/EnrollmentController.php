@@ -20,6 +20,15 @@ class EnrollmentController extends Controller
     public function index(Request $request)
     {
         $query = Enrollment::with(['user', 'section.course']);
+        
+        // Restrict head_of_department to their own department's enrollments
+        $user = auth()->user();
+        if ($user->role?->name === 'head_of_department' && $user->department_id) {
+            $query->whereHas('section.course', function ($q) use ($user) {
+                $q->where('department_id', $user->department_id);
+            });
+        }
+        
         if ($request->has('section_id')) $query->where('section_id', $request->section_id);
         if ($request->has('user_id')) $query->where('user_id', $request->user_id);
         if ($request->has('status')) $query->where('status', $request->status);
