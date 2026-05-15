@@ -127,12 +127,28 @@ export default function FieldStaffNotes() {
         <div className="list-clean">
           {notes.map((note) => {
             const stu = note.training_assignment?.enrollment?.user;
+            const assignmentRow = assignments.find(
+              (a) => String(a.id) === String(note.training_assignment_id)
+            );
+            const studentName =
+              note.student_name ||
+              stu?.name ||
+              assignmentRow?.enrollment?.user?.name ||
+              "طالب";
+            const studentId =
+              note.student_university_id ||
+              stu?.university_id ||
+              assignmentRow?.enrollment?.user?.university_id ||
+              "";
             return (
               <div className="list-item-card" key={note.id}>
                 <div className="panel-header items-center">
                   <div>
-                    <h4 className="panel-title">{stu?.name || "طالب"}</h4>
-                    <p className="panel-subtitle">{note.created_at || "—"}</p>
+                    <h4 className="panel-title">{studentName}</h4>
+                    <p className="panel-subtitle">
+                      {studentId ? `${studentId} — ` : ""}
+                      {note.created_at || "—"}
+                    </p>
                   </div>
                   <div className="table-actions">
                     <button className="btn-outline-custom btn-sm-custom" onClick={() => openEdit(note)}>

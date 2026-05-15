@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "../../../../services/api";
-import { useToast } from "../../../../components/Toast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
 export default function OverviewTab({ studentId, student, onOpenTab }) {
-  const { addToast } = useToast();
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +30,7 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
   const s = student || {};
   const hasNoAssignment = overview?.has_training_assignment === false;
 
-  const handleQuickAction = async (action) => {
+  const handleQuickAction = (action) => {
     switch (action) {
       case "schedule_visit":
         onOpenTab?.("field-visits");
@@ -43,19 +41,7 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
       case "open_evaluation":
         onOpenTab?.("evaluations");
         break;
-      case "escalate":
-        if (window.confirm("هل تريد تصعيد حالة الطالب للمنسق الأكاديمي؟")) {
-          try {
-            await apiClient.post(`/supervisor/students/${studentId}/escalate`, {
-              target: "coordinator",
-              reason: "general",
-              details: "تصعيد عام لحالة الطالب من لوحة المشرف الأكاديمي.",
-            });
-            addToast("تم تصعيد الحالة بنجاح", "success");
-          } catch {
-            addToast("فشل تصعيد الحالة", "error");
-          }
-        }
+      default:
         break;
     }
   };
@@ -103,7 +89,6 @@ export default function OverviewTab({ studentId, student, onOpenTab }) {
           <ActionButton icon="🗓️" label="جدولة زيارة ميدانية" onClick={() => handleQuickAction("schedule_visit")} color="#6f42c1" />
           <ActionButton icon="📝" label="إضافة مهمة" onClick={() => handleQuickAction("add_task")} color="#0d6efd" />
           <ActionButton icon="📊" label="فتح التقييم الأكاديمي" onClick={() => handleQuickAction("open_evaluation")} color="#28a745" />
-          <ActionButton icon="🚨" label="تصعيد الحالة للمنسق" onClick={() => handleQuickAction("escalate")} color="#dc3545" />
         </div>
       </div>
 

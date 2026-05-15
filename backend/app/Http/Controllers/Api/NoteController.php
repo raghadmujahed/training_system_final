@@ -19,7 +19,11 @@ class NoteController extends Controller
 
     public function index(Request $request)
     {
-        $query = Note::with(['user', 'trainingAssignment']);
+        $query = Note::with([
+            'user',
+            'trainingAssignment.enrollment.user',
+            'trainingAssignment.trainingSite',
+        ]);
         if ($request->has('user_id')) {
             $query->where('user_id', $request->user_id);
         }
@@ -51,7 +55,7 @@ class NoteController extends Controller
     public function store(StoreNoteRequest $request)
     {
         $note = Note::create($request->validated());
-        $note->load('trainingAssignment.enrollment');
+        $note->load(['trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite']);
 
         // إرسال إشعار للطالب
         $studentId = $note->trainingAssignment?->enrollment?->user_id;
@@ -71,12 +75,16 @@ class NoteController extends Controller
 
     public function show(Note $note)
     {
+        $note->load(['trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite', 'user']);
+
         return new NoteResource($note);
     }
 
     public function update(UpdateNoteRequest $request, Note $note)
     {
         $note->update($request->validated());
+        $note->load(['trainingAssignment.enrollment.user', 'trainingAssignment.trainingSite', 'user']);
+
         return new NoteResource($note);
     }
 
