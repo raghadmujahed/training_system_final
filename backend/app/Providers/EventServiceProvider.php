@@ -18,10 +18,20 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        // أضف هذا السطر لربط الحدث بالمستمعين
-        \App\Events\TrainingRequestApproved::class => [
-            \App\Listeners\CreateTrainingAssignment::class,
-            \App\Listeners\SendApprovalNotification::class,
+        \App\Events\TrainingRequestSentToSchool::class => [
+            \App\Listeners\SendTrainingRequestEmail::class,
+        ],
+        \App\Events\TrainingRequestRejected::class => [
+            \App\Listeners\SendTrainingRequestEmail::class,
+        ],
+        \App\Events\TrainingRequestApprovedByDirectorate::class => [
+            \App\Listeners\SendTrainingRequestEmail::class,
+        ],
+        \App\Events\TrainingRequestApprovedBySchool::class => [
+            \App\Listeners\SendTrainingRequestEmail::class,
+        ],
+        \App\Events\FieldSupervisorAssigned::class => [
+            \App\Listeners\SendTrainingRequestEmail::class,
         ],
     ];
 

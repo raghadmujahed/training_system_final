@@ -17,6 +17,11 @@ use App\Models\User;
 use App\Models\WorkflowTemplate;
 use App\Models\WorkflowApproval;
 use App\Models\WorkflowInstance;
+use App\Events\FieldSupervisorAssigned;
+use App\Events\TrainingRequestApprovedByDirectorate;
+use App\Events\TrainingRequestApprovedBySchool;
+use App\Events\TrainingRequestRejected;
+use App\Events\TrainingRequestSentToSchool;
 use App\Support\PsychologyAcademicWorkflow;
 use App\Support\TrainingRequestNotifications;
 use Illuminate\Support\Facades\DB;
@@ -188,6 +193,8 @@ class TrainingRequestService
                 ]
             );
         });
+
+        event(new TrainingRequestApprovedByDirectorate($trainingRequest, $directorateUserId));
     }
 
     /**
@@ -228,6 +235,8 @@ class TrainingRequestService
                 ]
             );
         });
+
+        event(new TrainingRequestSentToSchool($trainingRequest, $directorateUserId));
     }
 
     /**
@@ -236,8 +245,9 @@ class TrainingRequestService
     public function schoolApprove(TrainingRequest $trainingRequest, int $schoolManagerId, array $studentsData): void
     {
         try {
-            DB::transaction(function () use ($trainingRequest, $schoolManagerId, $studentsData) {
+            $createdAssignments = DB::transaction(function () use ($trainingRequest, $schoolManagerId, $studentsData) {
                 $activeTrainingPeriodId = $this->requireActiveTrainingPeriodId();
+                $createdAssignments = [];
                 $manager = User::with('role')->findOrFail($schoolManagerId);
                 $isPsychCenterManager = $manager->role?->name === 'psychology_center_manager';
                 $allowedRoles = $isPsychCenterManager
@@ -305,7 +315,7 @@ class TrainingRequestService
                     'assigned_teacher_id' => $studentData['assigned_teacher_id'],
                 ]);
 
-                TrainingAssignment::create([
+                $createdAssignments[] = TrainingAssignment::create([
                     'enrollment_id' => $enrollmentId,
                     'training_request_id' => $trainingRequest->id,
                     'training_request_student_id' => $studentRequest->id,
@@ -344,21 +354,6 @@ class TrainingRequestService
                 ]
             );
 
-            // إرسال بريد إلكتروني للطلاب عند قبول جهة التدريب
-            $siteName = $trainingRequest->trainingSite?->name ?? 'جهة التدريب';
-            $studentUsers = $trainingRequest->trainingRequestStudents
-                ->pluck('user')
-                ->merge([optional($trainingRequest->requestedBy)])
-                ->filter()
-                ->unique('id');
-            foreach ($studentUsers as $studentUser) {
-                $this->notificationService->sendEmail(
-                    $studentUser,
-                    'تم قبول طلب تدريبك',
-                    "مرحباً {$studentUser->name}،\n\nيسعدنا إبلاغك بأنه تم قبول طلب تدريبك في {$siteName}.\n\nيمكنك الدخول إلى المنصة للاطلاع على تفاصيل التدريب."
-                );
-            }
-
             $deptId = $trainingRequest->trainingRequestStudents
                 ->map(fn ($trs) => $trs->course?->department_id)
                 ->filter()
@@ -388,7 +383,15 @@ class TrainingRequestService
             if ($workflowInstance) {
                 $workflowInstance->update(['status' => 'approved']);
             }
+
+            return $createdAssignments;
         });
+
+        event(new TrainingRequestApprovedBySchool($trainingRequest, $schoolManagerId));
+
+        foreach ($createdAssignments as $assignment) {
+            event(new FieldSupervisorAssigned($trainingRequest, $assignment, false));
+        }
         } catch (ValidationException $e) {
             // Re-throw validation exceptions as-is
             throw $e;
@@ -462,6 +465,8 @@ class TrainingRequestService
                 ]
             );
         });
+
+        event(new TrainingRequestRejected($trainingRequest, 'directorate', $reason, $rejectedBy));
     }
 
     /**
@@ -512,6 +517,8 @@ class TrainingRequestService
                 ]
             );
         });
+
+        event(new TrainingRequestRejected($trainingRequest, 'directorate', $reason, $rejectedBy));
     }
 
     /**
@@ -569,6 +576,8 @@ class TrainingRequestService
                 ]
             );
         });
+
+        event(new TrainingRequestRejected($trainingRequest, 'school', $reason, $rejectedBy));
     }
 
     /**
@@ -619,6 +628,8 @@ class TrainingRequestService
                 ]
             );
         });
+
+        event(new TrainingRequestRejected($trainingRequest, 'coordinator', $reason, $rejectedBy));
     }
 
     /**
