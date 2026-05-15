@@ -247,7 +247,7 @@ class UserController extends Controller
                 null,
                 ['reason' => 'email_not_found', 'email' => $request->email, 'ip' => $request->ip()]
             );
-            return response()->json(['message' => 'البريد الإلكتروني غير موجود'], 404);
+            return response()->json(['message' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة'], 401);
         }
 
         if (!Hash::check($request->password, $user->password)) {

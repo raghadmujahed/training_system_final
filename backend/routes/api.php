@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\{
+    PublicStorageController,
     TrainingRequestController,
     TrainingRequestBatchController,
     TrainingAssignmentController,
@@ -49,6 +50,7 @@ use App\Http\Controllers\Api\{
 };
 
 // Routes publiques
+Route::get('/avatars/{path}', [PublicStorageController::class, 'avatar'])->where('path', '.*');
 Route::post('/login', [UserController::class, 'login'])->name('login');
 
 // Routes protégées

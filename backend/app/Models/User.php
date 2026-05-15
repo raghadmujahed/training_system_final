@@ -356,7 +356,7 @@ public function enrollments()
             $path = substr($path, strlen('storage/'));
         }
 
-        return rtrim(static::publicAssetBaseUrl(), '/').'/storage/'.$path;
+        return rtrim(static::publicAssetBaseUrl(), '/').'/api/avatars/'.$path;
     }
 
     public static function publicAssetBaseUrl(): string

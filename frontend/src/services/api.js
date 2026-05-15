@@ -3,6 +3,7 @@ import axios from "axios";
 import { apiCache } from "./apiCache";
 import { resetNotificationsState } from "../hooks/useNotifications";
 import { writeStoredUser } from "../utils/session";
+import { getApiOrigin } from "../utils/apiOrigin";
 
 // Validate environment variables
 const validateEnvironment = () => {
@@ -39,8 +40,8 @@ export const apiClient = axios.create({
   timeout: 30000, // 30 second timeout
 });
 
-/** أصل الخادم بدون ‎/api (لروابط التخزين /storage/...) */
-export const apiOrigin = String(apiClient.defaults.baseURL || "").replace(/\/api\/?$/, "") || (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/api\/?$/, "");
+/** أصل الخادم بدون ‎/api (لروابط التخزين والصور) */
+export const apiOrigin = getApiOrigin();
 
 // Laravel API Resources often return payload as { data: ... }.
 // Normalize responses to keep frontend forms and lists stable.

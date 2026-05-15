@@ -3,7 +3,13 @@ import { resolveAvatarUrl } from "./avatarUrl";
 function withResolvedAvatar(user) {
   if (!user || typeof user !== "object") return user;
   if (!user.avatar_url) return user;
-  return { ...user, avatar_url: resolveAvatarUrl(user.avatar_url) };
+  let url = resolveAvatarUrl(user.avatar_url);
+  if (url) {
+    const v = user.updated_at || user.avatar_updated_at || Date.now();
+    url += url.includes("?") ? "&" : "?";
+    url += `v=${encodeURIComponent(String(v))}`;
+  }
+  return { ...user, avatar_url: url };
 }
 
 export function readStoredUser() {

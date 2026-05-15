@@ -89,6 +89,7 @@ export default function ProfileAvatarEditor({ displayName, avatarUrl }) {
       const fd = new FormData();
       fd.append("avatar", pendingFile);
       const user = await uploadProfileAvatar(fd);
+      setServerImgFailed(false);
       if (user && typeof user === "object") {
         writeStoredUser(user);
       }
