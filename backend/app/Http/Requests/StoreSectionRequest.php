@@ -35,7 +35,7 @@ class StoreSectionRequest extends FormRequest
             'semester' => 'required|in:first,second,summer',
             'course_id' => 'required|exists:courses,id',
             'capacity' => 'nullable|integer|min:1|max:1000',
-            'department_id' => 'nullable|exists:departments,id',
+            'department_id' => 'required|exists:departments,id',
         ];
     }
 
@@ -46,6 +46,7 @@ class StoreSectionRequest extends FormRequest
             'academic_supervisor_id.required' => 'يجب تعيين مشرف أكاديمي للشعبة',
             'academic_supervisor_id.exists' => 'المشرف الأكاديمي المحدد غير موجود',
             'course_id.exists' => 'المساق المحدد غير موجود',
+            'department_id.required' => 'القسم مطلوب',
             'department_id.exists' => 'القسم المحدد غير موجود',
         ];
     }
