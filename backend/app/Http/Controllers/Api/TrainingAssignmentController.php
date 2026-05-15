@@ -8,6 +8,7 @@ use App\Http\Resources\TrainingAssignmentResource;
 use App\Models\TrainingAssignment;
 use App\Models\User;
 use App\Services\AcademicSupervisorStudentService;
+use App\Services\FieldSupervisorAssignmentResolver;
 use Illuminate\Http\Request;
 
 class TrainingAssignmentController extends Controller
@@ -38,17 +39,10 @@ class TrainingAssignmentController extends Controller
 
         if ($user->role?->name === 'student') {
             $query->whereHas('enrollment', fn ($q) => $q->where('user_id', $user->id));
-        } elseif ($user->role?->name === 'field_supervisor') {
-            $query->where(function ($q) use ($user) {
-                $q->where('teacher_id', $user->id)->orWhere('field_supervisor_id', $user->id);
-            });
-        } elseif ($user->role?->name === 'teacher') {
-            $query->where('teacher_id', $user->id);
-        } elseif (in_array($user->role?->name, ['adviser', 'psychologist'], true)) {
-            // المرشد التربوي / الأخصائي قد يُربط بالتعيين عبر field_supervisor_id وليس teacher_id فقط
-            $query->where(function ($q) use ($user) {
-                $q->where('teacher_id', $user->id)->orWhere('field_supervisor_id', $user->id);
-            });
+        } elseif (in_array($user->role?->name, ['field_supervisor', 'teacher', 'adviser', 'psychologist'], true)) {
+            $scopeIds = FieldSupervisorAssignmentResolver::assignmentsForFieldSupervisorUser($user)
+                ->select('training_assignments.id');
+            $query->whereIn('training_assignments.id', $scopeIds);
         } elseif ($isAcademicSupervisor) {
             $this->supervisorStudentService->ensureShellAssignmentsForSupervisedEnrollments($user);
             $scopeIds = $this->supervisorStudentService

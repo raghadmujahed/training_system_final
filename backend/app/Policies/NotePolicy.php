@@ -42,13 +42,8 @@ class NotePolicy
             return $this->isSupervisorOfNoteStudent($user, $note);
         }
 
-        // المعلم المرشد يرى ملاحظات طلابه
-        if ($user->role?->name === 'teacher') {
-            return $this->isMentorOfNoteStudent($user, $note);
-        }
-
-        // المشرف الميداني / الأخصائي / المرشد: نفس نطاق التعيين (teacher_id أو field_supervisor_id)
-        if (in_array($user->role?->name, ['field_supervisor', 'psychologist', 'adviser'], true)) {
+        // الكادر الميداني: نفس نطاق التعيين (teacher_id أو field_supervisor_id)
+        if (in_array($user->role?->name, ['teacher', 'field_supervisor', 'psychologist', 'adviser'], true)) {
             $assignment = $note->trainingAssignment;
             if ($assignment) {
                 return FieldSupervisorAssignmentResolver::userIsFieldSupervisorActor($user, $assignment);
@@ -146,10 +141,4 @@ class NotePolicy
         return (int) ($assignment->enrollment?->section?->academic_supervisor_id) === (int) $user->id;
     }
 
-    private function isMentorOfNoteStudent(User $user, Note $note): bool
-    {
-        $assignment = $note->trainingAssignment;
-        if (!$assignment) return false;
-        return $assignment->teacher_id === $user->id;
-    }
 }

@@ -563,6 +563,47 @@ export const getMySiteStudents = () =>
 export const getTrainingAssignments = (params = {}) =>
   apiClient.get("/training-assignments", { params }).then((res) => res.data);
 
+/**
+ * خيارات تعيين التدريب لنماذج الملاحظات والتقييمات — نفس نطاق طلاب المشرف الميداني.
+ * يفضّل /field-supervisor/students ثم /training-assignments.
+ */
+export async function loadFieldStaffAssignmentOptions(params = { per_page: 200 }) {
+  try {
+    const res = await apiClient.get("/field-supervisor/students");
+    const rows = Array.isArray(res.data) ? res.data : itemsFromPagedResponse(res.data);
+    const seen = new Set();
+    const options = [];
+    for (const row of rows) {
+      const assignmentId = row.assignment_id ?? row.training_assignment_id;
+      if (!assignmentId || seen.has(assignmentId)) continue;
+      seen.add(assignmentId);
+      options.push({
+        id: assignmentId,
+        enrollment: {
+          user: {
+            id: row.id ?? row.student_id,
+            name: row.name,
+            university_id: row.university_id,
+          },
+        },
+        training_site: {
+          name: row.training_site ?? row.training_site_name ?? row.site_name ?? "",
+        },
+      });
+    }
+    if (options.length) return options;
+  } catch (e) {
+    if (e?.response?.status === 403) {
+      // غير مصرح بمسار المشرف الميداني — نكمل بالمسار العام
+    } else {
+      throw e;
+    }
+  }
+
+  const assignRes = await getTrainingAssignments(params);
+  return itemsFromPagedResponse(assignRes);
+}
+
 // ==================== Tasks (مشرف / معلم) ====================
 export const getTasks = (params = {}) =>
   apiClient.get("/tasks", { params }).then((res) => res.data);

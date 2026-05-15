@@ -7,7 +7,7 @@ import {
   createNote,
   updateNote,
   deleteNote,
-  getTrainingAssignments,
+  loadFieldStaffAssignmentOptions,
   itemsFromPagedResponse,
 } from "../../services/api";
 
@@ -34,12 +34,12 @@ export default function FieldStaffNotes() {
     setLoading(true);
     setError("");
     try {
-      const [noteRes, assignRes] = await Promise.all([
+      const [noteRes, assignmentOptions] = await Promise.all([
         getNotes({ per_page: 200 }),
-        getTrainingAssignments({ per_page: 200 }),
+        loadFieldStaffAssignmentOptions({ per_page: 200 }),
       ]);
       setNotes(itemsFromPagedResponse(noteRes));
-      setAssignments(itemsFromPagedResponse(assignRes));
+      setAssignments(assignmentOptions);
     } catch (e) {
       setError(e?.response?.data?.message || "فشل تحميل الملاحظات");
     } finally {
