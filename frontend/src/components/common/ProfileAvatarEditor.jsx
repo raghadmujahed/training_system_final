@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, Pencil } from "lucide-react";
 import { uploadProfileAvatar, deleteProfileAvatar, getErrorMessage } from "../../services/api";
 import { writeStoredUser } from "../../utils/session";
+import { resolveAvatarUrl } from "../../utils/avatarUrl";
 import useAppToast from "../../hooks/useAppToast";
 
 function getInitials(name) {
@@ -12,6 +13,7 @@ function getInitials(name) {
 }
 
 const ACCEPT = "image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
+const MAX_AVATAR_BYTES = 10 * 1024 * 1024; // 10 MB
 
 const btnFocus = "focus:outline-none focus-visible:ring-2 focus-visible:ring-[#142a42]/35 focus-visible:ring-offset-2";
 
@@ -25,6 +27,7 @@ export default function ProfileAvatarEditor({ displayName, avatarUrl }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [serverImgFailed, setServerImgFailed] = useState(false);
 
   const revokePreview = useCallback(() => {
     setPreviewUrl((prev) => {
@@ -37,8 +40,13 @@ export default function ProfileAvatarEditor({ displayName, avatarUrl }) {
     return () => revokePreview();
   }, [revokePreview]);
 
-  const displaySrc = previewUrl || avatarUrl || null;
-  const hasServerAvatar = Boolean(avatarUrl);
+  const resolvedServerUrl = resolveAvatarUrl(avatarUrl);
+  const displaySrc = previewUrl || (!serverImgFailed ? resolvedServerUrl : null) || null;
+  const hasServerAvatar = Boolean(resolvedServerUrl);
+
+  useEffect(() => {
+    setServerImgFailed(false);
+  }, [avatarUrl]);
   const hasPending = Boolean(pendingFile);
 
   const openFilePicker = () => inputRef.current?.click();
@@ -55,8 +63,8 @@ export default function ProfileAvatarEditor({ displayName, avatarUrl }) {
       toast.error("يُسمح بصور JPG أو PNG أو WebP فقط.");
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("الحجم الأقصى للصورة 2 ميغابايت.");
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error("الحجم الأقصى للصورة 10 ميغابايت.");
       return;
     }
 
@@ -131,7 +139,16 @@ export default function ProfileAvatarEditor({ displayName, avatarUrl }) {
               aria-label="اختيار صورة شخصية"
             >
               {displaySrc ? (
-                <img src={displaySrc} alt="" className="h-full w-full object-cover" decoding="async" />
+                <img
+                  src={displaySrc}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  decoding="async"
+                  onError={() => {
+                    if (previewUrl) return;
+                    setServerImgFailed(true);
+                  }}
+                />
               ) : (
                 <span className="text-2xl sm:text-3xl">{getInitials(displayName)}</span>
               )}
@@ -154,7 +171,7 @@ export default function ProfileAvatarEditor({ displayName, avatarUrl }) {
           </button>
 
           <p className="m-0 max-w-[14rem] text-center text-[11px] leading-relaxed text-gray-500 sm:text-xs">
-            JPG أو PNG أو WebP — حتى 2MB
+            JPG أو PNG أو WebP — حتى 10MB
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getChatUserProfile } from "../../services/chatApi";
+import { resolveAvatarUrl } from "../../utils/avatarUrl";
 
 const ROLE_COLORS = {
   student:                   { bg: "#eff6ff", color: "#1d4ed8", border: "#bfdbfe" },
@@ -97,7 +98,12 @@ export default function UserProfileModal({ userId, userName, onClose }) {
                 style={profile.avatar_url ? undefined : { background: roleColors.color }}
               >
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" className="chat-avatar-img" decoding="async" />
+                  <img
+                    src={resolveAvatarUrl(profile.avatar_url)}
+                    alt=""
+                    className="chat-avatar-img"
+                    decoding="async"
+                  />
                 ) : (
                   initials
                 )}

@@ -1,8 +1,13 @@
+import { useState } from "react";
+import { resolveAvatarUrl } from "../../utils/avatarUrl";
+
 /**
  * صورة مستخدم في الدردشة: avatar_url أو الحرف الأول من الاسم (عرض فقط).
  */
 export default function ChatUserAvatar({ avatarUrl, name, className = "", children }) {
-  const hasImg = Boolean(avatarUrl);
+  const [imgFailed, setImgFailed] = useState(false);
+  const resolvedSrc = resolveAvatarUrl(avatarUrl);
+  const hasImg = Boolean(resolvedSrc) && !imgFailed;
   const fallback =
     name && String(name).trim()
       ? String(name).trim().charAt(0).toUpperCase()
@@ -11,7 +16,13 @@ export default function ChatUserAvatar({ avatarUrl, name, className = "", childr
   return (
     <div className={`${className}${hasImg ? " chat-avatar--has-image" : ""}`.trim()}>
       {hasImg ? (
-        <img src={avatarUrl} alt="" className="chat-avatar-img" decoding="async" />
+        <img
+          src={resolvedSrc}
+          alt=""
+          className="chat-avatar-img"
+          decoding="async"
+          onError={() => setImgFailed(true)}
+        />
       ) : (
         fallback
       )}

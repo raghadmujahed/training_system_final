@@ -343,7 +343,7 @@ public function enrollments()
     }
 
     /**
-     * رابط الصورة العامة تحت ‎/storage‎ (يطابق منفذ الطلب الحالي، مثل ‎:8000‎ في التطوير).
+     * رابط الصورة العامة تحت ‎/storage‎ (يعتمد APP_URL أو رؤوس البروكسي على الإنتاج).
      */
     public function publicAvatarUrl(): ?string
     {
@@ -352,11 +352,37 @@ public function enrollments()
         }
 
         $path = ltrim(str_replace('\\', '/', $this->avatar_path), '/');
-
-        if (! app()->runningInConsole() && request() && request()->getSchemeAndHttpHost()) {
-            return rtrim(request()->getSchemeAndHttpHost(), '/').'/storage/'.$path;
+        if (str_starts_with($path, 'storage/')) {
+            $path = substr($path, strlen('storage/'));
         }
 
-        return Storage::disk('public')->url($this->avatar_path);
+        return rtrim(static::publicAssetBaseUrl(), '/').'/storage/'.$path;
+    }
+
+    public static function publicAssetBaseUrl(): string
+    {
+        $configured = rtrim((string) config('app.url'), '/');
+        if ($configured !== '' && ! preg_match('#^https?://(localhost|127\.0\.0\.1)(:\d+)?$#i', $configured)) {
+            return $configured;
+        }
+
+        if (! app()->runningInConsole() && request()) {
+            $scheme = request()->header('X-Forwarded-Proto') ?: request()->getScheme();
+            $host = request()->header('X-Forwarded-Host') ?: request()->getHost();
+            $port = request()->header('X-Forwarded-Port');
+
+            if ($host && str_contains($host, ':')) {
+                return "{$scheme}://{$host}";
+            }
+
+            $defaultPort = $scheme === 'https' ? 443 : 80;
+            if ($port && (int) $port !== $defaultPort) {
+                return "{$scheme}://{$host}:{$port}";
+            }
+
+            return "{$scheme}://{$host}";
+        }
+
+        return $configured !== '' ? $configured : 'http://localhost:8000';
     }
 }

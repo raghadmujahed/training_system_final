@@ -1,6 +1,15 @@
+import { resolveAvatarUrl } from "./avatarUrl";
+
+function withResolvedAvatar(user) {
+  if (!user || typeof user !== "object") return user;
+  if (!user.avatar_url) return user;
+  return { ...user, avatar_url: resolveAvatarUrl(user.avatar_url) };
+}
+
 export function readStoredUser() {
   try {
-    return JSON.parse(localStorage.getItem("user") || "{}");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return withResolvedAvatar(user);
   } catch {
     return {};
   }
@@ -14,7 +23,7 @@ function dispatchUserUpdated(user) {
 }
 
 export function writeStoredUser(user) {
-  const payload = user || {};
+  const payload = withResolvedAvatar(user || {});
   localStorage.setItem("user", JSON.stringify(payload));
   dispatchUserUpdated(payload);
 }
@@ -37,8 +46,9 @@ export function clearStoredToken() {
  */
 export function refreshStoredUser(userData) {
   if (userData) {
-    localStorage.setItem("user", JSON.stringify(userData));
-    dispatchUserUpdated(userData);
+    const payload = withResolvedAvatar(userData);
+    localStorage.setItem("user", JSON.stringify(payload));
+    dispatchUserUpdated(payload);
   }
 }
 
