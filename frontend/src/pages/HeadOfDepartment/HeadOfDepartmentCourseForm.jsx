@@ -49,8 +49,8 @@ export default function HeadOfDepartmentCourseForm() {
     }
     if (name === 'training_hours' && value) {
       const numValue = Number(value);
-      if (!isInteger(value) || !isMinValue(numValue, 0) || !isMaxValue(numValue, 500)) {
-        setErrors({ ...errors, training_hours: "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا أكبر من أو يساوي صفر ولا يتجاوز 500" });
+      if (!isInteger(value) || !isMinValue(numValue, 1) || !isMaxValue(numValue, 500)) {
+        setErrors({ ...errors, training_hours: "عدد الساعات التدريبية يجب أن يكون عددًا صحيحًا أكبر من صفر ولا يتجاوز 500" });
       }
     }
   };
