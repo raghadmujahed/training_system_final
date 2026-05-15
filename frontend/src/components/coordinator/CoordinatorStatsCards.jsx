@@ -95,18 +95,18 @@ export default function CoordinatorStatsCards({
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2 sm:gap-2.5 mb-0">
       {cards.map((c) => {
         const Icon = iconMap[c.key] || Clock;
         const vs = variantStyles[c.variant] || variantStyles.info;
         return (
-          <Link key={c.key} to={c.link} className="no-underline">
-            <div className={`bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[16px] p-4 border-r-4 ${vs.border} hover:shadow-sm transition-shadow`}>
-              <div className={`w-9 h-9 rounded-[9px] ${vs.bg} flex items-center justify-center ${vs.icon} mb-2`}>
-                <Icon size={18} />
+          <Link key={c.key} to={c.link} className="no-underline min-w-0 h-full">
+            <div className={`h-full min-h-0 bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[12px] p-2.5 sm:p-3 border-r-4 ${vs.border} hover:shadow-sm transition-shadow`}>
+              <div className={`w-8 h-8 rounded-[8px] ${vs.bg} flex items-center justify-center ${vs.icon} mb-1.5`}>
+                <Icon size={16} />
               </div>
-              <div className="text-[1.5rem] font-extrabold text-secondary leading-tight">{c.value}</div>
-              <div className="text-text-faint text-[0.78rem] font-bold mt-1">{c.label}</div>
+              <div className="text-[1.35rem] sm:text-[1.45rem] font-extrabold text-secondary leading-none">{c.value}</div>
+              <div className="text-text-faint text-[0.72rem] sm:text-[0.75rem] font-bold mt-1 leading-snug line-clamp-2">{c.label}</div>
             </div>
           </Link>
         );

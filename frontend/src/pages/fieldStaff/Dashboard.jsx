@@ -86,7 +86,7 @@ export default function FieldStaffDashboard() {
 
       {/* Role-specific tips */}
       <div className="section-card mt-6 p-5">
-        <h5>إرشادات حسب دورك</h5>
+        <h5>إرشادات</h5>
         {isAdviser && (
           <ul className="pr-5">
             <li>راجع السجلات الإرشادية المقدمة من الطلبة وقم بقبولها أو إعادتها.</li>
@@ -117,9 +117,9 @@ export default function FieldStaffDashboard() {
         )}
         {(isMentor || (isFieldSupervisor && supervisorSubtype === "mentor_teacher")) && (
           <ul className="pr-5">
-            <li>راجع {terms.dailyReport || "التقارير اليومية"} المقدمة من الطلبة وقم بتأكيدها أو إعادتها.</li>
-            <li>استخدم نماذج {terms.evaluation || "التقييم"} لتقييم أداء الطلبة في {terms.lesson || "الحصة"}.</li>
-            <li>سجّل ملاحظاتك على {terms.classroom || "إدارة الصف"} وأضف ملاحظات سريعة.</li>
+            <li>راجع التقارير التدريسية المقدمة من الطلبة وقم بتأكيدها أو إعادتها.</li>
+            <li>في نهاية التدريب قم بعمل تقييم للطالب من خيار التقييمات.</li>
+            <li>سجّل ملاحظاتك على إدارة الصف وأضف ملاحظات سريعة إذا لزم الأمر للطالب.</li>
           </ul>
         )}
         {isFieldSupervisor && supervisorSubtype === "school_counselor" && (
