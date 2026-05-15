@@ -321,6 +321,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Communication
         Route::get('/students/{studentId}/messages', [FieldSupervisorController::class, 'studentMessages']);
         Route::post('/students/{studentId}/messages', [FieldSupervisorController::class, 'sendMessage']);
+        
+        // Visits
+        Route::get('/students/{studentId}/visits', [FieldSupervisorController::class, 'studentVisits']);
+        Route::post('/visits', [FieldSupervisorController::class, 'storeVisit']);
+        Route::put('/visits/{visitId}', [FieldSupervisorController::class, 'updateVisit']);
+        Route::delete('/visits/{visitId}', [FieldSupervisorController::class, 'deleteVisit']);
+        Route::post('/visits/{visitId}/complete', [FieldSupervisorController::class, 'completeVisit']);
         Route::post('/students/{studentId}/message-academic-supervisor', [FieldSupervisorController::class, 'messageAcademicSupervisor']);
         
         // Timeline

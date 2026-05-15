@@ -24,6 +24,7 @@ import EvaluationTab from "./tabs/EvaluationTab";
 import StudentFormsTab from "./tabs/StudentFormsTab";
 import CommunicationTab from "./tabs/CommunicationTab";
 import TimelineTab from "./tabs/TimelineTab";
+import VisitsTab from "./tabs/VisitsTab";
 
 const VALID_TABS = [
   "overview",
@@ -33,6 +34,7 @@ const VALID_TABS = [
   "forms",
   "communication",
   "timeline",
+  "visits",
 ];
 
 const TAB_ROWS = [
@@ -43,6 +45,7 @@ const TAB_ROWS = [
   { id: "forms", label: "النماذج والتقارير", icon: FileStack },
   { id: "communication", label: "الملاحظات والرسائل", icon: MessageCircle },
   { id: "timeline", label: "السجل الزمني", icon: Activity },
+  { id: "visits", label: "جدولة الزيارات", icon: CheckCircle },
 ];
 
 export default function StudentDetail() {
@@ -266,6 +269,7 @@ export default function StudentDetail() {
         )}
         {activeTab === "communication" && <CommunicationTab studentId={studentId} />}
         {activeTab === "timeline" && <TimelineTab studentId={studentId} />}
+        {activeTab === "visits" && <VisitsTab studentId={studentId} student={student} />}
       </div>
     </>
   );

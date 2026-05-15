@@ -15,6 +15,7 @@ use App\Models\Message;
 use App\Models\Note;
 use App\Models\Notification;
 use App\Models\FormInstance;
+use App\Models\SupervisorVisit;
 use App\Services\FieldEvaluationPortfolioEntryService;
 use App\Services\FieldSupervisorAssignmentResolver;
 use Carbon\Carbon;
@@ -1599,17 +1600,195 @@ class FieldSupervisorController extends Controller
     private function countUnreadMessagesFromAcademicSupervisors(User $user): int
     {
         return Message::query()
+            ->whereIn('conversation_id', $this->getUserConversationIds($user))
             ->where('sender_id', '!=', $user->id)
-            ->where(function ($q) {
-                $q->where('is_read', false)->orWhereNull('read_at');
-            })
-            ->whereHas('conversation', function ($q) use ($user) {
-                $q->where('participant_one_id', $user->id)
-                    ->orWhere('participant_two_id', $user->id);
-            })
-            ->whereHas('sender.role', function ($q) {
-                $q->where('name', 'academic_supervisor');
-            })
+            ->whereNull('read_at')
+            ->whereHas('sender', fn($q) => $q->whereHas('role', fn($r) => $r->where('name', 'academic_supervisor')))
             ->count();
+    }
+
+    private function getUserConversationIds(User $user): array
+    {
+        return Conversation::where('participant_one_id', $user->id)
+            ->orWhere('participant_two_id', $user->id)
+            ->pluck('id')
+            ->toArray();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // VISITS (الزيارات)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /**
+     * عرض زيارات الطالب
+     * GET /field-supervisor/students/{studentId}/visits
+     */
+    public function studentVisits(Request $request, $studentId)
+    {
+        $assignment = $this->getStudentAssignments($request, $studentId)->first();
+
+        if (!$assignment) {
+            return response()->json(['message' => 'هذا الطالب غير مرتبط بك كمشرف ميداني'], 403);
+        }
+
+        $visits = SupervisorVisit::where('training_assignment_id', $assignment->id)
+            ->where('supervisor_id', $request->user()->id)
+            ->latest('scheduled_date')
+            ->get();
+
+        return response()->json(['data' => $visits]);
+    }
+
+    /**
+     * جدولة زيارة جديدة
+     * POST /field-supervisor/visits
+     */
+    public function storeVisit(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'training_assignment_id' => 'required|exists:training_assignments,id',
+            'scheduled_date' => 'required|date|after_or_equal:today',
+            'visit_type' => 'required|in:initial,formative,final',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'بيانات غير صحيحة', 'errors' => $validator->errors()], 422);
+        }
+
+        $user = $request->user();
+        $assignment = $this->getStudentAssignments($request)
+            ->where('training_assignments.id', $request->training_assignment_id)
+            ->first();
+
+        if (!$assignment) {
+            return response()->json(['message' => 'هذا التعيين غير مرتبط بك كمشرف ميداني'], 403);
+        }
+
+        // التحقق من عدم وجود زيارة في نفس التاريخ
+        $existingVisit = SupervisorVisit::where('training_assignment_id', $request->training_assignment_id)
+            ->where('supervisor_id', $user->id)
+            ->where('scheduled_date', $request->scheduled_date)
+            ->whereIn('status', ['planned', 'scheduled'])
+            ->first();
+
+        if ($existingVisit) {
+            return response()->json(['message' => 'يوجد زيارة مجدولة لهذا الطالب في هذا التاريخ'], 422);
+        }
+
+        $visit = SupervisorVisit::create([
+            'training_assignment_id' => $request->training_assignment_id,
+            'supervisor_id' => $user->id,
+            'scheduled_date' => $request->scheduled_date,
+            'visit_type' => $request->visit_type,
+            'notes' => $request->notes,
+            'status' => 'planned',
+        ]);
+
+        return response()->json(['data' => $visit, 'message' => 'تم جدولة الزيارة بنجاح'], 201);
+    }
+
+    /**
+     * تعديل زيارة
+     * PUT /field-supervisor/visits/{visitId}
+     */
+    public function updateVisit(Request $request, $visitId)
+    {
+        $validator = Validator::make($request->all(), [
+            'scheduled_date' => 'required|date|after_or_equal:today',
+            'visit_type' => 'required|in:initial,formative,final',
+            'notes' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'بيانات غير صحيحة', 'errors' => $validator->errors()], 422);
+        }
+
+        $visit = SupervisorVisit::findOrFail($visitId);
+
+        // التحقق من أن الزيارة تخص المشرف الحالي
+        if ($visit->supervisor_id !== $request->user()->id) {
+            return response()->json(['message' => 'لا تملك صلاحية تعديل هذه الزيارة'], 403);
+        }
+
+        // التحقق من عدم وجود زيارة أخرى في نفس التاريخ (باستثناء الزيارة الحالية)
+        $existingVisit = SupervisorVisit::where('training_assignment_id', $visit->training_assignment_id)
+            ->where('supervisor_id', $request->user()->id)
+            ->where('scheduled_date', $request->scheduled_date)
+            ->where('id', '!=', $visitId)
+            ->whereIn('status', ['planned', 'scheduled'])
+            ->first();
+
+        if ($existingVisit) {
+            return response()->json(['message' => 'يوجد زيارة مجدولة لهذا الطالب في هذا التاريخ'], 422);
+        }
+
+        $visit->update([
+            'scheduled_date' => $request->scheduled_date,
+            'visit_type' => $request->visit_type,
+            'notes' => $request->notes,
+        ]);
+
+        return response()->json(['data' => $visit, 'message' => 'تم تعديل الزيارة بنجاح']);
+    }
+
+    /**
+     * إلغاء زيارة
+     * DELETE /field-supervisor/visits/{visitId}
+     */
+    public function deleteVisit(Request $request, $visitId)
+    {
+        $visit = SupervisorVisit::findOrFail($visitId);
+
+        // التحقق من أن الزيارة تخص المشرف الحالي
+        if ($visit->supervisor_id !== $request->user()->id) {
+            return response()->json(['message' => 'لا تملك صلاحية حذف هذه الزيارة'], 403);
+        }
+
+        // يمكن إلغاء الزيارات المجدولة فقط
+        if (!in_array($visit->status, ['planned', 'scheduled'])) {
+            return response()->json(['message' => 'لا يمكن إلغاء الزيارات المكتملة'], 422);
+        }
+
+        $visit->update(['status' => 'cancelled']);
+
+        return response()->json(['message' => 'تم إلغاء الزيارة بنجاح']);
+    }
+
+    /**
+     * إكمال زيارة
+     * POST /field-supervisor/visits/{visitId}/complete
+     */
+    public function completeVisit(Request $request, $visitId)
+    {
+        $validator = Validator::make($request->all(), [
+            'notes' => 'nullable|string',
+            'rating' => 'nullable|numeric|min:0|max:100',
+            'positive_points' => 'nullable|string',
+            'needs_improvement' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'بيانات غير صحيحة', 'errors' => $validator->errors()], 422);
+        }
+
+        $visit = SupervisorVisit::findOrFail($visitId);
+
+        // التحقق من أن الزيارة تخص المشرف الحالي
+        if ($visit->supervisor_id !== $request->user()->id) {
+            return response()->json(['message' => 'لا تملك صلاحية إكمال هذه الزيارة'], 403);
+        }
+
+        $visit->update([
+            'notes' => $request->notes,
+            'rating' => $request->rating,
+            'positive_points' => $request->positive_points,
+            'needs_improvement' => $request->needs_improvement,
+            'status' => 'completed',
+            'visit_date' => now(),
+            'completed_at' => now(),
+        ]);
+
+        return response()->json(['data' => $visit, 'message' => 'تم إكمال الزيارة بنجاح']);
     }
 }
