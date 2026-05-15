@@ -1,31 +1,23 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { Navigate, Link } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-import {
-  getStudentDashboardSummary,
-  itemsFromPagedResponse,
-} from "../../services/api";
+import { getStudentDashboardSummary } from "../../services/api";
 import { useAnnouncements } from "../../hooks/useSharedData";
 import { getStudentDashboardPath, getStudentTrack } from "../../utils/studentSection";
 import { readStoredUser } from "../../utils/session";
 import { getTrainingRequestStatusMeta, isTaskPending } from "../../utils/status";
 import {
-  User,
-  GraduationCap,
-  School,
-  MapPin,
   ClipboardList,
   FileText,
   Bell,
   Calendar,
   CheckCircle2,
-  Clock,
   BookOpen,
   Award,
   ArrowLeft,
-  Loader2,
   Megaphone,
 } from "lucide-react";
+import "../../styles/student-dashboard.css";
 
 const getStudentSpecialization = (user, track) => {
   const normalizeText = (value) =>
@@ -243,269 +235,228 @@ export default function StudentDashboard({ forcedTrack = null }) {
     return <Navigate to={getStudentDashboardPath(currentUser)} replace />;
   }
 
+  const trainingStatusLink = "/student/training-request-status";
+
   if (loading) {
     return (
       <LoadingSpinner size="page" text="جاري تحميل لوحة التحكم..." />
     );
   }
 
+  const announcementItems = publicAnnouncements.slice(0, 3);
+  const hasSectionData =
+    studentInfo.sectionName || studentInfo.academicSupervisorName || studentInfo.mentorName;
+
   return (
-    <>
-      {/* Hero Section */}
-      <div className="hero-section mb-4">
-        <div className="hero-content">
-          <div className="hero-icon">
-            <GraduationCap size={26} />
+    <div className="student-dashboard" dir="rtl">
+      <header className="sd-hero">
+        <h1 className="sd-hero-title">مرحبًا بك في لوحة التدريب</h1>
+        <p className="sd-hero-sub">تابع طلب التدريب، المهام، الحضور، والإشعارات</p>
+      </header>
+
+      <section className="sd-training-card">
+        <div className="sd-training-head">
+          <h2>
+            <ClipboardList size={18} aria-hidden />
+            متابعة التدريب
+          </h2>
+          <Link to={trainingStatusLink} className="sd-cta">
+            متابعة حالة طلب التدريب
+            <ArrowLeft size={14} aria-hidden />
+          </Link>
+        </div>
+        <div className="sd-training-grid">
+          <div className="sd-training-item sd-training-item--status">
+            <span className="sd-training-label">حالة طلب التدريب</span>
+            <strong className="sd-training-value">{studentInfo.trainingRequestStatus}</strong>
           </div>
-          <div className="hero-text">
-            <h1 className="hero-title">مرحبًا بك في لوحة التدريب 👋</h1>
-            <p className="hero-subtitle">
-              {effectiveTrack === "psychology"
-                ? "لوحة تحكم طالب علم النفس - تابع تقدمك في التدريب الميداني"
-                : "لوحة تحكم طالب أصول التربية - تابع تقدمك في التدريب الميداني"}
-            </p>
+          <div className="sd-training-item">
+            <span className="sd-training-label">
+              {effectiveTrack === "psychology" ? "الجهة المعتمدة" : "المدرسة المعتمدة"}
+            </span>
+            <strong className="sd-training-value">{studentInfo.school || "—"}</strong>
+          </div>
+          <div className="sd-training-item">
+            <span className="sd-training-label">
+              {effectiveTrack === "psychology" ? "الجهة/المديرية" : "مديرية التربية"}
+            </span>
+            <strong className="sd-training-value">{studentInfo.directorate || "—"}</strong>
           </div>
         </div>
-      </div>
+        {effectiveTrack === "psychology" ? (
+          <p className="sd-psych-note">
+            يُنشأ طلب التدريب عبر المشرف الأكاديمي للقسم؛ يمكنك متابعة الحالة من الزر أعلاه.
+          </p>
+        ) : null}
+      </section>
 
-      {effectiveTrack === "psychology" && (
-        <div
-          className="bg-gradient-to-br from-[#f0f9ff] to-white border border-border rounded-[18px] p-5 mb-4 border-r-4 border-r-info"
-        >
-          <div className="flex items-start gap-3.5">
-            <div
-              className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-info to-[#0369a1] flex items-center justify-center text-white shrink-0"
-            >
-              <ClipboardList size={20} />
-            </div>
-            <div className="flex-1">
-              <h4 className="m-0 mb-2 text-secondary font-extrabold text-[1.05rem]">طلب التدريب — قسم علم النفس</h4>
-              <p className="m-0 text-text-soft text-[0.92rem] leading-relaxed">
-                لا يتم إنشاء طلب التدريب من حساب الطالب. يقوم المشرف الأكاديمي للقسم بإنشاء الطلب ومتابعة الجهات
-                الرسمية حتى صدور الموافقة النهائية من جهة التدريب.
-              </p>
-              <Link
-                to="/student/training-request-status"
-                className="inline-flex items-center gap-1.5 mt-3 font-bold text-info no-underline hover:underline"
-              >
-                متابعة حالة طلب التدريب <ArrowLeft size={16} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {publicAnnouncements.length > 0 ? (
-        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-4 border-r-4 border-r-accent">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-10 h-10 rounded-[10px] bg-accent/12 flex items-center justify-center text-accent">
-              <Megaphone size={20} />
-            </div>
-            <h4 className="m-0 text-secondary font-extrabold">إعلانات عامة</h4>
-          </div>
-          <ul className="list-none p-0 m-0 flex flex-col gap-3">
-            {publicAnnouncements.map((a) => (
-              <li
-                key={a.id}
-                className="p-3 rounded-xl bg-[#f8fafc] border border-[#e2e8f0]"
-              >
-                <div className="font-bold mb-1.5 text-text">{a.title}</div>
-                <div className="text-[0.88rem] leading-relaxed whitespace-pre-wrap text-text-soft">{a.content}</div>
+      {announcementItems.length > 0 ? (
+        <section className="sd-announce">
+          <h2 className="sd-training-head" style={{ marginBottom: 0 }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.92rem", fontWeight: 800 }}>
+              <Megaphone size={18} aria-hidden />
+              إعلانات عامة
+            </span>
+          </h2>
+          <ul className="sd-announce-list">
+            {announcementItems.map((a) => (
+              <li key={a.id} className="sd-announce-item">
+                <strong>{a.title}</strong>
+                <div style={{ marginTop: "0.25rem", lineHeight: 1.45, whiteSpace: "pre-wrap" }}>{a.content}</div>
                 {a.published_at ? (
-                  <div className="text-[0.78rem] text-text-soft mt-2">
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-soft)", marginTop: "0.35rem" }}>
                     نُشر في {new Date(a.published_at).toLocaleString("ar-SA")}
                   </div>
                 ) : null}
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       ) : null}
 
-      {/* متابعة التدريب — بدون تكرار بيانات الحساب الأكاديمية (تُعرض في الملف الشخصي) */}
-      <div className="section-card mb-4">
-        <div className="d-flex align-items-center gap-2 mb-4">
-          <div className="section-icon">
-            <ClipboardList size={20} />
-          </div>
-          <h4 className="mb-0">متابعة التدريب</h4>
-        </div>
-        <div className="info-grid">
-          <div className="info-card">
-            <div className="info-icon-wrapper warning">
-              <MapPin size={18} />
+      {hasSectionData ? (
+        <section className="sd-section-block">
+          <h2 className="sd-training-head" style={{ marginBottom: "0.65rem" }}>
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.92rem", fontWeight: 800 }}>
+              <BookOpen size={18} aria-hidden />
+              الشعبة والمشرفون
+            </span>
+          </h2>
+          <div className="sd-section-grid">
+            <div className="sd-section-pill">
+              <span>المساق</span>
+              <strong>{studentInfo.courseName || "—"}</strong>
             </div>
-            <div className="info-content">
-              <span className="info-label">{effectiveTrack === "psychology" ? "الجهة/المديرية" : "مديرية التربية"}</span>
-              <strong className="info-value">{studentInfo.directorate || "—"}</strong>
+            <div className="sd-section-pill">
+              <span>الشعبة</span>
+              <strong>{studentInfo.sectionName || "—"}</strong>
             </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon-wrapper primary">
-              <School size={18} />
+            <div className="sd-section-pill">
+              <span>المشرف الأكاديمي</span>
+              <strong>{studentInfo.academicSupervisorName || "لم يُعيَّن بعد"}</strong>
             </div>
-            <div className="info-content">
-              <span className="info-label">{effectiveTrack === "psychology" ? "الجهة المعتمدة" : "المدرسة المعتمدة"}</span>
-              <strong className="info-value">{studentInfo.school || "—"}</strong>
-            </div>
-          </div>
-          <div className="info-card highlight">
-            <div className="info-icon-wrapper danger">
-              <ClipboardList size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">حالة طلب التدريب</span>
-              <strong className="info-value">{studentInfo.trainingRequestStatus}</strong>
+            <div className="sd-section-pill">
+              <span>{effectiveTrack === "psychology" ? "الأخصائي المرشد" : "المعلم المرشد"}</span>
+              <strong>{studentInfo.mentorName || "لم يُعيَّن بعد"}</strong>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      ) : null}
 
-      {/* Section & Supervisors Card — يظهر عند تسجيل الطالب في شعبة */}
-      {(studentInfo.sectionName || studentInfo.academicSupervisorName || studentInfo.mentorName) && (
-        <div className="section-card mb-4">
-          <div className="d-flex align-items-center gap-2 mb-4">
-            <div className="section-icon">
-              <BookOpen size={20} />
-            </div>
-            <h4 className="mb-0">الشعبة والمشرفون</h4>
-          </div>
-          <div className="info-grid">
-            <div className="info-card">
-              <div className="info-icon-wrapper primary">
-                <BookOpen size={18} />
-              </div>
-              <div className="info-content">
-                <span className="info-label">المساق</span>
-                <strong className="info-value">{studentInfo.courseName || "—"}</strong>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="info-icon-wrapper info">
-                <ClipboardList size={18} />
-              </div>
-              <div className="info-content">
-                <span className="info-label">الشعبة</span>
-                <strong className="info-value">{studentInfo.sectionName || "—"}</strong>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="info-icon-wrapper accent">
-                <User size={18} />
-              </div>
-              <div className="info-content">
-                <span className="info-label">المشرف الأكاديمي</span>
-                <strong className="info-value">{studentInfo.academicSupervisorName || "لم يُعيَّن بعد"}</strong>
-              </div>
-            </div>
-            <div className="info-card">
-              <div className="info-icon-wrapper success">
-                <School size={18} />
-              </div>
-              <div className="info-content">
-                <span className="info-label">{effectiveTrack === "psychology" ? "الأخصائي المرشد" : "المعلم المرشد"}</span>
-                <strong className="info-value">{studentInfo.mentorName || "لم يُعيَّن بعد"}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Stats Cards */}
-      <div className="dashboard-grid mb-4">
+      <div className="sd-quick-grid">
         {displaySummaryCards.map((card, index) => {
           const IconComponent = card.icon;
           return (
-            <Link key={index} to={card.link} className="stat-card-link">
-              <div className={`stat-card-modern ${card.className}`}>
-                <div className="stat-card-header">
-                  <div className={`stat-icon-modern ${card.className}`}>
-                    <IconComponent size={22} />
-                  </div>
-                  <ArrowLeft size={16} className="stat-arrow" />
+            <Link key={index} to={card.link} className={`sd-quick-card ${card.className}`}>
+              <div className="sd-quick-top">
+                <div className="sd-quick-icon">
+                  <IconComponent size={20} aria-hidden />
                 </div>
-                <div className="stat-card-body">
-                  <div className="stat-value-modern">{card.value}</div>
-                  <div className="stat-title-modern">{card.title}</div>
-                </div>
-                <div className="stat-meta-modern">{card.desc}</div>
+                <ArrowLeft size={14} aria-hidden />
               </div>
+              <div className="sd-quick-value">{card.value}</div>
+              <div className="sd-quick-title">{card.title}</div>
+              <div className="sd-quick-desc">{card.desc}</div>
             </Link>
           );
         })}
       </div>
 
-      <div className="section-card">
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <div className="d-flex align-items-center gap-2">
-            <div className="section-icon"><Bell size={20} /></div>
-            <h4 className="mb-0">آخر الإشعارات والتحديثات</h4>
+      <div className="sd-feed-row">
+        <section className="sd-feed-card">
+          <div className="sd-feed-head">
+            <h3>
+              <Bell size={16} aria-hidden />
+              آخر الإشعارات
+            </h3>
+            <Link to="/student/notifications-updates" className="sd-feed-link">
+              عرض الكل
+            </Link>
           </div>
-          <Link to="/student/notifications-updates" className="text-[0.82rem] text-[#6366f1] font-semibold no-underline hover:underline">عرض الكل ←</Link>
-        </div>
-        {latestItems.length === 0 ? (
-          <div className="text-center py-8 px-4 text-text-faint">
-            <Bell size={32} className="mb-2 opacity-40 mx-auto" />
-            <p className="m-0 text-[0.9rem]">لا توجد إشعارات حديثة.</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {latestItems.map((item, index) => (
+          {latestItems.length === 0 ? (
+            <div className="sd-empty">
+              <Bell size={24} style={{ opacity: 0.35 }} aria-hidden />
+              <p>لا توجد إشعارات حديثة.</p>
+            </div>
+          ) : (
+            latestItems.map((item, index) => (
               <div
                 key={index}
-                className="flex items-start gap-3 p-3.5 rounded-xl transition-shadow"
+                className="sd-notif-item"
                 style={{ backgroundColor: item.bg, border: `1px solid ${item.color}22` }}
               >
                 <div
-                  className="w-2.5 h-2.5 rounded-full shrink-0 mt-[5px]"
-                  style={{ backgroundColor: item.dot, boxShadow: `0 0 0 3px ${item.dot}33` }}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    backgroundColor: item.dot,
+                    flexShrink: 0,
+                    marginTop: 5,
+                  }}
+                  aria-hidden
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-0.5">
-                    <span className="font-bold text-[0.87rem]" style={{ color: item.color }}>{item.title}</span>
-                    {item.time && <span className="text-[0.73rem] text-text-faint shrink-0">{item.time}</span>}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", marginBottom: 2 }}>
+                    <span style={{ fontWeight: 700, fontSize: "0.8rem", color: item.color }}>{item.title}</span>
+                    {item.time ? (
+                      <span style={{ fontSize: "0.7rem", color: "var(--text-faint)", flexShrink: 0 }}>{item.time}</span>
+                    ) : null}
                   </div>
-                  <p className="m-0 text-[0.82rem] text-[#475569] leading-relaxed line-clamp-2">
-                    {item.text}
-                  </p>
+                  <p style={{ margin: 0, fontSize: "0.78rem", color: "#475569", lineHeight: 1.45 }}>{item.text}</p>
                 </div>
-                {!item.read && (
-                  <div className="w-[7px] h-[7px] rounded-full bg-[#6366f1] shrink-0 mt-1.5" />
-                )}
+                {!item.read ? (
+                  <div
+                    style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#6366f1", flexShrink: 0, marginTop: 6 }}
+                    aria-hidden
+                  />
+                ) : null}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            ))
+          )}
+        </section>
 
-      <div className="section-card mt-3">
-        <div className="d-flex align-items-center justify-content-between mb-3">
-          <div className="d-flex align-items-center gap-2">
-            <div className="section-icon"><FileText size={20} /></div>
-            <h4 className="mb-0">آخر التكليفات</h4>
+        <section className="sd-feed-card">
+          <div className="sd-feed-head">
+            <h3>
+              <FileText size={16} aria-hidden />
+              آخر التكليفات
+            </h3>
+            <Link to="/student/assignments" className="sd-feed-link">
+              عرض الكل
+            </Link>
           </div>
-          <Link to="/student/assignments" className="text-[0.82rem] text-[#6366f1] font-semibold no-underline hover:underline">عرض الكل ←</Link>
-        </div>
-        {latestTasks.length === 0 ? (
-          <div className="text-center py-6 px-4 text-text-faint">
-            <FileText size={28} className="mb-2 opacity-40 mx-auto" />
-            <p className="m-0 text-[0.9rem]">لا توجد تكليفات حديثة.</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {latestTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between p-3 rounded-[10px] bg-[#f8fafc] border border-[#e2e8f0]">
-                <span className="font-semibold text-[0.85rem] text-text">{task.title || "تكليف"}</span>
-                <div className="flex items-center gap-3 shrink-0">
-                  {task.due_date && <span className="text-[0.75rem] text-text-faint">{task.due_date}</span>}
-                  <span className={`text-[0.73rem] font-semibold px-2 py-0.5 rounded-full ${isTaskPending(task.status) ? "bg-warning/15 text-[#92400e]" : "bg-success/15 text-[#166534]"}`}>{task.status_label || task.status || "—"}</span>
+          {latestTasks.length === 0 ? (
+            <div className="sd-empty">
+              <FileText size={22} style={{ opacity: 0.35 }} aria-hidden />
+              <p>لا توجد تكليفات حديثة.</p>
+            </div>
+          ) : (
+            latestTasks.map((task) => (
+              <div key={task.id} className="sd-task-item">
+                <span style={{ fontWeight: 600 }}>{task.title || "تكليف"}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                  {task.due_date ? (
+                    <span style={{ fontSize: "0.72rem", color: "var(--text-faint)" }}>{task.due_date}</span>
+                  ) : null}
+                  <span
+                    style={{
+                      fontSize: "0.7rem",
+                      fontWeight: 600,
+                      padding: "0.15rem 0.45rem",
+                      borderRadius: 999,
+                      background: isTaskPending(task.status) ? "rgba(245, 158, 11, 0.15)" : "rgba(16, 185, 129, 0.15)",
+                      color: isTaskPending(task.status) ? "#92400e" : "#166534",
+                    }}
+                  >
+                    {task.status_label || task.status || "—"}
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </section>
       </div>
-
-    </>
+    </div>
   );
 }
