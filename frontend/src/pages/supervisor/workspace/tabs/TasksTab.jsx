@@ -625,7 +625,6 @@ export default function TasksTab({ studentId }) {
           })}
         </div>
       )}
-    </div>
 
       {/* Modal لعرض حلول الطلبة */}
       {showSubmissionsModal && selectedTask && (
@@ -696,19 +695,6 @@ export default function TasksTab({ studentId }) {
                             >
                               📎 تحميل الملف
                             </a>
-                          </div>
-                        )}
-
-                        {sub.notes && (
-                          <div className="mt-3 p-3 bg-[#f8f9fa] rounded-lg">
-                            <div className="text-sm text-gray-600 mb-1">ملاحظات الطالب:</div>
-                            <div className="text-sm">{sub.notes}</div>
-                          </div>
-                        )}
-
-                        {sub.score != null && (
-                          <div className="mt-3 text-sm">
-                            <span className="font-semibold text-[#28a745]">الدرجة: {sub.score}</span>
                           </div>
                         )}
                       </div>

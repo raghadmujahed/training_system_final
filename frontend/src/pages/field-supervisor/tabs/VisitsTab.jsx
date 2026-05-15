@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiClient } from "../../../../services/api";
-import { useToast } from "../../../../components/Toast";
-import LoadingSpinner from "../../../../components/common/LoadingSpinner";
+import { apiClient } from "../../../services/api";
+import { useToast } from "../../../components/Toast";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
 import { Calendar, Plus, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
 
 const initialScheduleForm = {
