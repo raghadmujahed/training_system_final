@@ -88,12 +88,19 @@ class UserController extends Controller
             if (!$requestedRole || $requestedRole === 'student') {
                 $users->whereHas('role', function ($q) { $q->where('name', 'student'); });
                 $users->where('status', 'active');
+                // للطلبة، دائماً فلترة حسب قسم المستخدم الحالي
+                if ($request->user()->department_id) {
+                    $users->where('users.department_id', $request->user()->department_id);
+                }
             } else {
                 $users->whereHas('role', function ($q) { $q->where('name', 'academic_supervisor'); });
-            }
-
-            if ($request->user()->department_id) {
-                $users->where('users.department_id', $request->user()->department_id);
+                // للمشرفين الأكاديميين، اسمح بالفلترة حسب department_id المطلوب من الـ request
+                // إذا لم يتم تحديد department_id في الـ request، فلتر حسب قسم المستخدم الحالي
+                if (isset($validated['department_id'])) {
+                    $users->where('users.department_id', $validated['department_id']);
+                } elseif ($request->user()->department_id) {
+                    $users->where('users.department_id', $request->user()->department_id);
+                }
             }
         }
 
