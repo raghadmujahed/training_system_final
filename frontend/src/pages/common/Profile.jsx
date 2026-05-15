@@ -22,6 +22,7 @@ export default function Profile() {
 
   const rawRole = profileUser?.role?.name || profileUser?.role || "";
   const isStudent = normalizeRole(rawRole) === ROLES.STUDENT;
+  const isAdmin = normalizeRole(rawRole) === ROLES.ADMIN;
   const roleDisplay = getRoleLabel(rawRole);
   const departmentName =
     (typeof profileUser?.department === "object" && profileUser?.department?.name) || profileUser?.department?.name || "";
@@ -289,15 +290,21 @@ export default function Profile() {
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4 leading-relaxed">
-                البيانات التالية للعرض فقط، ولا يمكن تعديلها من الملف الشخصي. لتحديثها، يرجى التواصل مع مسؤول
-                النظام.
-              </p>
+              {!isAdmin && (
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                  البيانات التالية للعرض فقط، ولا يمكن تعديلها من الملف الشخصي. لتحديثها، يرجى التواصل مع مسؤول
+                  النظام.
+                </p>
+              )}
 
-              <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <ProfileInfoItem icon={Hash} label="الرقم الجامعي / الموظف" value={universityDisplay || "—"} />
-                <ProfileInfoItem icon={Building2} label="القسم" value={departmentName || "—"} />
-                <ProfileInfoItem icon={BookOpen} label="التخصص" value={majorDisplay || "—"} />
+              <div className={`grid gap-4 ${isAdmin ? "sm:grid-cols-2" : "sm:grid-cols-2 md:grid-cols-3"}`}>
+                {!isAdmin && (
+                  <>
+                    <ProfileInfoItem icon={Hash} label="الرقم الجامعي / الموظف" value={universityDisplay || "—"} />
+                    <ProfileInfoItem icon={Building2} label="القسم" value={departmentName || "—"} />
+                    <ProfileInfoItem icon={BookOpen} label="التخصص" value={majorDisplay || "—"} />
+                  </>
+                )}
                 <ProfileInfoItem icon={Mail} label="البريد الإلكتروني" value={profileUser.email} />
                 <ProfileInfoItem icon={Phone} label="رقم الهاتف" value={profileUser.phone} />
               </div>
