@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import SidebarMenuGlyph from "./SidebarMenuGlyph";
 import { checkFeatureFlag } from "../../services/api";
-import { getFieldStaffRoleKey, getRoleLabel, normalizeRole, ROLES } from "../../utils/roles";
+import { getFieldStaffRoleKey, getRoleLabel, normalizeRole, ROLES, getProfilePathForUser } from "../../utils/roles";
 import {
   isPsychologyAcademicSupervisor,
   isPsychologyStudentUser,
@@ -97,7 +97,6 @@ function buildFieldSupervisorMenu() {
     { name: "النماذج والتقارير", path: "/field-supervisor/forms" },
     { name: "الملاحظات والرسائل", path: "/field-supervisor/messages" },
     { name: "الإشعارات", path: "/notifications" },
-    { name: "الملف الشخصي", path: "/profile" },
   ];
 }
 
@@ -163,9 +162,6 @@ const menus = {
     
     // تقارير
     { name: "التقارير", path: "/reports" },
-
-    // صفحات مشتركة
-    { name: "الملف الشخصي", path: "/profile" },
   ],
   
 
@@ -176,7 +172,6 @@ const menus = {
   supervisor: buildFieldStaffMenu("supervisor"),
   school_manager: [
     { name: "\u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629", path: "/principal/dashboard" },
-    { name: "\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a", path: "/principal/profile" },
     { name: "\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u062a\u062f\u0631\u064a\u0628", path: "/principal/training-requests" },
     { name: "\u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u062d\u0636\u0648\u0631", path: "/principal/attendance-approval" },
     { name: "تقييم الطلبة", path: "/principal/student-evaluation" },
@@ -205,7 +200,6 @@ const menus = {
     { name: "إدارة الشعب", path: "/head-department/sections" },
     { name: "تسجيل الطلاب", path: "/head-department/enrollments/create" },
     { name: "الأرشفة", path: "/head-department/archive" },
-    { name: "الملف الشخصي", path: "/profile" },
   ],
 
   coordinator: [
@@ -220,7 +214,6 @@ const menus = {
 
   principal: [
     { name: "الرئيسية", path: "/principal/dashboard" },
-    { name: "الملف الشخصي", path: "/principal/profile" },
     { name: "طلبات التدريب", path: "/principal/training-requests" },
     { name: "اعتماد الحضور", path: "/principal/attendance-approval" },
     { name: "التقييمات", path: "/principal/student-evaluation" },
@@ -228,7 +221,6 @@ const menus = {
 
   psychology_center_manager: [
     { name: "الرئيسية", path: "/psychology-center/dashboard" },
-    { name: "الملف الشخصي", path: "/psychology-center/profile" },
     { name: "طلبات التدريب", path: "/psychology-center/mentor-assignment" },
     { name: "المتدربون في المركز", path: "/psychology-center/trainee-students" },
     { name: "تقييم الطلبة", path: "/principal/student-evaluation" },
@@ -252,7 +244,10 @@ const menus = {
 export default function Sidebar({ isOpen, onClose }) {
   const navigate = useNavigate();
   const [featureFlags, setFeatureFlags] = useState({});
-  const savedUser = readStoredUser();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [storedUser, setStoredUser] = useState(() => readStoredUser());
+  const userMenuRef = useRef(null);
+  const savedUser = storedUser;
   const rawRole = savedUser?.role?.name || savedUser?.role || ROLES.ADMIN;
   const normalizedRole = normalizeRole(rawRole);
   const role =
@@ -265,6 +260,14 @@ export default function Sidebar({ isOpen, onClose }) {
       : getFieldStaffRoleKey(normalizedRole);
   const userName = savedUser?.name || "مستخدم تجريبي";
   const roleName = getRoleLabel(rawRole);
+  const profilePath = getProfilePathForUser(savedUser);
+  const universityLabel = savedUser?.university_id ? String(savedUser.university_id) : "";
+  const deptLabel =
+    (typeof savedUser?.department === "object" && savedUser?.department?.name) ||
+    savedUser?.department?.name ||
+    "";
+  const majorLabel = savedUser?.major ? String(savedUser.major) : "";
+  const deptOrMajor = [deptLabel, majorLabel].filter(Boolean).join(" — ") || "";
 
   const menu = useMemo(() => {
     // المعلم المرشد (دور teacher) بنفس هيكل قائمة «معلم مرشد ميداني» (mentor_teacher) — وليس بقائمة المهام/التقييم النهائي القديمة
@@ -312,6 +315,32 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const showMinistryEducationSeal = normalizedRole === ROLES.EDUCATION_DIRECTORATE;
   const showMinistryHealthSeal = normalizedRole === ROLES.HEALTH_DIRECTORATE;
+
+  useEffect(() => {
+    const onUserUpdated = (e) => {
+      setStoredUser(e.detail && typeof e.detail === "object" ? e.detail : readStoredUser());
+    };
+    window.addEventListener("user-updated", onUserUpdated);
+    return () => window.removeEventListener("user-updated", onUserUpdated);
+  }, []);
+
+  useEffect(() => {
+    if (!userMenuOpen) return undefined;
+    const onDoc = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setUserMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [userMenuOpen]);
 
   useEffect(() => {
     let isMounted = true;
@@ -412,25 +441,88 @@ export default function Sidebar({ isOpen, onClose }) {
 
       </div>
 
-      <div className="sidebar-footer">
-        <NavLink
-          to="/profile"
-          onClick={handleLinkClick}
-          className={({ isActive }) =>
-            `sidebar-user-box no-underline cursor-pointer ${isActive ? "active" : ""}`
-          }
-        >
-          <div className="sidebar-user-avatar">{getInitials(userName)}</div>
+      <div className="sidebar-footer" ref={userMenuRef}>
+        <div className="sidebar-user-menu-wrap">
+          <button
+            type="button"
+            className={`sidebar-user-box sidebar-user-menu-trigger w-100 text-start border-0 ${userMenuOpen ? "active" : ""}`}
+            aria-expanded={userMenuOpen}
+            aria-haspopup="true"
+            onClick={() => setUserMenuOpen((o) => !o)}
+          >
+            <div className="sidebar-user-avatar">
+              {savedUser?.avatar_url ? (
+                <img src={savedUser.avatar_url} alt="" className="sidebar-user-avatar-img" decoding="async" />
+              ) : (
+                getInitials(userName)
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <strong className="d-block text-truncate">{userName}</strong>
+              <span className="d-block text-truncate">
+                صفة المستخدم: {roleName}
+              </span>
+            </div>
+            <span className="sidebar-user-chevron" aria-hidden>
+              {userMenuOpen ? "▲" : "▼"}
+            </span>
+          </button>
 
-          <div>
-            <strong>{userName}</strong>
-            <span>{roleName}</span>
-          </div>
-        </NavLink>
-
-        <button className="sidebar-logout-btn mt-3" onClick={handleLogout}>
-          تسجيل الخروج
-        </button>
+          {userMenuOpen && (
+            <div className="sidebar-user-dropdown" role="menu">
+              <div className="sidebar-user-dropdown-header">
+                <div className="sidebar-user-avatar sidebar-user-avatar--lg">
+                  {savedUser?.avatar_url ? (
+                    <img src={savedUser.avatar_url} alt="" className="sidebar-user-avatar-img" decoding="async" />
+                  ) : (
+                    getInitials(userName)
+                  )}
+                </div>
+                <div className="sidebar-user-dropdown-meta">
+                  <strong>{userName}</strong>
+                  <span>صفة المستخدم: {roleName}</span>
+                  {universityLabel && (
+                    <small className="sidebar-user-dropdown-line">الرقم الجامعي / الموظف: {universityLabel}</small>
+                  )}
+                  {deptOrMajor && <small className="sidebar-user-dropdown-line">{deptOrMajor}</small>}
+                </div>
+              </div>
+              <NavLink
+                to={profilePath}
+                role="menuitem"
+                className="sidebar-user-dropdown-item"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  handleLinkClick();
+                }}
+              >
+                الملف الشخصي
+              </NavLink>
+              <NavLink
+                to="/change-password"
+                role="menuitem"
+                className="sidebar-user-dropdown-item"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  handleLinkClick();
+                }}
+              >
+                تغيير كلمة المرور
+              </NavLink>
+              <button
+                type="button"
+                role="menuitem"
+                className="sidebar-user-dropdown-item sidebar-user-dropdown-item--danger"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  handleLogout();
+                }}
+              >
+                تسجيل الخروج
+              </button>
+            </div>
+          )}
+        </div>
 
         <p>البوابة الأكاديمية لإدارة التدريب العملي والتربوي</p>
       </div>

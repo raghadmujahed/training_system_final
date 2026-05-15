@@ -2,6 +2,7 @@ import { useState } from "react";
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
 import UserProfileModal from "./UserProfileModal";
+import ChatUserAvatar from "./ChatUserAvatar";
 
 function getChatName(chat, currentUserId) {
   if (!chat) return "";
@@ -59,9 +60,11 @@ export default function ChatWindow({ chat, draftUser, messages, loadingMessages,
       <div className="chat-window">
         <div className="chat-window-header">
           <div className="chat-window-header-btn" style={{ cursor: 'default' }}>
-            <div className="chat-window-avatar">
-              {draftUser.name?.charAt(0).toUpperCase()}
-            </div>
+            <ChatUserAvatar
+              className="chat-window-avatar"
+              avatarUrl={draftUser.avatar_url}
+              name={draftUser.name}
+            />
             <div className="chat-window-title">
               <span className="chat-window-name">{draftUser.name}</span>
               {draftUser.role && (
@@ -91,9 +94,11 @@ export default function ChatWindow({ chat, draftUser, messages, loadingMessages,
           onClick={() => otherParticipant && setProfileUser(otherParticipant)}
           title="عرض الملف الشخصي"
         >
-          <div className="chat-window-avatar">
-            {chatName.charAt(0).toUpperCase()}
-          </div>
+          <ChatUserAvatar
+            className="chat-window-avatar"
+            avatarUrl={otherParticipant?.avatar_url}
+            name={chatName}
+          />
           <div className="chat-window-title">
             <span className="chat-window-name">{chatName}</span>
             {otherParticipant?.role && (

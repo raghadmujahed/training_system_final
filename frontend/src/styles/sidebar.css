@@ -259,6 +259,15 @@
   font-size: 0.85rem;
   color: #fff;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.sidebar-user-avatar .sidebar-user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .sidebar-user-box strong {
@@ -320,9 +329,116 @@
   transform: translateY(-1px);
 }
 
-.sidebar-footer p,
-.sidebar-footer span,
-.sidebar-footer small {
+/* قائمة المستخدم (Popover) أسفل الشريط */
+.sidebar-user-menu-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.sidebar-user-menu-trigger {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.sidebar-user-chevron {
+  margin-inline-start: auto;
+  opacity: 0.55;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.sidebar-user-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 120;
+  border-radius: 14px;
+  background: rgba(18, 36, 54, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  padding: 0;
+}
+
+.sidebar-user-dropdown-header {
+  display: flex;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-user-avatar--lg {
+  width: 44px;
+  height: 44px;
+  font-size: 0.95rem;
+}
+
+.sidebar-user-dropdown-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-user-dropdown-meta strong {
+  display: block;
+  color: #fff;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+.sidebar-user-dropdown-meta > span {
+  display: block;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.sidebar-user-dropdown-line {
+  display: block;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.sidebar-user-dropdown-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 11px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: start;
+  font-family: inherit;
+}
+
+.sidebar-user-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-user-dropdown-item--danger {
+  color: #fecaca;
+}
+
+.sidebar-user-dropdown-item--danger:hover {
+  background: rgba(176, 58, 72, 0.2);
+}
+
+.sidebar-footer > p {
   color: rgba(255, 255, 255, 0.68);
   margin: 10px 0 0;
   font-size: 0.76rem;

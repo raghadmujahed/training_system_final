@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getChatAllowedUsers } from "../../services/chatApi";
 import UserProfileModal from "./UserProfileModal";
+import ChatUserAvatar from "./ChatUserAvatar";
 
 function parseServerDate(dateStr) {
   if (!dateStr) return null;
@@ -173,12 +174,15 @@ export default function ChatSidebar({
               return (
                 <div key={chat.id} className={`chat-sidebar-item-wrap ${isActive ? "active" : ""}`}>
                   <button className="chat-sidebar-item" onClick={() => onSelectChat(chat)}>
-                    <div className="chat-item-avatar">
-                      {name.charAt(0).toUpperCase()}
+                    <ChatUserAvatar
+                      className="chat-item-avatar"
+                      avatarUrl={otherParticipant?.avatar_url}
+                      name={name}
+                    >
                       {chat.unread_count > 0 && (
                         <span className="chat-unread-badge">{chat.unread_count}</span>
                       )}
-                    </div>
+                    </ChatUserAvatar>
                     <div className="chat-item-info">
                       <span className="chat-item-name">{name}</span>
                       <span className="chat-item-preview" dir="auto">
@@ -244,9 +248,11 @@ export default function ChatSidebar({
                     setNewSearch("");
                   }}
                 >
-                  <div className="chat-item-avatar">
-                    {(user.name || "؟").charAt(0).toUpperCase()}
-                  </div>
+                  <ChatUserAvatar
+                    className="chat-item-avatar"
+                    avatarUrl={user.avatar_url}
+                    name={user.name}
+                  />
                   <div className="chat-item-info">
                     <span className="chat-item-name">{user.name}</span>
                     <span className="chat-item-preview">

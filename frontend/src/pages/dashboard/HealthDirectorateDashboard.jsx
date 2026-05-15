@@ -181,23 +181,13 @@ const HealthDirectorateDashboard = () => {
       </div>
 
       <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 mb-3">
-        <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">المعلومات الأساسية</h4>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
-            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.name}</strong>
-            <span className="text-text-faint text-[0.8rem]">اسم المديرية</span>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <Building2 size={22} />
           </div>
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
-            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.officer}</strong>
-            <span className="text-text-faint text-[0.8rem]">المسؤول</span>
-          </div>
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
-            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.email}</strong>
-            <span className="text-text-faint text-[0.8rem]">البريد الإلكتروني</span>
-          </div>
-          <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 text-center">
-            <strong className="block text-text text-[1rem] mb-1">{directorateInfo.phone}</strong>
-            <span className="text-text-faint text-[0.8rem]">رقم الهاتف</span>
+          <div>
+            <h4 className="m-0 text-secondary font-extrabold text-[1.05rem]">نطاق المديرية</h4>
+            <p className="m-0 mt-1 text-text text-[1rem] font-semibold">{directorateInfo.name}</p>
           </div>
         </div>
       </div>

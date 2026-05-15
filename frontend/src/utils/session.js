@@ -6,8 +6,17 @@ export function readStoredUser() {
   }
 }
 
+const USER_UPDATED = "user-updated";
+
+function dispatchUserUpdated(user) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(USER_UPDATED, { detail: user || {} }));
+}
+
 export function writeStoredUser(user) {
-  localStorage.setItem("user", JSON.stringify(user || {}));
+  const payload = user || {};
+  localStorage.setItem("user", JSON.stringify(payload));
+  dispatchUserUpdated(payload);
 }
 
 export function clearStoredUser() {
@@ -29,6 +38,7 @@ export function clearStoredToken() {
 export function refreshStoredUser(userData) {
   if (userData) {
     localStorage.setItem("user", JSON.stringify(userData));
+    dispatchUserUpdated(userData);
   }
 }
 

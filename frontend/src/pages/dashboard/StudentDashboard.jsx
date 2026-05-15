@@ -11,9 +11,7 @@ import { readStoredUser } from "../../utils/session";
 import { getTrainingRequestStatusMeta, isTaskPending } from "../../utils/status";
 import {
   User,
-  IdCard,
   GraduationCap,
-  Building2,
   School,
   MapPin,
   ClipboardList,
@@ -260,7 +258,7 @@ export default function StudentDashboard({ forcedTrack = null }) {
             <GraduationCap size={26} />
           </div>
           <div className="hero-text">
-            <h1 className="hero-title">مرحباً، {studentInfo.name || "طالب"} 👋</h1>
+            <h1 className="hero-title">مرحبًا بك في لوحة التدريب 👋</h1>
             <p className="hero-subtitle">
               {effectiveTrack === "psychology"
                 ? "لوحة تحكم طالب علم النفس - تابع تقدمك في التدريب الميداني"
@@ -324,60 +322,15 @@ export default function StudentDashboard({ forcedTrack = null }) {
         </div>
       ) : null}
 
-      {/* Student Info Cards */}
+      {/* متابعة التدريب — بدون تكرار بيانات الحساب الأكاديمية (تُعرض في الملف الشخصي) */}
       <div className="section-card mb-4">
         <div className="d-flex align-items-center gap-2 mb-4">
           <div className="section-icon">
-            <User size={20} />
+            <ClipboardList size={20} />
           </div>
-          <h4 className="mb-0">المعلومات الأساسية</h4>
+          <h4 className="mb-0">متابعة التدريب</h4>
         </div>
         <div className="info-grid">
-          <div className="info-card">
-            <div className="info-icon-wrapper primary">
-              <User size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">اسم الطالب</span>
-              <strong className="info-value">{studentInfo.name || "—"}</strong>
-            </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon-wrapper accent">
-              <IdCard size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">الرقم الجامعي</span>
-              <strong className="info-value">{studentInfo.universityId || "—"}</strong>
-            </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon-wrapper info">
-              <Building2 size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">الكلية</span>
-              <strong className="info-value">{studentInfo.college}</strong>
-            </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon-wrapper accent">
-              <BookOpen size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">التخصص</span>
-              <strong className="info-value">{studentInfo.major || "—"}</strong>
-            </div>
-          </div>
-          <div className="info-card">
-            <div className="info-icon-wrapper success">
-              <BookOpen size={18} />
-            </div>
-            <div className="info-content">
-              <span className="info-label">القسم</span>
-              <strong className="info-value">{studentInfo.department || "—"}</strong>
-            </div>
-          </div>
           <div className="info-card">
             <div className="info-icon-wrapper warning">
               <MapPin size={18} />

@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   getCurrentUser,
   updateUser,
   updateTrainingSite,
 } from "../../services/api";
+import { readStoredUser, writeStoredUser } from "../../utils/session";
+import { ProfileAvatarEditor } from "../../components/common";
 import { siteLabels } from "../../utils/roles";
 import useAppToast from "../../hooks/useAppToast";
 import {
@@ -36,6 +38,18 @@ const SCHOOL_TYPES = [
   { value: "private", label: "مدرسة خاصة" },
 ];
 
+/** لحساب التغييرات فقط على الحقول القابلة للتعديل (لا يشمل البريد المعروض للقراءة فقط) */
+function editableProfileSnapshot(p) {
+  return {
+    principalName: String(p.principalName ?? "").trim(),
+    phone: String(p.phone ?? "").trim(),
+    schoolName: String(p.schoolName ?? "").trim(),
+    directorate: p.directorate || "وسط",
+    schoolType: p.schoolType === "private" ? "private" : "public",
+    address: String(p.address ?? "").trim(),
+  };
+}
+
 const Profile = ({ siteType: propSiteType = "school" }) => {
   const [userId, setUserId] = useState(null);
   const [trainingSiteId, setTrainingSiteId] = useState(null);
@@ -55,9 +69,20 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
   const [loading, setLoading] = useState(true);
   const toast = useAppToast();
   const [saving, setSaving] = useState(false);
+  const [baselineProfile, setBaselineProfile] = useState(null);
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
 
   useEffect(() => {
     fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const onUserUpdated = () => {
+      const u = readStoredUser();
+      setProfileAvatarUrl(u.avatar_url ?? null);
+    };
+    window.addEventListener("user-updated", onUserUpdated);
+    return () => window.removeEventListener("user-updated", onUserUpdated);
   }, []);
 
   const fetchProfile = async () => {
@@ -77,7 +102,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
       setUserId(user.id ?? null);
       setTrainingSiteId(user.training_site_id ?? trainingSite.id ?? null);
 
-      setProfileData({
+      const snapshot = {
         principalName: empty(user.name) || "",
         schoolName: empty(trainingSite.name) || "",
         directorate: trainingSite.directorate || "وسط",
@@ -85,7 +110,10 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
         phone: empty(user.phone) || "",
         email: empty(user.email) || "",
         address: empty(trainingSite.location) || "",
-      });
+      };
+      setProfileData(snapshot);
+      setBaselineProfile(editableProfileSnapshot(snapshot));
+      setProfileAvatarUrl(user.avatar_url ?? null);
     } catch (error) {
       console.error("Failed to load principal profile:", error);
       toast.error("تعذر تحميل البيانات الشخصية.");
@@ -102,10 +130,22 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
     }));
   };
 
+  const profileDirty = useMemo(() => {
+    if (!baselineProfile) return false;
+    return (
+      JSON.stringify(editableProfileSnapshot(profileData)) !== JSON.stringify(baselineProfile)
+    );
+  }, [profileData, baselineProfile]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!userId) {
       toast.error("تعذر تحديد المستخدم الحالي.");
+      return;
+    }
+
+    if (!profileDirty) {
+      toast.info("لا توجد تغييرات لحفظها.");
       return;
     }
 
@@ -114,7 +154,6 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
     try {
       await updateUser(userId, {
         name: profileData.principalName.trim(),
-        email: profileData.email.trim(),
         phone: profileData.phone.trim() || null,
       });
 
@@ -130,7 +169,7 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
       const refreshed = await getCurrentUser();
       const payload = refreshed?.data || refreshed;
       if (payload && typeof payload === "object") {
-        localStorage.setItem("user", JSON.stringify(payload));
+        writeStoredUser(payload);
       }
 
       toast.success("تم حفظ التعديلات بنجاح.");
@@ -188,6 +227,13 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
             </div>
 
             <div className="flex flex-col gap-4">
+              <div className="pb-4 border-b border-[#e2e8f0]">
+                <ProfileAvatarEditor
+                  displayName={profileData.principalName || profileData.email || "المستخدم"}
+                  avatarUrl={profileAvatarUrl}
+                />
+              </div>
+
               {/* Name */}
               <div>
                 <label className="block text-[0.85rem] font-semibold text-[#475569] mb-[0.375rem]">
@@ -209,11 +255,20 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
                 </label>
                 <div className="relative">
                   <Mail size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
-                  <input type="email" name="email" value={profileData.email} onChange={handleChange} required disabled={saving}
-                    className="w-full py-[0.625rem] rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] outline-none transition-[border-color] duration-200 focus:border-[#3b82f6]"
-                    style={{ paddingLeft: '12px', paddingRight: '40px' }}
+                  <input
+                    type="email"
+                    name="email"
+                    value={profileData.email}
+                    readOnly
+                    disabled
+                    aria-readonly="true"
+                    className="w-full py-[0.625rem] rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f1f5f9] text-[#64748b] cursor-not-allowed outline-none"
+                    style={{ paddingLeft: "12px", paddingRight: "40px" }}
                   />
                 </div>
+                <p className="mt-1.5 text-[0.75rem] text-[#64748b] leading-relaxed">
+                  {"يتم تعديل البريد الإلكتروني من لوحة مسؤول النظام فقط."}
+                </p>
               </div>
 
               {/* Phone */}
@@ -320,9 +375,9 @@ const Profile = ({ siteType: propSiteType = "school" }) => {
 
         {/* Save Button */}
         <div className="mt-6 flex items-center gap-4">
-          <button type="submit" disabled={saving || loading}
+          <button type="submit" disabled={saving || loading || !profileDirty}
             className="inline-flex items-center gap-2 py-3 px-6 text-white border-none rounded-[10px] text-[0.95rem] font-semibold transition-[transform,box-shadow] duration-200"
-            style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", cursor: saving || loading ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+            style={{ background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)", cursor: saving || loading || !profileDirty ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
             onMouseEnter={(e) => { if (!saving) { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(59, 130, 246, 0.3)"; } }}
             onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
           >

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Request;
+use Throwable;
 
 class ActivityLogger
 {
@@ -32,6 +33,8 @@ class ActivityLogger
      * @param Model|null  $subject     الكيان المتأثر (اختياري)
      * @param array       $properties  بيانات إضافية (اختياري)
      * @param Model|null  $causer      المستخدم الذي قام بالإجراء (اختياري)
+     *
+     * @return ActivityLog|null null عند فشل الكتابة (مثلاً جدول غير مهاجر) حتى لا يُفسد الطلب الأساسي
      */
     public static function log(
         string $type,
@@ -40,34 +43,40 @@ class ActivityLogger
         ?Model $subject = null,
         array $properties = [],
         ?Model $causer = null
-    ): ActivityLog {
+    ): ?ActivityLog {
         $oldData = $properties['old'] ?? null;
         $newData = $properties['new'] ?? null;
         unset($properties['old'], $properties['new']);
 
         $actorId = $causer?->getKey() ?? auth()->id();
 
-        $activityLog = ActivityLog::create([
-            'user_id'       => $actorId,
-            'causer_id'     => $actorId,
-            'subject_type'  => $subject ? $type : null,
-            'subject_id'    => $subject?->getKey(),
-            'action'        => $type . '.' . $action,
-            'description'   => $description,
-            'ip_address'    => Request::ip(),
-            'old_data'      => self::sanitizeData($oldData),
-            'new_data'      => self::sanitizeData($newData ?? $properties),
-            'method'        => Request::method(),
-            'route'         => Request::path(),
-            'user_agent'    => Request::userAgent(),
-        ]);
+        try {
+            $activityLog = ActivityLog::create([
+                'user_id'       => $actorId,
+                'causer_id'     => $actorId,
+                'subject_type'  => $subject ? $type : null,
+                'subject_id'    => $subject?->getKey(),
+                'action'        => $type . '.' . $action,
+                'description'   => $description,
+                'ip_address'    => Request::ip(),
+                'old_data'      => self::sanitizeData($oldData),
+                'new_data'      => self::sanitizeData($newData ?? $properties),
+                'method'        => Request::method(),
+                'route'         => Request::path(),
+                'user_agent'    => Request::userAgent(),
+            ]);
 
-        self::storeFieldLevelDetails($activityLog, $oldData, $newData ?? $properties);
+            self::storeFieldLevelDetails($activityLog, $oldData, $newData ?? $properties);
 
-        return $activityLog;
+            return $activityLog;
+        } catch (Throwable $e) {
+            report($e);
+
+            return null;
+        }
     }
 
-    public static function logHttpRequest(HttpRequest $request, mixed $response, float $durationMs): ActivityLog
+    public static function logHttpRequest(HttpRequest $request, mixed $response, float $durationMs): ?ActivityLog
     {
         $statusCode = method_exists($response, 'getStatusCode') ? $response->getStatusCode() : null;
         $route = $request->route();
@@ -98,7 +107,7 @@ class ActivityLogger
         );
     }
 
-    public static function logModelChange(string $event, Model $model, ?array $old = null, ?array $new = null): ActivityLog
+    public static function logModelChange(string $event, Model $model, ?array $old = null, ?array $new = null): ?ActivityLog
     {
         $modelType = (string) str(class_basename($model))->snake();
 

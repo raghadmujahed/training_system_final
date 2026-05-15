@@ -14,8 +14,6 @@ import {
   Building2,
   User,
   MapPin,
-  Phone,
-  Mail,
   GraduationCap,
   Users,
   FileText,
@@ -196,11 +194,8 @@ const PrincipalDashboard = ({ siteType = "school" }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <InfoItem icon={User} label={labels.managerLabel} value={principalInfo.principalName} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <InfoItem icon={MapPin} label="المديرية" value={principalInfo.directorate} />
-          <InfoItem icon={Phone} label="رقم الهاتف" value={principalInfo.phone} />
-          <InfoItem icon={Mail} label="البريد الإلكتروني" value={principalInfo.email} />
         </div>
       </div>
 

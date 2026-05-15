@@ -75,6 +75,22 @@ export function getDashboardPathByRole(role) {
   return DASHBOARD_PATHS[normalizedRole] || "/";
 }
 
+/**
+ * مسار صفحة الملف الشخصي حسب الدور — يطابق عناصر القائمة في `Sidebar.jsx`
+ * (مدير المدرسة/الجهة → principal، مدير المركز النفسي → psychology-center، الباقي → /profile).
+ */
+export function getProfilePathForUser(user) {
+  const raw = user?.role?.name || user?.role || "";
+  const normalizedRole = normalizeRole(raw);
+  if (normalizedRole === ROLES.PSYCHOLOGY_CENTER_MANAGER) {
+    return "/psychology-center/profile";
+  }
+  if (normalizedRole === ROLES.PRINCIPAL || normalizedRole === ROLES.SCHOOL_MANAGER) {
+    return "/principal/profile";
+  }
+  return "/profile";
+}
+
 export function getFieldStaffRoleKey(role) {
   const normalizedRole = normalizeRole(role);
 

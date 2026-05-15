@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RefreshCw, Filter } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { getDistributionStatus } from '../../services/api';
 import { useCourses } from '../../hooks/useSharedData';
 import EmptyState from '../../components/common/EmptyState';
@@ -56,19 +56,9 @@ export default function HeadOfDepartmentDistributionStatus() {
   return (
     <div className="enrollments-list">
       <div className="page-header">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1>حالة التوزيع</h1>
-            <p>تتبع حالة توزيع الطلاب على الشعب وأماكن التدريب</p>
-          </div>
-          <button
-            className="btn-secondary flex items-center gap-[6px]"
-            onClick={fetchDistribution}
-            disabled={loading}
-          >
-            {loading ? <LoadingSpinner size="button" /> : <RefreshCw size={16} />}
-            تحديث
-          </button>
+        <div>
+          <h1>حالة التوزيع</h1>
+          <p>تتبع حالة توزيع الطلاب على الشعب وأماكن التدريب</p>
         </div>
       </div>
 

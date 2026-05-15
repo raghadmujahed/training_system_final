@@ -2,6 +2,7 @@
 import axios from "axios";
 import { apiCache } from "./apiCache";
 import { resetNotificationsState } from "../hooks/useNotifications";
+import { writeStoredUser } from "../utils/session";
 
 // Validate environment variables
 const validateEnvironment = () => {
@@ -257,7 +258,7 @@ export const refreshCurrentUser = async () => {
 
   // Update localStorage with fresh user data including permissions
   if (userData) {
-    localStorage.setItem("user", JSON.stringify(userData));
+    writeStoredUser(userData);
   }
 
   return userData;
@@ -573,6 +574,17 @@ export const updateTask = (id, data) =>
 
 export const deleteTask = (id) =>
   apiClient.delete(`/tasks/${id}`).then((res) => res.data);
+
+/** ملخص تسليمات مهمة موزّعة على شعبة/مجموعة (مفتاح distribution_key) */
+export const getSupervisorTaskBundleOverview = (distributionKey) =>
+  apiClient
+    .get(`/supervisor/task-bundles/${encodeURIComponent(distributionKey)}/overview`)
+    .then((res) => res.data?.data ?? res.data);
+
+export const saveSupervisorTaskBundleGrades = (distributionKey, payload) =>
+  apiClient
+    .post(`/supervisor/task-bundles/${encodeURIComponent(distributionKey)}/grades`, payload)
+    .then((res) => res.data?.data ?? res.data);
 
 export const getTask = (id) =>
   apiClient.get(`/tasks/${id}`).then((res) => res.data);
@@ -1049,5 +1061,18 @@ export const sendOfficialLetter = (id, data = {}) =>
 
 // ==================== User Profile ====================
 export const updateUserProfile = (data) => apiClient.put('/profile', data).then(res => res.data);
+
+export const uploadProfileAvatar = (formData) =>
+  apiClient.post("/profile/avatar", formData).then((res) => {
+    apiCache.invalidate("current-user:me");
+    return res.data?.data ?? res.data;
+  });
+
+export const deleteProfileAvatar = () =>
+  apiClient.delete("/profile/avatar").then((res) => {
+    apiCache.invalidate("current-user:me");
+    return res.data?.data ?? res.data;
+  });
+
 export const changePassword = (data) => apiClient.post('/change-password', data).then(res => res.data);
 export const getStaffDirectory = () => apiClient.get('/staff-directory').then(res => res.data);

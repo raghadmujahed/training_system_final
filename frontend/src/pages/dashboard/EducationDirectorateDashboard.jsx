@@ -8,9 +8,7 @@ import {
 import { useAnnouncements, useTrainingSites } from "../../hooks/useSharedData";
 import {
   Building2,
-  User,
   Phone,
-  Mail,
   FileText,
   MapPin,
   CheckCircle2,
@@ -192,7 +190,7 @@ const EducationDirectorateDashboard = () => {
 
       {/* Directorate Info Card */}
       <div className="bg-gradient-to-br from-white to-[#f8fafc] border border-[#e2e8f0] rounded-[18px] p-5 mb-4">
-        <div className="flex items-center gap-4 mb-5 pb-4 border-b border-[#e2e8f0]">
+        <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#1e3a5f] to-[#2d5f8a] flex items-center justify-center text-white shadow-lg shadow-[#1e3a5f]/25">
             <Building2 size={28} />
           </div>
@@ -200,11 +198,6 @@ const EducationDirectorateDashboard = () => {
             <h4 className="m-0 mb-1 text-[1.25rem] font-bold text-text">{directorateInfo.name}</h4>
             <p className="m-0 text-text-soft text-[0.9rem]">{"مديرية التربية والتعليم"}</p>
           </div>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <InfoItem icon={User} label={"المسؤول"} value={directorateInfo.officer} />
-          <InfoItem icon={Mail} label={"البريد الإلكتروني"} value={directorateInfo.email} />
-          <InfoItem icon={Phone} label={"رقم الهاتف"} value={directorateInfo.phone} />
         </div>
       </div>
 
@@ -362,20 +355,6 @@ const EducationDirectorateDashboard = () => {
 };
 
 // Helper Components
-function InfoItem({ icon: Icon, label, value }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-[10px] bg-[#f1f5f9] text-[#64748b] flex items-center justify-center shrink-0">
-        <Icon size={18} />
-      </div>
-      <div>
-        <div className="text-[0.75rem] text-text-faint mb-0.5">{label}</div>
-        <div className="text-[0.9rem] font-semibold text-text">{value}</div>
-      </div>
-    </div>
-  );
-}
-
 function StatusBadge({ status, badgeClass }) {
   const isSuccess = badgeClass?.includes("success");
   const isDanger = badgeClass?.includes("danger");

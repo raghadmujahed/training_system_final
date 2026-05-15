@@ -92,8 +92,15 @@ export default function UserProfileModal({ userId, userName, onClose }) {
           <>
             {/* Header */}
             <div className="upm-header" style={{ background: roleColors.bg, borderColor: roleColors.border }}>
-              <div className="upm-avatar" style={{ background: roleColors.color }}>
-                {initials}
+              <div
+                className={`upm-avatar ${profile.avatar_url ? "chat-avatar--has-image" : ""}`}
+                style={profile.avatar_url ? undefined : { background: roleColors.color }}
+              >
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="chat-avatar-img" decoding="async" />
+                ) : (
+                  initials
+                )}
               </div>
               <div className="upm-header-info">
                 <h2 className="upm-name">{profile.name}</h2>

@@ -181,6 +181,24 @@
   justify-content: center;
   font-weight: 700;
   font-size: 1rem;
+  overflow: hidden;
+}
+
+.chat-item-avatar.chat-avatar--has-image {
+  background: #e2e8f0;
+  color: transparent;
+}
+
+.chat-window-avatar.chat-avatar--has-image {
+  background: #e2e8f0;
+  color: transparent;
+}
+
+.chat-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .chat-unread-badge {
@@ -300,6 +318,7 @@
   font-weight: 700;
   font-size: 1rem;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .chat-window-title {
@@ -361,6 +380,46 @@
 .chat-bubble-wrapper.theirs {
   align-self: flex-start;
   align-items: flex-start;
+  flex-direction: row;
+  gap: 8px;
+  max-width: calc(72% + 40px);
+}
+
+.chat-bubble-theirs-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+  max-width: 100%;
+}
+
+.chat-bubble-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: var(--primary, #4f46e5);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+
+.chat-bubble-avatar.chat-avatar--has-image {
+  background: #e2e8f0;
+  color: transparent;
+}
+
+.chat-bubble-wrapper.theirs .chat-bubble {
+  max-width: 100%;
 }
 
 .chat-bubble-sender {
@@ -720,6 +779,12 @@
   font-weight: 700;
   color: #ffffff;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.upm-avatar.chat-avatar--has-image {
+  color: transparent;
+  background: #e2e8f0;
 }
 
 .upm-header-info {

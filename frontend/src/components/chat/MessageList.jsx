@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import ChatUserAvatar from "./ChatUserAvatar";
 
 function parseServerDate(dateStr) {
   if (!dateStr) return null;
@@ -39,23 +40,39 @@ function MessageBubble({ msg }) {
   return (
     <div className={`chat-bubble-wrapper ${msg.is_mine ? "mine" : "theirs"}${msg._pending ? " pending" : ""}`}>
       {!msg.is_mine && (
-        <span className="chat-bubble-sender">{msg.sender?.name}</span>
+        <ChatUserAvatar
+          className="chat-bubble-avatar"
+          avatarUrl={msg.sender?.avatar_url}
+          name={msg.sender?.name}
+        />
       )}
-      <div className={`chat-bubble ${msg.is_mine ? "bubble-mine" : "bubble-theirs"}`}>
-        <span className="chat-bubble-text" dir="auto">{msg.message}</span>
-        <span className="chat-bubble-meta">
-          <span className="chat-bubble-time">{formatTime(msg.created_at)}</span>
-          {msg.is_mine && (
-            msg._pending
-              ? <span className="chat-tick chat-tick-pending" title="جارٍ الإرسال...">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                </span>
-              : <ReadTick isRead={msg.is_read} />
-          )}
-        </span>
-      </div>
+      {!msg.is_mine ? (
+        <div className="chat-bubble-theirs-stack">
+          <span className="chat-bubble-sender">{msg.sender?.name}</span>
+          <div className="chat-bubble bubble-theirs">
+            <span className="chat-bubble-text" dir="auto">{msg.message}</span>
+            <span className="chat-bubble-meta">
+              <span className="chat-bubble-time">{formatTime(msg.created_at)}</span>
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="chat-bubble bubble-mine">
+          <span className="chat-bubble-text" dir="auto">{msg.message}</span>
+          <span className="chat-bubble-meta">
+            <span className="chat-bubble-time">{formatTime(msg.created_at)}</span>
+            {msg._pending ? (
+              <span className="chat-tick chat-tick-pending" title="جارٍ الإرسال...">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </span>
+            ) : (
+              <ReadTick isRead={msg.is_read} />
+            )}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

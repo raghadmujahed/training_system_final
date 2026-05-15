@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageHeader from "../../components/common/PageHeader";
 import EmptyState from "../../components/common/EmptyState";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -12,6 +12,8 @@ import {
   gradeTaskSubmission,
   itemsFromPagedResponse,
   unwrapSupervisorList,
+  getSupervisorTaskBundleOverview,
+  saveSupervisorTaskBundleGrades,
 } from "../../services/api";
 import { readStoredUser } from "../../utils/session";
 import { normalizeRole, ROLES } from "../../utils/roles";
@@ -61,6 +63,28 @@ const emptyForm = {
   grading_weight: "",
 };
 
+const BUNDLE_EXPAND_PREFIX = "bundle:";
+
+function buildTaskDisplayRows(items) {
+  if (!Array.isArray(items) || !items.length) return [];
+  const seen = new Set();
+  const rows = [];
+  for (const t of items) {
+    const dk = t.distribution_key;
+    const isDistributed =
+      (t.target_type === "section" || t.target_type === "group") && dk;
+    if (isDistributed) {
+      if (seen.has(dk)) continue;
+      seen.add(dk);
+      const tasks = items.filter((x) => x.distribution_key === dk);
+      rows.push({ kind: "bundle", distribution_key: dk, tasks, lead: tasks[0] });
+    } else {
+      rows.push({ kind: "single", task: t });
+    }
+  }
+  return rows;
+}
+
 export default function FieldStaffTasks() {
   const savedUser = readStoredUser();
   const isAcademicSupervisor = normalizeRole(savedUser?.role?.name || savedUser?.role) === ROLES.SUPERVISOR;
@@ -82,6 +106,15 @@ export default function FieldStaffTasks() {
   const [gradingForm, setGradingForm] = useState({ grade: "", feedback: "" });
   const [gradingSaving, setGradingSaving] = useState(false);
   const [gradingError, setGradingError] = useState("");
+
+  const [bundleOverviewByKey, setBundleOverviewByKey] = useState({});
+  const [bundleOverviewLoading, setBundleOverviewLoading] = useState({});
+  const [bundleOverviewError, setBundleOverviewError] = useState({});
+  const [bundleTabByKey, setBundleTabByKey] = useState({});
+  const [bundleGradeDrafts, setBundleGradeDrafts] = useState({});
+  const [bundleGradesSaving, setBundleGradesSaving] = useState({});
+
+  const displayRows = useMemo(() => buildTaskDisplayRows(items), [items]);
 
   const toggleStudent = (id) => {
     setSelectedStudentIds((prev) => {
@@ -149,6 +182,84 @@ export default function FieldStaffTasks() {
       setGradingError(e?.response?.data?.message || "فشل التقييم");
     } finally {
       setGradingSaving(false);
+    }
+  }
+
+  async function loadBundleOverview(dk) {
+    setBundleOverviewError((prev) => ({ ...prev, [dk]: "" }));
+    setBundleOverviewLoading((prev) => ({ ...prev, [dk]: true }));
+    try {
+      const payload = await getSupervisorTaskBundleOverview(dk);
+      setBundleOverviewByKey((prev) => ({ ...prev, [dk]: payload }));
+      setBundleGradeDrafts((prev) => {
+        const next = { ...prev };
+        const ingest = (rows) => {
+          for (const r of rows || []) {
+            const sc = r.submission?.score ?? r.submission?.grade;
+            next[`${dk}:${r.user_id}`] = {
+              score: sc === null || sc === undefined || sc === "" ? "" : String(sc),
+              feedback: r.submission?.feedback || "",
+            };
+          }
+        };
+        ingest(payload?.submitted);
+        ingest(payload?.not_submitted);
+        return next;
+      });
+      setBundleTabByKey((prev) => ({ ...prev, [dk]: prev[dk] || "submitted" }));
+    } catch (e) {
+      setBundleOverviewError((prev) => ({
+        ...prev,
+        [dk]: e?.response?.data?.message || "فشل تحميل ملخص الشعبة",
+      }));
+    } finally {
+      setBundleOverviewLoading((prev) => ({ ...prev, [dk]: false }));
+    }
+  }
+
+  async function saveBundleGrades(dk) {
+    const ov = bundleOverviewByKey[dk];
+    if (!ov) return;
+    const all = [...(ov.submitted || []), ...(ov.not_submitted || [])];
+    const grades = all.map((r) => {
+      const draft = bundleGradeDrafts[`${dk}:${r.user_id}`] || { score: "", feedback: "" };
+      let scoreVal = null;
+      if (draft.score !== "" && draft.score != null) {
+        const n = Number(draft.score);
+        if (Number.isFinite(n)) scoreVal = n;
+      }
+      return {
+        user_id: r.user_id,
+        score: scoreVal,
+        feedback: draft.feedback || null,
+      };
+    });
+    setBundleGradesSaving((prev) => ({ ...prev, [dk]: true }));
+    setBundleOverviewError((prev) => ({ ...prev, [dk]: "" }));
+    try {
+      await saveSupervisorTaskBundleGrades(dk, { grades });
+      await loadBundleOverview(dk);
+      await load();
+    } catch (e) {
+      setBundleOverviewError((prev) => ({
+        ...prev,
+        [dk]: e?.response?.data?.message || "فشل حفظ العلامات",
+      }));
+    } finally {
+      setBundleGradesSaving((prev) => ({ ...prev, [dk]: false }));
+    }
+  }
+
+  async function handleDeleteBundle(row) {
+    if (!window.confirm("حذف هذه المهمة لجميع الطلبة في الشعبة/المجموعة؟")) return;
+    try {
+      for (const tk of row.tasks) {
+        await deleteTask(tk.id);
+      }
+      setExpandedTaskId(null);
+      await load();
+    } catch (e) {
+      setError(e?.response?.data?.message || "فشل حذف المهمة");
     }
   }
 
@@ -305,11 +416,290 @@ export default function FieldStaffTasks() {
         <div className="section-card">
           <p className="text-danger">{error}</p>
         </div>
-      ) : !items.length ? (
+      ) : !displayRows.length ? (
         <EmptyState title="لا توجد مهام" description="لم تُضف مهام بعد. اضغط الزر أعلاه لإضافة مهمة جديدة." />
       ) : (
         <div className="row g-4">
-          {items.map((t) => {
+          {displayRows.map((row) => {
+            if (row.kind === "bundle") {
+              const dk = row.distribution_key;
+              const t = row.lead;
+              const expandId = `${BUNDLE_EXPAND_PREFIX}${dk}`;
+              const isExpanded = expandedTaskId === expandId;
+              const isOverdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== "graded";
+              const ov = bundleOverviewByKey[dk];
+              const tab = bundleTabByKey[dk] || "submitted";
+              const ovLoading = bundleOverviewLoading[dk];
+              const ovErr = bundleOverviewError[dk];
+              const allStudents = ov ? [...(ov.submitted || []), ...(ov.not_submitted || [])] : [];
+
+              return (
+                <div className="col-12" key={`bundle-${dk}`}>
+                  <div
+                    className="section-card"
+                    style={{
+                      borderRight: isOverdue ? "4px solid #dc3545" : "4px solid var(--primary, #4f46e5)",
+                    }}
+                  >
+                    <div className="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                          <h5 className="mb-0">{t.title}</h5>
+                          <span className="badge-custom badge-info">مهمة {t.target_type === "section" ? "شعبة" : "مجموعة"}</span>
+                          {statusBadge(t.status)}
+                          {isOverdue && (
+                            <span className="badge-custom badge-danger d-inline-flex align-items-center gap-1">
+                              <AlertCircle size={12} />
+                              متأخر
+                            </span>
+                          )}
+                        </div>
+                        {t.description && (
+                          <p className="text-muted mb-2 whitespace-pre-line">
+                            {t.description.length > 120 ? t.description.slice(0, 120) + "…" : t.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="d-flex gap-2 shrink-0 flex-wrap">
+                        <button
+                          type="button"
+                          className="btn-outline-custom btn-sm-custom d-inline-flex align-items-center gap-1"
+                          onClick={async () => {
+                            if (isExpanded) {
+                              setExpandedTaskId(null);
+                            } else {
+                              setExpandedTaskId(expandId);
+                              await loadBundleOverview(dk);
+                            }
+                          }}
+                        >
+                          {isExpanded ? (
+                            <>
+                              <ChevronUp size={14} /> إخفاء
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown size={14} /> التفاصيل
+                            </>
+                          )}
+                        </button>
+                        <button type="button" className="btn-danger-custom btn-sm-custom" onClick={() => handleDeleteBundle(row)}>
+                          حذف للجميع
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-wrap gap-3 mt-2 text-[0.88rem] text-[#6c757d]">
+                      <span className="d-inline-flex align-items-center gap-1">
+                        <User size={14} />
+                        عدد الطلبة: {row.tasks.length}
+                      </span>
+                      {t.due_date && (
+                        <span className="d-inline-flex align-items-center gap-1">
+                          <Clock size={14} />
+                          موعد التسليم: {t.due_date}
+                        </span>
+                      )}
+                    </div>
+
+                    {isExpanded && (
+                      <div className="mt-3 pt-3 border-t border-[#e9ecef]">
+                        {ovLoading && (
+                          <div className="d-flex align-items-center gap-2 text-muted py-2">
+                            <Loader2 className="animate-spin" size={18} />
+                            جاري تحميل قائمة الطلبة…
+                          </div>
+                        )}
+                        {ovErr && (
+                          <div className="alert-custom alert-danger d-flex align-items-center gap-2 mb-2">
+                            <AlertCircle size={14} />
+                            {ovErr}
+                          </div>
+                        )}
+                        {ov && !ovLoading && (
+                          <>
+                            <div className="d-flex flex-wrap gap-2 mb-3">
+                              {[
+                                { key: "submitted", label: "تم التسليم" },
+                                { key: "not_submitted", label: "لم يتم التسليم" },
+                                { key: "grades", label: "رصد العلامات" },
+                              ].map((x) => (
+                                <button
+                                  key={x.key}
+                                  type="button"
+                                  className={`btn-sm-custom ${tab === x.key ? "btn-primary-custom" : "btn-outline-custom"}`}
+                                  onClick={() => setBundleTabByKey((prev) => ({ ...prev, [dk]: x.key }))}
+                                >
+                                  {x.label}
+                                  {x.key === "submitted" && ` (${(ov.submitted || []).length})`}
+                                  {x.key === "not_submitted" && ` (${(ov.not_submitted || []).length})`}
+                                </button>
+                              ))}
+                            </div>
+
+                            {tab === "submitted" && (
+                              <div className="table-responsive">
+                                <table className="table table-bordered table-sm align-middle mb-0 bg-white">
+                                  <thead className="table-light">
+                                    <tr>
+                                      <th>الطالب</th>
+                                      <th>تاريخ ووقت التسليم</th>
+                                      <th>المرفق</th>
+                                      <th>حالة التسليم</th>
+                                      <th>العلامة الحالية</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {(ov.submitted || []).length === 0 ? (
+                                      <tr>
+                                        <td colSpan={5} className="text-muted text-center py-3">
+                                          لا يوجد طلبة سلّموا بعد.
+                                        </td>
+                                      </tr>
+                                    ) : (
+                                      (ov.submitted || []).map((r) => (
+                                        <tr key={r.user_id}>
+                                          <td>{r.name}</td>
+                                          <td>{r.submission?.submitted_at || "—"}</td>
+                                          <td>
+                                            {r.submission?.file_url ? (
+                                              <a href={r.submission.file_url} target="_blank" rel="noopener noreferrer">
+                                                تحميل
+                                              </a>
+                                            ) : (
+                                              "—"
+                                            )}
+                                          </td>
+                                          <td>{r.submission?.status || "—"}</td>
+                                          <td>
+                                            {r.submission?.grade != null || r.submission?.score != null
+                                              ? `${r.submission.grade ?? r.submission.score}/100`
+                                              : "—"}
+                                          </td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+
+                            {tab === "not_submitted" && (
+                              <div className="table-responsive">
+                                <table className="table table-bordered table-sm align-middle mb-0 bg-white">
+                                  <thead className="table-light">
+                                    <tr>
+                                      <th>الطالب</th>
+                                      <th>ملاحظة</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {(ov.not_submitted || []).length === 0 ? (
+                                      <tr>
+                                        <td colSpan={2} className="text-muted text-center py-3">
+                                          جميع الطلبة سلّموا.
+                                        </td>
+                                      </tr>
+                                    ) : (
+                                      (ov.not_submitted || []).map((r) => (
+                                        <tr key={r.user_id}>
+                                          <td>{r.name}</td>
+                                          <td className="text-muted">لم يُرفع تسليم بعد</td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+
+                            {tab === "grades" && (
+                              <div>
+                                <p className="text-muted text-[0.9rem] mb-3">
+                                  أدخل العلامة (0–100) و/أو ملاحظات لكل طالب، ثم احفظ دفعة واحدة.
+                                </p>
+                                <div className="table-responsive">
+                                  <table className="table table-bordered table-sm align-middle mb-3 bg-white">
+                                    <thead className="table-light">
+                                      <tr>
+                                        <th>الطالب</th>
+                                        <th>حالة التسليم</th>
+                                        <th>العلامة (0–100)</th>
+                                        <th>ملاحظات</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {allStudents.map((r) => {
+                                        const draftKey = `${dk}:${r.user_id}`;
+                                        const draft = bundleGradeDrafts[draftKey] || { score: "", feedback: "" };
+                                        return (
+                                          <tr key={r.user_id}>
+                                            <td>{r.name}</td>
+                                            <td>{r.has_submitted ? "تم التسليم" : "لم يتم التسليم"}</td>
+                                            <td style={{ minWidth: "110px" }}>
+                                              <input
+                                                type="number"
+                                                min={0}
+                                                max={100}
+                                                className="form-control-custom form-control-sm"
+                                                value={draft.score}
+                                                onChange={(e) =>
+                                                  setBundleGradeDrafts((prev) => ({
+                                                    ...prev,
+                                                    [draftKey]: { ...draft, score: e.target.value },
+                                                  }))
+                                                }
+                                                placeholder="—"
+                                              />
+                                            </td>
+                                            <td>
+                                              <textarea
+                                                className="form-control-custom form-control-sm"
+                                                rows={2}
+                                                value={draft.feedback}
+                                                onChange={(e) =>
+                                                  setBundleGradeDrafts((prev) => ({
+                                                    ...prev,
+                                                    [draftKey]: { ...draft, feedback: e.target.value },
+                                                  }))
+                                                }
+                                                placeholder="اختياري"
+                                              />
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                    </tbody>
+                                  </table>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="btn-primary-custom d-inline-flex align-items-center gap-2"
+                                  disabled={bundleGradesSaving[dk]}
+                                  onClick={() => saveBundleGrades(dk)}
+                                >
+                                  {bundleGradesSaving[dk] ? (
+                                    <>
+                                      <LoadingSpinner size="button" /> جاري الحفظ…
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Star size={16} /> حفظ جميع العلامات
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
+            const t = row.task;
             const isExpanded = expandedTaskId === t.id;
             const submission = t.submissions?.[0] || null;
             const isOverdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== "graded";
@@ -416,7 +806,7 @@ export default function FieldStaffTasks() {
                             </div>
                           )}
 
-                          {t.status === "graded" && submission.grade !== null && (
+                          {t.status === "graded" && submission.grade != null && (
                             <div className="d-flex align-items-center gap-2 mb-1">
                               <Star size={16} className="text-warning" />
                               <strong>الدرجة:</strong>{" "}
@@ -443,7 +833,7 @@ export default function FieldStaffTasks() {
                       )}
 
                       {/* Grading form - show if submitted but not yet graded */}
-                      {submission && submission.grade === null && (
+                      {submission && submission.submitted_at && submission.grade == null && (
                         <div className="p-3 rounded bg-[#fefce8] border border-[#fde68a]">
                           <h6 className="d-flex align-items-center gap-2 mb-3">
                             <Star size={16} className="text-warning" />
