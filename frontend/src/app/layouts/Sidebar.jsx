@@ -60,7 +60,6 @@ function buildFieldStaffMenu(roleKey) {
       { name: "الزيارات الميدانية", path: "/supervisor/field-visits" },
       { name: "التحكم بجدول الحصص الأسبوعية", path: "/supervisor/training-program-control" },
       { name: "الشعب", path: "/supervisor/sections" },
-      { name: "حلول الطلبة", path: "/supervisor/submissions" },
     );
 
     const supervisorFieldStaffPaths = {
@@ -81,6 +80,11 @@ function buildFieldStaffMenu(roleKey) {
     );
     if (studentsIdx >= 0) {
       menu.splice(studentsIdx, 1);
+    }
+
+    const submissionsIdx = menu.findIndex((item) => item.path === "/supervisor/submissions");
+    if (submissionsIdx >= 0) {
+      menu.splice(submissionsIdx, 1);
     }
   }
 

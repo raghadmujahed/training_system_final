@@ -1687,7 +1687,7 @@ class SupervisorWorkspaceController extends Controller
             'strengths' => $request->input('strengths'),
             'areas_for_improvement' => $request->input('areas_for_improvement'),
             'recommendation' => $request->input('recommendation'),
-            'total_score' => $request->input('total_score') ?? collect($criteriaScores)->avg('score'),
+            'total_score' => $request->input('total_score') ?? collect($criteriaScores)->sum('score'),
             'status' => 'draft',
             'is_final' => false,
         ]);
@@ -1714,7 +1714,7 @@ class SupervisorWorkspaceController extends Controller
             'strengths' => $request->input('strengths'),
             'areas_for_improvement' => $request->input('areas_for_improvement'),
             'recommendation' => $request->input('recommendation'),
-            'total_score' => $request->input('total_score') ?? collect($criteriaScores)->avg('score'),
+            'total_score' => $request->input('total_score') ?? collect($criteriaScores)->sum('score'),
             'status' => 'final',
             'is_final' => true,
             'submitted_at' => now(),

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { apiClient } from "../../../../services/api";
 import useAppToast from "../../../../hooks/useAppToast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
@@ -76,6 +76,11 @@ export default function EvaluationsTab({ studentId }) {
   }, [studentId]);
 
   useEffect(() => { loadEvals(); }, [loadEvals]);
+
+  const academicTotal = useMemo(
+    () => calculateTotalScore(form, rubricTemplate, criteriaValues),
+    [form, rubricTemplate, criteriaValues]
+  );
 
   const handleSubmitAcademic = async (e) => {
     e.preventDefault();
@@ -209,9 +214,12 @@ export default function EvaluationsTab({ studentId }) {
             <div>
               {/* Show existing evaluation */}
               <div className="section-card border-r-4 border-r-[#28a745]">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
                   <h4 className="m-0">🎓 التقييم الأكاديمي</h4>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center flex-wrap">
+                    <span className="py-2 px-4 rounded-lg bg-[#e8f5e9] text-[#28a745] font-bold text-[0.95rem]">
+                      المجموع: {formatScore(academicEval.total_score ?? sumFromCriteriaScores(academicEval.criteria_scores))}
+                    </span>
                     <button className="btn-primary-custom" onClick={() => setShowAcademicForm(true)}>✏️ تعديل</button>
                     {academicEval.is_final && <span className="py-1 px-3 rounded-2xl text-[0.78rem] font-semibold text-[#28a745] bg-[#e8f5e9]">✅ معتمد</span>}
                   </div>
@@ -253,30 +261,34 @@ export default function EvaluationsTab({ studentId }) {
               </div>
 
               <form onSubmit={handleSubmitAcademic}>
+                <div className="mb-4 py-3 px-4 rounded-lg bg-[#f0f7ff] border border-[#cfe2ff] flex justify-between items-center flex-wrap gap-2">
+                  <span className="text-[0.88rem] text-[#0d6efd] font-medium">المجموع الحالي</span>
+                  <span className="text-[1.15rem] font-bold text-[#0d6efd]">{formatScore(academicTotal)}</span>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="form-label-custom">الأداء الميداني * <small>(من 100)</small></label>
-                    <input id="eval-field-performance" name="field_performance" type="number" min="0" max="100" className="form-input-custom" value={form.field_performance} onChange={(e) => setForm((p) => ({ ...p, field_performance: e.target.value }))} required />
+                    <label className="form-label-custom">الأداء الميداني *</label>
+                    <input id="eval-field-performance" name="field_performance" type="number" min="0" step="any" className="form-input-custom" value={form.field_performance} onChange={(e) => setForm((p) => ({ ...p, field_performance: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label-custom">ملف الإنجاز * <small>(من 100)</small></label>
-                    <input id="eval-portfolio-score" name="portfolio_score" type="number" min="0" max="100" className="form-input-custom" value={form.portfolio_score} onChange={(e) => setForm((p) => ({ ...p, portfolio_score: e.target.value }))} required />
+                    <label className="form-label-custom">ملف الإنجاز *</label>
+                    <input id="eval-portfolio-score" name="portfolio_score" type="number" min="0" step="any" className="form-input-custom" value={form.portfolio_score} onChange={(e) => setForm((p) => ({ ...p, portfolio_score: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label-custom">الحضور * <small>(من 100)</small></label>
-                    <input id="eval-attendance-score" name="attendance_score" type="number" min="0" max="100" className="form-input-custom" value={form.attendance_score} onChange={(e) => setForm((p) => ({ ...p, attendance_score: e.target.value }))} required />
+                    <label className="form-label-custom">الحضور *</label>
+                    <input id="eval-attendance-score" name="attendance_score" type="number" min="0" step="any" className="form-input-custom" value={form.attendance_score} onChange={(e) => setForm((p) => ({ ...p, attendance_score: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label-custom">السجل اليومي * <small>(من 100)</small></label>
-                    <input id="eval-daily-log-score" name="daily_log_score" type="number" min="0" max="100" className="form-input-custom" value={form.daily_log_score} onChange={(e) => setForm((p) => ({ ...p, daily_log_score: e.target.value }))} required />
+                    <label className="form-label-custom">السجل اليومي *</label>
+                    <input id="eval-daily-log-score" name="daily_log_score" type="number" min="0" step="any" className="form-input-custom" value={form.daily_log_score} onChange={(e) => setForm((p) => ({ ...p, daily_log_score: e.target.value }))} required />
                   </div>
                   <div>
-                    <label className="form-label-custom">المتطلبات النظرية <small>(من 100)</small></label>
-                    <input id="eval-theory-score" name="theory_score" type="number" min="0" max="100" className="form-input-custom" value={form.theory_score} onChange={(e) => setForm((p) => ({ ...p, theory_score: e.target.value }))} />
+                    <label className="form-label-custom">المتطلبات النظرية</label>
+                    <input id="eval-theory-score" name="theory_score" type="number" min="0" step="any" className="form-input-custom" value={form.theory_score} onChange={(e) => setForm((p) => ({ ...p, theory_score: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="form-label-custom">المهام <small>(من 100)</small></label>
-                    <input id="eval-tasks-score" name="tasks_score" type="number" min="0" max="100" className="form-input-custom" value={form.tasks_score} onChange={(e) => setForm((p) => ({ ...p, tasks_score: e.target.value }))} />
+                    <label className="form-label-custom">المهام</label>
+                    <input id="eval-tasks-score" name="tasks_score" type="number" min="0" step="any" className="form-input-custom" value={form.tasks_score} onChange={(e) => setForm((p) => ({ ...p, tasks_score: e.target.value }))} />
                   </div>
                   <div className="col-span-full">
                     <label className="form-label-custom">ملاحظات عامة</label>
@@ -290,12 +302,11 @@ export default function EvaluationsTab({ studentId }) {
                           <div key={item.id}>
                             <label className="form-label-custom">
                               {item.title}{item.is_required ? " *" : ""}
-                              <small> (من {item.max_score || 100})</small>
                             </label>
                             <input
                               type="number"
                               min="0"
-                              max={item.max_score || 100}
+                              step="any"
                               className="form-input-custom"
                               value={criteriaValues[`template:${item.id}`] ?? ""}
                               onChange={(e) => setCriteriaValues((prev) => ({ ...prev, [`template:${item.id}`]: e.target.value }))}
@@ -338,12 +349,12 @@ function scoreFromCriterion(criteriaScores, criterion) {
 
 function buildCriteriaScores(coreForm, rubricTemplate, criteriaValues) {
   const coreRows = [
-    { criterion: "field_performance", score: Number(coreForm.field_performance || 0), max_score: 100, is_required: true },
-    { criterion: "portfolio_score", score: Number(coreForm.portfolio_score || 0), max_score: 100, is_required: true },
-    { criterion: "attendance_score", score: Number(coreForm.attendance_score || 0), max_score: 100, is_required: true },
-    { criterion: "daily_log_score", score: Number(coreForm.daily_log_score || 0), max_score: 100, is_required: true },
-    { criterion: "theory_score", score: Number(coreForm.theory_score || 0), max_score: 100, is_required: false },
-    { criterion: "tasks_score", score: Number(coreForm.tasks_score || 0), max_score: 100, is_required: false },
+    { criterion: "field_performance", score: Number(coreForm.field_performance || 0), is_required: true },
+    { criterion: "portfolio_score", score: Number(coreForm.portfolio_score || 0), is_required: true },
+    { criterion: "attendance_score", score: Number(coreForm.attendance_score || 0), is_required: true },
+    { criterion: "daily_log_score", score: Number(coreForm.daily_log_score || 0), is_required: true },
+    { criterion: "theory_score", score: Number(coreForm.theory_score || 0), is_required: false },
+    { criterion: "tasks_score", score: Number(coreForm.tasks_score || 0), is_required: false },
   ];
 
   const dynamicRows = (rubricTemplate?.items || [])
@@ -351,7 +362,7 @@ function buildCriteriaScores(coreForm, rubricTemplate, criteriaValues) {
     .map((item) => ({
       criterion: `template:${item.id}`,
       score: Number(criteriaValues[`template:${item.id}`] || 0),
-      max_score: Number(item.max_score || 100),
+      max_score: item.max_score != null ? Number(item.max_score) : null,
       is_required: Boolean(item.is_required),
     }));
 
@@ -360,9 +371,18 @@ function buildCriteriaScores(coreForm, rubricTemplate, criteriaValues) {
 
 function calculateTotalScore(coreForm, rubricTemplate, criteriaValues) {
   const rows = buildCriteriaScores(coreForm, rubricTemplate, criteriaValues);
-  if (!rows.length) return 0;
-  const total = rows.reduce((sum, row) => sum + Number(row.score || 0), 0);
-  return Math.round((total / rows.length) * 100) / 100;
+  return sumFromCriteriaScores(rows);
+}
+
+function sumFromCriteriaScores(criteriaScores) {
+  const total = (criteriaScores || []).reduce((sum, row) => sum + Number(row?.score || 0), 0);
+  return Math.round(total * 100) / 100;
+}
+
+function formatScore(value) {
+  if (value === "" || value == null || Number.isNaN(Number(value))) return "—";
+  const num = Number(value);
+  return Number.isInteger(num) ? String(num) : num.toFixed(2);
 }
 
 function EvalItem({ label, value }) {

@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { apiClient, unwrapSupervisorList, unwrapSupervisorStats } from "../../../services/api";
-import DashboardSummary from "./DashboardSummary";
+import { apiClient, unwrapSupervisorList } from "../../../services/api";
 import StudentsTable from "./StudentsTable";
 import StudentProfile from "./StudentProfile";
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
@@ -32,13 +31,11 @@ export default function SupervisorWorkspace() {
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [initialReady, setInitialReady] = useState(false);
   const [error, setError] = useState("");
-  const [stats, setStats] = useState(null);
   const [students, setStudents] = useState([]);
   const [sections, setSections] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterSection, setFilterSection] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
   const [expandedSection, setExpandedSection] = useState(null);
 
   const loadAbortRef = useRef(null);
@@ -52,9 +49,7 @@ export default function SupervisorWorkspace() {
     return () => clearTimeout(t);
   }, [searchTerm]);
 
-  const loadStatsAndSections = useCallback(async () => {
-    const statsRes = await apiClient.get("/supervisor/stats").then((r) => r.data).catch(() => null);
-    setStats(unwrapSupervisorStats(statsRes));
+  const loadSections = useCallback(async () => {
     const sectionsMerged = await fetchAllSupervisorSections();
     setSections(sectionsMerged);
   }, []);
@@ -111,11 +106,10 @@ export default function SupervisorWorkspace() {
       setLoading(true);
       setError("");
       try {
-        await loadStatsAndSections();
+        await loadSections();
       } catch (e) {
         if (!cancelled) {
           setError(e?.response?.data?.message || "فشل تحميل البيانات");
-          setStats(null);
         }
       } finally {
         if (!cancelled) {
@@ -127,7 +121,7 @@ export default function SupervisorWorkspace() {
     return () => {
       cancelled = true;
     };
-  }, [loadStatsAndSections]);
+  }, [loadSections]);
 
   useEffect(() => {
     if (!initialReady) return;
@@ -150,12 +144,12 @@ export default function SupervisorWorkspace() {
   const handleRefresh = useCallback(async () => {
     setError("");
     try {
-      await loadStatsAndSections();
+      await loadSections();
       await loadStudentsOnly();
     } catch (e) {
       setError(e?.response?.data?.message || "فشل التحديث");
     }
-  }, [loadStatsAndSections, loadStudentsOnly]);
+  }, [loadSections, loadStudentsOnly]);
 
   if (loading) {
     return (
@@ -180,8 +174,6 @@ export default function SupervisorWorkspace() {
           <p className="text-[#dc3545] m-0">⚠️ {error}</p>
         </div>
       )}
-
-      <DashboardSummary stats={stats} loading={loading} />
 
       {/* Sections Cards */}
       {sections.length > 0 && (
@@ -316,24 +308,11 @@ export default function SupervisorWorkspace() {
                 </option>
               ))}
             </select>
-            <select
-              id="status-filter"
-              name="status"
-              className="form-select-custom min-w-[140px]"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-            >
-              <option value="">كل الحالات</option>
-              <option value="healthy">🟢 سليم</option>
-              <option value="warning">🟡 تنبيه</option>
-              <option value="critical">🔴 حرج</option>
-            </select>
           </div>
         </div>
 
         <StudentsTable
           students={students}
-          filterStatus={filterStatus}
           onSelectStudent={handleSelectStudent}
         />
       </div>

@@ -77,7 +77,7 @@ const formatDateTime = (value) => {
   return date.toLocaleString("ar", { dateStyle: "short", timeStyle: "short" });
 };
 
-export default function StudentsTable({ students, filterStatus, onSelectStudent }) {
+export default function StudentsTable({ students, onSelectStudent }) {
   const normalized = useMemo(() => {
     const rows = students.map((s) => {
         const id = s.student_id ?? s.id;
@@ -128,15 +128,7 @@ export default function StudentsTable({ students, filterStatus, onSelectStudent 
     return Array.from(byStudentId.values());
   }, [students]);
 
-  const filtered = useMemo(() => {
-    let list = [...normalized];
-
-    if (filterStatus) {
-      list = list.filter((s) => s.health_status === filterStatus);
-    }
-
-    return list;
-  }, [normalized, filterStatus]);
+  const filtered = normalized;
 
   if (!normalized.length) {
     return (
