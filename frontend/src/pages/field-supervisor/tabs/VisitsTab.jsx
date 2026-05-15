@@ -57,8 +57,9 @@ export default function VisitsTab({ studentId, student }) {
     e.preventDefault();
     setSaving(true);
     try {
+      const studentData = student?.student || student;
       const payload = {
-        training_assignment_id: student?.assignment_id || student?.training_assignment_id,
+        training_assignment_id: studentData?.training_assignment_id,
         scheduled_date: scheduleForm.scheduled_date,
         visit_type: scheduleForm.visit_type,
         notes: scheduleForm.notes,

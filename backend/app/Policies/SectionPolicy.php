@@ -41,7 +41,7 @@ class SectionPolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role?->name, ['admin', 'training_coordinator', 'head_of_department']);
+        return in_array($user->role?->name, ['admin', 'training_coordinator', 'coordinator', 'head_of_department']);
     }
 
     /**

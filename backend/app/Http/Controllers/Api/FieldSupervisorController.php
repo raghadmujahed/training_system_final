@@ -303,6 +303,7 @@ class FieldSupervisorController extends Controller
                 'training_type' => $this->getTrainingTypeLabel($profile?->supervisor_type),
                 'training_start' => $assignment->start_date?->format('Y-m-d'),
                 'training_status' => $assignment->status,
+                'training_assignment_id' => $assignment->id,
             ],
             'attendance' => $attendanceStats,
             'last_report' => $lastReport ? [
