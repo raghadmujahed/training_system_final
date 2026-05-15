@@ -18,8 +18,26 @@ const menuFeatureMap = {
   "/admin/announcements": "announcements.create",
 };
 
+/** قائمة المشرف الأكاديمي — ترتيب ثابت حسب سير العمل */
+function buildAcademicSupervisorMenu() {
+  return [
+    { name: "🏠 مساحة العمل", path: "/supervisor/workspace" },
+    { name: "الشعب", path: "/supervisor/sections" },
+    { name: "التحكم بجدول الحصص الأسبوعية", path: "/supervisor/training-program-control" },
+    { name: "السجلات اليومية", path: "/supervisor/daily-reports" },
+    { name: "الزيارات الميدانية", path: "/supervisor/field-visits" },
+    { name: "المهام", path: "/supervisor/tasks" },
+    { name: "الملاحظات", path: "/supervisor/notes" },
+    { name: "التقييم النهائي", path: "/supervisor/final-evaluation" },
+  ];
+}
+
 /** القائمة الموحدة للكادر الميداني — نفس العناصر مع Conditional Rendering */
 function buildFieldStaffMenu(roleKey) {
+  if (roleKey === "supervisor") {
+    return buildAcademicSupervisorMenu();
+  }
+
   // الصفحات الموحدة الأساسية لكل الكادر الميداني
   const menu = [
     { name: "الرئيسية", path: "/field-staff/dashboard" },
@@ -40,52 +58,6 @@ function buildFieldStaffMenu(roleKey) {
   // الإرشاد النفسي: للأخصائي النفسي فقط
   if (roleKey === "psychologist") {
     menu.push({ name: "الإرشاد والدعم", path: "/field-staff/guidance" });
-  }
-
-  // صفحات خاصة بالمشرف الأكاديمي
-  if (roleKey === "supervisor") {
-    const dashboardIndex = menu.findIndex((item) => item.path === "/field-staff/dashboard");
-    if (dashboardIndex >= 0) {
-      menu.splice(dashboardIndex, 1);
-    }
-
-    const evaluationsIndex = menu.findIndex((item) => item.path === "/field-staff/evaluations");
-    if (evaluationsIndex >= 0) {
-      menu.splice(evaluationsIndex, 1);
-    }
-
-    // إضافة مساحة العمل الموحدة في البداية
-    menu.unshift({ name: "🏠 مساحة العمل", path: "/supervisor/workspace" });
-    menu.push(
-      { name: "الزيارات الميدانية", path: "/supervisor/field-visits" },
-      { name: "التحكم بجدول الحصص الأسبوعية", path: "/supervisor/training-program-control" },
-      { name: "الشعب", path: "/supervisor/sections" },
-    );
-
-    const supervisorFieldStaffPaths = {
-      "/field-staff/students": "/supervisor/students",
-      "/field-staff/notes": "/supervisor/notes",
-      "/field-staff/tasks": "/supervisor/tasks",
-      "/field-staff/daily-reports": "/supervisor/daily-reports",
-      "/field-staff/final-evaluation": "/supervisor/final-evaluation",
-    };
-    for (let i = 0; i < menu.length; i++) {
-      const next = supervisorFieldStaffPaths[menu[i].path];
-      if (next) menu[i] = { ...menu[i], path: next };
-    }
-
-    // المشرف الأكاديمي يدير الطلبة من مساحة العمل فقط — بدون صفحة «ملفات الطلبة» المنفصلة
-    const studentsIdx = menu.findIndex(
-      (item) => item.path === "/supervisor/students" || item.path === "/field-staff/students"
-    );
-    if (studentsIdx >= 0) {
-      menu.splice(studentsIdx, 1);
-    }
-
-    const submissionsIdx = menu.findIndex((item) => item.path === "/supervisor/submissions");
-    if (submissionsIdx >= 0) {
-      menu.splice(submissionsIdx, 1);
-    }
   }
 
   // الجدول الأسبوعي: للمعلم فقط
