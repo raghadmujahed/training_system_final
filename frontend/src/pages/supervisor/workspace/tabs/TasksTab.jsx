@@ -223,17 +223,6 @@ export default function TasksTab({ studentId }) {
     }
   };
 
-  const handleDelete = async (taskId) => {
-    if (!window.confirm("هل تريد حذف هذه المهمة؟")) return;
-    try {
-      await apiClient.delete(`/supervisor/tasks/${taskId}`);
-      addToast("تم حذف المهمة بنجاح", "success");
-      loadTasks();
-    } catch {
-      addToast("فشل حذف المهمة", "error");
-    }
-  };
-
   const handleViewSubmissions = async (task) => {
     setSelectedTask(task);
     setShowSubmissionsModal(true);
@@ -280,21 +269,6 @@ export default function TasksTab({ studentId }) {
     } finally {
       setSubmissionsLoading(false);
     }
-  };
-
-  const openEdit = (task) => {
-    setForm({
-      title: task.title || "",
-      description: task.description || "",
-      instructions: task.instructions || "",
-      due_date: task.due_date ? String(task.due_date).slice(0, 10) : "",
-      task_type: task.task_type || "general",
-      grading_weight: task.grading_weight != null ? String(task.grading_weight) : "",
-      assignment_scope: "current_student",
-      section_id: "",
-    });
-    setEditingId(task.id);
-    setShowForm(true);
   };
 
   const statusConfig = {
@@ -638,20 +612,6 @@ export default function TasksTab({ studentId }) {
                     onClick={() => handleViewSubmissions(task)}
                   >
                     👁️ عرض حل الطالب
-                  </button>
-                  <button
-                    type="button"
-                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#4361ee] bg-[#4361ee] text-white cursor-pointer hover:bg-[#3651de]"
-                    onClick={() => openEdit(task)}
-                  >
-                    ✏️ تعديل
-                  </button>
-                  <button
-                    type="button"
-                    className="text-[0.82rem] py-1 px-3 rounded-md border border-[#dc3545] bg-[#dc3545] text-white cursor-pointer hover:bg-[#c82333]"
-                    onClick={() => handleDelete(task.id)}
-                  >
-                    🗑️ حذف
                   </button>
                 </div>
               </div>
