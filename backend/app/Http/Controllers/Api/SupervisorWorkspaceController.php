@@ -1340,6 +1340,8 @@ class SupervisorWorkspaceController extends Controller
                 'feedback' => $submission?->feedback,
                 'review_status' => $submission?->review_status,
                 'submission_id' => $submission?->id,
+                'score' => $submission?->score !== null ? (float) $submission->score : null,
+                'grade' => $submission?->score !== null ? (float) $submission->score : null,
             ];
         })->values();
 
@@ -1347,6 +1349,7 @@ class SupervisorWorkspaceController extends Controller
             'task' => [
                 ...$this->taskListRow($lead),
                 'id' => (string) $taskId,
+                'grading_weight' => $lead->grading_weight,
             ],
             'submissions' => $rows,
         ], 'Task submissions loaded successfully.');
@@ -1410,6 +1413,7 @@ class SupervisorWorkspaceController extends Controller
                 'due_date' => $task->due_date?->toDateString(),
                 'status' => $task->status,
                 'task_type' => $task->task_type,
+                'grading_weight' => $task->grading_weight,
             ],
             'student' => $student,
             'submission' => $submission
@@ -1739,12 +1743,16 @@ class SupervisorWorkspaceController extends Controller
 
     public function gradeSubmission(Request $request, $submissionId)
     {
-        $request->validate([
-            'score' => 'required|numeric|min:0|max:100',
-            'feedback' => 'nullable|string|max:2000',
-        ]);
         $submission = TaskSubmission::with('task')->findOrFail($submissionId);
         $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $submission->user_id);
+
+        $maxScore = $submission->task?->grading_weight;
+        $maxScore = is_numeric($maxScore) && (float) $maxScore > 0 ? (float) $maxScore : 100.0;
+
+        $request->validate([
+            'score' => ['required', 'numeric', 'min:0', 'max:'.$maxScore],
+            'feedback' => 'nullable|string|max:2000',
+        ]);
 
         $submission->update([
             'review_status' => 'graded',
@@ -1761,7 +1769,10 @@ class SupervisorWorkspaceController extends Controller
             );
         }
 
-        return $this->successResponse($submission->fresh(['task', 'user']), 'Submission graded successfully.');
+        return $this->successResponse([
+            'submission' => (new TaskSubmissionResource($submission->fresh(['task', 'user'])))->resolve(),
+            'max_score' => $maxScore,
+        ], 'Submission graded successfully.');
     }
 
     public function studentFieldEvaluations(Request $request, $studentId)
@@ -2107,6 +2118,7 @@ class SupervisorWorkspaceController extends Controller
             'target_type' => $task->target_type,
             'target_ids' => $task->target_ids ?? [],
             'due_date' => optional($task->due_date)->toDateString(),
+            'grading_weight' => $task->grading_weight,
             'attachments' => $task->attachments ?? [],
             'allow_resubmission' => (bool) $task->allow_resubmission,
             'is_required' => (bool) $task->is_required,

@@ -281,6 +281,17 @@ export default function Assignments() {
             const StatusIcon = statusConf.icon;
             const assigner = task.assigned_by;
             const submission = task.submissions?.[0] || null;
+            const maxScore =
+              task.grading_weight != null && Number(task.grading_weight) > 0
+                ? Number(task.grading_weight)
+                : 100;
+            const awardedScore =
+              submission?.score != null
+                ? Number(submission.score)
+                : submission?.grade != null
+                  ? Number(submission.grade)
+                  : null;
+            const isGraded = awardedScore != null || task.status === "graded";
             const isExpanded = expandedTaskId === task.id;
             const overdue = isOverdue(task);
 
@@ -294,14 +305,14 @@ export default function Assignments() {
                   style={{
                     background: overdue
                       ? "linear-gradient(to right, #fef2f2, white)"
-                      : submission?.grade !== null
+                      : isGraded
                       ? "linear-gradient(to right, #f0fdf4, white)"
                       : submission
                       ? "linear-gradient(to right, #eff6ff, white)"
                       : "white",
                     borderRight: overdue
                       ? "4px solid #ef4444"
-                      : submission?.grade !== null
+                      : isGraded
                       ? "4px solid #10b981"
                       : submission
                       ? "4px solid #3b82f6"
@@ -395,14 +406,14 @@ export default function Assignments() {
                 {submission && (
                   <div
                     className={`py-5 px-7 ${isExpanded ? 'border-b border-[#e5e7eb]' : ''}`}
-                    style={{ background: task.status === "graded" ? "#f0fdf4" : "#f8fafc" }}
+                    style={{ background: isGraded ? "#f0fdf4" : "#f8fafc" }}
                   >
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="rounded-full p-[6px] text-white" style={{ background: task.status === "graded" ? "#22c55e" : "#3b82f6" }}>
-                        {task.status === "graded" ? <Award size={16} /> : <FileCheck size={16} />}
+                      <div className="rounded-full p-[6px] text-white" style={{ background: isGraded ? "#22c55e" : "#3b82f6" }}>
+                        {isGraded ? <Award size={16} /> : <FileCheck size={16} />}
                       </div>
                       <h6 className="m-0 font-semibold text-[#374151]">
-                        {task.status === "graded" ? "التسليم والتقييم" : "تفاصيل التسليم"}
+                        {isGraded ? "التسليم والتقييم" : "تفاصيل التسليم"}
                       </h6>
                       {submission.submitted_at && (
                         <span className="text-[#9ca3af] text-[0.8rem] mr-auto">
@@ -432,12 +443,12 @@ export default function Assignments() {
                         </div>
                       )}
 
-                      {task.status === "graded" && (
+                      {isGraded && (
                         <div className="bg-white rounded-xl py-5 px-5 border-2 border-[#22c55e]">
                           <div className="flex items-center gap-3 mb-3">
                             <div className="bg-gradient-to-br from-[#fbbf24] to-[#f59e0b] rounded-xl py-[10px] px-4 text-white font-bold text-[1.1rem]">
                               <TrendingUp size={20} className="ml-[6px] inline" />
-                              {submission.grade !== null ? `${submission.grade}/100` : "—"}
+                              {awardedScore != null ? `${awardedScore}/${maxScore}` : "—"}
                             </div>
                             <span className="text-[#22c55e] font-semibold">تم التقييم بنجاح</span>
                           </div>

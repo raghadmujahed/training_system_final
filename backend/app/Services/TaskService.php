@@ -134,11 +134,14 @@ class TaskService
 
         $submission->task->update(['status' => TaskStatus::GRADED->value]);
 
+        $maxScore = $submission->task->grading_weight;
+        $maxScore = is_numeric($maxScore) && (float) $maxScore > 0 ? (float) $maxScore : 100.0;
+
         // إشعار الطالب بالتقييم
         AppNotification::create([
             'user_id' => $submission->user_id,
             'type' => 'task_graded',
-            'message' => "تم تقييم تسليمك للمهمة \"{$submission->task->title}\". الدرجة: {$grade}",
+            'message' => "تم تقييم تسليمك للمهمة \"{$submission->task->title}\". الدرجة: {$grade} من {$maxScore}",
             'notifiable_type' => Task::class,
             'notifiable_id' => $submission->task_id,
             'data' => [

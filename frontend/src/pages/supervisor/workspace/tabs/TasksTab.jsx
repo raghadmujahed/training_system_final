@@ -53,6 +53,12 @@ export default function TasksTab({ studentId }) {
   const [selectedTask, setSelectedTask] = useState(null);
   const [studentSubmission, setStudentSubmission] = useState(null);
   const [submissionStudent, setSubmissionStudent] = useState(null);
+  const [boardRows, setBoardRows] = useState([]);
+  const [selectedBoardStudentId, setSelectedBoardStudentId] = useState("");
+  const [gradingMax, setGradingMax] = useState(100);
+  const [gradeValue, setGradeValue] = useState("");
+  const [gradeFeedback, setGradeFeedback] = useState("");
+  const [savingGrade, setSavingGrade] = useState(false);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [submissionsError, setSubmissionsError] = useState("");
   const [openingFile, setOpeningFile] = useState(false);
@@ -223,51 +229,101 @@ export default function TasksTab({ studentId }) {
     }
   };
 
+  const taskMaxScore = (task) => {
+    const w = task?.grading_weight;
+    return w != null && w !== "" && Number(w) > 0 ? Number(w) : 100;
+  };
+
+  const applyBoardStudent = (rows, sid, task) => {
+    const studentIdNum = Number(sid);
+    const row = rows.find((r) => Number(r.student_id) === studentIdNum) ?? null;
+    setSubmissionStudent(
+      row
+        ? { id: row.student_id, name: row.student_name, university_id: row.university_id }
+        : supervisedStudents.find((s) => Number(s.student_id ?? s.id) === studentIdNum) ?? null
+    );
+    setStudentSubmission(row ? normalizeBoardRow(row) : null);
+    if (row?.score != null || row?.grade != null) {
+      setGradeValue(String(row.score ?? row.grade));
+    } else {
+      setGradeValue("");
+    }
+    setGradeFeedback(row?.feedback || row?.supervisor_feedback || "");
+    setGradingMax(taskMaxScore(task));
+  };
+
+  const loadSubmissionsBoard = async (task, preferredStudentId) => {
+    setSubmissionsLoading(true);
+    setSubmissionsError("");
+    setBoardRows([]);
+    setStudentSubmission(null);
+    setSubmissionStudent(null);
+    setGradeValue("");
+    setGradeFeedback("");
+
+    const max = taskMaxScore(task);
+    setGradingMax(max);
+
+    try {
+      const res = await apiClient.get(`/supervisor/tasks/${task.id}/submissions-board`);
+      const payload = res.data?.data ?? res.data;
+      const rows = Array.isArray(payload?.submissions) ? payload.submissions : [];
+      const boardMax = payload?.task?.grading_weight;
+      if (boardMax != null && Number(boardMax) > 0) {
+        setGradingMax(Number(boardMax));
+      }
+      setBoardRows(rows);
+
+      const defaultSid =
+        preferredStudentId ||
+        rows.find((r) => r.submission_id || r.file_path)?.student_id ||
+        rows[0]?.student_id ||
+        studentId;
+      setSelectedBoardStudentId(String(defaultSid));
+      applyBoardStudent(rows, defaultSid, task);
+    } catch (err) {
+      setSubmissionsError(err?.response?.data?.message || "فشل تحميل حلول الطلاب");
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
   const handleViewSubmissions = async (task) => {
     setSelectedTask(task);
     setShowSubmissionsModal(true);
-    setSubmissionsLoading(true);
-    setSubmissionsError("");
-    setStudentSubmission(null);
-    setSubmissionStudent(null);
+    await loadSubmissionsBoard(task, Number(studentId));
+  };
 
-    const sid = Number(studentId);
-    const embedded = Array.isArray(task?.submissions)
-      ? task.submissions.find((s) => Number(s.user_id) === sid) ?? task.submissions[0]
-      : null;
+  const handleBoardStudentChange = (sid) => {
+    setSelectedBoardStudentId(String(sid));
+    applyBoardStudent(boardRows, sid, selectedTask);
+  };
 
-    if (embedded && (embedded.submitted_at || embedded.file_path)) {
-      setStudentSubmission(normalizeTaskSubmission(embedded));
-      setSubmissionsLoading(false);
+  const handleSubmitGrade = async () => {
+    if (!studentSubmission?.id) {
+      addToast("لا يوجد تسليم لتقييمه", "error");
       return;
     }
-
+    const score = Number(gradeValue);
+    if (Number.isNaN(score) || score < 0 || score > gradingMax) {
+      addToast(`أدخل علامة بين 0 و ${gradingMax}`, "error");
+      return;
+    }
+    setSavingGrade(true);
     try {
-      const res = await apiClient.get(`/supervisor/students/${studentId}/tasks/${task.id}/submission`);
-      const payload = res.data?.data ?? res.data;
-      setSubmissionStudent(payload?.student ?? null);
-      setStudentSubmission(
-        payload?.submission ? normalizeTaskSubmission(payload.submission) : null
-      );
-    } catch (err) {
-      if (err?.response?.status === 404) {
-        try {
-          const fallback = await apiClient.get(`/tasks/${task.id}/submissions`);
-          const list = Array.isArray(fallback.data?.submissions)
-            ? fallback.data.submissions
-            : [];
-          const match = list.find((s) => Number(s.user_id) === sid) ?? list[0] ?? null;
-          setStudentSubmission(match ? normalizeTaskSubmission(match) : null);
-        } catch (fallbackErr) {
-          setSubmissionsError(
-            fallbackErr?.response?.data?.message || "فشل تحميل حل الطالب"
-          );
-        }
-      } else {
-        setSubmissionsError(err?.response?.data?.message || "فشل تحميل حل الطالب");
+      await apiClient.post(`/supervisor/task-submissions/${studentSubmission.id}/grade`, {
+        score,
+        feedback: gradeFeedback.trim() || null,
+      });
+      addToast("تم حفظ العلامة وإرسالها للطالب", "success");
+      if (selectedTask) {
+        await loadSubmissionsBoard(selectedTask, Number(selectedBoardStudentId));
       }
+      loadTasks();
+    } catch (err) {
+      addToast(err?.response?.data?.message || "فشل حفظ العلامة", "error");
     } finally {
-      setSubmissionsLoading(false);
+      setSavingGrade(false);
     }
   };
 
@@ -521,7 +577,7 @@ export default function TasksTab({ studentId }) {
                 </select>
               </div>
               <div>
-                <label className="form-label-custom">وزن التقييم (0–100) اختياري</label>
+                <label className="form-label-custom">العلامة الكاملة للمهمة (اختياري)</label>
                 <input
                   type="number"
                   min={0}
@@ -602,7 +658,7 @@ export default function TasksTab({ studentId }) {
                   <span
                     className="text-[0.75rem] text-[#28a745] bg-[#e8f5e9] py-[2px] px-2 rounded-[10px]"
                   >
-                    وزن: {task.grading_weight}
+                    العلامة الكاملة: {task.grading_weight}
                   </span>
                 )}
                 <div className="flex gap-2 mt-[10px]">
@@ -611,7 +667,7 @@ export default function TasksTab({ studentId }) {
                     className="text-[0.82rem] py-1 px-3 rounded-md border border-[#28a745] bg-[#28a745] text-white cursor-pointer hover:bg-[#218838]"
                     onClick={() => handleViewSubmissions(task)}
                   >
-                    👁️ عرض حل الطالب
+                    👁️ عرض حلول الطلاب والتقييم
                   </button>
                 </div>
               </div>
@@ -620,13 +676,13 @@ export default function TasksTab({ studentId }) {
         </div>
       )}
 
-      {/* Modal: حل الطالب الحالي فقط */}
+      {/* Modal: حلول الطلاب والتقييم */}
       {showSubmissionsModal && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold m-0">حل الطالب</h3>
+                <h3 className="text-xl font-bold m-0">حلول الطلاب والتقييم</h3>
                 <button
                   type="button"
                   className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -644,7 +700,31 @@ export default function TasksTab({ studentId }) {
                 )}
               </div>
 
-              {submissionsLoading && <LoadingSpinner size="section" text="جاري تحميل حل الطالب..." />}
+              <div className="text-sm text-emerald-700 font-semibold mb-3">
+                العلامة الكاملة: {gradingMax}
+              </div>
+
+              {boardRows.length > 0 && (
+                <div className="mb-4">
+                  <label className="form-label-custom block mb-1">اختر الطالب</label>
+                  <select
+                    className="form-select-custom w-full"
+                    value={selectedBoardStudentId}
+                    onChange={(e) => handleBoardStudentChange(e.target.value)}
+                  >
+                    {boardRows.map((row) => (
+                      <option key={row.student_id} value={row.student_id}>
+                        {row.student_name || `طالب #${row.student_id}`}
+                        {row.university_id ? ` — ${row.university_id}` : ""}
+                        {row.submission_id || row.file_path ? " ✓ سلّم" : " — لم يسلّم"}
+                        {row.score != null ? ` — ${row.score}/${gradingMax}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {submissionsLoading && <LoadingSpinner size="section" text="جاري تحميل الحلول..." />}
               
               {submissionsError && (
                 <div className="text-[#dc3545] p-4 bg-[#ffebee] rounded-lg mb-4">
@@ -730,7 +810,49 @@ export default function TasksTab({ studentId }) {
 
                   {studentSubmission.score != null && (
                     <div className="mt-3 text-[0.95rem] font-semibold text-[#28a745]">
-                      الدرجة: {studentSubmission.score}
+                      العلامة الحالية: {studentSubmission.score} / {gradingMax}
+                    </div>
+                  )}
+
+                  {studentSubmission.id && (
+                    <div className="mt-4 p-4 bg-[#f8fafc] rounded-xl border border-slate-200">
+                      <h4 className="m-0 mb-3 text-[0.95rem] font-bold text-slate-800">تقييم المهمة</h4>
+                      <div className="flex flex-wrap gap-3 items-end">
+                        <div>
+                          <label className="text-[0.8rem] text-slate-600 block mb-1">
+                            العلامة (من {gradingMax})
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={gradingMax}
+                            step={0.5}
+                            className="form-input-custom w-28"
+                            value={gradeValue}
+                            onChange={(e) => setGradeValue(e.target.value)}
+                            disabled={savingGrade}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-[180px]">
+                          <label className="text-[0.8rem] text-slate-600 block mb-1">ملاحظة للطالب (اختياري)</label>
+                          <input
+                            type="text"
+                            className="form-input-custom w-full"
+                            value={gradeFeedback}
+                            onChange={(e) => setGradeFeedback(e.target.value)}
+                            placeholder="ملاحظات التقييم..."
+                            disabled={savingGrade}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          disabled={savingGrade || gradeValue === ""}
+                          onClick={handleSubmitGrade}
+                          className="btn-primary-custom text-[0.88rem] py-2 px-4 disabled:opacity-50"
+                        >
+                          {savingGrade ? "جاري الحفظ..." : "إرسال العلامة للطالب"}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -762,6 +884,19 @@ function normalizeTaskSubmission(raw) {
     file_url: id ? raw.file_url : (raw.file_url || buildSubmissionFileUrl(filePath)),
     notes: raw.notes ?? raw.student_notes ?? raw.student_note,
     score: raw.score ?? raw.grade ?? null,
+    feedback: raw.feedback ?? raw.supervisor_feedback ?? null,
     user: raw.user ?? null,
   };
+}
+
+function normalizeBoardRow(row) {
+  if (!row) return null;
+  const submissionId = row.submission_id ?? row.id ?? null;
+  return normalizeTaskSubmission({
+    ...row,
+    id: submissionId,
+    submission_id: submissionId,
+    notes: row.notes ?? row.student_note,
+    feedback: row.feedback ?? row.supervisor_feedback,
+  });
 }
