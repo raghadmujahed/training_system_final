@@ -358,7 +358,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         // Portfolio
         Route::get('/portfolio', [StudentPortfolioController::class, 'show']);
         Route::post('/portfolio/entries', [PortfolioEntryController::class, 'store']);
-        Route::put('/portfolio/entries/{entry}', [PortfolioEntryController::class, 'update']);
+        Route::match(['put', 'post'], '/portfolio/entries/{entry}', [PortfolioEntryController::class, 'update']);
         Route::get('/portfolio/entries/{entry}/file', [PortfolioEntryController::class, 'downloadFile']);
         Route::delete('/portfolio/entries/{entry}', [PortfolioEntryController::class, 'destroy']);
         

@@ -886,8 +886,7 @@ export const addPortfolioEntry = async (data) => {
 
 export const updatePortfolioEntry = async (id, data) => {
     if (data instanceof FormData) {
-        data.append('_method', 'PUT');
-        const response = await apiClient.post(`/student/portfolio/entries/${id}`, data, {
+        const response = await apiClient.put(`/student/portfolio/entries/${id}`, data, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data;
@@ -899,8 +898,7 @@ export const updatePortfolioEntry = async (id, data) => {
 export const uploadPortfolioFile = async (entryId, pdfBlob, filename) => {
     const fd = new FormData();
     fd.append('file', pdfBlob, filename);
-    fd.append('_method', 'PUT');
-    const response = await apiClient.post(`/student/portfolio/entries/${entryId}`, fd, {
+    const response = await apiClient.put(`/student/portfolio/entries/${entryId}`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;

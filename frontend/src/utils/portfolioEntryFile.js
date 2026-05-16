@@ -34,13 +34,13 @@ export async function openPortfolioEntryFile(entryId, suggestedName = "portfolio
     try {
       const res = await apiClient.get(path, { responseType: "blob" });
 
-      if (res.data?.type?.includes("application/json")) {
+      const contentType = res.headers["content-type"] || "application/octet-stream";
+
+      if (contentType.includes("application/json")) {
         const text = await res.data.text();
         const json = JSON.parse(text);
         throw new Error(json?.message || "تعذر فتح الملف");
       }
-
-      const contentType = res.headers["content-type"] || "application/octet-stream";
       const blob = new Blob([res.data], { type: contentType });
       const url = URL.createObjectURL(blob);
       const opened = window.open(url, "_blank", "noopener,noreferrer");
