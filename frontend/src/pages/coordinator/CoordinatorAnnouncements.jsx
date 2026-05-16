@@ -50,6 +50,7 @@ export default function CoordinatorAnnouncements() {
   // بيانات الشعب والطلاب
   const [sections, setSections] = useState([]);
   const [sectionsLoading, setSectionsLoading] = useState(false);
+  const [sectionsLoadError, setSectionsLoadError] = useState("");
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentSearch, setStudentSearch] = useState("");
@@ -71,16 +72,38 @@ export default function CoordinatorAnnouncements() {
 
   useEffect(() => { load(); }, [tab]);
 
-  // جلب الشعب عند اختيار sections
+  const parseListResponse = (res) => {
+    if (Array.isArray(res)) return { items: res, message: "" };
+    if (Array.isArray(res?.data)) return { items: res.data, message: res?.message || "" };
+    return { items: [], message: res?.message || "" };
+  };
+
+  const loadSections = useCallback(() => {
+    setSectionsLoading(true);
+    setSectionsLoadError("");
+    getCoordinatorSections()
+      .then((res) => {
+        const { items, message } = parseListResponse(res);
+        setSections(items);
+        if (items.length === 0 && message) {
+          setSectionsLoadError(message);
+        }
+      })
+      .catch((e) => {
+        setSections([]);
+        setSectionsLoadError(
+          e?.response?.data?.message || "تعذر تحميل الشعب. تحقق من اتصالك أو ربط حسابك بالقسم."
+        );
+      })
+      .finally(() => setSectionsLoading(false));
+  }, []);
+
+  // جلب الشعب عند اختيار «شعب معينة»
   useEffect(() => {
-    if (form.target_type === "sections" && sections.length === 0) {
-      setSectionsLoading(true);
-      getCoordinatorSections()
-        .then((res) => setSections(res?.data || []))
-        .catch(() => setSections([]))
-        .finally(() => setSectionsLoading(false));
+    if (form.target_type === "sections") {
+      loadSections();
     }
-  }, [form.target_type]);
+  }, [form.target_type, loadSections]);
 
   // جلب الطلاب عند اختيار student مع بحث
   const fetchStudents = useCallback((search) => {
@@ -310,8 +333,12 @@ export default function CoordinatorAnnouncements() {
               <label className="form-label-custom">اختيار الشعب</label>
               {sectionsLoading ? (
                 <p className="text-muted text-[0.85rem]">جاري تحميل الشعب...</p>
+              ) : sectionsLoadError ? (
+                <p className="text-[#dc2626] text-[0.85rem] mb-0">{sectionsLoadError}</p>
               ) : sections.length === 0 ? (
-                <p className="text-muted text-[0.85rem]">لا توجد شعب متاحة.</p>
+                <p className="text-muted text-[0.85rem] mb-0">
+                  لا توجد شعب في قسمك حالياً. أنشئ الشعب من لوحة التوزيع أو تواصل مع الإدارة.
+                </p>
               ) : (
                 <div
                   className="border border-[var(--border)] rounded-[8px] p-[10px] max-h-[200px] overflow-y-auto"

@@ -8,11 +8,13 @@ use App\Http\Requests\UpdateAnnouncementRequest;
 use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
 use App\Models\AnnouncementTarget;
+use App\Models\Course;
 use App\Models\Section;
 use App\Models\SectionStudent;
 use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AnnouncementController extends Controller
 {
@@ -142,7 +144,7 @@ class AnnouncementController extends Controller
         if ($isCoordinator) {
             if ($targetType === 'sections') {
                 $sectionIds = $request->input('section_ids', []);
-                $allowedIds = Section::whereNull('archived_at')->pluck('id')->toArray();
+                $allowedIds = $this->queryCoordinatorAccessibleSections($user)->pluck('id')->all();
                 $invalid = array_diff($sectionIds, $allowedIds);
                 if (!empty($invalid)) {
                     return response()->json([
@@ -154,8 +156,10 @@ class AnnouncementController extends Controller
 
             if ($targetType === 'student') {
                 $studentId = $request->input('student_id');
+                $allowedSectionIds = $this->queryCoordinatorAccessibleSections($user)->pluck('id');
                 $exists = SectionStudent::where('student_id', $studentId)
                     ->where('status', 'accepted')
+                    ->when($allowedSectionIds->isNotEmpty(), fn ($q) => $q->whereIn('section_id', $allowedSectionIds))
                     ->exists();
                 if (!$exists) {
                     return response()->json([
@@ -312,28 +316,44 @@ class AnnouncementController extends Controller
         $user = $request->user();
         $roleName = $user->role?->name;
 
-        if (!in_array($roleName, ['admin', 'coordinator', 'training_coordinator'], true)) {
+        if (! in_array($roleName, ['admin', 'coordinator', 'training_coordinator'], true)) {
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        $sections = Section::whereNull('archived_at')
-            ->select('id', 'name', 'academic_year', 'semester', 'course_id')
-            ->with('course:id,name')
-            ->withCount(['students as active_students_count' => function ($q) {
-                $q->wherePivot('status', 'accepted');
-            }])
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($s) => [
-                'id' => $s->id,
-                'name' => $s->name,
-                'course_name' => $s->course?->name,
-                'academic_year' => $s->academic_year,
-                'semester' => $s->semester,
-                'students_count' => $s->active_students_count,
+        if (! $user->department_id && $roleName !== 'admin') {
+            return response()->json([
+                'data' => [],
+                'message' => 'حسابك غير مربوط بقسم أكاديمي. تواصل مع مدير النظام لربط القسم بحسابك.',
+            ]);
+        }
+
+        try {
+            $sections = $this->queryCoordinatorAccessibleSections($user)
+                ->withCount(['students as active_students_count' => function ($q) {
+                    $q->where('section_students.status', 'accepted');
+                }])
+                ->get()
+                ->map(fn ($s) => [
+                    'id' => $s->id,
+                    'name' => $s->name,
+                    'course_name' => $s->course?->name,
+                    'academic_year' => $s->academic_year,
+                    'semester' => $s->semester,
+                    'students_count' => (int) $s->active_students_count,
+                ]);
+        } catch (\Throwable $e) {
+            Log::error('coordinatorSections failed', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
             ]);
 
-        return response()->json(['data' => $sections]);
+            return response()->json([
+                'message' => 'تعذر تحميل الشعب. يرجى المحاولة لاحقاً.',
+                'data' => [],
+            ], 500);
+        }
+
+        return response()->json(['data' => $sections->values()]);
     }
 
     /**
@@ -350,9 +370,12 @@ class AnnouncementController extends Controller
 
         $search = $request->input('search', '');
 
-        $query = User::whereHas('sectionStudents', function ($q) {
+        $accessibleSectionIds = $this->queryCoordinatorAccessibleSections($user)->pluck('id');
+
+        $query = User::whereHas('sectionStudents', function ($q) use ($accessibleSectionIds) {
             $q->where('status', 'accepted')
-              ->whereHas('section', fn ($sq) => $sq->whereNull('archived_at'));
+                ->when($accessibleSectionIds->isNotEmpty(), fn ($sq) => $sq->whereIn('section_id', $accessibleSectionIds))
+                ->whereHas('section', fn ($sec) => $sec->whereNull('archived_at'));
         })
         ->select('id', 'name', 'email')
         ->orderBy('name');
@@ -371,6 +394,35 @@ class AnnouncementController extends Controller
         ]);
 
         return response()->json(['data' => $students]);
+    }
+
+    /**
+     * شعب المنسق: قسمه الأكاديمي عبر sections.department_id أو مساقات القسم.
+     */
+    protected function queryCoordinatorAccessibleSections(User $user)
+    {
+        $query = Section::query()
+            ->select('sections.id', 'sections.name', 'sections.academic_year', 'sections.semester', 'sections.course_id', 'sections.department_id')
+            ->with('course:id,name,department_id')
+            ->orderBy('sections.name');
+
+        if ($user->role?->name === 'admin' && ! $user->department_id) {
+            return $query;
+        }
+
+        $deptId = (int) $user->department_id;
+        if ($deptId <= 0) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $courseIdsInDept = Course::query()->where('department_id', $deptId)->pluck('id');
+
+        return $query->where(function ($q) use ($deptId, $courseIdsInDept) {
+            $q->where('sections.department_id', $deptId);
+            if ($courseIdsInDept->isNotEmpty()) {
+                $q->orWhereIn('sections.course_id', $courseIdsInDept);
+            }
+        });
     }
 
     protected function dispatchNotifications(Announcement $announcement): void
