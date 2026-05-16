@@ -52,6 +52,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class SupervisorWorkspaceController extends Controller
@@ -1235,16 +1236,24 @@ class SupervisorWorkspaceController extends Controller
                 ->where('user_id', $student?->id)
                 ->sortByDesc('submitted_at')
                 ->first();
+            $filePath = $submission?->file_path;
+
             return [
+                'id' => $submission?->id,
                 'task_id' => $task->id,
                 'student_id' => $student?->id,
                 'student_name' => $student?->name,
                 'university_id' => $student?->university_id,
+                'user' => $student ? ['id' => $student->id, 'name' => $student->name] : null,
                 'status' => $this->resolveSubmissionStatus($task, $submission),
                 'submitted_at' => $submission?->submitted_at,
-                'attachments' => $submission?->file_path ? [$submission->file_path] : [],
+                'file_path' => $filePath,
+                'file_url' => $filePath ? Storage::disk('public')->url($filePath) : null,
+                'attachments' => $filePath ? [$filePath] : [],
                 'student_note' => $submission?->notes,
+                'notes' => $submission?->notes,
                 'supervisor_feedback' => $submission?->feedback,
+                'feedback' => $submission?->feedback,
                 'review_status' => $submission?->review_status,
                 'submission_id' => $submission?->id,
             ];
@@ -1391,7 +1400,9 @@ class SupervisorWorkspaceController extends Controller
                 'name' => $student->name,
                 'university_id' => $student->university_id,
                 'task_id' => (int) $task->id,
-                'submission' => $submission ? (new TaskSubmissionResource($submission))->resolve() : null,
+                'submission' => $submission
+                    ? (new \App\Http\Resources\TaskSubmissionResource($submission))->resolve()
+                    : null,
                 'has_submitted' => $hasSubmitted,
             ];
 

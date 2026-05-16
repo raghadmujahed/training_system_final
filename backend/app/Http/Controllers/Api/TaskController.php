@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Http\Requests\SubmitTaskRequest;
 use App\Http\Requests\GradeTaskSubmissionRequest;
 use App\Http\Resources\TaskResource;
+use App\Http\Resources\TaskSubmissionResource;
 use App\Models\Task;
 use App\Models\TaskSubmission;
 use App\Services\TaskService;
@@ -175,8 +176,9 @@ class TaskController extends Controller
             ->get();
 
         return response()->json([
-            'task' => new TaskResource($task),
-            'submissions' => TaskSubmissionResource::collection($submissions),
+            'success' => true,
+            'task' => (new TaskResource($task->loadMissing('assignedBy')))->resolve(),
+            'submissions' => TaskSubmissionResource::collection($submissions)->resolve(),
         ]);
     }
 }

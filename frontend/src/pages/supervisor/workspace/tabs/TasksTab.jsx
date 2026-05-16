@@ -238,10 +238,24 @@ export default function TasksTab({ studentId }) {
     setSubmissions([]);
     
     try {
-      const res = await apiClient.get(`/tasks/${task.id}/submissions`);
-      setSubmissions(res.data?.submissions || []);
+      const res = await apiClient.get(`/supervisor/tasks/${task.id}/submissions-board`);
+      const payload = res.data?.data ?? res.data;
+      const raw = payload?.submissions;
+      const list = (Array.isArray(raw) ? raw : []).map((row) => ({
+        id: row.submission_id ?? row.id ?? `student-${row.student_id}`,
+        user: row.user ?? (row.student_name ? { name: row.student_name } : null),
+        submitted_at: row.submitted_at,
+        status: row.status,
+        file_path: row.file_path ?? row.attachments?.[0],
+        file_url: row.file_url,
+        notes: row.notes ?? row.student_note,
+        feedback: row.feedback ?? row.supervisor_feedback,
+        review_status: row.review_status,
+        has_submitted: Boolean(row.submission_id && row.submitted_at),
+      }));
+      setSubmissions(list);
     } catch (err) {
-      const msg = err?.response?.data?.message || "فشل تحميل الحلول";
+      const msg = err?.response?.data?.message || err?.message || "فشل تحميل الحلول";
       setSubmissionsError(msg);
     } finally {
       setSubmissionsLoading(false);
@@ -669,9 +683,16 @@ export default function TasksTab({ studentId }) {
                 <div className="flex flex-col gap-3">
                   {submissions.map((sub) => {
                     const studentName = sub.user?.name || "طالب";
-                    const submittedAt = sub.submitted_at ? new Date(sub.submitted_at).toLocaleString('ar-SA') : "لم يسلّم";
-                    const status = sub.status === 'submitted' ? 'تم التسليم' : 
-                                 sub.status === 'draft' ? 'مسودة' : sub.status;
+                    const submittedAt = sub.submitted_at
+                      ? new Date(sub.submitted_at).toLocaleString("ar-SA")
+                      : "لم يسلّم بعد";
+                    const status = !sub.has_submitted && !sub.submitted_at
+                      ? "لم يسلّم"
+                      : sub.status === "submitted"
+                        ? "تم التسليم"
+                        : sub.status === "draft"
+                          ? "مسودة"
+                          : (sub.status || "—");
                     
                     return (
                       <div key={sub.id} className="border border-[#e9ecef] rounded-lg p-4">
