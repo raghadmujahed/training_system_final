@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import PageHeader from "../../components/common/PageHeader";
+import EmptyState from "../../components/common/EmptyState";
 import {
   getCurrentUser,
   getOfficialLetters,
@@ -26,6 +28,8 @@ import {
   Briefcase,
   FileCheck,
   Inbox,
+  ClipboardCheck,
+  Settings,
 } from "lucide-react";
 
 const PrincipalDashboard = ({ siteType = "school" }) => {

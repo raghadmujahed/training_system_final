@@ -11,7 +11,6 @@ import {
   Users,
   CheckCircle2,
   XCircle,
-  Clock,
   Loader2,
   Plus,
   Pencil,
@@ -23,6 +22,7 @@ import {
   AlertCircle,
   Phone,
   Mail,
+  AlertTriangle,
 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import MinistryEducationSeal from "../../components/branding/MinistryEducationSeal";
@@ -41,24 +41,76 @@ const getSchoolTypeFromItem = (item) => {
   return "حكومية";
 };
 
-const normalizePlace = (item) => ({
-  id: item.id,
-  name: item.name || "—",
-  school_type: getSchoolTypeFromItem(item),
-  city: item.location || "—",
-  capacity: item.capacity ?? 0,
-  directorate: item.directorate || "وسط",
-  phone: item.phone || "",
-  email: item.email || "",
-  mobile: item.mobile || "",
-  gender_classification: item.gender_classification || "",
-  school_level: item.school_level || "",
-  status:
-    item.is_active === true || item.is_active === 1 ? "متاح" : "غير نشط",
-  is_active: item.is_active === true || item.is_active === 1,
-});
+/** تسميات الحالة للعرض فقط — تعتمد على الحقول المرسلة من الـ API دون تغييره */
+const resolveStatusDisplay = (item) => {
+  const isActive = item.is_active === true || item.is_active === 1;
+  const cap = Number(item.capacity);
+  const remaining =
+    typeof item.remaining_capacity === "number" ? item.remaining_capacity : null;
+  const assignments =
+    typeof item.active_assignments_count === "number"
+      ? item.active_assignments_count
+      : null;
+  const atCapFlag = item.is_at_capacity === true || item.is_at_capacity === 1;
+  const derivedFull =
+    atCapFlag ||
+    (remaining !== null && cap > 0 && remaining <= 0) ||
+    (assignments !== null && cap > 0 && assignments >= cap);
+
+  if (!isActive) return { key: "inactive", label: "غير نشط" };
+  if (derivedFull) return { key: "full", label: "ممتلئ" };
+  if (remaining !== null && remaining > 0) return { key: "available", label: "متاح" };
+  if (assignments !== null && cap > 0 && assignments < cap)
+    return { key: "available", label: "متاح" };
+  return { key: "active", label: "نشط" };
+};
+
+const normalizePlace = (item) => {
+  const is_active = item.is_active === true || item.is_active === 1;
+  const status = resolveStatusDisplay(item);
+  return {
+    id: item.id,
+    name: item.name || "—",
+    school_type: getSchoolTypeFromItem(item),
+    city: item.location || "—",
+    capacity: item.capacity ?? 0,
+    directorate: item.directorate || "وسط",
+    phone: item.phone || "",
+    email: item.email || "",
+    mobile: item.mobile || "",
+    gender_classification: item.gender_classification || "",
+    school_level: item.school_level || "",
+    status: status.label,
+    statusKey: status.key,
+    is_active,
+  };
+};
 
 const toApiSchoolType = (value) => (value === "خاصة" ? "private" : "public");
+
+/** شارة حالة الموقع — ألوان ثابتة حسب المفتاح */
+function DirectorateSiteStatusBadge({ statusKey, label }) {
+  const base =
+    "inline-flex items-center justify-center gap-1 py-1 px-2.5 rounded-full text-[0.75rem] font-bold whitespace-nowrap border max-w-full";
+  const styles = {
+    inactive: "bg-red-50 text-red-700 border-red-100",
+    full: "bg-amber-50 text-amber-900 border-amber-100",
+    available: "bg-emerald-50 text-emerald-800 border-emerald-100",
+    active: "bg-sky-50 text-sky-800 border-sky-100",
+  };
+  const Icon =
+    statusKey === "inactive"
+      ? XCircle
+      : statusKey === "full"
+        ? AlertTriangle
+        : CheckCircle2;
+  return (
+    <span className={`${base} ${styles[statusKey] || styles.active}`}>
+      <Icon size={13} className="shrink-0" aria-hidden />
+      {label}
+    </span>
+  );
+}
 
 const extractValidationMessage = (error, fallback) => {
   const apiMessage = error?.response?.data?.message;
@@ -317,8 +369,8 @@ export default function TrainingPlaces() {
     return p.name.toLowerCase().includes(q) || p.city.toLowerCase().includes(q) || p.directorate.toLowerCase().includes(q);
   });
 
-  const activeCount = places.filter((p) => p.status === "متاح").length;
-  const inactiveCount = places.filter((p) => p.status !== "متاح").length;
+  const activeCount = places.filter((p) => p.is_active).length;
+  const inactiveCount = places.filter((p) => !p.is_active).length;
   const totalCapacity = places.reduce((sum, p) => sum + p.capacity, 0);
 
   if (fetchError) {
@@ -331,7 +383,7 @@ export default function TrainingPlaces() {
   }
 
   return (
-    <div>
+    <div className="min-w-0 max-w-full overflow-x-hidden">
       {/* Hero Section */}
       <div className="flex items-start gap-3 flex-wrap mb-4">
         <MinistryEducationSeal size={54} />
@@ -500,16 +552,16 @@ export default function TrainingPlaces() {
       </div>
 
       {/* Training Sites List */}
-      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0]">
+      <div className="bg-white p-6 rounded-2xl border border-[#e2e8f0] min-w-0">
         <div className="flex items-center justify-between gap-4 mb-5 pb-4 border-b border-[#e2e8f0] flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center text-white">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-[10px] bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center text-white shrink-0">
               <Building2 size={20} />
             </div>
-            <h4 className="m-0 text-[1.1rem] font-bold">قائمة أماكن التدريب</h4>
+            <h4 className="m-0 text-[1.1rem] font-bold truncate">قائمة أماكن التدريب</h4>
           </div>
-          <div className="relative min-w-[220px]">
-            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+          <div className="relative w-full sm:w-auto sm:min-w-[220px] max-w-full">
+            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
             <input type="text" placeholder="بحث بالاسم أو المدينة..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full py-2 rounded-[10px] border border-[#e2e8f0] text-[0.85rem] bg-[#f8fafc] outline-none"
               style={{ paddingLeft: '12px', paddingRight: '40px' }}
@@ -520,68 +572,178 @@ export default function TrainingPlaces() {
         {loading ? (
           <LoadingSpinner size="section" text="جاري تحميل أماكن التدريب..." />
         ) : (
-          <div className="rounded-xl overflow-hidden border border-[#e2e8f0]">
-            <table className="w-full border-collapse text-[0.9rem]">
-              <thead>
-                <tr className="bg-[#f8fafc]">
-                  {["اسم المكان", "نوع المدرسة", "المدينة", "الهاتف", "البريد", "المحمول", "السعة", "المديرية", "الحالة", "الإجراءات"].map((h) => (
-                    <th key={h} className="py-3.5 px-4 text-right font-semibold text-[#475569] border-b border-[#e2e8f0] whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPlaces.map((place, idx) =>
+          <>
+            {/* بطاقات — شاشات صغيرة فقط (عند عدم التعديل) */}
+            {editingId === null && (
+              <div className="md:hidden flex flex-col gap-3 mb-1">
+                {filteredPlaces.map((place) => (
+                  <div
+                    key={place.id}
+                    className="rounded-xl border border-[#e2e8f0] bg-[#fafbfc] p-4 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="font-bold text-[#1e293b] text-[0.95rem] leading-snug break-words min-w-0">
+                        {place.name}
+                      </div>
+                      <DirectorateSiteStatusBadge statusKey={place.statusKey} label={place.status} />
+                    </div>
+                    <dl className="m-0 grid grid-cols-1 gap-1.5 text-[0.82rem]">
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">نوع المدرسة</dt>
+                        <dd className="m-0 text-[#475569] font-medium text-left">{place.school_type}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">المدينة</dt>
+                        <dd className="m-0 text-[#475569] font-medium text-left break-words">{place.city}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">الهاتف</dt>
+                        <dd className="m-0 text-[#475569] font-mono text-left dir-ltr">{place.phone || "—"}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">البريد</dt>
+                        <dd className="m-0 text-[#475569] text-left break-all min-w-0">{place.email || "—"}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">المحمول</dt>
+                        <dd className="m-0 text-[#475569] font-mono text-left dir-ltr">{place.mobile || "—"}</dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">السعة</dt>
+                        <dd className="m-0 text-[#475569] font-semibold text-left inline-flex items-center gap-1">
+                          <Users size={14} className="text-[#94a3b8]" /> {place.capacity}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <dt className="text-[#94a3b8] shrink-0">المديرية</dt>
+                        <dd className="m-0 text-[#475569] font-medium text-left">{place.directorate}</dd>
+                      </div>
+                    </dl>
+                    <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-[#e2e8f0]">
+                      <button type="button" onClick={() => startEdit(place)}
+                        className="inline-flex items-center gap-1 py-1.5 px-2.5 bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0] rounded-md text-[0.8rem] font-semibold cursor-pointer"
+                      >
+                        <Pencil size={13} /> تعديل
+                      </button>
+                      <button type="button" onClick={() => handleDeletePlace(place.id)}
+                        className="inline-flex items-center gap-1 py-1.5 px-2.5 bg-[#fef2f2] text-[#dc2626] border border-[#fecaca] rounded-md text-[0.8rem] font-semibold cursor-pointer"
+                      >
+                        <Trash2 size={13} /> حذف
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filteredPlaces.length === 0 && (
+                  <div className="text-center py-8 text-[#94a3b8] rounded-xl border border-dashed border-[#e2e8f0]">
+                    <School size={40} className="mb-2 opacity-40 mx-auto" />
+                    <p className="m-0 text-[0.95rem] font-semibold text-[#64748b]">
+                      {searchQuery ? "لا توجد نتائج مطابقة للبحث" : "لا توجد أماكن تدريب مسجلة حاليًا"}
+                    </p>
+                    {searchQuery && <p className="m-0 mt-1 text-[0.85rem]">جرّب كلمات بحث مختلفة</p>}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div
+              className={`rounded-xl border border-[#e2e8f0] bg-white min-w-0 ${
+                editingId !== null ? "block" : "hidden md:block"
+              }`}
+            >
+              <div className="overflow-x-auto overscroll-x-contain min-w-0 touch-pan-x [-webkit-overflow-scrolling:touch]">
+                <table className="w-full border-collapse text-[0.82rem] min-w-[1040px]">
+                  <thead>
+                    <tr className="bg-[#f8fafc]">
+                      {[
+                        { k: "name", label: "اسم المكان" },
+                        { k: "type", label: "نوع المدرسة" },
+                        { k: "city", label: "المدينة" },
+                        { k: "phone", label: "الهاتف" },
+                        { k: "email", label: "البريد" },
+                        { k: "mobile", label: "المحمول" },
+                        { k: "cap", label: "السعة" },
+                        { k: "dir", label: "المديرية" },
+                        { k: "status", label: "الحالة" },
+                        { k: "act", label: "الإجراءات" },
+                      ].map((c) => (
+                        <th
+                          key={c.k}
+                          className={`py-2.5 px-2.5 sm:px-3 text-right font-semibold text-[#475569] border-b border-[#e2e8f0] align-bottom ${
+                            c.k === "name"
+                              ? "min-w-[11rem] max-w-[14rem]"
+                              : c.k === "email"
+                                ? "min-w-[10rem] w-[12rem] max-w-[14rem]"
+                                : c.k === "status"
+                                  ? "w-[7.5rem] min-w-[7rem] whitespace-nowrap"
+                                  : c.k === "act"
+                                    ? "w-[9.5rem] min-w-[9rem] whitespace-nowrap"
+                                    : c.k === "phone" || c.k === "mobile"
+                                      ? "min-w-[6.5rem] whitespace-nowrap"
+                                      : c.k === "dir"
+                                        ? "min-w-[4.5rem]"
+                                        : c.k === "cap"
+                                          ? "min-w-[4rem] w-[4.5rem]"
+                                          : "min-w-[5rem]"
+                          }`}
+                        >
+                          {c.label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPlaces.map((place, idx) =>
                   editingId === place.id ? (
                     <tr key={place.id} className="bg-[#fef3c7]">
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top min-w-[11rem] max-w-[14rem]">
                         <input type="text" name="name" value={editFormData.name} onChange={handleEditChange}
                           className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap">
                         <select name="school_type" value={editFormData.school_type} onChange={handleEditChange}
-                          className="py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
+                          className="py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem] max-w-full"
                         >
                           <option value="حكومية">حكومية</option>
                           <option value="خاصة">خاصة</option>
                         </select>
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top min-w-[6rem]">
                         <input type="text" name="city" value={editFormData.city} onChange={handleEditChange}
                           className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap">
                         <input type="text" name="phone" value={editFormData.phone} onChange={handleEditChange}
-                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
+                          className="w-full min-w-[6rem] py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem] font-mono dir-ltr"
                         />
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top max-w-[14rem]">
                         <input type="email" name="email" value={editFormData.email} onChange={handleEditChange}
-                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
+                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.8rem] break-all"
                         />
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap">
                         <input type="text" name="mobile" value={editFormData.mobile} onChange={handleEditChange}
-                          className="w-full py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
+                          className="w-full min-w-[6rem] py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem] font-mono dir-ltr"
                         />
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top">
                         <input type="number" name="capacity" value={editFormData.capacity} onChange={handleEditChange} min="1"
-                          className="w-[70px] py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
+                          className="w-[4.5rem] py-1.5 px-2 rounded-md border border-[#d97706] text-[0.85rem]"
                         />
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
-                        <span className="text-[0.85rem] text-[#64748b] font-semibold">{userDirectorate || place.directorate}</span>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top text-[0.85rem] text-[#64748b] font-semibold">
+                        {userDirectorate || place.directorate}
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap w-[7rem]">
                         <label className="flex gap-1.5 items-center text-[0.85rem] cursor-pointer">
                           <input type="checkbox" name="is_active" checked={editFormData.is_active} onChange={handleEditChange} />
                           نشط
                         </label>
                       </td>
-                      <td className="py-3 px-4 border-b border-[#e2e8f0]">
-                        <div className="flex gap-1.5">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap">
+                        <div className="flex gap-1.5 flex-wrap">
                           <button type="button" onClick={() => handleUpdatePlace(place.id)}
                             className="inline-flex items-center gap-1 py-1.5 px-3 bg-[#10b981] text-white border-none rounded-md text-[0.8rem] font-semibold cursor-pointer"
                           >
@@ -597,35 +759,34 @@ export default function TrainingPlaces() {
                     </tr>
                   ) : (
                     <tr key={place.id} className={`border-b border-[#e2e8f0] hover:bg-[#f1f5f9] transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-[#f8fafc]'}`}>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
-                        <div className="flex items-center gap-2">
-                          <div className="w-[34px] h-[34px] rounded-lg bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] text-[#2563eb] flex items-center justify-center shrink-0">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top min-w-[11rem] max-w-[14rem]">
+                        <div className="flex items-start gap-2">
+                          <div className="w-[34px] h-[34px] rounded-lg bg-gradient-to-br from-[#dbeafe] to-[#bfdbfe] text-[#2563eb] flex items-center justify-center shrink-0 mt-0.5">
                             <School size={16} />
                           </div>
-                          <span className="font-semibold">{place.name}</span>
+                          <span className="font-semibold text-[#1e293b] leading-snug break-words">{place.name}</span>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.school_type}</td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">
-                        <span className="flex items-center gap-1"><MapPin size={13} />{place.city}</span>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] text-[#64748b] align-top whitespace-nowrap">{place.school_type}</td>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] text-[#64748b] align-top min-w-[6.5rem]">
+                        <span className="flex items-start gap-1 break-words"><MapPin size={13} className="shrink-0 mt-0.5" />{place.city}</span>
                       </td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.phone || "-"}</td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.email || "-"}</td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.mobile || "-"}</td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] text-[#64748b] align-top whitespace-nowrap font-mono text-[0.8rem] dir-ltr">{place.phone || "—"}</td>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] text-[#64748b] align-top max-w-[14rem] break-all text-[0.78rem]" title={place.email || undefined}>
+                        {place.email || "—"}
+                      </td>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] text-[#64748b] align-top whitespace-nowrap font-mono text-[0.8rem] dir-ltr">{place.mobile || "—"}</td>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap w-[4.5rem]">
                         <span className="inline-flex items-center gap-1 font-semibold text-[#1e293b]">
                           <Users size={14} color="#64748b" />{place.capacity}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0] text-[#64748b]">{place.directorate}</td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
-                        <span className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full text-[0.8rem] font-semibold" style={{ background: place.status === "متاح" ? "#d1fae5" : "#fee2e2", color: place.status === "متاح" ? "#059669" : "#dc2626" }}>
-                          {place.status === "متاح" ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                          {place.status}
-                        </span>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] text-[#64748b] align-top">{place.directorate}</td>
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-middle w-[7.5rem] min-w-[7rem]">
+                        <DirectorateSiteStatusBadge statusKey={place.statusKey} label={place.status} />
                       </td>
-                      <td className="py-3.5 px-4 border-b border-[#e2e8f0]">
-                        <div className="flex gap-1.5">
+                      <td className="py-2.5 px-2.5 border-b border-[#e2e8f0] align-top whitespace-nowrap">
+                        <div className="flex gap-1.5 flex-wrap">
                           <button type="button" onClick={() => startEdit(place)}
                             className="inline-flex items-center gap-1 py-1.5 px-2.5 bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0] rounded-md text-[0.8rem] font-semibold cursor-pointer hover:bg-[#e2e8f0] hover:text-[#1e293b] transition-all"
                           >
@@ -642,22 +803,24 @@ export default function TrainingPlaces() {
                   )
                 )}
 
-                {filteredPlaces.length === 0 && (
-                  <tr>
-                    <td colSpan={10} className="py-10 text-center">
-                      <div className="text-[#94a3b8]">
-                        <School size={48} className="mb-3 opacity-40" />
-                        <p className="m-0 text-[1rem] font-semibold">
-                          {searchQuery ? "لا توجد نتائج مطابقة للبحث" : "لا توجد أماكن تدريب مسجلة حاليًا"}
-                        </p>
-                        {searchQuery && <p className="m-0 mt-1 text-[0.85rem]">جرّب كلمات بحث مختلفة</p>}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    {filteredPlaces.length === 0 && (
+                      <tr>
+                        <td colSpan={10} className="py-10 text-center">
+                          <div className="text-[#94a3b8]">
+                            <School size={48} className="mb-3 opacity-40 mx-auto" />
+                            <p className="m-0 text-[1rem] font-semibold">
+                              {searchQuery ? "لا توجد نتائج مطابقة للبحث" : "لا توجد أماكن تدريب مسجلة حاليًا"}
+                            </p>
+                            {searchQuery && <p className="m-0 mt-1 text-[0.85rem]">جرّب كلمات بحث مختلفة</p>}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
