@@ -266,6 +266,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('/visits/{visitId}/complete', [SupervisorWorkspaceController::class, 'completeVisit']);
         Route::get('/visits/{visitId}', [SupervisorWorkspaceController::class, 'showVisit']);
         Route::get('/students/{studentId}/tasks', [SupervisorWorkspaceController::class, 'studentTasks']);
+        Route::get('/students/{studentId}/tasks/{taskId}/submission', [SupervisorWorkspaceController::class, 'studentTaskSubmission']);
         Route::post('/tasks', [SupervisorWorkspaceController::class, 'storeTask']);
         Route::get('/tasks/{taskId}/submissions-board', [SupervisorWorkspaceController::class, 'taskSubmissionsBoard']);
         Route::get('/task-bundles/{distributionKey}/overview', [SupervisorWorkspaceController::class, 'taskBundleOverview']);

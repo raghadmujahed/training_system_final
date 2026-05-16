@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient, itemsFromPagedResponse, unwrapSupervisorList } from "../../../../services/api";
+import { getApiOrigin } from "../../../../utils/apiOrigin";
 import { useToast } from "../../../../components/Toast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
@@ -49,7 +50,8 @@ export default function TasksTab({ studentId }) {
   const [saving, setSaving] = useState(false);
   const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [submissions, setSubmissions] = useState([]);
+  const [studentSubmission, setStudentSubmission] = useState(null);
+  const [submissionStudent, setSubmissionStudent] = useState(null);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [submissionsError, setSubmissionsError] = useState("");
   
@@ -235,28 +237,44 @@ export default function TasksTab({ studentId }) {
     setShowSubmissionsModal(true);
     setSubmissionsLoading(true);
     setSubmissionsError("");
-    setSubmissions([]);
-    
+    setStudentSubmission(null);
+    setSubmissionStudent(null);
+
+    const sid = Number(studentId);
+    const embedded = Array.isArray(task?.submissions)
+      ? task.submissions.find((s) => Number(s.user_id) === sid) ?? task.submissions[0]
+      : null;
+
+    if (embedded && (embedded.submitted_at || embedded.file_path)) {
+      setStudentSubmission(normalizeTaskSubmission(embedded));
+      setSubmissionsLoading(false);
+      return;
+    }
+
     try {
-      const res = await apiClient.get(`/supervisor/tasks/${task.id}/submissions-board`);
+      const res = await apiClient.get(`/supervisor/students/${studentId}/tasks/${task.id}/submission`);
       const payload = res.data?.data ?? res.data;
-      const raw = payload?.submissions;
-      const list = (Array.isArray(raw) ? raw : []).map((row) => ({
-        id: row.submission_id ?? row.id ?? `student-${row.student_id}`,
-        user: row.user ?? (row.student_name ? { name: row.student_name } : null),
-        submitted_at: row.submitted_at,
-        status: row.status,
-        file_path: row.file_path ?? row.attachments?.[0],
-        file_url: row.file_url,
-        notes: row.notes ?? row.student_note,
-        feedback: row.feedback ?? row.supervisor_feedback,
-        review_status: row.review_status,
-        has_submitted: Boolean(row.submission_id && row.submitted_at),
-      }));
-      setSubmissions(list);
+      setSubmissionStudent(payload?.student ?? null);
+      setStudentSubmission(
+        payload?.submission ? normalizeTaskSubmission(payload.submission) : null
+      );
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "فشل تحميل الحلول";
-      setSubmissionsError(msg);
+      if (err?.response?.status === 404) {
+        try {
+          const fallback = await apiClient.get(`/tasks/${task.id}/submissions`);
+          const list = Array.isArray(fallback.data?.submissions)
+            ? fallback.data.submissions
+            : [];
+          const match = list.find((s) => Number(s.user_id) === sid) ?? list[0] ?? null;
+          setStudentSubmission(match ? normalizeTaskSubmission(match) : null);
+        } catch (fallbackErr) {
+          setSubmissionsError(
+            fallbackErr?.response?.data?.message || "فشل تحميل حل الطالب"
+          );
+        }
+      } else {
+        setSubmissionsError(err?.response?.data?.message || "فشل تحميل حل الطالب");
+      }
     } finally {
       setSubmissionsLoading(false);
     }
@@ -617,7 +635,7 @@ export default function TasksTab({ studentId }) {
                     className="text-[0.82rem] py-1 px-3 rounded-md border border-[#28a745] bg-[#28a745] text-white cursor-pointer hover:bg-[#218838]"
                     onClick={() => handleViewSubmissions(task)}
                   >
-                    👁️ عرض حلول الطلبة
+                    👁️ عرض حل الطالب
                   </button>
                   <button
                     type="button"
@@ -640,13 +658,13 @@ export default function TasksTab({ studentId }) {
         </div>
       )}
 
-      {/* Modal لعرض حلول الطلبة */}
+      {/* Modal: حل الطالب الحالي فقط */}
       {showSubmissionsModal && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold m-0">حلول الطلبة</h3>
+                <h3 className="text-xl font-bold m-0">حل الطالب</h3>
                 <button
                   type="button"
                   className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -664,7 +682,7 @@ export default function TasksTab({ studentId }) {
                 )}
               </div>
 
-              {submissionsLoading && <LoadingSpinner size="section" text="جاري تحميل الحلول..." />}
+              {submissionsLoading && <LoadingSpinner size="section" text="جاري تحميل حل الطالب..." />}
               
               {submissionsError && (
                 <div className="text-[#dc3545] p-4 bg-[#ffebee] rounded-lg mb-4">
@@ -672,55 +690,72 @@ export default function TasksTab({ studentId }) {
                 </div>
               )}
 
-              {!submissionsLoading && !submissionsError && submissions.length === 0 && (
+              {!submissionsLoading && !submissionsError && !studentSubmission && (
                 <div className="text-center p-8 text-[#999]">
                   <div className="text-[2rem] mb-3">📭</div>
-                  لا توجد حلول مسلّمة لهذه المهمة حتى الآن
+                  لم يسلّم الطالب هذه المهمة بعد
                 </div>
               )}
 
-              {!submissionsLoading && !submissionsError && submissions.length > 0 && (
-                <div className="flex flex-col gap-3">
-                  {submissions.map((sub) => {
-                    const studentName = sub.user?.name || "طالب";
-                    const submittedAt = sub.submitted_at
-                      ? new Date(sub.submitted_at).toLocaleString("ar-SA")
-                      : "لم يسلّم بعد";
-                    const status = !sub.has_submitted && !sub.submitted_at
-                      ? "لم يسلّم"
-                      : sub.status === "submitted"
-                        ? "تم التسليم"
-                        : sub.status === "draft"
-                          ? "مسودة"
-                          : (sub.status || "—");
-                    
-                    return (
-                      <div key={sub.id} className="border border-[#e9ecef] rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="font-semibold">{studentName}</div>
-                            <div className="text-sm text-gray-600">وقت التسليم: {submittedAt}</div>
-                          </div>
-                          <span className="px-3 py-1 rounded-full text-sm bg-[#e0f7fa] text-[#0d6efd]">
-                            {status}
-                          </span>
-                        </div>
-
-                        {sub.file_path && (
-                          <div className="mt-3">
-                            <a
-                              href={sub.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-[#0d6efd] hover:text-[#0a58ca] text-sm"
-                            >
-                              📎 تحميل الملف
-                            </a>
-                          </div>
-                        )}
+              {!submissionsLoading && !submissionsError && studentSubmission && (
+                <div className="border border-[#e9ecef] rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
+                    <div>
+                      <div className="font-semibold text-[1.05rem]">
+                        {submissionStudent?.name
+                          || studentSubmission.user?.name
+                          || "الطالب"}
                       </div>
-                    );
-                  })}
+                      <div className="text-sm text-gray-600">
+                        وقت التسليم:{" "}
+                        {studentSubmission.submitted_at
+                          ? new Date(studentSubmission.submitted_at).toLocaleString("ar-SA")
+                          : "—"}
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-sm bg-[#e8f5e9] text-[#28a745]">
+                      {studentSubmission.file_path ? "تم التسليم" : "مُسلَّم"}
+                    </span>
+                  </div>
+
+                  {studentSubmission.file_url || studentSubmission.file_path ? (
+                    <div className="mt-3 p-3 bg-[#f8f9fa] rounded-lg border border-[#dee2e6]">
+                      <div className="font-semibold mb-2 text-[0.9rem]">الملف المرفق:</div>
+                      <a
+                        href={
+                          studentSubmission.file_url
+                          || buildSubmissionFileUrl(studentSubmission.file_path)
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 btn-primary-custom text-[0.9rem] py-2 px-4"
+                      >
+                        📎 عرض / تحميل ملف الحل
+                      </a>
+                    </div>
+                  ) : (
+                    <p className="text-[#666] text-[0.9rem] m-0 mt-2">لا يوجد ملف مرفق.</p>
+                  )}
+
+                  {studentSubmission.notes && (
+                    <div className="mt-3 p-3 bg-[#f0f7ff] rounded-lg text-[0.9rem]">
+                      <span className="font-semibold">ملاحظة الطالب: </span>
+                      {studentSubmission.notes}
+                    </div>
+                  )}
+
+                  {studentSubmission.feedback && (
+                    <div className="mt-3 p-3 bg-[#fff8e1] rounded-lg text-[0.9rem]">
+                      <span className="font-semibold">ملاحظة المشرف: </span>
+                      {studentSubmission.feedback}
+                    </div>
+                  )}
+
+                  {studentSubmission.score != null && (
+                    <div className="mt-3 text-[0.95rem] font-semibold text-[#28a745]">
+                      الدرجة: {studentSubmission.score}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -729,4 +764,25 @@ export default function TasksTab({ studentId }) {
       )}
     </div>
   );
+}
+
+function buildSubmissionFileUrl(filePath) {
+  if (!filePath) return null;
+  if (String(filePath).startsWith("http")) return filePath;
+  const origin = getApiOrigin();
+  const clean = String(filePath).replace(/^\/+/, "");
+  return `${origin}/storage/${clean}`;
+}
+
+function normalizeTaskSubmission(raw) {
+  if (!raw) return null;
+  const filePath = raw.file_path || raw.attachment_path || null;
+  return {
+    ...raw,
+    file_path: filePath,
+    file_url: raw.file_url || buildSubmissionFileUrl(filePath),
+    notes: raw.notes ?? raw.student_notes ?? raw.student_note,
+    score: raw.score ?? raw.grade ?? null,
+    user: raw.user ?? null,
+  };
 }

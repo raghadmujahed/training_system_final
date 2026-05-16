@@ -1272,7 +1272,7 @@ class SupervisorWorkspaceController extends Controller
     {
         $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $studentId);
         $tasks = Task::where('training_assignment_id', $assignment->id)
-            ->with('submissions')
+            ->with(['submissions' => fn ($q) => $q->where('user_id', (int) $studentId)->orderByDesc('id')])
             ->orderBy('due_date', 'desc')
             ->paginate($request->per_page ?? 50);
 
@@ -1291,6 +1291,47 @@ class SupervisorWorkspaceController extends Controller
                 'open_tasks_count' => Task::where('training_assignment_id', $assignment->id)->whereIn('status', ['pending', 'in_progress'])->count(),
             ],
         ]);
+    }
+
+    /**
+     * حل مهمة واحدة لطالب محدد داخل مساحة عمل المشرف (وليس كل طلاب الشعبة).
+     */
+    public function studentTaskSubmission(Request $request, $studentId, $taskId)
+    {
+        $supervisor = $request->user();
+        $studentUserId = (int) $studentId;
+        $assignment = $this->studentService->mustGetAssignmentForStudent($supervisor, $studentUserId);
+
+        $task = Task::query()
+            ->whereKey((int) $taskId)
+            ->where('training_assignment_id', $assignment->id)
+            ->where('assigned_by', $supervisor->id)
+            ->firstOrFail();
+
+        $submission = TaskSubmission::query()
+            ->with('user:id,name,university_id')
+            ->where('task_id', $task->id)
+            ->where('user_id', $studentUserId)
+            ->orderByDesc('id')
+            ->first();
+
+        $student = User::query()
+            ->select('id', 'name', 'university_id')
+            ->find($studentUserId);
+
+        return $this->successResponse([
+            'task' => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'due_date' => $task->due_date?->toDateString(),
+                'status' => $task->status,
+                'task_type' => $task->task_type,
+            ],
+            'student' => $student,
+            'submission' => $submission
+                ? (new TaskSubmissionResource($submission))->resolve()
+                : null,
+        ], $submission ? 'تم تحميل حل الطالب.' : 'لم يسلّم الطالب هذه المهمة بعد.');
     }
 
     public function storeTask(StoreAcademicTaskRequest $request)
