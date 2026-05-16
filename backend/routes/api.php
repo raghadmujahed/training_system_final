@@ -163,6 +163,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('tasks/{task}/submit', [TaskController::class, 'submit']);
     Route::get('tasks/{task}/submissions', [TaskController::class, 'getTaskSubmissions']);
     Route::get('task-submissions/{task_submission}/file', [TaskSubmissionController::class, 'downloadFile']);
+    Route::get('portfolio-entries/{entry}/file', [PortfolioEntryController::class, 'downloadFile']);
     Route::apiResource('task-submissions', TaskSubmissionController::class);
     Route::post('task-submissions/{task_submission}/grade', [TaskSubmissionController::class, 'grade']);
 
@@ -358,6 +359,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/portfolio', [StudentPortfolioController::class, 'show']);
         Route::post('/portfolio/entries', [PortfolioEntryController::class, 'store']);
         Route::put('/portfolio/entries/{entry}', [PortfolioEntryController::class, 'update']);
+        Route::get('/portfolio/entries/{entry}/file', [PortfolioEntryController::class, 'downloadFile']);
         Route::delete('/portfolio/entries/{entry}', [PortfolioEntryController::class, 'destroy']);
         
         // Tâches étudiant

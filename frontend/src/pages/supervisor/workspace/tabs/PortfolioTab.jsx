@@ -3,6 +3,7 @@ import { apiClient, apiOrigin } from "../../../../services/api";
 import { Download, ExternalLink } from "lucide-react";
 import { useToast } from "../../../../components/Toast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
+import { openPortfolioEntryFile } from "../../../../utils/portfolioEntryFile";
 
 export default function PortfolioTab({ studentId }) {
   const { addToast } = useToast();
@@ -149,26 +150,24 @@ export default function PortfolioTab({ studentId }) {
                   </span>
                 </div>
 
-                {entry.file_path && (
+                {entry.file_path && entry.id && (
                   <div className="mb-2">
-                    <a
-                      href={`${apiOrigin}/storage/${entry.file_path.replace(/^\//, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-[6px] text-[0.82rem] text-[#0d6efd] no-underline py-1 px-2 rounded-md bg-[#f8f9fa] border border-[#dee2e6] transition-all duration-200"
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#e9ecef";
-                        e.currentTarget.style.borderColor = "#0d6efd";
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const name = String(entry.file_path || "file").split("/").pop();
+                          await openPortfolioEntryFile(entry.id, name);
+                        } catch (e) {
+                          addToast(e?.message || "تعذر فتح الملف", "error");
+                        }
                       }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#f8f9fa";
-                        e.currentTarget.style.borderColor = "#dee2e6";
-                      }}
+                      className="inline-flex items-center gap-[6px] text-[0.82rem] text-[#0d6efd] py-1 px-2 rounded-md bg-[#f8f9fa] border border-[#dee2e6] cursor-pointer transition-all duration-200 hover:bg-[#e9ecef] hover:border-[#0d6efd]"
                     >
                       <Download size={14} />
                       تحميل الملف
                       <ExternalLink size={12} />
-                    </a>
+                    </button>
                   </div>
                 )}
 

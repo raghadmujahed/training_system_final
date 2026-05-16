@@ -11,6 +11,7 @@ import {
 import { useToast } from "../../components/Toast";
 import { Loader2, Upload, FileText, Trash2, ExternalLink, Plus, FolderOpen, Calendar, FileCheck, BookOpen, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, Edit3, Save as SaveIcon } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { openPortfolioEntryFile } from "../../utils/portfolioEntryFile";
 
 // CSS Animation + compact layout for this page only
 const fadeInStyles = `
@@ -918,13 +919,15 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                           ) : en.file_path ? (
                             <button type="button"
                               onClick={async () => {
-                                const href = fileHref(en.file_path);
-                                if (!href) return;
                                 try {
-                                  const res = await fetch(href, { method: 'HEAD' });
-                                  if (res.ok) { window.open(href, '_blank'); }
-                                  else { alert('الملف غير متاح حالياً. يرجى إعادة رفع الملف.'); }
-                                } catch { window.open(href, '_blank'); }
+                                  const name = String(en.file_path || "file").split("/").pop();
+                                  await openPortfolioEntryFile(en.id, name);
+                                } catch (e) {
+                                  addToast(
+                                    e?.message || "تعذر فتح الملف. حاول إعادة رفعه.",
+                                    "error"
+                                  );
+                                }
                               }}
                               className="inline-flex items-center gap-[0.35rem] text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all border-none cursor-pointer"
                               style={{ color: style.color, backgroundColor: style.bg }}

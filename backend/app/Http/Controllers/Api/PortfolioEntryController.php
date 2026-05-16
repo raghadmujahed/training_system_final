@@ -10,8 +10,10 @@ use App\Models\PortfolioEntry;
 use App\Models\StudentPortfolio;
 use App\Models\Notification;
 use App\Models\TrainingAssignment;
+use App\Support\PublicStoragePath;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 
 class PortfolioEntryController extends Controller
@@ -129,6 +131,42 @@ class PortfolioEntryController extends Controller
         $this->notifyAcademicSupervisor($entry->studentPortfolio, $entry, 'updated');
 
         return new PortfolioEntryResource($entry);
+    }
+
+    /**
+     * تنزيل/عرض مرفق مدخل ملف الإنجاز (مصادقة عبر API).
+     */
+    public function downloadFile(Request $request, PortfolioEntry $entry): Response
+    {
+        $entry->loadMissing('studentPortfolio');
+        $this->authorize('view', $entry);
+
+        if (! $entry->file_path) {
+            return response()->json([
+                'message' => 'لا يوجد ملف مرفق في هذا المدخل.',
+                'code' => 'no_file_path',
+            ], 404);
+        }
+
+        $path = PublicStoragePath::resolveExistingPath($entry->file_path);
+        if (! $path) {
+            \Log::warning('portfolio entry file missing on disk', [
+                'entry_id' => $entry->id,
+                'file_path' => $entry->file_path,
+            ]);
+
+            return response()->json([
+                'message' => 'الملف غير موجود على الخادم. يرجى إعادة رفع الملف.',
+                'code' => 'file_missing_on_disk',
+            ], 404);
+        }
+
+        $filename = basename($path);
+
+        return Storage::disk('public')->response($path, $filename, [
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     /**

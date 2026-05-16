@@ -40,6 +40,7 @@ class PublicStoragePath
         $candidates = array_unique(array_filter([
             $normalized,
             str_starts_with($normalized, 'task_submissions/') ? null : 'task_submissions/'.basename($normalized),
+            str_starts_with($normalized, 'portfolio/') ? null : 'portfolio/'.basename($normalized),
         ]));
 
         foreach ($candidates as $candidate) {

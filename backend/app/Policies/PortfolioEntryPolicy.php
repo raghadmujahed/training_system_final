@@ -2,8 +2,9 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\PortfolioEntry;
+use App\Models\TrainingAssignment;
+use App\Models\User;
 
 class PortfolioEntryPolicy
 {
@@ -14,8 +15,22 @@ class PortfolioEntryPolicy
 
     public function view(User $user, PortfolioEntry $entry): bool
     {
-        // يمكن للمستخدم رؤية المدخل إذا كان هو مالك ملف الإنجاز أو أدمن
-        return $user->id === $entry->studentPortfolio->user_id || $user->role?->name === 'admin';
+        $entry->loadMissing('studentPortfolio');
+
+        if ($user->id === $entry->studentPortfolio->user_id || $user->role?->name === 'admin') {
+            return true;
+        }
+
+        if ($user->role?->name === 'academic_supervisor') {
+            $studentId = (int) $entry->studentPortfolio->user_id;
+
+            return TrainingAssignment::query()
+                ->where('academic_supervisor_id', $user->id)
+                ->whereHas('enrollment', fn ($q) => $q->where('user_id', $studentId))
+                ->exists();
+        }
+
+        return false;
     }
 
     public function create(User $user): bool
