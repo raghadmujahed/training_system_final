@@ -1248,7 +1248,9 @@ class SupervisorWorkspaceController extends Controller
                 'status' => $this->resolveSubmissionStatus($task, $submission),
                 'submitted_at' => $submission?->submitted_at,
                 'file_path' => $filePath,
-                'file_url' => $filePath ? Storage::disk('public')->url($filePath) : null,
+                'file_url' => $submission?->id && \App\Support\PublicStoragePath::exists($filePath)
+                    ? url('/api/task-submissions/'.$submission->id.'/file')
+                    : null,
                 'attachments' => $filePath ? [$filePath] : [],
                 'student_note' => $submission?->notes,
                 'notes' => $submission?->notes,

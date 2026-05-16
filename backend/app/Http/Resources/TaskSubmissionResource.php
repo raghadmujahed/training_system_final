@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\PublicStoragePath;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,9 @@ class TaskSubmissionResource extends JsonResource
         return [
             'id' => $this->id,
             'file_path' => $this->file_path,
-            'file_url' => $this->file_path ? \Storage::disk('public')->url($this->file_path) : null,
+            'file_url' => $this->id && PublicStoragePath::exists($this->file_path)
+                ? url('/api/task-submissions/'.$this->id.'/file')
+                : null,
             'notes' => $this->notes,
             'status' => $this->status,
             'review_status' => $this->review_status,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient, itemsFromPagedResponse, unwrapSupervisorList } from "../../../../services/api";
 import { getApiOrigin } from "../../../../utils/apiOrigin";
+import { openTaskSubmissionFile } from "../../../../utils/taskSubmissionFile";
 import { useToast } from "../../../../components/Toast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
@@ -54,6 +55,7 @@ export default function TasksTab({ studentId }) {
   const [submissionStudent, setSubmissionStudent] = useState(null);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [submissionsError, setSubmissionsError] = useState("");
+  const [openingFile, setOpeningFile] = useState(false);
   
   // الفلاتر
   const [searchTerm, setSearchTerm] = useState("");
@@ -721,17 +723,30 @@ export default function TasksTab({ studentId }) {
                   {studentSubmission.file_url || studentSubmission.file_path ? (
                     <div className="mt-3 p-3 bg-[#f8f9fa] rounded-lg border border-[#dee2e6]">
                       <div className="font-semibold mb-2 text-[0.9rem]">الملف المرفق:</div>
-                      <a
-                        href={
-                          studentSubmission.file_url
-                          || buildSubmissionFileUrl(studentSubmission.file_path)
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        disabled={openingFile || !studentSubmission.id}
                         className="inline-flex items-center gap-2 btn-primary-custom text-[0.9rem] py-2 px-4"
+                        onClick={async () => {
+                          if (!studentSubmission.id) return;
+                          setOpeningFile(true);
+                          try {
+                            const name = String(studentSubmission.file_path || "solution")
+                              .split("/")
+                              .pop();
+                            await openTaskSubmissionFile(studentSubmission.id, name);
+                          } catch (e) {
+                            addToast(
+                              e?.response?.data?.message || "تعذر فتح الملف",
+                              "error"
+                            );
+                          } finally {
+                            setOpeningFile(false);
+                          }
+                        }}
                       >
-                        📎 عرض / تحميل ملف الحل
-                      </a>
+                        📎 {openingFile ? "جاري فتح الملف..." : "عرض / تحميل ملف الحل"}
+                      </button>
                     </div>
                   ) : (
                     <p className="text-[#666] text-[0.9rem] m-0 mt-2">لا يوجد ملف مرفق.</p>
@@ -777,10 +792,12 @@ function buildSubmissionFileUrl(filePath) {
 function normalizeTaskSubmission(raw) {
   if (!raw) return null;
   const filePath = raw.file_path || raw.attachment_path || null;
+  const id = raw.id ?? raw.submission_id ?? null;
   return {
     ...raw,
+    id,
     file_path: filePath,
-    file_url: raw.file_url || buildSubmissionFileUrl(filePath),
+    file_url: id ? raw.file_url : (raw.file_url || buildSubmissionFileUrl(filePath)),
     notes: raw.notes ?? raw.student_notes ?? raw.student_note,
     score: raw.score ?? raw.grade ?? null,
     user: raw.user ?? null,

@@ -162,6 +162,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         ->only(['index', 'show', 'update', 'destroy']);
     Route::post('tasks/{task}/submit', [TaskController::class, 'submit']);
     Route::get('tasks/{task}/submissions', [TaskController::class, 'getTaskSubmissions']);
+    Route::get('task-submissions/{task_submission}/file', [TaskSubmissionController::class, 'downloadFile']);
     Route::apiResource('task-submissions', TaskSubmissionController::class);
     Route::post('task-submissions/{task_submission}/grade', [TaskSubmissionController::class, 'grade']);
 

@@ -11,8 +11,10 @@ use App\Http\Resources\TaskSubmissionResource;
 use App\Models\TaskSubmission;
 use App\Models\Task;
 use App\Services\TaskService;
+use App\Support\PublicStoragePath;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class TaskSubmissionController extends Controller
 {
@@ -112,6 +114,24 @@ class TaskSubmissionController extends Controller
     public function show(TaskSubmission $taskSubmission)
     {
         return new TaskSubmissionResource($taskSubmission->load(['task', 'user']));
+    }
+
+    /**
+     * تنزيل/عرض ملف التسليم (مصادقة عبر API — يعمل على Railway دون symlink).
+     */
+    public function downloadFile(Request $request, TaskSubmission $taskSubmission): Response
+    {
+        $this->authorize('view', $taskSubmission);
+
+        $path = PublicStoragePath::normalize($taskSubmission->file_path);
+        abort_unless($path && Storage::disk('public')->exists($path), 404, 'الملف غير موجود على الخادم.');
+
+        $filename = basename($path);
+
+        return Storage::disk('public')->response($path, $filename, [
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
     }
 
     /**
