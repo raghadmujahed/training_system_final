@@ -105,6 +105,18 @@ function parsePsychologistInstitutionPayload(entry) {
   return null;
 }
 
+function parseEformIdFromEntry(entry) {
+  const code = entry?.code;
+  if (code && /^eform:\d+$/i.test(String(code))) {
+    return Number(String(code).replace(/^eform:/i, ""));
+  }
+  return null;
+}
+
+function needsAcademicRevision(entry) {
+  return !!(entry?.reviewer_note || entry?.review_status === "needs_edit");
+}
+
 function parseSchoolManagerPortfolioPayload(entry) {
   if (!entry?.content) return null;
   let o = entry.content;
@@ -574,9 +586,40 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
     else if (title.includes("تقرير الأسبوعي") || title.includes("الأسبوعي")) formKey = "weekly_full_report";
     else if (title.includes("حصص")) formKey = "classes_count";
     else if (title.includes("المهام والأعمال اليومية") || title.includes("مهام") && title.includes("يومي")) formKey = "daily_tasks_report";
+    else if (en.category) formKey = en.category;
+
+    const eformId = parseEformIdFromEntry(en);
+    const resubmitAfterEdit = needsAcademicRevision(en);
 
     if (formKey) {
-      navigate("/student/e-forms", { state: { editEntry: { id: en.id, formKey, title: en.title, content: en.content } } });
+      let content = en.content;
+      const summaryOnly =
+        typeof content === "string" && content.includes("نموذج إلكتروني مُقدّم");
+      if (summaryOnly || !content) {
+        const sibling = entries.find(
+          (e) =>
+            e.id !== en.id &&
+            !needsAcademicRevision(e) &&
+            e.content &&
+            (e.category === formKey ||
+              (e.title || "").includes(title.includes("أسبوعي") ? "أسبوعي" : ""))
+        );
+        if (sibling?.content) content = sibling.content;
+      }
+
+      navigate("/student/e-forms", {
+        state: {
+          editEntry: {
+            id: en.id,
+            portfolioEntryId: en.id,
+            eformId,
+            formKey,
+            title: en.title,
+            content,
+            resubmitAfterEdit,
+          },
+        },
+      });
     } else {
       // Generic entry — use inline editing
       setEditingId(en.id);
@@ -781,6 +824,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
               const schoolManagerPayload = parseSchoolManagerPortfolioPayload(en);
               const style = getEntryStyle(en);
               const EntryIcon = style.icon;
+              const academicRevision = needsAcademicRevision(en);
               return (
                 <div key={en.id}
                   className="bg-white rounded-lg border border-[#e9ecef] transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-px"
@@ -896,20 +940,26 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                                 <FileText size={14} />
                                 بدون مرفق
                               </span>
-                              <button type="button" onClick={() => setReplacingFileId(en.id)}
-                                className="inline-flex items-center gap-[0.35rem] text-white bg-[#28a745] border border-[#28a745] text-[0.78rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg cursor-pointer transition-all hover:bg-[#218838] hover:border-[#218838]"
-                                title="رفع ملف جديد"
-                              >
-                                <Upload size={12} />
-                                رفع ملف
-                              </button>
+                              {!academicRevision && (
+                                <button
+                                  type="button"
+                                  onClick={() => setReplacingFileId(en.id)}
+                                  className="inline-flex items-center gap-[0.35rem] text-white bg-[#28a745] border border-[#28a745] text-[0.78rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg cursor-pointer transition-all hover:bg-[#218838] hover:border-[#218838]"
+                                  title="رفع ملف جديد"
+                                >
+                                  <Upload size={12} />
+                                  رفع ملف
+                                </button>
+                              )}
                             </div>
                           )}
                           {!counselorPayload && !mentorVisitPayload && !psychInstitutionPayload && !schoolManagerPayload ? (
                             <>
-                              <button type="button" onClick={() => startEdit(en)}
+                              <button
+                                type="button"
+                                onClick={() => startEdit(en)}
                                 className="bg-transparent border-none cursor-pointer text-[#94a3b8] p-1 rounded-md transition-all hover:text-[#3b82f6] hover:bg-[#eff6ff]"
-                                title="تعديل"
+                                title={academicRevision ? "تعديل وإعادة الإرسال للمشرف" : "تعديل"}
                               >
                                 <Edit3 size={15} />
                               </button>

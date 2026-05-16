@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
+use App\Models\PortfolioEntry;
 use App\Models\StudentEForm;
 use App\Models\TrainingAssignment;
 use App\Models\TrainingLog;
+use App\Services\StudentEFormAcademicReviewService;
 use App\Services\TrainingTrackResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -146,11 +149,17 @@ class StudentEFormController extends Controller
             'payload' => ['nullable', 'array'],
         ]);
 
+        $payload = $data['payload'] ?? $eform->payload;
+
         $eform->update([
-            'payload' => $data['payload'] ?? $eform->payload,
+            'payload' => $payload,
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
+
+        $reviewService = app(StudentEFormAcademicReviewService::class);
+        $portfolioEntry = $reviewService->onStudentResubmit($eform->fresh(), is_array($payload) ? $payload : null);
+        $this->notifyAcademicSupervisorResubmit($eform->fresh(), $portfolioEntry);
 
         return response()->json($eform->fresh());
     }
@@ -210,5 +219,47 @@ class StudentEFormController extends Controller
         }
 
         return response()->json($eform->fresh());
+    }
+
+    private function notifyAcademicSupervisorResubmit(StudentEForm $eform, ?PortfolioEntry $entry): void
+    {
+        $eform->loadMissing('user');
+        $student = $eform->user;
+        if (! $student) {
+            return;
+        }
+
+        $assignment = TrainingAssignment::whereHas(
+            'enrollment',
+            fn ($q) => $q->where('user_id', $student->id)
+        )->latest('id')->first();
+
+        $supervisor = $assignment?->academicSupervisor;
+        if (! $supervisor && $student->department_id) {
+            $supervisor = \App\Models\User::whereHas('role', fn ($q) => $q->where('name', 'academic_supervisor'))
+                ->where('department_id', $student->department_id)
+                ->first();
+        }
+
+        if (! $supervisor) {
+            return;
+        }
+
+        $title = $eform->title ?: (StudentEFormAcademicReviewService::PORTFOLIO_TITLES[$eform->form_key] ?? $eform->form_key);
+
+        Notification::create([
+            'user_id' => $supervisor->id,
+            'type' => 'eform_resubmitted',
+            'message' => "أعاد الطالب {$student->name} إرسال النموذج: {$title}",
+            'notifiable_type' => $entry ? PortfolioEntry::class : StudentEForm::class,
+            'notifiable_id' => $entry?->id ?? $eform->id,
+            'data' => [
+                'student_id' => $student->id,
+                'student_name' => $student->name,
+                'form_key' => $eform->form_key,
+                'eform_id' => $eform->id,
+                'portfolio_entry_id' => $entry?->id,
+            ],
+        ]);
     }
 }

@@ -110,6 +110,19 @@ class PortfolioEntryController extends Controller
             $data['file_path'] = $request->file('file')->store('portfolio', 'public');
         }
         
+        // إعادة إرسال نموذج مرتبط: مسح ملاحظة المشرف السابقة
+        if (
+            filled($entry->code)
+            && str_starts_with((string) $entry->code, 'eform:')
+            && (isset($data['content']) || $request->hasFile('file'))
+        ) {
+            $data['reviewer_note'] = null;
+            $data['review_status'] = 'pending';
+            $data['reviewed_by'] = null;
+            $data['reviewed_at'] = null;
+            $data['academic_rating'] = null;
+        }
+
         $entry->update($data);
 
         // إشعار المشرف الأكاديمي عند تحديث مدخل في ملف الإنجاز

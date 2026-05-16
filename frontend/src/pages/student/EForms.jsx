@@ -1,6 +1,14 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { getStudentEForms, saveStudentEForm, updateStudentEForm, addPortfolioEntry, uploadPortfolioFile, updatePortfolioEntry } from "../../services/api";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  getStudentEForms,
+  saveStudentEForm,
+  updateStudentEForm,
+  submitStudentEForm,
+  addPortfolioEntry,
+  uploadPortfolioFile,
+  updatePortfolioEntry,
+} from "../../services/api";
 import html2pdf from "html2pdf.js";
 import { Loader2, Save, Plus, Trash2, RotateCcw, BookOpen, FileText, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, ArrowRight, CheckCircle2, Clock, Edit3 } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -42,6 +50,8 @@ const allForms = [
 export default function EForms() {
   const { addToast } = useToast();
   const location = useLocation();
+  const navigate = useNavigate();
+  const payloadLoadedRef = useRef(false);
   const { config } = useStudentTrack();
   const availableForms = allForms.filter(f => {
     if (f.educationOnly && !config.isEducation) return false;
@@ -156,46 +166,86 @@ export default function EForms() {
     load();
   }, []);
 
-  // Handle edit entry from Portfolio page
+  const applyPayloadToForm = (formKey, payload) => {
+    if (!payload) return;
+    let parsed = payload;
+    if (typeof payload === "string") {
+      try {
+        parsed = JSON.parse(payload);
+      } catch {
+        return;
+      }
+    }
+    if (formKey === "learning_experience_review") {
+      setLearningExperience((prev) => ({ ...prev, ...parsed }));
+    } else if (formKey === "weekly_full_report") {
+      setWeeklyReport((prev) => ({ ...prev, ...parsed }));
+    } else if (formKey === "weekly_brief_report") {
+      setWeeklyBriefReport((prev) => ({ ...prev, ...parsed }));
+    } else if (formKey === "weekly_reflection") {
+      setWeeklyReflection((prev) => ({ ...prev, ...parsed }));
+    } else if (formKey === "field_visit_summary") {
+      setFieldVisitSummary((prev) => ({ ...prev, ...parsed }));
+    } else if (formKey === "classes_count" && Array.isArray(parsed)) {
+      setTeachingSessions(parsed);
+    } else if (formKey === "daily_tasks_report" && Array.isArray(parsed)) {
+      setDailyTaskRows(parsed);
+    }
+  };
+
+  // فتح تعديل من ملف الإنجاز
   useEffect(() => {
     const editData = location.state?.editEntry;
     if (!editData) return;
 
-    const { formKey, content } = editData;
-    // Find the specific eform by ID (preferred) or fall back to form_key match
-    const eformId = editData.eformId || editData.id || null;
-    const matchingForm = eformId
-      ? forms.find(f => f.id === eformId)
-      : forms.find(f => f.form_key === formKey);
-    const resolvedEformId = matchingForm?.id || eformId || null;
-    setEditingEntry({ ...editData, eformId: resolvedEformId });
-    setSelectedForm(formKey);
+    payloadLoadedRef.current = false;
+    setEditingEntry({
+      ...editData,
+      portfolioEntryId: editData.portfolioEntryId ?? editData.id,
+      eformId: editData.eformId || null,
+    });
+    setSelectedForm(editData.formKey);
 
-    // Parse saved form data and load it
-    try {
-      const parsed = typeof content === "string" ? JSON.parse(content) : content;
-      if (formKey === "learning_experience_review" && parsed) {
-        setLearningExperience(prev => ({ ...prev, ...parsed }));
-      } else if (formKey === "weekly_full_report" && parsed) {
-        setWeeklyReport(prev => ({ ...prev, ...parsed }));
-      } else if (formKey === "weekly_brief_report" && parsed) {
-        setWeeklyBriefReport(prev => ({ ...prev, ...parsed }));
-      } else if (formKey === "weekly_reflection" && parsed) {
-        setWeeklyReflection(prev => ({ ...prev, ...parsed }));
-      } else if (formKey === "field_visit_summary" && parsed) {
-        setFieldVisitSummary(prev => ({ ...prev, ...parsed }));
-      } else if (formKey === "classes_count" && Array.isArray(parsed)) {
-        setTeachingSessions(parsed);
-      } else if (formKey === "daily_tasks_report" && Array.isArray(parsed)) {
-        setDailyTaskRows(parsed);
+    if (editData.content) {
+      try {
+        applyPayloadToForm(editData.formKey, editData.content);
+        payloadLoadedRef.current = true;
+      } catch {
+        /* يُحمَّل لاحقاً من student_eforms */
       }
-    } catch {
-      // Content may not be valid JSON — ignore
     }
 
-    // Clear the navigation state so it doesn't reload on re-render
     window.history.replaceState({}, "");
   }, [location.state]);
+
+  // تحميل بيانات النموذج من student_eforms عند التعديل
+  useEffect(() => {
+    if (!editingEntry?.formKey || !forms.length || payloadLoadedRef.current) return;
+
+    const eformId = editingEntry.eformId;
+    const matchingForm = eformId
+      ? forms.find((f) => f.id === eformId)
+      : [...forms]
+          .filter((f) => f.form_key === editingEntry.formKey)
+          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+
+    if (!matchingForm) return;
+
+    if (matchingForm.payload) {
+      try {
+        applyPayloadToForm(editingEntry.formKey, matchingForm.payload);
+        payloadLoadedRef.current = true;
+      } catch {
+        /* ignore */
+      }
+    }
+
+    if (!editingEntry.eformId && matchingForm.id) {
+      setEditingEntry((prev) =>
+        prev ? { ...prev, eformId: matchingForm.id } : prev
+      );
+    }
+  }, [forms, editingEntry?.formKey, editingEntry?.eformId]);
 
   const getFormStatus = (formKey) => {
     const form = forms.find(f => f.form_key === formKey);
@@ -372,9 +422,16 @@ export default function EForms() {
       const dateStr = now.toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
       const timeStr = now.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
       const entryTitle = `${formTitle} — ${dateStr} ${timeStr}`;
-      // Only reuse the portfolio entry ID if the student explicitly opened an existing entry for editing
-      const isExplicitEdit = !!(editingEntry?.eformId && editingEntry?.id);
-      let entryId = isExplicitEdit ? editingEntry.id : null;
+      const portfolioEntryId = editingEntry?.portfolioEntryId ?? editingEntry?.id ?? null;
+      let eformId = editingEntry?.eformId ?? null;
+      if (!eformId && selectedForm && forms.length) {
+        const latest = [...forms]
+          .filter((f) => f.form_key === selectedForm)
+          .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+        eformId = latest?.id ?? null;
+      }
+      const isResubmit = Boolean(editingEntry?.resubmitAfterEdit && eformId);
+      let entryId = portfolioEntryId;
       let formData = null;
 
       if (selectedForm === "classes_count") {
@@ -428,19 +485,21 @@ export default function EForms() {
         formData = dailyTaskRows;
       }
 
-      // Update existing entry or always create new one to portfolio
-      if (isExplicitEdit && entryId && formData) {
-        // Update existing portfolio entry (only when editing from portfolio)
+      if (isResubmit && eformId) {
+        await submitStudentEForm(eformId, { payload: formData });
+      }
+
+      if (portfolioEntryId && formData) {
         try {
-          await updatePortfolioEntry(entryId, {
-            title: entryTitle,
+          await updatePortfolioEntry(portfolioEntryId, {
+            title: isResubmit ? formTitle : entryTitle,
             content: JSON.stringify(formData, null, 2),
           });
+          entryId = portfolioEntryId;
         } catch {
-          // Portfolio update failure is non-critical
+          /* non-critical */
         }
-      } else if (formData) {
-        // Always create a new portfolio entry for each save
+      } else if (formData && !portfolioEntryId) {
         try {
           const fd = new FormData();
           fd.append("title", entryTitle);
@@ -449,7 +508,6 @@ export default function EForms() {
           entryId = res?.data?.id || res?.id || null;
         } catch (portfolioErr) {
           console.warn("Portfolio entry creation failed:", portfolioErr?.response?.data || portfolioErr?.message);
-          // Portfolio failure is non-critical — e-form was saved successfully
         }
       }
 
@@ -463,10 +521,15 @@ export default function EForms() {
         // PDF upload failure is non-critical
       }
 
-      const actionText = editingEntry ? "تعديل" : "حفظ";
-      setSuccess(`تم ${actionText} "${formTitle}" وإضافته لملف الإنجاز بنجاح!`);
+      const actionText = isResubmit ? "إعادة إرسال" : editingEntry ? "تعديل" : "حفظ";
+      setSuccess(
+        isResubmit
+          ? `تم ${actionText} "${formTitle}" للمشرف الأكاديمي بنجاح!`
+          : `تم ${actionText} "${formTitle}" وإضافته لملف الإنجاز بنجاح!`
+      );
       addToast(`تم ${actionText} "${formTitle}" بنجاح`, "success");
       setEditingEntry(null);
+      payloadLoadedRef.current = false;
       // Reset form so student can fill again fresh
       if (selectedForm === "weekly_full_report") resetWeeklyReport();
       else if (selectedForm === "weekly_brief_report") resetWeeklyBriefReport();
@@ -478,6 +541,9 @@ export default function EForms() {
       setTimeout(() => {
         setSuccess("");
         setSelectedForm("");
+        if (isResubmit) {
+          navigate("/student/portfolio");
+        }
       }, 2500);
       await load();
     } catch (e) {
@@ -507,6 +573,12 @@ export default function EForms() {
           <p className="page-subtitle">اختر النموذج أو التقرير المطلوب تعبئته</p>
         </div>
       </div>
+
+      {editingEntry?.resubmitAfterEdit && (
+        <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-[0.9rem]">
+          <strong>تعديل بناءً على ملاحظة المشرف:</strong> عدّل النموذج ثم احفظ — سيُحدَّث نفس السجل ويُعاد إرساله للمشرف الأكاديمي دون إنشاء نموذج جديد.
+        </div>
+      )}
 
       {error ? <div className="alert-custom alert-danger mb-3">{error}</div> : null}
       {success ? <div className="alert-custom alert-success mb-3">{success}</div> : null}

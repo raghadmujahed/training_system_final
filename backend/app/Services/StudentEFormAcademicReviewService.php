@@ -230,4 +230,93 @@ class StudentEFormAcademicReviewService
 
         return "نموذج إلكتروني مُقدّم بتاريخ {$submitted}";
     }
+
+    /**
+     * بعد تعديل الطالب وإعادة الإرسال: مسح ملاحظة المشرف وتحديث محتوى المدخل المرتبط.
+     */
+    public function onStudentResubmit(StudentEForm $eform, ?array $payload = null): ?PortfolioEntry
+    {
+        $portfolio = $this->findPortfolioForUser((int) $eform->user_id);
+        if (! $portfolio) {
+            return null;
+        }
+
+        $code = 'eform:' . $eform->id;
+        $title = trim((string) ($eform->title ?: ''));
+        if ($title === '') {
+            $title = self::PORTFOLIO_TITLES[$eform->form_key] ?? $eform->form_key;
+        }
+
+        $entry = PortfolioEntry::query()
+            ->where('student_portfolio_id', $portfolio->id)
+            ->where('code', $code)
+            ->first();
+
+        if (! $entry) {
+            $entry = PortfolioEntry::query()
+                ->where('student_portfolio_id', $portfolio->id)
+                ->where(function ($q) use ($title) {
+                    $q->where('title', $title)
+                        ->orWhere('title', 'like', $title . '%');
+                })
+                ->orderByDesc('id')
+                ->first();
+        }
+
+        $payload = $payload ?? (is_array($eform->payload) ? $eform->payload : []);
+        $content = count($payload) > 0
+            ? json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)
+            : $this->portfolioContentSummary($eform);
+
+        if ($entry) {
+            $entry->update([
+                'code' => $code,
+                'category' => $eform->form_key,
+                'title' => $title,
+                'content' => $content,
+                'reviewer_note' => null,
+                'review_status' => 'pending',
+                'reviewed_by' => null,
+                'reviewed_at' => null,
+                'academic_rating' => null,
+            ]);
+        }
+
+        $this->clearLinkedTrainingLogAcademicNote($eform);
+
+        return $entry?->fresh();
+    }
+
+    private function clearLinkedTrainingLogAcademicNote(StudentEForm $eform): void
+    {
+        $assignment = TrainingAssignment::whereHas(
+            'enrollment',
+            fn ($q) => $q->where('user_id', $eform->user_id)
+        )->latest('id')->first();
+
+        if (! $assignment) {
+            return;
+        }
+
+        $logDate = optional($eform->submitted_at ?? $eform->created_at)?->toDateString();
+        if (! $logDate) {
+            return;
+        }
+
+        $log = TrainingLog::withArchived()
+            ->where('training_assignment_id', $assignment->id)
+            ->whereDate('log_date', $logDate)
+            ->first();
+
+        if (! $log) {
+            return;
+        }
+
+        $log->update([
+            'academic_note' => null,
+            'needs_discussion' => false,
+            'academic_review_status' => 'pending',
+            'academic_reviewed_at' => null,
+        ]);
+    }
 }
