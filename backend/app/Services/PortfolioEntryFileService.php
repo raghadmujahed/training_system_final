@@ -5,8 +5,9 @@ namespace App\Services;
 use App\Models\PortfolioEntry;
 use App\Models\StudentEForm;
 use App\Support\PublicStoragePath;
-use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class PortfolioEntryFileService
 {
@@ -62,7 +63,10 @@ class PortfolioEntryFileService
             }
         }
 
-        if (preg_match('/^eform:(\d+)$/i', (string) $entry->code, $m)) {
+        if (
+            Schema::hasTable('student_eforms')
+            && preg_match('/^eform:(\d+)$/i', (string) $entry->code, $m)
+        ) {
             $eform = StudentEForm::find((int) $m[1]);
             if ($eform?->form_key) {
                 foreach ($peers as $peer) {
@@ -153,7 +157,7 @@ HTML;
             }
         }
 
-        if (preg_match('/^eform:(\d+)$/i', (string) $entry->code, $m)) {
+        if (Schema::hasTable('student_eforms') && preg_match('/^eform:(\d+)$/i', (string) $entry->code, $m)) {
             $eform = StudentEForm::find((int) $m[1]);
             if (is_array($eform?->payload) && $eform->payload !== []) {
                 return $eform->payload;

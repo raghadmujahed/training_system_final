@@ -13,8 +13,8 @@ use App\Models\TrainingAssignment;
 use App\Services\PortfolioEntryFileService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 
 class PortfolioEntryController extends Controller
 {

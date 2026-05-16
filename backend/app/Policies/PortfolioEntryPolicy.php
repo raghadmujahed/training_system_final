@@ -16,13 +16,18 @@ class PortfolioEntryPolicy
     public function view(User $user, PortfolioEntry $entry): bool
     {
         $entry->loadMissing('studentPortfolio');
+        $portfolio = $entry->studentPortfolio;
 
-        if ($user->id === $entry->studentPortfolio->user_id || $user->role?->name === 'admin') {
+        if (! $portfolio) {
+            return $user->role?->name === 'admin';
+        }
+
+        if ($user->id === $portfolio->user_id || $user->role?->name === 'admin') {
             return true;
         }
 
         if ($user->role?->name === 'academic_supervisor') {
-            $studentId = (int) $entry->studentPortfolio->user_id;
+            $studentId = (int) $portfolio->user_id;
 
             return TrainingAssignment::query()
                 ->where('academic_supervisor_id', $user->id)
@@ -41,8 +46,14 @@ class PortfolioEntryPolicy
 
     public function update(User $user, PortfolioEntry $entry): bool
     {
-        // فقط مالك المدخل أو الأدمن يمكنه التعديل
-        return $user->id === $entry->studentPortfolio->user_id || $user->role?->name === 'admin';
+        $entry->loadMissing('studentPortfolio');
+        $portfolio = $entry->studentPortfolio;
+
+        if (! $portfolio) {
+            return $user->role?->name === 'admin';
+        }
+
+        return $user->id === $portfolio->user_id || $user->role?->name === 'admin';
     }
 
     public function delete(User $user, PortfolioEntry $entry): bool
