@@ -31,6 +31,7 @@ use App\Models\PortfolioEntry;
 use App\Models\Role;
 use App\Models\Section;
 use App\Services\AcademicSupervisorStudentService;
+use App\Services\StudentEFormAcademicReviewService;
 use App\Services\TaskService;
 use App\Services\TrainingTrackResolver;
 use App\Support\ApiResponse;
@@ -892,6 +893,44 @@ class SupervisorWorkspaceController extends Controller
                 'reviewed_at' => $report->reviewed_at,
                 'reviewed_by' => $report->reviewer?->name,
             ]);
+        $eformFormKeys = [
+            'weekly_full_report',
+            'weekly_brief_report',
+            'weekly_reflection',
+            'learning_experience_review',
+            'field_visit_summary',
+            'classes_count',
+            'daily_tasks_report',
+        ];
+
+        // نماذج إلكترونية للطالب
+        $eFormRows = collect();
+        $enrollment = $assignment->enrollment;
+        if ($enrollment) {
+            $eFormRows = StudentEForm::where('user_id', $enrollment->user_id)
+                ->whereIn('form_key', $eformFormKeys)
+                ->orderByDesc('updated_at')
+                ->get()
+                ->map(fn (StudentEForm $eform) => [
+                    'id' => 'eform-' . $eform->id,
+                    'source' => 'eform',
+                    'source_id' => $eform->id,
+                    'title' => $eform->title ?: (StudentEFormAcademicReviewService::PORTFOLIO_TITLES[$eform->form_key] ?? $eform->form_key),
+                    'form_key' => $eform->form_key,
+                    'date' => optional($eform->submitted_at ?? $eform->updated_at)->toDateString(),
+                    'log_date' => optional($eform->submitted_at ?? $eform->updated_at)->toDateString(),
+                    'status' => $eform->status === 'reviewed' ? 'reviewed' : ($eform->status === 'submitted' ? 'submitted' : 'draft'),
+                    'description' => $eform->title,
+                    'student_reflection' => is_array($eform->payload) ? json_encode($eform->payload, JSON_UNESCAPED_UNICODE) : $eform->payload,
+                    'payload' => $eform->payload,
+                    'submitted_at' => optional($eform->submitted_at)?->toDateTimeString(),
+                    'academic_note' => $eform->academic_note,
+                    'supervisor_comment' => $eform->academic_note,
+                    'needs_discussion' => (bool) $eform->needs_discussion,
+                    'academic_reviewed_at' => optional($eform->academic_reviewed_at)?->toDateTimeString(),
+                ]);
+        }
+
         $trainingLogRows = collect($logs->items())->map(fn (TrainingLog $log) => [
             'id' => $log->id,
             'source' => 'training_log',
@@ -904,32 +943,35 @@ class SupervisorWorkspaceController extends Controller
             'mentor_comment' => $log->supervisor_notes,
             'student_reflection' => $log->student_reflection,
             'academic_note' => $log->academic_note,
+            'supervisor_comment' => $log->academic_note,
             'academic_review_status' => $log->academic_review_status,
-        ]);
+        ])->filter(function (array $row) use ($eFormRows) {
+            if (empty($row['student_reflection'])) {
+                return true;
+            }
 
-        // نماذج إلكترونية للطالب (أصول التربية)
-        $eFormRows = collect();
-        $enrollment = $assignment->enrollment;
-        if ($enrollment) {
-            $eFormRows = StudentEForm::where('user_id', $enrollment->user_id)
-                ->whereIn('form_key', ['weekly_full_report', 'weekly_brief_report', 'weekly_reflection', 'learning_experience_review', 'field_visit_summary', 'classes_count'])
-                ->orderByDesc('updated_at')
-                ->get()
-                ->map(fn (StudentEForm $eform) => [
-                    'id' => 'eform-' . $eform->id,
-                    'source' => 'eform',
-                    'source_id' => $eform->id,
-                    'title' => $eform->title,
-                    'form_key' => $eform->form_key,
-                    'date' => optional($eform->updated_at)->toDateString(),
-                    'log_date' => optional($eform->updated_at)->toDateString(),
-                    'status' => $eform->status,
-                    'description' => $eform->title,
-                    'student_reflection' => is_array($eform->payload) ? json_encode($eform->payload, JSON_UNESCAPED_UNICODE) : $eform->payload,
-                    'payload' => $eform->payload,
-                    'submitted_at' => optional($eform->submitted_at)?->toDateTimeString(),
-                ]);
-        }
+            $reflection = json_decode($row['student_reflection'], true);
+            if (! is_array($reflection)) {
+                return true;
+            }
+
+            $isWeeklyPayload = isset($reflection['course'])
+                || isset($reflection['morningAssembly'])
+                || isset($reflection['implementedLessons']);
+
+            if (! $isWeeklyPayload) {
+                return true;
+            }
+
+            $duplicateEform = $eFormRows->contains(function (array $eform) use ($row) {
+                $sameDay = ($eform['date'] ?? null) === ($row['date'] ?? null);
+                $weeklyKey = str_starts_with((string) ($eform['form_key'] ?? ''), 'weekly_');
+
+                return $sameDay && $weeklyKey;
+            });
+
+            return ! $duplicateEform;
+        })->values();
 
         $visibleLogs = $trainingLogRows
             ->merge($dailyReports)
@@ -972,12 +1014,48 @@ class SupervisorWorkspaceController extends Controller
     public function reviewDailyLog(ReviewDailyLogRequest $request, $studentId, $logId)
     {
         $assignment = $this->studentService->mustGetAssignmentForStudent($request->user(), (int) $studentId);
+        $logId = (string) $logId;
+        $note = (string) $request->string('academic_note');
+        $needsDiscussion = (bool) $request->boolean('needs_discussion');
+
+        if (str_starts_with($logId, 'eform-')) {
+            $eformId = (int) substr($logId, 6);
+            $enrollment = $assignment->enrollment;
+            abort_unless($enrollment, 404);
+
+            $eform = StudentEForm::query()
+                ->where('id', $eformId)
+                ->where('user_id', $enrollment->user_id)
+                ->firstOrFail();
+
+            $eform = app(StudentEFormAcademicReviewService::class)->applyReview(
+                $eform,
+                $request->user(),
+                $note,
+                $needsDiscussion
+            );
+
+            $this->createActivity($request->user()->id, 'eform_reviewed', 'Academic review added to student e-form.');
+
+            return $this->successResponse([
+                'id' => 'eform-' . $eform->id,
+                'academic_note' => $eform->academic_note,
+                'supervisor_comment' => $eform->academic_note,
+                'needs_discussion' => $eform->needs_discussion,
+                'academic_reviewed_at' => optional($eform->academic_reviewed_at)?->toDateTimeString(),
+            ], 'E-form reviewed successfully.');
+        }
+
+        if (str_starts_with($logId, 'daily-report-')) {
+            return $this->errorResponse('لا يمكن إضافة ملاحظة أكاديمية على التقرير الميداني من هنا.', 422);
+        }
+
         $log = TrainingLog::where('id', $logId)->where('training_assignment_id', $assignment->id)->firstOrFail();
 
         $log->update([
             'academic_review_status' => 'reviewed',
-            'academic_note' => $request->string('academic_note'),
-            'needs_discussion' => (bool) $request->boolean('needs_discussion'),
+            'academic_note' => $note,
+            'needs_discussion' => $needsDiscussion,
             'academic_reviewed_at' => now(),
         ]);
 
