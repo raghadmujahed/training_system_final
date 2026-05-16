@@ -903,32 +903,38 @@ class SupervisorWorkspaceController extends Controller
             'daily_tasks_report',
         ];
 
-        // نماذج إلكترونية للطالب
+        // نماذج إلكترونية للطالب — الملاحظات من portfolio_entries (code: eform:{id})
         $eFormRows = collect();
         $enrollment = $assignment->enrollment;
+        $eformReviewService = app(StudentEFormAcademicReviewService::class);
         if ($enrollment) {
+            $eformReviewMap = $eformReviewService->portfolioReviewsByEformId((int) $enrollment->user_id);
+
             $eFormRows = StudentEForm::where('user_id', $enrollment->user_id)
                 ->whereIn('form_key', $eformFormKeys)
                 ->orderByDesc('updated_at')
                 ->get()
-                ->map(fn (StudentEForm $eform) => [
-                    'id' => 'eform-' . $eform->id,
-                    'source' => 'eform',
-                    'source_id' => $eform->id,
-                    'title' => $eform->title ?: (StudentEFormAcademicReviewService::PORTFOLIO_TITLES[$eform->form_key] ?? $eform->form_key),
-                    'form_key' => $eform->form_key,
-                    'date' => optional($eform->submitted_at ?? $eform->updated_at)->toDateString(),
-                    'log_date' => optional($eform->submitted_at ?? $eform->updated_at)->toDateString(),
-                    'status' => $eform->status === 'reviewed' ? 'reviewed' : ($eform->status === 'submitted' ? 'submitted' : 'draft'),
-                    'description' => $eform->title,
-                    'student_reflection' => is_array($eform->payload) ? json_encode($eform->payload, JSON_UNESCAPED_UNICODE) : $eform->payload,
-                    'payload' => $eform->payload,
-                    'submitted_at' => optional($eform->submitted_at)?->toDateTimeString(),
-                    'academic_note' => $eform->academic_note,
-                    'supervisor_comment' => $eform->academic_note,
-                    'needs_discussion' => (bool) $eform->needs_discussion,
-                    'academic_reviewed_at' => optional($eform->academic_reviewed_at)?->toDateTimeString(),
-                ]);
+                ->map(function (StudentEForm $eform) use ($eformReviewService, $eformReviewMap) {
+                    $review = $eformReviewService->eformReviewPayload($eformReviewMap[$eform->id] ?? null);
+                    $status = $review['has_review']
+                        ? 'reviewed'
+                        : ($eform->status === 'submitted' ? 'submitted' : ($eform->status === 'reviewed' ? 'reviewed' : 'draft'));
+
+                    return array_merge([
+                        'id' => 'eform-' . $eform->id,
+                        'source' => 'eform',
+                        'source_id' => $eform->id,
+                        'title' => $eform->title ?: (StudentEFormAcademicReviewService::PORTFOLIO_TITLES[$eform->form_key] ?? $eform->form_key),
+                        'form_key' => $eform->form_key,
+                        'date' => optional($eform->submitted_at ?? $eform->updated_at)->toDateString(),
+                        'log_date' => optional($eform->submitted_at ?? $eform->updated_at)->toDateString(),
+                        'status' => $status,
+                        'description' => $eform->title,
+                        'student_reflection' => is_array($eform->payload) ? json_encode($eform->payload, JSON_UNESCAPED_UNICODE) : $eform->payload,
+                        'payload' => $eform->payload,
+                        'submitted_at' => optional($eform->submitted_at)?->toDateTimeString(),
+                    ], $review);
+                });
         }
 
         $trainingLogRows = collect($logs->items())->map(fn (TrainingLog $log) => [
@@ -1028,7 +1034,7 @@ class SupervisorWorkspaceController extends Controller
                 ->where('user_id', $enrollment->user_id)
                 ->firstOrFail();
 
-            $eform = app(StudentEFormAcademicReviewService::class)->applyReview(
+            $entry = app(StudentEFormAcademicReviewService::class)->applyReview(
                 $eform,
                 $request->user(),
                 $note,
@@ -1037,13 +1043,11 @@ class SupervisorWorkspaceController extends Controller
 
             $this->createActivity($request->user()->id, 'eform_reviewed', 'Academic review added to student e-form.');
 
-            return $this->successResponse([
+            $review = app(StudentEFormAcademicReviewService::class)->eformReviewPayload($entry);
+
+            return $this->successResponse(array_merge([
                 'id' => 'eform-' . $eform->id,
-                'academic_note' => $eform->academic_note,
-                'supervisor_comment' => $eform->academic_note,
-                'needs_discussion' => $eform->needs_discussion,
-                'academic_reviewed_at' => optional($eform->academic_reviewed_at)?->toDateTimeString(),
-            ], 'E-form reviewed successfully.');
+            ], $review), 'E-form reviewed successfully.');
         }
 
         if (str_starts_with($logId, 'daily-report-')) {

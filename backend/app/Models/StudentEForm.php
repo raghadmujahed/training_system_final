@@ -19,26 +19,15 @@ class StudentEForm extends Model
         'payload',
         'status',
         'submitted_at',
-        'academic_note',
-        'needs_discussion',
-        'academic_supervisor_id',
-        'academic_reviewed_at',
     ];
 
     protected $casts = [
         'payload' => 'array',
         'submitted_at' => 'datetime',
-        'needs_discussion' => 'boolean',
-        'academic_reviewed_at' => 'datetime',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function academicSupervisor()
-    {
-        return $this->belongsTo(User::class, 'academic_supervisor_id');
     }
 }

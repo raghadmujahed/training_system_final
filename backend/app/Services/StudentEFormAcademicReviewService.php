@@ -7,6 +7,7 @@ use App\Models\PortfolioEntry;
 use App\Models\StudentEForm;
 use App\Models\StudentPortfolio;
 use App\Models\TrainingAssignment;
+use App\Models\TrainingLog;
 use App\Models\User;
 
 class StudentEFormAcademicReviewService
@@ -21,44 +22,78 @@ class StudentEFormAcademicReviewService
         'daily_tasks_report' => 'تقرير المهام والأعمال اليومية',
     ];
 
-    public function applyReview(StudentEForm $eform, User $supervisor, string $note, bool $needsDiscussion): StudentEForm
+    /**
+     * يحفظ الملاحظة في portfolio_entries (ومزامنة اختيارية مع training_logs) — بدون أعمدة جديدة على student_eforms.
+     */
+    public function applyReview(StudentEForm $eform, User $supervisor, string $note, bool $needsDiscussion): PortfolioEntry
     {
-        $eform->update([
-            'academic_note' => $note,
-            'needs_discussion' => $needsDiscussion,
-            'academic_supervisor_id' => $supervisor->id,
-            'academic_reviewed_at' => now(),
-            'status' => 'reviewed',
-        ]);
+        if ($eform->status !== 'draft') {
+            $eform->update(['status' => 'reviewed']);
+        }
 
-        $this->syncNoteToPortfolio($eform->fresh(), $supervisor, $note, $needsDiscussion);
+        $entry = $this->syncNoteToPortfolio($eform, $supervisor, $note, $needsDiscussion);
+        $this->syncLinkedTrainingLog($eform, $note, $needsDiscussion);
 
-        return $eform->fresh();
+        return $entry;
     }
 
-    public function syncNoteToPortfolio(StudentEForm $eform, User $supervisor, string $note, bool $needsDiscussion): ?PortfolioEntry
+    /**
+     * @return array<int, PortfolioEntry> مفتاحه eform id
+     */
+    public function portfolioReviewsByEformId(int $userId): array
     {
+        $portfolio = $this->findPortfolioForUser($userId);
+        if (! $portfolio) {
+            return [];
+        }
+
+        $entries = PortfolioEntry::query()
+            ->where('student_portfolio_id', $portfolio->id)
+            ->where('code', 'like', 'eform:%')
+            ->get();
+
+        $map = [];
+        foreach ($entries as $entry) {
+            $code = (string) $entry->code;
+            if (preg_match('/^eform:(\d+)$/', $code, $m)) {
+                $map[(int) $m[1]] = $entry;
+            }
+        }
+
+        return $map;
+    }
+
+    public function eformReviewPayload(?PortfolioEntry $entry): array
+    {
+        if (! $entry || ! filled($entry->reviewer_note)) {
+            return [
+                'academic_note' => null,
+                'supervisor_comment' => null,
+                'needs_discussion' => false,
+                'academic_reviewed_at' => null,
+                'has_review' => false,
+            ];
+        }
+
+        return [
+            'academic_note' => $entry->reviewer_note,
+            'supervisor_comment' => $entry->reviewer_note,
+            'needs_discussion' => $entry->review_status === 'needs_edit',
+            'academic_reviewed_at' => $entry->reviewed_at?->toDateTimeString(),
+            'has_review' => true,
+        ];
+    }
+
+    public function syncNoteToPortfolio(StudentEForm $eform, User $supervisor, string $note, bool $needsDiscussion): PortfolioEntry
+    {
+        $portfolio = $this->findPortfolioForUser((int) $eform->user_id);
         $assignment = TrainingAssignment::whereHas(
             'enrollment',
             fn ($q) => $q->where('user_id', $eform->user_id)
         )->latest('id')->first();
 
-        $portfolio = StudentPortfolio::query()
-            ->where('user_id', $eform->user_id)
-            ->when($assignment, function ($q) use ($assignment) {
-                $q->where(function ($sub) use ($assignment) {
-                    $sub->where('training_assignment_id', $assignment->id)
-                        ->orWhereNull('training_assignment_id')
-                        ->orWhereHas('trainingAssignment', fn ($ta) => $ta->where('enrollment_id', $assignment->enrollment_id));
-                });
-            })
-            ->orderByDesc('updated_at')
-            ->first();
-
         if (! $portfolio) {
-            if (! $assignment) {
-                return null;
-            }
+            abort_unless($assignment, 404, 'لا يوجد تعيين تدريبي للطالب.');
             $portfolio = StudentPortfolio::create([
                 'user_id' => $eform->user_id,
                 'training_assignment_id' => $assignment->id,
@@ -128,7 +163,60 @@ class StudentEFormAcademicReviewService
             ]);
         }
 
-        return $entry;
+        return $entry->fresh();
+    }
+
+    private function syncLinkedTrainingLog(StudentEForm $eform, string $note, bool $needsDiscussion): void
+    {
+        $assignment = TrainingAssignment::whereHas(
+            'enrollment',
+            fn ($q) => $q->where('user_id', $eform->user_id)
+        )->latest('id')->first();
+
+        if (! $assignment) {
+            return;
+        }
+
+        $logDate = optional($eform->submitted_at ?? $eform->created_at)?->toDateString();
+        if (! $logDate) {
+            return;
+        }
+
+        $log = TrainingLog::withArchived()
+            ->where('training_assignment_id', $assignment->id)
+            ->whereDate('log_date', $logDate)
+            ->first();
+
+        if (! $log) {
+            return;
+        }
+
+        $log->update([
+            'academic_review_status' => 'reviewed',
+            'academic_note' => $note,
+            'needs_discussion' => $needsDiscussion,
+            'academic_reviewed_at' => now(),
+        ]);
+    }
+
+    private function findPortfolioForUser(int $userId): ?StudentPortfolio
+    {
+        $assignment = TrainingAssignment::whereHas(
+            'enrollment',
+            fn ($q) => $q->where('user_id', $userId)
+        )->latest('id')->first();
+
+        return StudentPortfolio::query()
+            ->where('user_id', $userId)
+            ->when($assignment, function ($q) use ($assignment) {
+                $q->where(function ($sub) use ($assignment) {
+                    $sub->where('training_assignment_id', $assignment->id)
+                        ->orWhereNull('training_assignment_id')
+                        ->orWhereHas('trainingAssignment', fn ($ta) => $ta->where('enrollment_id', $assignment->enrollment_id));
+                });
+            })
+            ->orderByDesc('updated_at')
+            ->first();
     }
 
     private function portfolioContentSummary(StudentEForm $eform): ?string
