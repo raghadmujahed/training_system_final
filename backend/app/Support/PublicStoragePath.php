@@ -24,8 +24,35 @@ class PublicStoragePath
 
     public static function exists(?string $path): bool
     {
-        $normalized = self::normalize($path);
+        return self::resolveExistingPath($path) !== null;
+    }
 
-        return $normalized !== null && Storage::disk('public')->exists($normalized);
+    /**
+     * يعيد مساراً نسبياً على قرص public إن وُجد الملف فعلياً.
+     */
+    public static function resolveExistingPath(?string $path): ?string
+    {
+        $normalized = self::normalize($path);
+        if ($normalized === null) {
+            return null;
+        }
+
+        $candidates = array_unique(array_filter([
+            $normalized,
+            str_starts_with($normalized, 'task_submissions/') ? null : 'task_submissions/'.basename($normalized),
+        ]));
+
+        foreach ($candidates as $candidate) {
+            if (Storage::disk('public')->exists($candidate)) {
+                return $candidate;
+            }
+
+            $absolute = storage_path('app/public/'.$candidate);
+            if (is_file($absolute)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 }

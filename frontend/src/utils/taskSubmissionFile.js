@@ -1,31 +1,78 @@
 import { apiClient } from "../services/api";
 
+async function parseBlobError(error) {
+  const data = error?.response?.data;
+  if (!(data instanceof Blob)) {
+    return error?.response?.data?.message || error?.message || "تعذر فتح الملف";
+  }
+
+  try {
+    const text = await data.text();
+    const json = JSON.parse(text);
+    return json?.message || "تعذر فتح الملف";
+  } catch {
+    return "تعذر فتح الملف (404)";
+  }
+}
+
 /**
  * فتح/تحميل ملف تسليم مهمة عبر API (مع Bearer) — يعمل على Railway/Vercel.
  */
-export async function openTaskSubmissionFile(submissionId, suggestedName = "solution") {
+export async function openTaskSubmissionFile(submissionId, suggestedName = "solution", options = {}) {
   if (!submissionId) {
     throw new Error("معرّف التسليم غير متوفر");
   }
 
-  const res = await apiClient.get(`/task-submissions/${submissionId}/file`, {
-    responseType: "blob",
-  });
+  const paths = options.preferSupervisor
+    ? [
+        `/supervisor/task-submissions/${submissionId}/file`,
+        `/task-submissions/${submissionId}/file`,
+      ]
+    : [
+        `/task-submissions/${submissionId}/file`,
+        `/supervisor/task-submissions/${submissionId}/file`,
+      ];
 
-  const contentType = res.headers["content-type"] || "application/octet-stream";
-  const blob = new Blob([res.data], { type: contentType });
-  const url = URL.createObjectURL(blob);
-  const opened = window.open(url, "_blank", "noopener,noreferrer");
+  let lastError = null;
 
-  if (!opened) {
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = suggestedName;
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  for (const path of paths) {
+    try {
+      const res = await apiClient.get(path, { responseType: "blob" });
+
+      if (res.data?.type?.includes("application/json")) {
+        const text = await res.data.text();
+        const json = JSON.parse(text);
+        throw new Error(json?.message || "تعذر فتح الملف");
+      }
+
+      const contentType = res.headers["content-type"] || "application/octet-stream";
+      const blob = new Blob([res.data], { type: contentType });
+      const url = URL.createObjectURL(blob);
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+
+      if (!opened) {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = suggestedName;
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(url), 120_000);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (error?.response?.status === 404) {
+        continue;
+      }
+      throw error;
+    }
   }
 
-  window.setTimeout(() => URL.revokeObjectURL(url), 120_000);
+  const message = await parseBlobError(lastError);
+  const err = new Error(message);
+  err.cause = lastError;
+  throw err;
 }

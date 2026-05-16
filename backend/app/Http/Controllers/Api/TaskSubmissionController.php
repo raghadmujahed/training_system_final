@@ -123,8 +123,26 @@ class TaskSubmissionController extends Controller
     {
         $this->authorize('view', $taskSubmission);
 
-        $path = PublicStoragePath::normalize($taskSubmission->file_path);
-        abort_unless($path && Storage::disk('public')->exists($path), 404, 'الملف غير موجود على الخادم.');
+        if (! $taskSubmission->file_path) {
+            return response()->json([
+                'message' => 'لا يوجد ملف مرفق في سجل التسليم.',
+                'code' => 'no_file_path',
+            ], 404);
+        }
+
+        $path = PublicStoragePath::resolveExistingPath($taskSubmission->file_path);
+        if (! $path) {
+            \Log::warning('task submission file missing on disk', [
+                'submission_id' => $taskSubmission->id,
+                'file_path' => $taskSubmission->file_path,
+            ]);
+
+            return response()->json([
+                'message' => 'الملف غير موجود على خادم التطبيق (غالباً بسبب إعادة نشر السيرفر). اطلب من الطالب إعادة رفع الحل.',
+                'code' => 'file_missing_on_disk',
+                'file_path' => $taskSubmission->file_path,
+            ], 404);
+        }
 
         $filename = basename($path);
 

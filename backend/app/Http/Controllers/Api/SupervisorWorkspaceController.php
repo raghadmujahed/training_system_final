@@ -1594,6 +1594,22 @@ class SupervisorWorkspaceController extends Controller
         return $this->successResponse($submission);
     }
 
+    public function downloadTaskSubmissionFile(Request $request, $submissionId)
+    {
+        $submission = TaskSubmission::with('task')->findOrFail($submissionId);
+        $supervisor = $request->user();
+
+        abort_unless(
+            $submission->task && (int) $submission->task->assigned_by === (int) $supervisor->id,
+            403,
+            'غير مصرح بتحميل هذا الملف.'
+        );
+
+        $this->studentService->mustGetAssignmentForStudent($supervisor, (int) $submission->user_id);
+
+        return app(TaskSubmissionController::class)->downloadFile($request, $submission);
+    }
+
     public function reviewTaskSubmission(ReviewTaskSubmissionRequest $request, $submissionId)
     {
         $submission = TaskSubmission::with('task.trainingAssignment.enrollment')->findOrFail($submissionId);

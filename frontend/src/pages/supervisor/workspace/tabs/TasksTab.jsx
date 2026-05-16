@@ -734,7 +734,9 @@ export default function TasksTab({ studentId }) {
                             const name = String(studentSubmission.file_path || "solution")
                               .split("/")
                               .pop();
-                            await openTaskSubmissionFile(studentSubmission.id, name);
+                            await openTaskSubmissionFile(studentSubmission.id, name, {
+                              preferSupervisor: true,
+                            });
                           } catch (e) {
                             addToast(
                               e?.response?.data?.message || "تعذر فتح الملف",

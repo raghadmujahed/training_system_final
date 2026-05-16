@@ -276,6 +276,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/tasks/{taskId}', [SupervisorWorkspaceController::class, 'deleteTask']);
         Route::get('/students/{studentId}/task-submissions', [SupervisorWorkspaceController::class, 'studentTaskSubmissions']);
         Route::get('/task-submissions/{submissionId}', [SupervisorWorkspaceController::class, 'showTaskSubmission']);
+        Route::get('/task-submissions/{submissionId}/file', [SupervisorWorkspaceController::class, 'downloadTaskSubmissionFile']);
         Route::post('/task-submissions/{submissionId}/review', [SupervisorWorkspaceController::class, 'reviewTaskSubmission']);
         Route::post('/task-submissions/{submissionId}/request-resubmission', [SupervisorWorkspaceController::class, 'requestResubmission']);
         Route::post('/task-submissions/{submissionId}/grade', [SupervisorWorkspaceController::class, 'gradeSubmission']);
