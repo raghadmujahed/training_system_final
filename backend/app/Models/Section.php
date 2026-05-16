@@ -80,6 +80,12 @@ class Section extends Model
         return $this->hasMany(SectionStudent::class)->where('status', 'accepted');
     }
 
+    /** تسجيلات نشطة في الشعبة (جدول enrollments). */
+    public function activeEnrollments()
+    {
+        return $this->hasMany(Enrollment::class)->where('status', 'active');
+    }
+
     public function getActiveStudentsCountAttribute()
     {
         return $this->activeStudents()->count();

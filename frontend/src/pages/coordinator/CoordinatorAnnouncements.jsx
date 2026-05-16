@@ -32,7 +32,7 @@ const TARGET_LABELS = {
 const INITIAL_FORM = {
   title: "",
   content: "",
-  status: "draft",
+  status: "active",
   target_type: "all_students",
   section_ids: [],
   student_id: null,
@@ -44,6 +44,7 @@ export default function CoordinatorAnnouncements() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ ...INITIAL_FORM });
 
@@ -109,8 +110,19 @@ export default function CoordinatorAnnouncements() {
   const fetchStudents = useCallback((search) => {
     setStudentsLoading(true);
     getCoordinatorStudents(search)
-      .then((res) => setStudents(res?.data || []))
-      .catch(() => setStudents([]))
+      .then((res) => {
+        const list = res?.data || [];
+        setStudents(list);
+        if (list.length === 0 && res?.message && !search) {
+          setFormError(res.message);
+        }
+      })
+      .catch((e) => {
+        setStudents([]);
+        if (!search) {
+          setFormError(e?.response?.data?.message || "تعذر تحميل قائمة الطلاب.");
+        }
+      })
       .finally(() => setStudentsLoading(false));
   }, []);
 
@@ -136,6 +148,7 @@ export default function CoordinatorAnnouncements() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setFormError("");
+    setFormSuccess("");
     if (form.target_type === "sections" && form.section_ids.length === 0) {
       setFormError("يرجى اختيار شعبة واحدة على الأقل");
       return;
@@ -162,9 +175,15 @@ export default function CoordinatorAnnouncements() {
       if (form.target_type === "student") {
         payload.student_id = form.student_id;
       }
-      await createAnnouncement(payload);
+      const publishNow = form.status === "active";
+      const res = await createAnnouncement(payload);
+      const msg = res?.message || (publishNow
+        ? "تم نشر الإعلان وإرسال الإشعارات"
+        : "تم حفظ الإعلان كمسودة");
+      setFormSuccess(msg);
       setForm({ ...INITIAL_FORM });
       setStudentSearch("");
+      if (publishNow) setTab("active");
       await load();
     } catch (e) {
       const msg = e?.response?.data?.message || "تعذر حفظ الإعلان.";
@@ -265,6 +284,13 @@ export default function CoordinatorAnnouncements() {
           إنشاء إعلان جديد
         </h5>
         <form onSubmit={handleCreate} className="row g-3">
+          {formSuccess && (
+            <div className="col-12">
+              <div className="alert-custom alert-success">
+                <p className="m-0">{formSuccess}</p>
+              </div>
+            </div>
+          )}
           {formError && (
             <div className="col-12">
               <div className="alert-custom alert-danger">
@@ -289,8 +315,8 @@ export default function CoordinatorAnnouncements() {
               value={form.status}
               onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
             >
-              <option value="draft">مسودة</option>
-              <option value="active">نشر فوري</option>
+              <option value="active">نشر فوري (إرسال للطلاب)</option>
+              <option value="draft">مسودة (حفظ دون إرسال)</option>
             </select>
           </div>
 

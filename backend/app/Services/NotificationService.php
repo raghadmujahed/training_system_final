@@ -6,6 +6,7 @@ use App\Mail\SystemMessage;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 
@@ -22,7 +23,9 @@ class NotificationService
         return Notification::create([
             'user_id'         => $user->id,
             'type'            => $type,
+            'title'           => Str::limit((string) ($data['title'] ?? $message), 255),
             'message'         => $message,
+            'content'         => $data['content'] ?? $message,
             'data'            => $data,
             'notifiable_type' => $notifiableType ?? get_class($user),
             'notifiable_id'   => $notifiableId ?? $user->id,

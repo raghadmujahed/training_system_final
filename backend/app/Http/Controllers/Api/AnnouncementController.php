@@ -9,9 +9,11 @@ use App\Http\Resources\AnnouncementResource;
 use App\Models\Announcement;
 use App\Models\AnnouncementTarget;
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Section;
 use App\Models\SectionStudent;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -85,10 +87,7 @@ class AnnouncementController extends Controller
         $user = $request->user();
         $now = now();
 
-        // شعب الطالب المقبول فيها
-        $studentSectionIds = SectionStudent::where('student_id', $user->id)
-            ->where('status', 'accepted')
-            ->pluck('section_id');
+        $studentSectionIds = $this->sectionIdsForStudentUser((int) $user->id);
 
         $query = Announcement::query()
             ->with(['user'])
@@ -155,13 +154,10 @@ class AnnouncementController extends Controller
             }
 
             if ($targetType === 'student') {
-                $studentId = $request->input('student_id');
+                $studentId = (int) $request->input('student_id');
                 $allowedSectionIds = $this->queryCoordinatorAccessibleSections($user)->pluck('id');
-                $exists = SectionStudent::where('student_id', $studentId)
-                    ->where('status', 'accepted')
-                    ->when($allowedSectionIds->isNotEmpty(), fn ($q) => $q->whereIn('section_id', $allowedSectionIds))
-                    ->exists();
-                if (!$exists) {
+                $allowedStudentIds = $this->studentUserIdsInSections($allowedSectionIds);
+                if (! $allowedStudentIds->contains($studentId)) {
                     return response()->json([
                         'message' => 'لا تملك صلاحية إرسال إعلان لهذا الطالب',
                         'errors' => ['student_id' => ['لا تملك صلاحية إرسال إعلان لهذا الطالب']],
@@ -221,11 +217,22 @@ class AnnouncementController extends Controller
         }
 
         if ($status === 'active') {
-            $this->dispatchNotifications($announcement);
+            try {
+                $this->dispatchNotifications($announcement->fresh(['targets', 'user']));
+            } catch (\Throwable $e) {
+                Log::error('announcement notifications failed on create', [
+                    'announcement_id' => $announcement->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
         }
 
+        $statusMessage = $status === 'active'
+            ? 'تم نشر الإعلان وإرسال الإشعارات للفئة المستهدفة'
+            : 'تم حفظ الإعلان كمسودة (لن يصل للطلاب حتى التفعيل)';
+
         return (new AnnouncementResource($announcement->load(['targets.section', 'targetStudent'])))
-            ->additional(['message' => 'تم إنشاء الإعلان بنجاح']);
+            ->additional(['message' => $statusMessage]);
     }
 
     public function show(Announcement $announcement)
@@ -290,10 +297,25 @@ class AnnouncementController extends Controller
         }
 
         if ($announcement->wasChanged('status') && $announcement->status === 'active') {
-            $this->dispatchNotifications($announcement);
+            if ($announcement->published_at === null) {
+                $announcement->published_at = now();
+                $announcement->save();
+            }
+            try {
+                $this->dispatchNotifications($announcement->fresh(['targets', 'user']));
+            } catch (\Throwable $e) {
+                Log::error('announcement notifications failed on update', [
+                    'announcement_id' => $announcement->id,
+                    'message' => $e->getMessage(),
+                ]);
+            }
         }
 
-        return new AnnouncementResource($announcement->load('targets'));
+        $extraMessage = $announcement->wasChanged('status') && $announcement->status === 'active'
+            ? ['message' => 'تم تفعيل الإعلان وإرسال الإشعارات']
+            : [];
+
+        return (new AnnouncementResource($announcement->load('targets')))->additional($extraMessage);
     }
 
     public function destroy(Request $request, Announcement $announcement)
@@ -329,7 +351,6 @@ class AnnouncementController extends Controller
 
         try {
             $sections = $this->queryCoordinatorAccessibleSections($user)
-                ->withCount('acceptedSectionStudents as active_students_count')
                 ->get()
                 ->map(fn ($s) => [
                     'id' => $s->id,
@@ -337,7 +358,7 @@ class AnnouncementController extends Controller
                     'course_name' => $s->course?->name,
                     'academic_year' => $s->academic_year,
                     'semester' => $s->semester,
-                    'students_count' => (int) $s->active_students_count,
+                    'students_count' => $this->studentUserIdsInSections([$s->id])->count(),
                 ]);
         } catch (\Throwable $e) {
             Log::error('coordinatorSections failed', [
@@ -366,22 +387,37 @@ class AnnouncementController extends Controller
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        $search = $request->input('search', '');
+        if (! $user->department_id && $roleName !== 'admin') {
+            return response()->json([
+                'data' => [],
+                'message' => 'حسابك غير مربوط بقسم أكاديمي.',
+            ]);
+        }
 
+        $search = trim((string) $request->input('search', ''));
         $accessibleSectionIds = $this->queryCoordinatorAccessibleSections($user)->pluck('id');
+        $studentIds = $this->studentUserIdsInSections($accessibleSectionIds);
 
-        $query = User::whereHas('sectionStudents', function ($q) use ($accessibleSectionIds) {
-            $q->where('status', 'accepted')
-                ->when($accessibleSectionIds->isNotEmpty(), fn ($sq) => $sq->whereIn('section_id', $accessibleSectionIds))
-                ->whereHas('section', fn ($sec) => $sec->whereNull('archived_at'));
-        })
-        ->select('id', 'name', 'email')
-        ->orderBy('name');
+        if ($studentIds->isEmpty()) {
+            return response()->json([
+                'data' => [],
+                'message' => 'لا يوجد طلاب مسجلون في شعب قسمك حالياً (تحقق من التوزيع على الشعب).',
+            ]);
+        }
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+        $query = User::query()
+            ->whereIn('id', $studentIds)
+            ->where('status', 'active')
+            ->whereHas('role', fn ($q) => $q->where('name', 'student'))
+            ->select('id', 'name', 'email', 'university_id')
+            ->orderBy('name');
+
+        if ($search !== '') {
+            $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('university_id', 'like', $term);
             });
         }
 
@@ -389,6 +425,7 @@ class AnnouncementController extends Controller
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
+            'university_id' => $u->university_id,
         ]);
 
         return response()->json(['data' => $students]);
@@ -426,40 +463,51 @@ class AnnouncementController extends Controller
     protected function dispatchNotifications(Announcement $announcement): void
     {
         $notificationService = app(NotificationService::class);
+        $announcement->loadMissing('user');
+        $creator = $announcement->user;
+
         $title = $announcement->title;
         $message = 'إعلان جديد: ' . $title;
         $data = [
             'announcement_id' => $announcement->id,
             'type' => 'announcement',
             'title' => $title,
+            'content' => $announcement->content,
         ];
 
         $targetType = $announcement->target_type ?? 'all_students';
 
-        // إعلان لكل الطلاب
+        // إعلان لكل الطلاب (ضمن قسم المنسق إن وُجد)
         if ($announcement->all_students || $targetType === 'all_students') {
-            $notificationService->sendToRole('student', 'announcement', $message, $data);
+            $studentsQuery = User::query()
+                ->where('status', 'active')
+                ->whereHas('role', fn ($q) => $q->where('name', 'student'));
+
+            if ($creator && in_array($creator->role?->name, ['coordinator', 'training_coordinator'], true) && $creator->department_id) {
+                $studentsQuery->where('department_id', $creator->department_id);
+            }
+
+            foreach ($studentsQuery->get() as $student) {
+                $notificationService->sendToUser($student, 'announcement', $message, $data, Announcement::class, $announcement->id);
+            }
         }
 
         // إعلان لطالب معين
         if ($targetType === 'student' && $announcement->target_student_id) {
             $student = User::find($announcement->target_student_id);
             if ($student) {
-                $notificationService->sendToUser($student, 'announcement', $message, $data);
+                $notificationService->sendToUser($student, 'announcement', $message, $data, Announcement::class, $announcement->id);
             }
         }
 
         // إعلان لشعب معينة — إشعار لطلاب هذه الشعب
         if ($targetType === 'sections') {
             $sectionIds = $announcement->targets()->whereNotNull('section_id')->pluck('section_id');
-            if ($sectionIds->isNotEmpty()) {
-                $studentIds = SectionStudent::whereIn('section_id', $sectionIds)
-                    ->where('status', 'accepted')
-                    ->pluck('student_id')
-                    ->unique();
-                $students = User::whereIn('id', $studentIds)->get();
+            $studentIds = $this->studentUserIdsInSections($sectionIds);
+            if ($studentIds->isNotEmpty()) {
+                $students = User::whereIn('id', $studentIds)->where('status', 'active')->get();
                 foreach ($students as $student) {
-                    $notificationService->sendToUser($student, 'announcement', $message, $data);
+                    $notificationService->sendToUser($student, 'announcement', $message, $data, Announcement::class, $announcement->id);
                 }
             }
         }
@@ -485,5 +533,43 @@ class AnnouncementController extends Controller
                 }
             }
         }
+    }
+
+    /**
+     * طلاب الشعب: من section_students (مقبول) ومن enrollments (نشط) — كما في التوزيع الفعلي.
+     */
+    protected function studentUserIdsInSections(Collection|array $sectionIds): Collection
+    {
+        $ids = collect($sectionIds)->filter()->map(fn ($id) => (int) $id)->unique()->values();
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        $fromPivot = SectionStudent::query()
+            ->whereIn('section_id', $ids)
+            ->where('status', 'accepted')
+            ->pluck('student_id');
+
+        $fromEnrollments = Enrollment::query()
+            ->whereIn('section_id', $ids)
+            ->where('status', 'active')
+            ->pluck('user_id');
+
+        return $fromPivot->merge($fromEnrollments)->map(fn ($id) => (int) $id)->unique()->values();
+    }
+
+    protected function sectionIdsForStudentUser(int $studentUserId): Collection
+    {
+        $fromPivot = SectionStudent::query()
+            ->where('student_id', $studentUserId)
+            ->where('status', 'accepted')
+            ->pluck('section_id');
+
+        $fromEnrollments = Enrollment::query()
+            ->where('user_id', $studentUserId)
+            ->where('status', 'active')
+            ->pluck('section_id');
+
+        return $fromPivot->merge($fromEnrollments)->map(fn ($id) => (int) $id)->unique()->values();
     }
 }
