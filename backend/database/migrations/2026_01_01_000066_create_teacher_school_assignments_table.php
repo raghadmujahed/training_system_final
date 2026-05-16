@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * @deprecated Prefer 2026_01_01_000066. Kept for migration history; no-op if table exists.
-     */
     public function up(): void
     {
         if (Schema::hasTable('teacher_school_assignments')) {

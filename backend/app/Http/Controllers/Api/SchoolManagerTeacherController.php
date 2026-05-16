@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\TrainingSite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 
 class SchoolManagerTeacherController extends Controller
@@ -27,29 +29,39 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
-        $teachers = TeacherSchoolAssignment::active()
-            ->forSchool($schoolManager->training_site_id)
-            ->with(['teacher' => function ($query) {
-                $query->select('id', 'name', 'email', 'phone', 'university_id');
-            }])
-            ->get()
-            ->map(function ($assignment) {
-                return [
-                    'id' => $assignment->teacher->id,
-                    'name' => $assignment->teacher->name,
-                    'email' => $assignment->teacher->email,
-                    'phone' => $assignment->teacher->phone,
-                    'university_id' => $assignment->teacher->university_id,
-                    'start_date' => $assignment->start_date->format('Y-m-d'),
-                    'academic_year' => $assignment->academic_year,
-                    'status' => $assignment->status,
-                    'assignment_id' => $assignment->id,
-                ];
-            });
+        try {
+            $teachers = TeacherSchoolAssignment::active()
+                ->forSchool($schoolManager->training_site_id)
+                ->with(['teacher' => function ($query) {
+                    $query->select('id', 'name', 'email', 'phone', 'university_id');
+                }])
+                ->get()
+                ->map(function ($assignment) {
+                    return [
+                        'id' => $assignment->teacher->id,
+                        'name' => $assignment->teacher->name,
+                        'email' => $assignment->teacher->email,
+                        'phone' => $assignment->teacher->phone,
+                        'university_id' => $assignment->teacher->university_id,
+                        'start_date' => $assignment->start_date->format('Y-m-d'),
+                        'academic_year' => $assignment->academic_year,
+                        'status' => $assignment->status,
+                        'assignment_id' => $assignment->id,
+                    ];
+                });
+        } catch (QueryException $e) {
+            Log::error('school-teachers index failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [],
+                'message' => 'جدول تعيينات المعلمين غير جاهز بعد. يرجى تشغيل migrations على الخادم.',
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $teachers
+            'data' => $teachers,
         ]);
     }
 
@@ -68,38 +80,47 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
-        $assignments = TeacherSchoolAssignment::forSchool($schoolManager->training_site_id)
-            ->with(['teacher' => function ($query) {
-                $query->select('id', 'name', 'email', 'university_id');
-            }, 'createdBy' => function ($query) {
-                $query->select('id', 'name');
-            }])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($assignment) {
-                return [
-                    'id' => $assignment->id,
-                    'teacher' => [
-                        'id' => $assignment->teacher->id,
-                        'name' => $assignment->teacher->name,
-                        'email' => $assignment->teacher->email,
-                        'university_id' => $assignment->teacher->university_id,
-                    ],
-                    'start_date' => $assignment->start_date->format('Y-m-d'),
-                    'end_date' => $assignment->end_date?->format('Y-m-d'),
-                    'academic_year' => $assignment->academic_year,
-                    'status' => $assignment->status,
-                    'action_type' => $assignment->action_type,
-                    'reason' => $assignment->reason,
-                    'notes' => $assignment->notes,
-                    'created_by' => $assignment->createdBy?->name,
-                    'created_at' => $assignment->created_at->format('Y-m-d H:i:s'),
-                ];
-            });
+        try {
+            $assignments = TeacherSchoolAssignment::forSchool($schoolManager->training_site_id)
+                ->with(['teacher' => function ($query) {
+                    $query->select('id', 'name', 'email', 'university_id');
+                }, 'createdBy' => function ($query) {
+                    $query->select('id', 'name');
+                }])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($assignment) {
+                    return [
+                        'id' => $assignment->id,
+                        'teacher' => [
+                            'id' => $assignment->teacher->id,
+                            'name' => $assignment->teacher->name,
+                            'email' => $assignment->teacher->email,
+                            'university_id' => $assignment->teacher->university_id,
+                        ],
+                        'start_date' => $assignment->start_date->format('Y-m-d'),
+                        'end_date' => $assignment->end_date?->format('Y-m-d'),
+                        'academic_year' => $assignment->academic_year,
+                        'status' => $assignment->status,
+                        'action_type' => $assignment->action_type,
+                        'reason' => $assignment->reason,
+                        'notes' => $assignment->notes,
+                        'created_by' => $assignment->createdBy?->name,
+                        'created_at' => $assignment->created_at->format('Y-m-d H:i:s'),
+                    ];
+                });
+        } catch (QueryException $e) {
+            Log::error('teacher-assignments history failed', ['error' => $e->getMessage()]);
+
+            return response()->json([
+                'success' => true,
+                'data' => [],
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $assignments
+            'data' => $assignments,
         ]);
     }
 
