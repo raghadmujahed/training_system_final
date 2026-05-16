@@ -329,9 +329,7 @@ class AnnouncementController extends Controller
 
         try {
             $sections = $this->queryCoordinatorAccessibleSections($user)
-                ->withCount(['students as active_students_count' => function ($q) {
-                    $q->where('section_students.status', 'accepted');
-                }])
+                ->withCount('acceptedSectionStudents as active_students_count')
                 ->get()
                 ->map(fn ($s) => [
                     'id' => $s->id,

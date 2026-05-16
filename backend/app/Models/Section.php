@@ -74,6 +74,12 @@ class Section extends Model
         return $this->students()->wherePivot('status', 'accepted');
     }
 
+    /** تسجيلات مقبولة في الشعبة (للعد دون أعمدة pivot في الاستعلامات الفرعية). */
+    public function acceptedSectionStudents()
+    {
+        return $this->hasMany(SectionStudent::class)->where('status', 'accepted');
+    }
+
     public function getActiveStudentsCountAttribute()
     {
         return $this->activeStudents()->count();
