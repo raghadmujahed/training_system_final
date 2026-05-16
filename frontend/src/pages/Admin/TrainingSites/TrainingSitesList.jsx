@@ -72,6 +72,16 @@ export default function TrainingSitesList() {
     return labels[level] || level || 'غير محدد';
   };
 
+  const getLinkedAccountStatus = (site) => {
+    if (site.school_account) {
+      return { linked: true, label: site.school_account.name || 'حساب مرتبط', email: site.school_account.email, source: 'school_account' };
+    }
+    if (site.manager) {
+      return { linked: true, label: site.manager.name, email: site.manager.email, source: 'manager' };
+    }
+    return { linked: false, label: 'لا يوجد حساب مرتبط', email: null, source: null };
+  };
+
   const getGenderLabel = (classification) => {
     const labels = {
       'boys': 'ذكور',
@@ -89,7 +99,7 @@ export default function TrainingSitesList() {
         <h1>مواقع التدريب</h1>
         <div>
           <Link to="/admin/training-sites/staff" className="btn-secondary me-2">إدارة الكوادر</Link>
-          <Link to="/admin/training-sites/without-manager" className="btn-secondary me-2">المدارس بدون مدير</Link>
+          <Link to="/admin/training-sites/without-manager" className="btn-secondary me-2">المدارس بدون حساب</Link>
           <Link to="/admin/training-sites/create" className="btn-primary">+ إضافة موقع</Link>
         </div>
       </div>
@@ -102,7 +112,7 @@ export default function TrainingSitesList() {
             <th>المرحلة الدراسية</th>
             <th>رقم الهاتف</th>
             <th>رقم المحمول</th>
-            <th>مدير المدرسة</th>
+            <th>حساب المدرسة</th>
             <th>الحالة</th>
             <th>إجراءات</th>
           </tr>
@@ -116,7 +126,20 @@ export default function TrainingSitesList() {
               <td>{s.school_level === 'lower' ? 'أساسية' : s.school_level === 'upper' ? 'ثانوية' : s.school_level === 'both' ? 'أساسية وثانوية' : '-'}</td>
               <td>{s.phone || '-'}</td>
               <td>{s.mobile || '-'}</td>
-              <td>{s.manager ? s.manager.name : 'غير مرتبط بمدير'}</td>
+              <td>
+                {(() => {
+                  const status = getLinkedAccountStatus(s);
+                  if (status.linked) {
+                    return (
+                      <div>
+                        <span className="badge badge-success">حساب مرتبط</span>
+                        <div className="text-sm text-gray-600 mt-1">{status.email || status.label}</div>
+                      </div>
+                    );
+                  }
+                  return <span className="badge badge-warning">لا يوجد حساب مرتبط</span>;
+                })()}
+              </td>
               <td>
                 <span className={`badge ${s.is_active ? 'badge-success' : 'badge-secondary'}`}>
                   {s.is_active ? 'نشط' : 'غير نشط'}
@@ -130,13 +153,13 @@ export default function TrainingSitesList() {
                   عرض التفاصيل
                 </button>
                 <Link to={`/admin/training-sites/edit/${s.id}`} className="btn-sm me-1">تعديل</Link>
-                {!s.manager && (
+                {!s.school_account && !s.manager && (
                   <Link 
                     to={`/admin/training-sites/without-manager`} 
                     className="btn-sm warning"
-                    title="ربط مدير"
+                    title="ربط حساب مدرسة"
                   >
-                    ربط مدير
+                    ربط حساب
                   </Link>
                 )}
                 <button onClick={() => handleDelete(s.id)} className="btn-sm danger">حذف</button>
@@ -215,18 +238,39 @@ export default function TrainingSitesList() {
                     </div>
                   </div>
 
-                  {/* Manager Information */}
+                  {/* Account Information */}
                   <div className="col-md-6">
-                    <h5 className="section-title">مدير المدرسة</h5>
-                    <div className="detail-item">
-                      <strong>اسم المدير:</strong> {selectedSite.manager ? selectedSite.manager.name : 'غير مرتبط بمدير'}
-                    </div>
-                    <div className="detail-item">
-                      <strong>حالة الربط:</strong> 
-                      <span className={`badge ${selectedSite.manager ? 'badge-success' : 'badge-warning'} me-2`}>
-                        {selectedSite.manager ? 'مرتبط بمدير' : 'غير مرتبط بمدير'}
-                      </span>
-                    </div>
+                    <h5 className="section-title">حساب المدرسة</h5>
+                    {(() => {
+                      const status = getLinkedAccountStatus(selectedSite);
+                      if (status.linked) {
+                        return (
+                          <>
+                            <div className="detail-item">
+                              <strong>البريد الإلكتروني:</strong> {status.email || 'غير محدد'}
+                            </div>
+                            <div className="detail-item">
+                              <strong>اسم الحساب:</strong> {status.label}
+                            </div>
+                            <div className="detail-item">
+                              <strong>حالة الحساب:</strong>
+                              <span className="badge badge-success me-2">حساب نشط مرتبط</span>
+                            </div>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <div className="detail-item">
+                            <strong>حالة الحساب:</strong>
+                            <span className="badge badge-warning me-2">لا يوجد حساب تسجيل دخول مرتبط</span>
+                          </div>
+                          <div className="detail-item">
+                            <small className="text-muted">يمكن ربط حساب مدرسة من صفحة المدارس غير المرتبطة</small>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* System Information */}

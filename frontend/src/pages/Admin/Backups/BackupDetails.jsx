@@ -16,13 +16,17 @@ export default function BackupDetails() {
     const fetchDetails = async () => {
       try {
         const result = await getBackupDetails(id);
-        // التعامل مع هيكل استجابة Laravel Resource
         const backupData = result?.data || result;
-        console.log("Backup data:", backupData);
         setData(backupData);
       } catch (err) {
-        console.error(err);
-        setError("فشل تحميل تفاصيل النسخة الاحتياطية");
+        const status = err?.response?.status;
+        if (status === 403) {
+          setError("لا تملك صلاحية عرض تفاصيل النسخ الاحتياطية.");
+        } else if (status === 404) {
+          setError("النسخة الاحتياطية غير موجودة أو تم حذفها.");
+        } else {
+          setError("تعذر تحميل تفاصيل النسخة الاحتياطية.");
+        }
       } finally {
         setLoading(false);
       }
@@ -36,13 +40,27 @@ export default function BackupDetails() {
       toast.success("تم تحميل النسخة الاحتياطية بنجاح");
     } catch (err) {
       console.error(err);
-      setError("فشل تحميل النسخة");
+      toast.error("تعذر تحميل النسخة الاحتياطية.");
     }
   };
 
-  if (loading) return <LoadingSpinner size="page" text="جاري تحميل التفاصيل..." />;
-  if (error) return <div className="error">{error}</div>;
-  if (!data) return <div>لا توجد بيانات</div>;
+  if (loading) return <LoadingSpinner size="page" text="جاري تحميل تفاصيل النسخة الاحتياطية..." />;
+  if (error) return (
+    <div>
+      <div className="alert alert-danger mb-3" role="alert">{error}</div>
+      <button onClick={() => navigate("/admin/backups")} className="btn-secondary">
+        رجوع إلى القائمة
+      </button>
+    </div>
+  );
+  if (!data) return (
+    <div>
+      <p>لا توجد تفاصيل إضافية لهذه النسخة.</p>
+      <button onClick={() => navigate("/admin/backups")} className="btn-secondary">
+        رجوع إلى القائمة
+      </button>
+    </div>
+  );
 
   return (
     <div>

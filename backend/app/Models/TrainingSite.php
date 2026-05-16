@@ -53,6 +53,21 @@ class TrainingSite extends Model
         return $this->belongsTo(User::class, 'manager_id');
     }
 
+    /**
+     * The primary login account for this school/training site.
+     * This is a user with a manager role (school_manager, principal, psychology_center_manager)
+     * whose training_site_id points to this site.
+     * This is how most schools are linked — via the user's training_site_id field,
+     * NOT necessarily via manager_id on this model.
+     */
+    public function schoolAccount()
+    {
+        return $this->hasOne(User::class, 'training_site_id')
+            ->whereHas('role', function ($q) {
+                $q->whereIn('name', ['school_manager', 'principal', 'psychology_center_manager']);
+            });
+    }
+
     public function staff()
     {
         return $this->hasMany(User::class, 'training_site_id');

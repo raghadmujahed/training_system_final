@@ -42,19 +42,19 @@ export default function SchoolsWithoutManager() {
 
   const handleConfirmAssign = async () => {
     if (!selectedSchool || !selectedManager) {
-      toast.warning("يرجى اختيار مدير المدرسة");
+      toast.warning("يرجى اختيار حساب المدرسة أولاً");
       return;
     }
 
     setAssigningManager(selectedSchool.id);
     try {
       await assignManagerToSchool(selectedSchool.id, selectedManager);
-      toast.success("تم ربط المدير بالمدرسة بنجاح");
+      toast.success("تم ربط حساب المدرسة بنجاح");
       setShowAssignModal(false);
       fetchData(); // Refresh data
     } catch (err) {
       console.error(err);
-      toast.apiError(err, "حدث خطأ أثناء ربط المدير");
+      toast.apiError(err, "حدث خطأ أثناء ربط الحساب");
     } finally {
       setAssigningManager(null);
     }
@@ -90,8 +90,8 @@ export default function SchoolsWithoutManager() {
   return (
     <div className="schools-without-manager">
       <PageHeader 
-        title="المدارس بدون مدير" 
-        description="قائمة بالمدارس التي لم يتم ربطها بمدير مدرسة بعد"
+        title="المدارس بدون حساب مرتبط" 
+        description="قائمة بالمدارس التي لم يتم ربطها بحساب تسجيل دخول بعد"
       />
 
       <div className="card">
@@ -99,8 +99,8 @@ export default function SchoolsWithoutManager() {
           {schools.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">📋</div>
-              <h3>جميع المدارس مرتبطة بمدراء حالياً</h3>
-              <p>لا توجد مدارس بدون مدير في الوقت الحالي</p>
+              <h3>جميع المدارس مرتبطة بحسابات تسجيل دخول</h3>
+              <p>لا توجد مدارس بدون حساب مرتبط في الوقت الحالي</p>
               <Button onClick={() => window.history.back()}>
                 رجوع
               </Button>
@@ -147,7 +147,7 @@ export default function SchoolsWithoutManager() {
                           onClick={() => handleAssignManager(school)}
                           disabled={availableManagers.length === 0}
                         >
-                          ربط مدير
+                          ربط حساب
                         </Button>
                       </td>
                     </tr>
@@ -164,7 +164,7 @@ export default function SchoolsWithoutManager() {
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>ربط مدير بالمدرسة</h3>
+              <h3>ربط حساب بالمدرسة</h3>
               <button 
                 className="modal-close"
                 onClick={() => setShowAssignModal(false)}
@@ -183,21 +183,21 @@ export default function SchoolsWithoutManager() {
                 />
               </div>
               <div className="form-group">
-                <label>اختر مدير المدرسة</label>
+                <label>اختر حساب المدرسة</label>
                 <select 
                   value={selectedManager}
                   onChange={(e) => setSelectedManager(e.target.value)}
                   className="form-control"
                 >
-                  <option value="">اختر مدير المدرسة من الحسابات الموجودة</option>
+                  <option value="">اختر حساب تسجيل دخول المدرسة</option>
                   {availableManagers.map((manager) => (
                     <option key={manager.id} value={manager.id}>
-                      {manager.name} ({manager.email})
+                      {manager.name} — {manager.email}
                     </option>
                   ))}
                 </select>
                 <small className="form-help">
-                  يمكن ترك هذا الحقل فارغاً وربط المدرسة بمدير لاحقاً.
+                  يُعدّ هذا الحساب حساب تسجيل الدخول الخاص بالمدرسة. يمكن ربطه لاحقاً إذا لم يكن متوفراً الآن.
                 </small>
               </div>
             </div>

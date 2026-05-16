@@ -13,13 +13,13 @@ export default function CoursesList() {
   const [error, setError] = useState("");
   const { data: departments } = useDepartments();
   const [filterDept, setFilterDept] = useState("");
+  const perPage = 10;
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
-    per_page: 10,
+    per_page: perPage,
     total: 0,
   });
-  const [perPage, setPerPage] = useState(10);
 
   const fetchCourses = async (page = 1) => {
     setLoading(true);
@@ -48,7 +48,7 @@ export default function CoursesList() {
 
   useEffect(() => {
     fetchCourses(1);
-  }, [perPage, filterDept]);
+  }, [filterDept]);
 
   const goToPage = (page) => {
     if (page < 1 || page > pagination.last_page) return;
@@ -78,15 +78,6 @@ export default function CoursesList() {
           {departments.map(dept => (
             <option key={dept.id} value={dept.id}>{dept.name}</option>
           ))}
-        </select>
-        <select
-          value={perPage}
-          onChange={(e) => setPerPage(Number(e.target.value))}
-        >
-          <option value="10">10 مساقات</option>
-          <option value="20">20 مساق</option>
-          <option value="50">50 مساق</option>
-          <option value="100">100 مساق</option>
         </select>
         <Link to="/admin/courses/create" className="btn-primary">
           + إضافة مساق

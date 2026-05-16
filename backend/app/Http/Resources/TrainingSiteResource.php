@@ -54,6 +54,28 @@ class TrainingSiteResource extends JsonResource
                 }
             ),
             'manager_id' => $this->manager_id,
+            'school_account' => $this->when(
+                $this->relationLoaded('schoolAccount'),
+                function () {
+                    if (!$this->schoolAccount) {
+                        return null;
+                    }
+                    return [
+                        'id'     => $this->schoolAccount->id,
+                        'name'   => $this->schoolAccount->name,
+                        'email'  => $this->schoolAccount->email,
+                        'status' => $this->schoolAccount->status ?? 'active',
+                        'role'   => $this->schoolAccount->role?->name,
+                    ];
+                }
+            ),
+            'has_linked_account' => $this->when(
+                $this->relationLoaded('manager') || $this->relationLoaded('schoolAccount'),
+                function () {
+                    return ($this->relationLoaded('manager') && $this->manager !== null)
+                        || ($this->relationLoaded('schoolAccount') && $this->schoolAccount !== null);
+                }
+            ),
             'training_requests_count' => $this->when(
                 isset($this->training_requests_count),
                 (int) $this->training_requests_count

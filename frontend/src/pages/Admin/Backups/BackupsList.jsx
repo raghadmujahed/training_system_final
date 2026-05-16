@@ -135,14 +135,12 @@ export default function BackupsList() {
                 <td>{backup.size?.toLocaleString() || "غير معروف"} bytes</td>
                 <td>
                   <div className="flex gap-2">
-                    <Button
-                      as={Link}
+                    <Link
                       to={`/admin/backups/${backup.id}`}
-                      size="sm"
-                      variant="outline"
+                      className="inline-flex items-center justify-center gap-2 font-bold rounded-[12px] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 min-h-[38px] px-[14px] text-[0.9rem] border bg-white border-border text-text hover:bg-[#f7fafc] hover:border-border-strong hover:text-text focus:ring-primary/50 whitespace-nowrap"
                     >
                       عرض التفاصيل
-                    </Button>
+                    </Link>
                     <Button
                       size="sm"
                       variant="outline"

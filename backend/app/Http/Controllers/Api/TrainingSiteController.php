@@ -89,8 +89,8 @@ class TrainingSiteController extends Controller
             ]);
         }
 
-        // Always include manager relationship for the list
-        $query->with('manager');
+        // Always include manager and schoolAccount relationships for the list
+        $query->with(['manager', 'schoolAccount']);
 
         $sites = $query->latest()->paginate($request->per_page ?? 15);
         return TrainingSiteResource::collection($sites);
@@ -111,6 +111,7 @@ class TrainingSiteController extends Controller
     {
         $trainingSite->load([
             'manager',
+            'schoolAccount',
             'trainingAssignments' => function ($query) {
                 $query->with(['enrollment.user', 'teacher', 'academic_supervisor']);
             }
@@ -269,13 +270,27 @@ class TrainingSiteController extends Controller
 
     public function schoolsWithoutManager()
     {
+        // A school is considered "without linked account" when:
+        // 1. It has no manager_id set, AND
+        // 2. It has no user with a manager role (school_manager/principal/psychology_center_manager)
+        //    whose training_site_id points to this site.
+        $managerRoleIds = \DB::table('roles')
+            ->whereIn('name', ['school_manager', 'principal', 'psychology_center_manager'])
+            ->pluck('id');
+
+        $linkedSiteIds = \DB::table('users')
+            ->whereNotNull('training_site_id')
+            ->whereIn('role_id', $managerRoleIds)
+            ->whereNull('deleted_at')
+            ->pluck('training_site_id');
+
         $schools = TrainingSite::whereNull('manager_id')
-            ->orWhere('manager_id', '')
-            ->with('manager')
+            ->whereNotIn('id', $linkedSiteIds)
+            ->with(['manager', 'schoolAccount'])
             ->latest()
             ->get();
 
-        return response()->json($schools);
+        return TrainingSiteResource::collection($schools);
     }
 
     public function availableSchoolManagers()
