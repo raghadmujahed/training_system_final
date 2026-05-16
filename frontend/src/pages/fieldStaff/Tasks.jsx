@@ -28,7 +28,11 @@ import {
   Download,
   MessageSquare,
   Star,
+  Eye,
+  FileText,
 } from "lucide-react";
+import { openTaskSubmissionFile } from "../../utils/taskSubmissionFile";
+import BundleSubmittedPanel from "./components/BundleSubmittedPanel";
 
 const STATUS_MAP = {
   pending: { label: "قيد الانتظار", cls: "badge-warning" },
@@ -113,6 +117,9 @@ export default function FieldStaffTasks() {
   const [bundleTabByKey, setBundleTabByKey] = useState({});
   const [bundleGradeDrafts, setBundleGradeDrafts] = useState({});
   const [bundleGradesSaving, setBundleGradesSaving] = useState({});
+  const [bundleSelectedStudentId, setBundleSelectedStudentId] = useState({});
+  const [bundleOpeningFileId, setBundleOpeningFileId] = useState(null);
+  const [bundleGradeSavingId, setBundleGradeSavingId] = useState(null);
 
   const displayRows = useMemo(() => buildTaskDisplayRows(items), [items]);
 
@@ -167,21 +174,69 @@ export default function FieldStaffTasks() {
     }
   }
 
-  async function handleGrade(submissionId) {
+  const taskMaxScore = (task) => {
+    const w = task?.grading_weight;
+    return w != null && w !== "" && Number(w) > 0 ? Number(w) : 100;
+  };
+
+  async function handleGrade(submissionId, maxScore = 100) {
     setGradingSaving(true);
     setGradingError("");
+    const score = gradingForm.grade === "" ? NaN : Number(gradingForm.grade);
+    if (Number.isNaN(score) || score < 0 || score > maxScore) {
+      setGradingError(`أدخل علامة بين 0 و ${maxScore}`);
+      setGradingSaving(false);
+      return;
+    }
     try {
-      await gradeTaskSubmission(submissionId, {
-        grade: gradingForm.grade ? Number(gradingForm.grade) : null,
-        feedback: gradingForm.feedback || null,
-        status: "graded",
-      });
+      if (isAcademicSupervisor) {
+        await apiClient.post(`/supervisor/task-submissions/${submissionId}/grade`, {
+          score,
+          feedback: gradingForm.feedback || null,
+        });
+      } else {
+        await gradeTaskSubmission(submissionId, {
+          grade: score,
+          feedback: gradingForm.feedback || null,
+          status: "graded",
+        });
+      }
       setGradingForm({ grade: "", feedback: "" });
       await load();
     } catch (e) {
       setGradingError(e?.response?.data?.message || "فشل التقييم");
     } finally {
       setGradingSaving(false);
+    }
+  }
+
+  async function handleBundleStudentGrade(dk, userId, submissionId, maxScore) {
+    const draftKey = `${dk}:${userId}`;
+    const draft = bundleGradeDrafts[draftKey] || { score: "", feedback: "" };
+    const score = draft.score === "" ? NaN : Number(draft.score);
+    if (Number.isNaN(score) || score < 0 || score > maxScore) {
+      setBundleOverviewError((prev) => ({
+        ...prev,
+        [dk]: `أدخل علامة بين 0 و ${maxScore}`,
+      }));
+      return;
+    }
+    setBundleGradeSavingId(submissionId);
+    setBundleOverviewError((prev) => ({ ...prev, [dk]: "" }));
+    try {
+      await apiClient.post(`/supervisor/task-submissions/${submissionId}/grade`, {
+        score,
+        feedback: draft.feedback || null,
+      });
+      await loadBundleOverview(dk);
+      await load();
+    } catch (e) {
+      setBundleOverviewError((prev) => ({
+        ...prev,
+        [dk]: e?.response?.data?.message || "فشل حفظ العلامة",
+      }));
+    } finally {
+      setBundleGradeSavingId(null);
     }
   }
 
@@ -207,6 +262,10 @@ export default function FieldStaffTasks() {
         return next;
       });
       setBundleTabByKey((prev) => ({ ...prev, [dk]: prev[dk] || "submitted" }));
+      const firstSubmitted = payload?.submitted?.[0]?.user_id;
+      if (firstSubmitted) {
+        setBundleSelectedStudentId((prev) => ({ ...prev, [dk]: firstSubmitted }));
+      }
     } catch (e) {
       setBundleOverviewError((prev) => ({
         ...prev,
@@ -432,6 +491,9 @@ export default function FieldStaffTasks() {
               const ovLoading = bundleOverviewLoading[dk];
               const ovErr = bundleOverviewError[dk];
               const allStudents = ov ? [...(ov.submitted || []), ...(ov.not_submitted || [])] : [];
+              const bundleMaxScore = taskMaxScore({
+                grading_weight: ov?.bundle?.grading_weight ?? t.grading_weight,
+              });
 
               return (
                 <div className="col-12" key={`bundle-${dk}`}>
@@ -537,52 +599,64 @@ export default function FieldStaffTasks() {
                               ))}
                             </div>
 
-                            {tab === "submitted" && (
-                              <div className="table-responsive">
-                                <table className="table table-bordered table-sm align-middle mb-0 bg-white">
-                                  <thead className="table-light">
-                                    <tr>
-                                      <th>الطالب</th>
-                                      <th>تاريخ ووقت التسليم</th>
-                                      <th>المرفق</th>
-                                      <th>حالة التسليم</th>
-                                      <th>العلامة الحالية</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {(ov.submitted || []).length === 0 ? (
-                                      <tr>
-                                        <td colSpan={5} className="text-muted text-center py-3">
-                                          لا يوجد طلبة سلّموا بعد.
-                                        </td>
-                                      </tr>
-                                    ) : (
-                                      (ov.submitted || []).map((r) => (
-                                        <tr key={r.user_id}>
-                                          <td>{r.name}</td>
-                                          <td>{r.submission?.submitted_at || "—"}</td>
-                                          <td>
-                                            {r.submission?.file_url ? (
-                                              <a href={r.submission.file_url} target="_blank" rel="noopener noreferrer">
-                                                تحميل
-                                              </a>
-                                            ) : (
-                                              "—"
-                                            )}
-                                          </td>
-                                          <td>{r.submission?.status || "—"}</td>
-                                          <td>
-                                            {r.submission?.grade != null || r.submission?.score != null
-                                              ? `${r.submission.grade ?? r.submission.score}/100`
-                                              : "—"}
-                                          </td>
-                                        </tr>
-                                      ))
-                                    )}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
+                            {tab === "submitted" && (() => {
+                              const submittedList = ov.submitted || [];
+                              const maxScore = taskMaxScore({
+                                grading_weight: ov.bundle?.grading_weight ?? t.grading_weight,
+                              });
+                              const selectedId =
+                                bundleSelectedStudentId[dk] ?? submittedList[0]?.user_id ?? null;
+                              const selectedRow =
+                                submittedList.find((r) => r.user_id === selectedId) ?? null;
+                              const draftKey = selectedRow ? `${dk}:${selectedRow.user_id}` : "";
+                              const draft = draftKey
+                                ? bundleGradeDrafts[draftKey] || { score: "", feedback: "" }
+                                : { score: "", feedback: "" };
+
+                              return (
+                                <BundleSubmittedPanel
+                                  submittedList={submittedList}
+                                  maxScore={maxScore}
+                                  selectedId={selectedId}
+                                  onSelectStudent={(uid) =>
+                                    setBundleSelectedStudentId((prev) => ({ ...prev, [dk]: uid }))
+                                  }
+                                  selectedRow={selectedRow}
+                                  draft={draft}
+                                  onDraftChange={(next) =>
+                                    setBundleGradeDrafts((prev) => ({
+                                      ...prev,
+                                      [draftKey]: next,
+                                    }))
+                                  }
+                                  onGrade={(userId, submissionId) =>
+                                    handleBundleStudentGrade(dk, userId, submissionId, maxScore)
+                                  }
+                                  gradeSavingId={bundleGradeSavingId}
+                                  openingFileId={bundleOpeningFileId}
+                                  fileError={ovErr}
+                                  onOpenFile={async (submission) => {
+                                    if (!submission?.id) return;
+                                    setBundleOpeningFileId(submission.id);
+                                    try {
+                                      const name = String(submission.file_path || "solution")
+                                        .split("/")
+                                        .pop();
+                                      await openTaskSubmissionFile(submission.id, name, {
+                                        preferSupervisor: true,
+                                      });
+                                    } catch (err) {
+                                      setBundleOverviewError((prev) => ({
+                                        ...prev,
+                                        [dk]: err?.message || "تعذر فتح الملف",
+                                      }));
+                                    } finally {
+                                      setBundleOpeningFileId(null);
+                                    }
+                                  }}
+                                />
+                              );
+                            })()}
 
                             {tab === "not_submitted" && (
                               <div className="table-responsive">
@@ -616,7 +690,7 @@ export default function FieldStaffTasks() {
                             {tab === "grades" && (
                               <div>
                                 <p className="text-muted text-[0.9rem] mb-3">
-                                  أدخل العلامة (0–100) و/أو ملاحظات لكل طالب، ثم احفظ دفعة واحدة.
+                                  أدخل العلامة (0–{bundleMaxScore}) و/أو ملاحظات لكل طالب، ثم احفظ دفعة واحدة.
                                 </p>
                                 <div className="table-responsive">
                                   <table className="table table-bordered table-sm align-middle mb-3 bg-white">
@@ -624,7 +698,7 @@ export default function FieldStaffTasks() {
                                       <tr>
                                         <th>الطالب</th>
                                         <th>حالة التسليم</th>
-                                        <th>العلامة (0–100)</th>
+                                        <th>العلامة (0–{bundleMaxScore})</th>
                                         <th>ملاحظات</th>
                                       </tr>
                                     </thead>
@@ -640,7 +714,7 @@ export default function FieldStaffTasks() {
                                               <input
                                                 type="number"
                                                 min={0}
-                                                max={100}
+                                                max={bundleMaxScore}
                                                 className="form-control-custom form-control-sm"
                                                 value={draft.score}
                                                 onChange={(e) =>
@@ -702,6 +776,7 @@ export default function FieldStaffTasks() {
             const t = row.task;
             const isExpanded = expandedTaskId === t.id;
             const submission = t.submissions?.[0] || null;
+            const maxScore = taskMaxScore(t);
             const isOverdue = t.due_date && new Date(t.due_date) < new Date() && t.status !== "graded";
             return (
               <div className="col-12" key={t.id}>
@@ -785,17 +860,35 @@ export default function FieldStaffTasks() {
                             )}
                           </div>
 
-                          {submission.file_url && (
+                          {(submission.file_url || submission.file_path) && submission.id && (
                             <div className="mb-2">
-                              <a
-                                href={submission.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="d-inline-flex align-items-center gap-1 text-[var(--primary,#4f46e5)] text-[0.9rem]"
-                              >
-                                <Download size={14} />
-                                تحميل ملف الطالب
-                              </a>
+                              {isAcademicSupervisor ? (
+                                <button
+                                  type="button"
+                                  className="btn-primary-custom btn-sm-custom d-inline-flex align-items-center gap-2"
+                                  onClick={async () => {
+                                    try {
+                                      const name = String(submission.file_path || "solution").split("/").pop();
+                                      await openTaskSubmissionFile(submission.id, name, { preferSupervisor: true });
+                                    } catch {
+                                      setGradingError("تعذر فتح الملف");
+                                    }
+                                  }}
+                                >
+                                  <Eye size={14} />
+                                  عرض / تحميل الحل
+                                </button>
+                              ) : (
+                                <a
+                                  href={submission.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="d-inline-flex align-items-center gap-1 text-[var(--primary,#4f46e5)] text-[0.9rem]"
+                                >
+                                  <Download size={14} />
+                                  تحميل ملف الطالب
+                                </a>
+                              )}
                             </div>
                           )}
 
@@ -806,11 +899,13 @@ export default function FieldStaffTasks() {
                             </div>
                           )}
 
-                          {t.status === "graded" && submission.grade != null && (
+                          {(submission.grade != null || submission.score != null) && (
                             <div className="d-flex align-items-center gap-2 mb-1">
                               <Star size={16} className="text-warning" />
-                              <strong>الدرجة:</strong>{" "}
-                              <span className="badge-custom badge-success">{submission.grade}/100</span>
+                              <strong>العلامة:</strong>{" "}
+                              <span className="badge-custom badge-success">
+                                {submission.grade ?? submission.score}/{maxScore}
+                              </span>
                             </div>
                           )}
                           {t.status === "graded" && submission.feedback && (
@@ -833,7 +928,10 @@ export default function FieldStaffTasks() {
                       )}
 
                       {/* Grading form - show if submitted but not yet graded */}
-                      {submission && submission.submitted_at && submission.grade == null && (
+                      {submission &&
+                        submission.submitted_at &&
+                        submission.grade == null &&
+                        submission.score == null && (
                         <div className="p-3 rounded bg-[#fefce8] border border-[#fde68a]">
                           <h6 className="d-flex align-items-center gap-2 mb-3">
                             <Star size={16} className="text-warning" />
@@ -848,11 +946,12 @@ export default function FieldStaffTasks() {
                           <div className="row g-3">
                             <div className="col-md-3">
                               <div className="form-group">
-                                <label className="form-label">الدرجة (0-100)</label>
+                                <label className="form-label">العلامة (0–{maxScore})</label>
                                 <input
                                   type="number"
                                   min="0"
-                                  max="100"
+                                  max={maxScore}
+                                  step={0.5}
                                   className="form-control-custom"
                                   value={gradingForm.grade}
                                   onChange={(e) => setGradingForm((prev) => ({ ...prev, grade: e.target.value }))}
@@ -877,7 +976,7 @@ export default function FieldStaffTasks() {
                                 type="button"
                                 className="btn-primary-custom d-inline-flex align-items-center gap-2"
                                 disabled={gradingSaving}
-                                onClick={() => handleGrade(submission.id)}
+                                onClick={() => handleGrade(submission.id, maxScore)}
                               >
                                 {gradingSaving ? (
                                   <><LoadingSpinner size="button" /> جاري التقييم...</>

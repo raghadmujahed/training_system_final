@@ -1553,6 +1553,7 @@ class SupervisorWorkspaceController extends Controller
                 'target_ids' => $lead->target_ids ?? [],
                 'task_type' => $lead->task_type,
                 'status' => $lead->status,
+                'grading_weight' => $lead->grading_weight,
                 'task_count' => $tasks->count(),
             ],
             'submitted' => $submitted,

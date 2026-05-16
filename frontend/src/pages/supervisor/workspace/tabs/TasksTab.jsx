@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { apiClient, itemsFromPagedResponse, unwrapSupervisorList } from "../../../../services/api";
 import { getApiOrigin } from "../../../../utils/apiOrigin";
 import { openTaskSubmissionFile } from "../../../../utils/taskSubmissionFile";
+import BundleSubmittedPanel from "../../../fieldStaff/components/BundleSubmittedPanel";
 import { useToast } from "../../../../components/Toast";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
 
@@ -61,7 +62,7 @@ export default function TasksTab({ studentId }) {
   const [savingGrade, setSavingGrade] = useState(false);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [submissionsError, setSubmissionsError] = useState("");
-  const [openingFile, setOpeningFile] = useState(false);
+  const [openingFileId, setOpeningFileId] = useState(null);
   
   // الفلاتر
   const [searchTerm, setSearchTerm] = useState("");
@@ -109,6 +110,17 @@ export default function TasksTab({ studentId }) {
       setSelectedStudentIds(new Set([sid]));
     }
   }, [studentId]);
+
+  useEffect(() => {
+    if (!showSubmissionsModal || submissionsLoading || !boardRows.length) return;
+    const submitted = boardRows.filter((r) => r.submission_id || r.file_path);
+    if (!submitted.length) return;
+    const sid = Number(selectedBoardStudentId);
+    const inList = submitted.some((r) => Number(r.student_id) === sid);
+    if (!inList) {
+      handleBoardStudentChange(String(submitted[0].student_id));
+    }
+  }, [boardRows, selectedBoardStudentId, showSubmissionsModal, submissionsLoading]);
 
   const toggleStudent = (id) => {
     setSelectedStudentIds((prev) => {
@@ -679,7 +691,7 @@ export default function TasksTab({ studentId }) {
       {/* Modal: حلول الطلاب والتقييم */}
       {showSubmissionsModal && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold m-0">حلول الطلاب والتقييم</h3>
@@ -704,26 +716,6 @@ export default function TasksTab({ studentId }) {
                 العلامة الكاملة: {gradingMax}
               </div>
 
-              {boardRows.length > 0 && (
-                <div className="mb-4">
-                  <label className="form-label-custom block mb-1">اختر الطالب</label>
-                  <select
-                    className="form-select-custom w-full"
-                    value={selectedBoardStudentId}
-                    onChange={(e) => handleBoardStudentChange(e.target.value)}
-                  >
-                    {boardRows.map((row) => (
-                      <option key={row.student_id} value={row.student_id}>
-                        {row.student_name || `طالب #${row.student_id}`}
-                        {row.university_id ? ` — ${row.university_id}` : ""}
-                        {row.submission_id || row.file_path ? " ✓ سلّم" : " — لم يسلّم"}
-                        {row.score != null ? ` — ${row.score}/${gradingMax}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               {submissionsLoading && <LoadingSpinner size="section" text="جاري تحميل الحلول..." />}
               
               {submissionsError && (
@@ -732,131 +724,54 @@ export default function TasksTab({ studentId }) {
                 </div>
               )}
 
-              {!submissionsLoading && !submissionsError && !studentSubmission && (
-                <div className="text-center p-8 text-[#999]">
-                  <div className="text-[2rem] mb-3">📭</div>
-                  لم يسلّم الطالب هذه المهمة بعد
-                </div>
-              )}
+              {!submissionsLoading && !submissionsError && (() => {
+                const submittedList = boardRows
+                  .filter((r) => r.submission_id || r.file_path)
+                  .map((r) => ({
+                    user_id: r.student_id,
+                    name: r.student_name || `طالب #${r.student_id}`,
+                    university_id: r.university_id,
+                    submission: normalizeBoardRow(r),
+                  }));
+                const sid = Number(selectedBoardStudentId);
+                const selectedId =
+                  submittedList.find((r) => r.user_id === sid)?.user_id ??
+                  submittedList[0]?.user_id ??
+                  null;
+                const selectedRow =
+                  submittedList.find((r) => r.user_id === selectedId) ?? null;
 
-              {!submissionsLoading && !submissionsError && studentSubmission && (
-                <div className="border border-[#e9ecef] rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
-                    <div>
-                      <div className="font-semibold text-[1.05rem]">
-                        {submissionStudent?.name
-                          || studentSubmission.user?.name
-                          || "الطالب"}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        وقت التسليم:{" "}
-                        {studentSubmission.submitted_at
-                          ? new Date(studentSubmission.submitted_at).toLocaleString("ar-SA")
-                          : "—"}
-                      </div>
-                    </div>
-                    <span className="px-3 py-1 rounded-full text-sm bg-[#e8f5e9] text-[#28a745]">
-                      {studentSubmission.file_path ? "تم التسليم" : "مُسلَّم"}
-                    </span>
-                  </div>
-
-                  {studentSubmission.file_url || studentSubmission.file_path ? (
-                    <div className="mt-3 p-3 bg-[#f8f9fa] rounded-lg border border-[#dee2e6]">
-                      <div className="font-semibold mb-2 text-[0.9rem]">الملف المرفق:</div>
-                      <button
-                        type="button"
-                        disabled={openingFile || !studentSubmission.id}
-                        className="inline-flex items-center gap-2 btn-primary-custom text-[0.9rem] py-2 px-4"
-                        onClick={async () => {
-                          if (!studentSubmission.id) return;
-                          setOpeningFile(true);
-                          try {
-                            const name = String(studentSubmission.file_path || "solution")
-                              .split("/")
-                              .pop();
-                            await openTaskSubmissionFile(studentSubmission.id, name, {
-                              preferSupervisor: true,
-                            });
-                          } catch (e) {
-                            addToast(
-                              e?.response?.data?.message || "تعذر فتح الملف",
-                              "error"
-                            );
-                          } finally {
-                            setOpeningFile(false);
-                          }
-                        }}
-                      >
-                        📎 {openingFile ? "جاري فتح الملف..." : "عرض / تحميل ملف الحل"}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-[#666] text-[0.9rem] m-0 mt-2">لا يوجد ملف مرفق.</p>
-                  )}
-
-                  {studentSubmission.notes && (
-                    <div className="mt-3 p-3 bg-[#f0f7ff] rounded-lg text-[0.9rem]">
-                      <span className="font-semibold">ملاحظة الطالب: </span>
-                      {studentSubmission.notes}
-                    </div>
-                  )}
-
-                  {studentSubmission.feedback && (
-                    <div className="mt-3 p-3 bg-[#fff8e1] rounded-lg text-[0.9rem]">
-                      <span className="font-semibold">ملاحظة المشرف: </span>
-                      {studentSubmission.feedback}
-                    </div>
-                  )}
-
-                  {studentSubmission.score != null && (
-                    <div className="mt-3 text-[0.95rem] font-semibold text-[#28a745]">
-                      العلامة الحالية: {studentSubmission.score} / {gradingMax}
-                    </div>
-                  )}
-
-                  {studentSubmission.id && (
-                    <div className="mt-4 p-4 bg-[#f8fafc] rounded-xl border border-slate-200">
-                      <h4 className="m-0 mb-3 text-[0.95rem] font-bold text-slate-800">تقييم المهمة</h4>
-                      <div className="flex flex-wrap gap-3 items-end">
-                        <div>
-                          <label className="text-[0.8rem] text-slate-600 block mb-1">
-                            العلامة (من {gradingMax})
-                          </label>
-                          <input
-                            type="number"
-                            min={0}
-                            max={gradingMax}
-                            step={0.5}
-                            className="form-input-custom w-28"
-                            value={gradeValue}
-                            onChange={(e) => setGradeValue(e.target.value)}
-                            disabled={savingGrade}
-                          />
-                        </div>
-                        <div className="flex-1 min-w-[180px]">
-                          <label className="text-[0.8rem] text-slate-600 block mb-1">ملاحظة للطالب (اختياري)</label>
-                          <input
-                            type="text"
-                            className="form-input-custom w-full"
-                            value={gradeFeedback}
-                            onChange={(e) => setGradeFeedback(e.target.value)}
-                            placeholder="ملاحظات التقييم..."
-                            disabled={savingGrade}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          disabled={savingGrade || gradeValue === ""}
-                          onClick={handleSubmitGrade}
-                          className="btn-primary-custom text-[0.88rem] py-2 px-4 disabled:opacity-50"
-                        >
-                          {savingGrade ? "جاري الحفظ..." : "إرسال العلامة للطالب"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                return (
+                  <BundleSubmittedPanel
+                    submittedList={submittedList}
+                    maxScore={gradingMax}
+                    selectedId={selectedId}
+                    onSelectStudent={(uid) => handleBoardStudentChange(uid)}
+                    selectedRow={selectedRow}
+                    draft={{ score: gradeValue, feedback: gradeFeedback }}
+                    onDraftChange={(next) => {
+                      setGradeValue(next.score);
+                      setGradeFeedback(next.feedback);
+                    }}
+                    onGrade={() => handleSubmitGrade()}
+                    gradeSavingId={savingGrade ? studentSubmission?.id : null}
+                    openingFileId={openingFileId}
+                    fileError={null}
+                    onOpenFile={async (submission) => {
+                      if (!submission?.id) return;
+                      setOpeningFileId(submission.id);
+                      try {
+                        const name = String(submission.file_path || "solution").split("/").pop();
+                        await openTaskSubmissionFile(submission.id, name, { preferSupervisor: true });
+                      } catch (e) {
+                        addToast(e?.response?.data?.message || "تعذر فتح الملف", "error");
+                      } finally {
+                        setOpeningFileId(null);
+                      }
+                    }}
+                  />
+                );
+              })()}
             </div>
           </div>
         </div>
