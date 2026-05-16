@@ -35,7 +35,7 @@ class SupervisorVisitController extends Controller
             'supervisor_id' => $request->user()->id,
             'scheduled_date' => $request->scheduled_date,
             'notes' => $request->notes,
-            'status' => 'scheduled',
+            'status' => SupervisorVisit::initialStatus(),
         ]);
         return new SupervisorVisitResource($visit);
     }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->date('scheduled_date')->nullable();
             $table->text('notes')->nullable();
             $table->integer('rating')->nullable();
-            $table->enum('status', ['planned', 'completed', 'cancelled'])->default('planned');
+            $table->enum('status', ['planned', 'scheduled', 'completed', 'cancelled'])->default('planned');
             $table->string('visit_type')->nullable();
             $table->string('location')->nullable();
             $table->string('training_track')->nullable();

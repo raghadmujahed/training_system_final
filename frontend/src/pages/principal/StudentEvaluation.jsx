@@ -64,7 +64,19 @@ export default function StudentEvaluation() {
     return SCHOOL_EVAL_FIELDS;
   };
   const buildEmptyEval = (student) => Object.fromEntries([...getFieldsForStudent(student).map(f => [f.key, ""]), ["general_notes", ""]]);
+
+  const buildEvalFromExisting = (student, existing) => {
+    if (!existing) return buildEmptyEval(student);
+    const fields = getFieldsForStudent(student);
+    const out = { general_notes: existing.general_notes || "" };
+    fields.forEach((f) => {
+      out[f.key] = existing[f.key] ?? "";
+    });
+    return out;
+  };
+
   const [evaluation, setEvaluation] = useState(() => buildEmptyEval(null));
+  const isReadOnly = Boolean(selectedStudent?.already_evaluated);
 
   useEffect(() => {
     fetchStudents();
@@ -89,6 +101,8 @@ export default function StudentEvaluation() {
         period: student.period || "—",
         requestId: student.request_id,
         track: student.track || null,
+        already_evaluated: Boolean(student.already_evaluated),
+        existing_evaluation: student.existing_evaluation || null,
       }));
       setStudents(allStudents);
     } catch (error) {
@@ -101,9 +115,9 @@ export default function StudentEvaluation() {
   };
 
   const handleStudentSelect = (studentId) => {
-    const student = students.find((s) => s.studentRowId === parseInt(studentId));
-    setSelectedStudent(student);
-    setEvaluation(buildEmptyEval(student));
+    const student = students.find((s) => s.studentRowId === parseInt(studentId, 10));
+    setSelectedStudent(student || null);
+    setEvaluation(buildEvalFromExisting(student, student?.existing_evaluation));
   };
 
   const handleEvaluationChange = (field, value) => {
@@ -117,6 +131,11 @@ export default function StudentEvaluation() {
       return;
     }
 
+    if (selectedStudent.already_evaluated) {
+      toast.warning("تم تقييم هذا الطالب مسبقاً ولا يمكن إعادة التقييم.");
+      return;
+    }
+
     try {
       const dynamicFields = Object.fromEntries(evalFields.map(f => [f.key, evaluation[f.key] || null]));
       const evaluationData = {
@@ -127,11 +146,42 @@ export default function StudentEvaluation() {
         evaluation_date: new Date().toISOString().split('T')[0],
       };
 
-      await createStudentEvaluation(evaluationData);
+      const res = await createStudentEvaluation(evaluationData);
+      const saved = res?.evaluation || res?.data?.evaluation || evaluationData;
       toast.success("تم حفظ التقييم بنجاح.");
-      setEvaluation(buildEmptyEval(selectedStudent));
+      const updatedStudent = {
+        ...selectedStudent,
+        already_evaluated: true,
+        existing_evaluation: saved,
+      };
+      setSelectedStudent(updatedStudent);
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.studentRowId === updatedStudent.studentRowId ? updatedStudent : s
+        )
+      );
+      setEvaluation(buildEvalFromExisting(updatedStudent, saved));
     } catch (error) {
       console.error("Failed to save evaluation:", error);
+      if (error?.response?.status === 422) {
+        const existing = error?.response?.data?.evaluation;
+        if (existing) {
+          const updatedStudent = {
+            ...selectedStudent,
+            already_evaluated: true,
+            existing_evaluation: existing,
+          };
+          setSelectedStudent(updatedStudent);
+          setStudents((prev) =>
+            prev.map((s) =>
+              s.studentRowId === updatedStudent.studentRowId ? updatedStudent : s
+            )
+          );
+          setEvaluation(buildEvalFromExisting(updatedStudent, existing));
+        }
+        toast.warning(error?.response?.data?.message || "تم تقييم هذا الطالب مسبقاً.");
+        return;
+      }
       toast.apiError(error, "حدث خطأ أثناء حفظ التقييم.");
     }
   };
@@ -221,6 +271,7 @@ export default function StudentEvaluation() {
             {students.map((student) => (
               <option key={student.studentRowId} value={student.studentRowId}>
                 {student.studentName} - {student.universityId}
+                {student.already_evaluated ? " (تم التقييم)" : ""}
               </option>
             ))}
           </select>
@@ -298,9 +349,28 @@ export default function StudentEvaluation() {
               </div>
               <div>
                 <h4 className="m-0 mb-1 text-[1.1rem] font-bold">{"نموذج تقييم أداء الطالب"}</h4>
-                <p className="m-0 text-[0.8rem] text-[var(--text-faint)]">{"يرجى تقييم أداء الطالب في جميع الجوانب"}</p>
+                <p className="m-0 text-[0.8rem] text-[var(--text-faint)]">
+                  {isReadOnly ? "عرض التقييم المحفوظ (لا يمكن التعديل)" : "يرجى تقييم أداء الطالب في جميع الجوانب"}
+                </p>
               </div>
             </div>
+
+            {isReadOnly ? (
+              <div className="mb-6 p-4 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] flex items-start gap-3">
+                <CheckCircle size={22} className="text-[#16a34a] shrink-0 mt-0.5" />
+                <div>
+                  <p className="m-0 font-semibold text-[#166534]">تم حفظ تقييم هذا الطالب</p>
+                  <p className="m-0 mt-1 text-[0.85rem] text-[#15803d]">
+                    يظهر التقييم في ملف إنجاز الطالب. لا يمكن إعادة التقييم أو تعديله.
+                  </p>
+                  {selectedStudent.existing_evaluation?.evaluation_date ? (
+                    <p className="m-0 mt-1 text-[0.8rem] text-[#64748b]">
+                      تاريخ التقييم: {selectedStudent.existing_evaluation.evaluation_date}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
 
             {/* Rating Fields */}
             {isPsychCenter ? (
@@ -322,9 +392,12 @@ export default function StudentEvaluation() {
                           <td key={rating} className="py-2 border border-[#bae6fd] text-center">
                             <button
                               type="button"
-                              onClick={() => handleEvaluationChange(field.key, rating)}
-                              className="w-9 h-9 rounded-full font-bold cursor-pointer transition-all text-[0.85rem]"
+                              disabled={isReadOnly}
+                              onClick={() => !isReadOnly && handleEvaluationChange(field.key, rating)}
+                              className="w-9 h-9 rounded-full font-bold transition-all text-[0.85rem]"
                               style={{
+                                cursor: isReadOnly ? "not-allowed" : "pointer",
+                                opacity: isReadOnly ? 0.85 : 1,
                                 border: evaluation[field.key] === rating ? "none" : "1.5px solid #cbd5e1",
                                 background: evaluation[field.key] === rating ? "#0e7490" : "#f8fafc",
                                 color: evaluation[field.key] === rating ? "white" : "#64748b",
@@ -355,9 +428,12 @@ export default function StudentEvaluation() {
                       <button
                         key={rating}
                         type="button"
-                        onClick={() => handleEvaluationChange(field.key, rating)}
-                        className="flex-1 py-2 rounded-md text-[0.8rem] cursor-pointer transition-all border"
+                        disabled={isReadOnly}
+                        onClick={() => !isReadOnly && handleEvaluationChange(field.key, rating)}
+                        className="flex-1 py-2 rounded-md text-[0.8rem] transition-all border"
                         style={{
+                          cursor: isReadOnly ? "not-allowed" : "pointer",
+                          opacity: isReadOnly ? 0.85 : 1,
                           borderColor: "#e2e8f0",
                           background: evaluation[field.key] === rating ? "#3b82f6" : "#f8fafc",
                           color: evaluation[field.key] === rating ? "white" : "#64748b",
@@ -390,6 +466,7 @@ export default function StudentEvaluation() {
               <textarea
                 value={evaluation.general_notes}
                 onChange={(e) => handleEvaluationChange("general_notes", e.target.value)}
+                readOnly={isReadOnly}
                 placeholder=""
                 rows={5}
                 className="w-full py-3 px-3 rounded-[10px] border border-[#e2e8f0] text-[0.9rem] bg-[#f8fafc] resize-y outline-none focus:border-[#8b5cf6]"
@@ -397,6 +474,7 @@ export default function StudentEvaluation() {
             </div>
 
             {/* Submit Button */}
+            {!isReadOnly ? (
             <div className="mt-8 flex justify-end">
               <button
                 type="submit"
@@ -414,6 +492,7 @@ export default function StudentEvaluation() {
                 {"حفظ التقييم"}
               </button>
             </div>
+            ) : null}
           </div>
         </form>
       )}

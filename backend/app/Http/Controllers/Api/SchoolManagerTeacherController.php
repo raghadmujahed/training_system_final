@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\TeacherSchoolAssignment;
 use App\Models\User;
-use App\Models\TrainingSite;
+use App\Support\SchoolManagerSiteResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -25,30 +25,23 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        if (!$schoolManager->training_site_id) {
+        $siteId = SchoolManagerSiteResolver::resolveTrainingSiteId($schoolManager);
+        if (! $siteId) {
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
         try {
+            TeacherSchoolAssignment::syncLegacyTeachersForSchool($siteId, $schoolManager->id);
+
             $teachers = TeacherSchoolAssignment::active()
-                ->forSchool($schoolManager->training_site_id)
+                ->forSchool($siteId)
                 ->with(['teacher' => function ($query) {
                     $query->select('id', 'name', 'email', 'phone', 'university_id');
                 }])
                 ->get()
-                ->map(function ($assignment) {
-                    return [
-                        'id' => $assignment->teacher->id,
-                        'name' => $assignment->teacher->name,
-                        'email' => $assignment->teacher->email,
-                        'phone' => $assignment->teacher->phone,
-                        'university_id' => $assignment->teacher->university_id,
-                        'start_date' => $assignment->start_date->format('Y-m-d'),
-                        'academic_year' => $assignment->academic_year,
-                        'status' => $assignment->status,
-                        'assignment_id' => $assignment->id,
-                    ];
-                });
+                ->map(fn ($assignment) => TeacherSchoolAssignment::formatTeacherListItem($assignment))
+                ->filter()
+                ->values();
         } catch (QueryException $e) {
             Log::error('school-teachers index failed', ['error' => $e->getMessage()]);
 
@@ -76,12 +69,15 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        if (!$schoolManager->training_site_id) {
+        $siteId = SchoolManagerSiteResolver::resolveTrainingSiteId($schoolManager);
+        if (! $siteId) {
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
         try {
-            $assignments = TeacherSchoolAssignment::forSchool($schoolManager->training_site_id)
+            TeacherSchoolAssignment::syncLegacyTeachersForSchool($siteId, $schoolManager->id);
+
+            $assignments = TeacherSchoolAssignment::forSchool($siteId)
                 ->with(['teacher' => function ($query) {
                     $query->select('id', 'name', 'email', 'university_id');
                 }, 'createdBy' => function ($query) {
@@ -163,7 +159,8 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        if (!$schoolManager->training_site_id) {
+        $siteId = SchoolManagerSiteResolver::resolveTrainingSiteId($schoolManager);
+        if (! $siteId) {
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
@@ -182,8 +179,8 @@ class SchoolManagerTeacherController extends Controller
 
         // Check if teacher can be assigned to this school
         $canAssign = TeacherSchoolAssignment::canTeacherBeAssignedToSchool(
-            $validated['teacher_id'], 
-            $schoolManager->training_site_id
+            $validated['teacher_id'],
+            $siteId
         );
 
         if (!$canAssign['can_assign']) {
@@ -195,7 +192,7 @@ class SchoolManagerTeacherController extends Controller
 
             $assignment = TeacherSchoolAssignment::create([
                 'teacher_id' => $validated['teacher_id'],
-                'school_id' => $schoolManager->training_site_id,
+                'school_id' => $siteId,
                 'academic_year' => $validated['academic_year'] ?? date('Y'),
                 'start_date' => $validated['start_date'],
                 'is_active' => true,
@@ -204,6 +201,8 @@ class SchoolManagerTeacherController extends Controller
                 'notes' => $validated['notes'],
                 'created_by' => $schoolManager->id,
             ]);
+
+            $teacher->update(['training_site_id' => $siteId]);
 
             DB::commit();
 
@@ -235,7 +234,8 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        if (!$schoolManager->training_site_id) {
+        $siteId = SchoolManagerSiteResolver::resolveTrainingSiteId($schoolManager);
+        if (! $siteId) {
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
@@ -248,10 +248,10 @@ class SchoolManagerTeacherController extends Controller
         // Find active assignment for this teacher in this school
         $assignment = TeacherSchoolAssignment::active()
             ->forTeacher($teacherId)
-            ->forSchool($schoolManager->training_site_id)
+            ->forSchool($siteId)
             ->first();
 
-        if (!$assignment) {
+        if (! $assignment) {
             return response()->json(['message' => 'لم يتم العثور على تعيين نشط لهذا المعلم في مدرستك.'], 404);
         }
 
@@ -267,6 +267,11 @@ class SchoolManagerTeacherController extends Controller
                 $validated['reason'],
                 $validated['notes']
             );
+
+            $teacher = User::find($teacherId);
+            if ($teacher && (int) $teacher->training_site_id === $siteId) {
+                $teacher->update(['training_site_id' => null]);
+            }
 
             DB::commit();
 
@@ -298,13 +303,14 @@ class SchoolManagerTeacherController extends Controller
             return response()->json(['message' => 'غير مصرح'], 403);
         }
 
-        if (!$schoolManager->training_site_id) {
+        $siteId = SchoolManagerSiteResolver::resolveTrainingSiteId($schoolManager);
+        if (! $siteId) {
             return response()->json(['message' => 'لا يمكن تنفيذ العملية لأن حسابك غير مرتبط بمدرسة.'], 400);
         }
 
         $assignment = TeacherSchoolAssignment::active()
             ->forTeacher($teacherId)
-            ->forSchool($schoolManager->training_site_id)
+            ->forSchool($siteId)
             ->with(['teacher', 'school', 'createdBy'])
             ->first();
 

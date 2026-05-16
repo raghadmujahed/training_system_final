@@ -72,8 +72,11 @@ class TrainingRequestPolicy
         }
 
         if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true)) {
-            $sameSite = ! $user->training_site_id
-                || (int) $trainingRequest->training_site_id === (int) $user->training_site_id;
+            if (! $user->training_site_id) {
+                return false;
+            }
+
+            $sameSite = (int) $trainingRequest->training_site_id === (int) $user->training_site_id;
             $inSchoolFlow = in_array($trainingRequest->book_status, [
                 'sent_to_school',
                 'school_approved',
@@ -259,7 +262,7 @@ class TrainingRequestPolicy
         }
 
         if (! $user->training_site_id) {
-            return true;
+            return false;
         }
 
         return (int) $trainingRequest->training_site_id === (int) $user->training_site_id;

@@ -7,6 +7,7 @@ use App\Models\EmailNotificationLog;
 use App\Models\TrainingRequest;
 use App\Models\TrainingRequestStudent;
 use App\Models\User;
+use App\Support\SchoolManagerSiteResolver;
 use App\Support\TrainingRequestNotifications;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -19,7 +20,7 @@ class TrainingRequestEmailService
         $site = $request->trainingSite;
         if (! $site) return;
 
-        $manager = $site->manager;
+        $manager = SchoolManagerSiteResolver::resolveManagerAccount($site);
         $toEmail = $manager?->email ?: $site->email;
         $toName  = $manager?->name ?? 'مدير جهة التدريب';
 

@@ -173,8 +173,13 @@ class TrainingRequestController extends Controller
             });
         }
 
-        if (in_array($request->user()->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true) && $request->user()->training_site_id) {
-            $query->where('training_site_id', $request->user()->training_site_id);
+        if (\App\Support\SchoolManagerSiteResolver::isSiteManager($request->user())) {
+            $siteId = (int) ($request->user()->training_site_id ?? 0);
+            if ($siteId <= 0) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('training_site_id', $siteId);
+            }
         }
         if (in_array($request->user()->role?->name, ['coordinator', 'training_coordinator'], true)) {
             $coordinatorDeptId = $request->user()->department_id;
@@ -875,10 +880,7 @@ class TrainingRequestController extends Controller
     public function schoolManagerMentorRequests(Request $request)
     {
         $user = $request->user();
-
-        if (!in_array($user->role?->name, ['school_manager', 'principal', 'psychology_center_manager'], true)) {
-            abort(403, 'هذه الخدمة متاحة فقط لمدير جهة التدريب.');
-        }
+        $siteId = \App\Support\SchoolManagerSiteResolver::requireTrainingSiteId($user);
 
         $query = TrainingRequest::with([
             'trainingSite',
@@ -889,11 +891,8 @@ class TrainingRequestController extends Controller
             'trainingPeriod',
         ])
             ->where('book_status', 'sent_to_school')
-            ->where('status', 'pending');
-
-        if ($user->training_site_id) {
-            $query->where('training_site_id', $user->training_site_id);
-        }
+            ->where('status', 'pending')
+            ->where('training_site_id', $siteId);
 
         if ($request->filled('governing_body')) {
             $query->where('governing_body', $request->governing_body);
@@ -910,10 +909,7 @@ class TrainingRequestController extends Controller
     public function schoolManagerTeachers(Request $request)
     {
         $user = $request->user();
-
-        if (!in_array($user->role?->name, ['school_manager', 'principal', 'psychology_center_manager'], true)) {
-            abort(403, 'هذه الخدمة متاحة فقط لمدير جهة التدريب.');
-        }
+        $siteId = \App\Support\SchoolManagerSiteResolver::requireTrainingSiteId($user);
 
         // جهة التدريب (مدرسة): معلم/مرشد أو حساب مشرف ميداني في المنصة. المركز النفسي: أخصائي نفسي فقط.
         $targetRoles = $user->role?->name === 'psychology_center_manager'
@@ -923,7 +919,7 @@ class TrainingRequestController extends Controller
         $teachers = User::where('status', 'active')
             ->with('role')
             ->whereHas('role', fn($q) => $q->whereIn('name', $targetRoles))
-            ->when($user->training_site_id, fn ($q) => $q->where('training_site_id', $user->training_site_id))
+            ->where('training_site_id', $siteId)
             ->when($request->filled('search'), function ($q) use ($request) {
                 $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $request->search) . '%';
                 $q->where(function ($sub) use ($term) {

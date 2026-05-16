@@ -57,10 +57,15 @@ class AttendanceController extends Controller
             $query->whereHas('trainingAssignment', function ($q) use ($uid) {
                 $q->where('teacher_id', $uid)->orWhere('field_supervisor_id', $uid);
             });
-        } elseif ($request->user()->role?->name === 'school_manager') {
-            $query->whereHas('trainingAssignment.trainingSite', function ($q) use ($request) {
-                $q->where('id', $request->user()->training_site_id);
-            })->whereNotNull('submitted_to_manager_at');
+        } elseif (in_array($request->user()->role?->name, ['school_manager', 'principal', 'psychology_center_manager'], true)) {
+            $siteId = (int) ($request->user()->training_site_id ?? 0);
+            if ($siteId <= 0) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->whereHas('trainingAssignment.trainingSite', function ($q) use ($siteId) {
+                    $q->where('id', $siteId);
+                })->whereNotNull('submitted_to_manager_at');
+            }
         } elseif ($request->user()->role?->name === 'student') {
             $query->whereHas('trainingAssignment.enrollment', function ($q) use ($request) {
                 $q->where('user_id', $request->user()->id);

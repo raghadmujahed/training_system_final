@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiClient, apiOrigin } from "../../../../services/api";
-import { Calendar, Clock, Download, Printer, CheckCircle, AlertCircle, FileText } from "lucide-react";
+import { Download, Printer, AlertCircle } from "lucide-react";
 import LoadingSpinner from "../../../../components/common/LoadingSpinner";
-import { useToast } from "../../../../components/Toast";
 
 const days = [
   { id: "sunday", label: "الأحد" },
@@ -76,7 +75,6 @@ const printStyles = `
 }`;
 
 export default function ScheduleTab({ studentId, student }) {
-  const { addToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [schedule, setSchedule] = useState(buildEmptySchedule);
@@ -92,7 +90,6 @@ export default function ScheduleTab({ studentId, student }) {
     start_date: "—",
     semester: "—",
   });
-  const [programStatus, setProgramStatus] = useState(null);
   const [hasSchedule, setHasSchedule] = useState(false);
   const [filePath, setFilePath] = useState(null);
 
@@ -120,7 +117,6 @@ export default function ScheduleTab({ studentId, student }) {
         setHasSchedule(false);
       }
 
-      if (data?.status) setProgramStatus(data.status);
       if (data?.file_path) setFilePath(data.file_path);
 
       // Use student info from API or fallback to prop
@@ -152,14 +148,6 @@ export default function ScheduleTab({ studentId, student }) {
     window.print();
   };
 
-  const filledCount = days.reduce(
-    (acc, day) => acc + periods.filter((p) => schedule[day.id]?.[p.id]).length,
-    0
-  );
-
-  const totalCells = days.length * periods.length;
-  const completionRate = Math.round((filledCount / totalCells) * 100);
-
   if (loading) return <LoadingSpinner size="section" text="جاري تحميل الجدول..." />;
 
   if (error) {
@@ -188,35 +176,6 @@ export default function ScheduleTab({ studentId, student }) {
   return (
     <div>
       <style>{printStyles}</style>
-
-      {/* Progress Card */}
-      <div className="section-card no-print mb-4">
-        <div className="flex justify-between items-center mb-3">
-          <h4 className="m-0 flex items-center gap-2">
-            <Calendar size={18} /> نسبة اكتمال جدول الحصص
-          </h4>
-          <span className="text-[1.3rem] font-bold" style={{ color: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545" }}>
-            {completionRate}%
-          </span>
-        </div>
-        <div className="bg-[#e9ecef] rounded-[10px] h-3 overflow-hidden">
-          <div
-            className="h-full rounded-[10px] transition-[width] duration-500 ease"
-            style={{
-              width: `${completionRate}%`,
-              background: completionRate >= 80 ? "#28a745" : completionRate >= 50 ? "#ffc107" : "#dc3545",
-            }}
-          />
-        </div>
-        <div className="mt-3 flex gap-4 flex-wrap text-[0.85rem] text-[#64748b]">
-          <span>📊 الحصص المحددة: {filledCount} من {totalCells}</span>
-          {programStatus && (
-            <span className="flex items-center gap-1">
-              <CheckCircle size={14} /> الحالة: {programStatus === "approved" ? "معتمد" : programStatus === "submitted" ? "مُقدم" : "مسودة"}
-            </span>
-          )}
-        </div>
-      </div>
 
       {/* Actions */}
       <div className="section-card no-print mb-4 flex gap-3 flex-wrap">

@@ -92,6 +92,7 @@ export default function FieldVisitsTab({ studentId, student }) {
   };
 
   const statusConfig = {
+    planned: { label: "مجدولة", color: "#6f42c1", bg: "#ede7f6", icon: "🗓️" },
     scheduled: { label: "مجدولة", color: "#6f42c1", bg: "#ede7f6", icon: "🗓️" },
     completed: { label: "تمت", color: "#28a745", bg: "#e8f5e9", icon: "✅" },
     cancelled: { label: "ملغاة", color: "#dc3545", bg: "#ffebee", icon: "❌" },
@@ -148,7 +149,7 @@ export default function FieldVisitsTab({ studentId, student }) {
       ) : (
         <div className="flex flex-col gap-3">
           {visits.map((visit) => {
-            const sc = statusConfig[visit.status] || statusConfig.scheduled;
+            const sc = statusConfig[visit.status] || statusConfig.planned;
             return (
               <div key={visit.id} className="bg-white border border-[#e9ecef] rounded-[10px] p-4" style={{ borderRight: `4px solid ${sc.color}` }}>
                 <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
@@ -206,7 +207,7 @@ export default function FieldVisitsTab({ studentId, student }) {
                   </div>
                 )}
 
-                {visit.status === "scheduled" && reportVisitId !== visit.id && (
+                {(visit.status === "scheduled" || visit.status === "planned") && reportVisitId !== visit.id && (
                   <button className="text-[0.82rem] py-[6px] px-[14px] rounded-md border border-[#28a745] bg-[#28a745] text-white cursor-pointer hover:bg-[#218838] mt-2" onClick={() => setReportVisitId(visit.id)}>
                     📝 إدخال تقرير الزيارة
                   </button>

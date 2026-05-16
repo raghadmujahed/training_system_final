@@ -1862,7 +1862,7 @@ class SupervisorWorkspaceController extends Controller
             'training_track' => $request->input('training_track', $this->trackResolver->resolveForAssignment($assignment)),
             'template_type' => $request->input('template_type'),
             'notes' => $request->input('notes'),
-            'status' => 'scheduled',
+            'status' => SupervisorVisit::initialStatus(),
         ]);
 
         $studentId = (int) data_get($assignment, 'enrollment.user_id');

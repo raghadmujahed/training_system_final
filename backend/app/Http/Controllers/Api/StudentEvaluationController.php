@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\StudentEvaluation;
-use App\Models\User;
-use App\Models\TrainingRequestStudent;
 use App\Models\TrainingRequest;
+use App\Services\StudentEvaluationPortfolioService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -90,10 +89,13 @@ class StudentEvaluationController extends Controller
         }
 
         $evaluation = StudentEvaluation::create($validated);
+        $evaluation->load(['student', 'evaluator.role', 'evaluator.trainingSite', 'trainingRequestStudent.trainingRequest.trainingSite']);
+
+        StudentEvaluationPortfolioService::syncToPortfolio($evaluation);
 
         return response()->json([
             'message' => 'تم حفظ التقييم بنجاح',
-            'evaluation' => $evaluation->load(['student', 'evaluator']),
+            'evaluation' => $evaluation,
         ], 201);
     }
 
@@ -121,16 +123,20 @@ class StudentEvaluationController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
+        $user = Auth::user();
+        if ($user->role && in_array($user->role->name, ['school_manager', 'principal', 'psychology_center_manager'], true)) {
+            return response()->json([
+                'message' => 'لا يمكن تعديل التقييم بعد حفظه. التقييم نهائي.',
+            ], 403);
+        }
+
         $evaluation = StudentEvaluation::findOrFail($id);
 
-        // Check if user has permission to update this evaluation
-        $user = Auth::user();
         if ($evaluation->evaluator_id !== $user->id) {
             return response()->json(['message' => 'غير مصرح لك بتعديل هذا التقييم'], 403);
         }
 
         $validated = $request->validate([
-            // Rating fields from evaluation image
             'supervisor' => 'nullable|integer|min:1|max:5',
             'attendance' => 'nullable|integer|min:1|max:5',
             'cooperation_with_staff' => 'nullable|integer|min:1|max:5',
@@ -158,10 +164,15 @@ class StudentEvaluationController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
+        $user = Auth::user();
+        if ($user->role && in_array($user->role->name, ['school_manager', 'principal', 'psychology_center_manager'], true)) {
+            return response()->json([
+                'message' => 'لا يمكن حذف التقييم بعد حفظه.',
+            ], 403);
+        }
+
         $evaluation = StudentEvaluation::findOrFail($id);
 
-        // Check if user has permission to delete this evaluation
-        $user = Auth::user();
         if ($evaluation->evaluator_id !== $user->id) {
             return response()->json(['message' => 'غير مصرح لك بحذف هذا التقييم'], 403);
         }
@@ -243,11 +254,25 @@ class StudentEvaluationController extends Controller
             ->whereIn('book_status', ['sent_to_school', 'school_approved', 'directorate_approved', 'completed'])
             ->get();
 
+        $studentUserIds = $trainingRequests
+            ->flatMap(fn ($req) => $req->trainingRequestStudents->pluck('user_id'))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $evaluationsByStudent = StudentEvaluation::query()
+            ->where('evaluator_id', $user->id)
+            ->whereIn('student_id', $studentUserIds)
+            ->get()
+            ->keyBy('student_id');
+
         // Extract students from all requests
         $students = [];
         foreach ($trainingRequests as $request) {
             foreach ($request->trainingRequestStudents as $student) {
                 $departmentName = $student->user?->department?->name;
+                $existing = $evaluationsByStudent->get($student->user_id);
+
                 $students[] = [
                     'id' => $student->id,
                     'student_id' => $student->user_id,
@@ -264,6 +289,8 @@ class StudentEvaluationController extends Controller
                     'book_status' => $request->book_status,
                     'department_name' => $departmentName,
                     'track' => $student->user?->resolveStudentTrack(),
+                    'already_evaluated' => $existing !== null,
+                    'existing_evaluation' => $existing ? $this->formatEvaluationPayload($existing) : null,
                 ];
             }
         }
@@ -273,5 +300,27 @@ class StudentEvaluationController extends Controller
             'total' => count($students),
             'training_site' => $trainingRequests->first()?->trainingSite?->name,
         ]);
+    }
+
+    private function formatEvaluationPayload(StudentEvaluation $evaluation): array
+    {
+        return [
+            'id' => $evaluation->id,
+            'student_id' => $evaluation->student_id,
+            'evaluation_date' => $evaluation->evaluation_date?->format('Y-m-d'),
+            'average_rating' => $evaluation->average_rating,
+            'rating_level' => $evaluation->rating_level,
+            'general_notes' => $evaluation->general_notes,
+            'supervisor' => $evaluation->supervisor,
+            'attendance' => $evaluation->attendance,
+            'cooperation_with_staff' => $evaluation->cooperation_with_staff,
+            'professionalism' => $evaluation->professionalism,
+            'dealing_with_students' => $evaluation->dealing_with_students,
+            'manners' => $evaluation->manners,
+            'participation_in_activities' => $evaluation->participation_in_activities,
+            'school' => $evaluation->school,
+            'comfort' => $evaluation->comfort,
+            'professional_ethics' => $evaluation->professional_ethics,
+        ];
     }
 }

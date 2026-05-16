@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\TrainingTrackResolver;
+use App\Support\SchoolManagerSiteResolver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -12,6 +13,18 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::saved(function (User $user) {
+            if (
+                $user->wasChanged('training_site_id')
+                || $user->wasChanged('role_id')
+            ) {
+                SchoolManagerSiteResolver::syncSiteManagerId($user);
+            }
+        });
+    }
 
     protected $fillable = [
         'university_id', 'name', 'email', 'password', 'status',

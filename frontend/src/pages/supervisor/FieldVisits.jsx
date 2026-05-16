@@ -209,6 +209,7 @@ export default function FieldVisits() {
   const getStatusLabel = (status) => {
     if (status === "completed") return "تمت";
     if (status === "cancelled") return "ملغاة";
+    if (status === "scheduled" || status === "planned") return "مجدولة";
     return "مجدولة";
   };
 

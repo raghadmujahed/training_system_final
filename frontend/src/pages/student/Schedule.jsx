@@ -146,6 +146,11 @@ export default function Schedule() {
     load();
   }, [load]);
 
+  useEffect(() => () => {
+    document.getElementById("schedule-pdf-hide-style")?.remove();
+    document.querySelectorAll(".html2canvas-container").forEach((el) => el.remove());
+  }, []);
+
   // Handle edit entry from Portfolio page
   useEffect(() => {
     const editData = location.state?.editEntry;
@@ -193,18 +198,58 @@ export default function Schedule() {
     setSuccess("");
   };
 
+  const cleanupPdfArtifacts = () => {
+    document.getElementById("schedule-pdf-hide-style")?.remove();
+    document.querySelectorAll(".html2canvas-container").forEach((el) => el.remove());
+  };
+
   const generatePdf = async () => {
-    const element = document.getElementById('printable-area');
+    const element = document.getElementById("printable-area");
     if (!element) return null;
+
+    const tempStyle = document.createElement("style");
+    tempStyle.id = "schedule-pdf-hide-style";
+    tempStyle.textContent = `
+      #printable-area .no-print,
+      #printable-area .no-print * { display: none !important; height: 0 !important; overflow: hidden !important; }
+      #printable-area button { display: none !important; }
+    `;
+    document.head.appendChild(tempStyle);
+    await new Promise((r) => setTimeout(r, 100));
+
     const opt = {
       margin: 10,
-      filename: 'training-program.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      filename: "training-program.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 1.5, useCORS: true, logging: false },
+      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
     };
-    const blob = await html2pdf().set(opt).from(element).output('blob');
-    return blob;
+
+    try {
+      const blob = await Promise.race([
+        html2pdf().set(opt).from(element).output("blob"),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("PDF generation timeout")), 25000)
+        ),
+      ]);
+      return blob;
+    } finally {
+      cleanupPdfArtifacts();
+    }
+  };
+
+  const uploadSchedulePdf = async (entryId) => {
+    if (!entryId) return;
+    try {
+      const pdfBlob = await generatePdf();
+      if (pdfBlob) {
+        await uploadPortfolioFile(entryId, pdfBlob, "training-program.pdf");
+      }
+    } catch (pdfErr) {
+      console.error("PDF upload failed:", pdfErr);
+    } finally {
+      cleanupPdfArtifacts();
+    }
   };
 
   const handleSave = async () => {
@@ -214,31 +259,36 @@ export default function Schedule() {
     try {
       const res = await saveStudentTrainingProgram({ schedule });
       setHasSavedProgram(true);
-      if (res?.data?.portfolio_entry_id) {
-        portfolioEntryIdRef.current = res.data.portfolio_entry_id;
+      const entryId = res?.data?.portfolio_entry_id ?? portfolioEntryIdRef.current;
+      if (entryId) {
+        portfolioEntryIdRef.current = entryId;
       }
 
-      // Update existing portfolio entry or generate PDF for new one
-      try {
-        if (editingEntry && portfolioEntryIdRef.current) {
-          const dateStr = new Date().toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-          await updatePortfolioEntry(portfolioEntryIdRef.current, {
+      if (editingEntry && entryId) {
+        try {
+          const dateStr = new Date().toLocaleDateString("ar-SA", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          });
+          await updatePortfolioEntry(entryId, {
             title: `جدول الحصص الأسبوعية — ${dateStr}`,
             content: JSON.stringify(schedule, null, 2),
           });
+        } catch {
+          // Backend already syncs portfolio content on save
         }
-        const pdfBlob = await generatePdf();
-        if (pdfBlob && portfolioEntryIdRef.current) {
-          await uploadPortfolioFile(portfolioEntryIdRef.current, pdfBlob, 'training-program.pdf');
-        }
-      } catch (pdfErr) {
-        console.error('PDF upload failed:', pdfErr);
       }
 
       const actionText = editingEntry ? "تعديل" : "حفظ";
       setSuccess(`تم ${actionText} جدول الحصص الأسبوعية بنجاح وإضافته للملف الإنجاز.`);
       addToast(`تم ${actionText} جدول الحصص الأسبوعية بنجاح`, "success");
       setEditingEntry(null);
+
+      // Generate PDF in background so the UI stays responsive
+      if (entryId) {
+        void uploadSchedulePdf(entryId);
+      }
     } catch (e) {
       setError(e?.response?.data?.message || "تعذر حفظ جدول الحصص الأسبوعية.");
       addToast(e?.response?.data?.message || "تعذر حفظ جدول الحصص الأسبوعية.", "error");

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   addPortfolioEntry,
@@ -12,7 +12,7 @@ import { useToast } from "../../components/Toast";
 import { Loader2, Upload, FileText, Trash2, ExternalLink, Plus, FolderOpen, Calendar, FileCheck, BookOpen, ClipboardCheck, FileBarChart, FileSpreadsheet, GraduationCap, Edit3, Save as SaveIcon } from "lucide-react";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 
-// CSS Animation
+// CSS Animation + compact layout for this page only
 const fadeInStyles = `
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
@@ -23,6 +23,47 @@ const fadeInStyles = `
   to { transform: rotate(360deg); }
 }
 .spin { animation: spin 1s linear infinite; }
+.portfolio-page .content-header {
+  padding: 0.9rem 1.35rem;
+  min-height: 68px;
+  margin-bottom: 0.85rem;
+  border-radius: 14px;
+}
+.portfolio-page .content-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+}
+.portfolio-page .content-header-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.portfolio-page .content-header .page-title {
+  font-size: 1.15rem;
+}
+.portfolio-page .content-header .page-subtitle {
+  font-size: 0.82rem;
+}
+@media (max-width: 768px) {
+  .portfolio-page .content-header {
+    padding: 0.75rem 1rem;
+    min-height: 60px;
+  }
+  .portfolio-page .content-header .page-title {
+    font-size: 1.05rem;
+  }
+}
+.portfolio-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 `;
 
 function parseCounselorPortfolioPayload(entry) {
@@ -62,6 +103,27 @@ function parsePsychologistInstitutionPayload(entry) {
     return o;
   }
   return null;
+}
+
+function parseSchoolManagerPortfolioPayload(entry) {
+  if (!entry?.content) return null;
+  let o = entry.content;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { return null; }
+  }
+  if (typeof o !== "object") return null;
+  if (o?.type === "school_manager_evaluation" || entry.category === "school_manager_evaluation") {
+    return o;
+  }
+  if (tIncludesSchoolManagerEval(entry?.title)) {
+    return o;
+  }
+  return null;
+}
+
+function tIncludesSchoolManagerEval(title) {
+  const t = (title || "").toString();
+  return t.includes("تقييم مدير") || t.includes("تقييم مديرية") || t.includes("مدير جهة التدريب");
 }
 
 function CounselorPortfolioReadOnly({ data }) {
@@ -177,6 +239,58 @@ function MentorClassroomVisitPortfolioReadOnly({ data }) {
   );
 }
 
+function SchoolManagerPortfolioReadOnly({ data }) {
+  const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+  const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
+  const site = data.site_name || "—";
+
+  return (
+    <div className="mt-4 p-4 bg-gradient-to-b from-[#fffbeb] to-white rounded-xl border border-[#fde68a]">
+      <div className="grid gap-2 mb-4 text-[0.88rem]">
+        <div><span className="text-[#64748b]">جهة التدريب: </span><strong className="text-[#92400e]">{site}</strong></div>
+        <div className="flex flex-wrap gap-4">
+          {data.average_rating != null ? (
+            <div>
+              <span className="text-[#64748b]">المعدل: </span>
+              <strong className="text-[1.1rem]">{data.average_rating}</strong>
+              <span className="text-[#94a3b8]"> / 5</span>
+            </div>
+          ) : null}
+          {data.rating_level ? <div><span className="text-[#64748b]">التقدير: </span><strong>{data.rating_level}</strong></div> : null}
+          {data.evaluator_name ? <div><span className="text-[#64748b]">المقيّم: </span><strong>{data.evaluator_name}</strong></div> : null}
+          {data.evaluation_date ? <div><span className="text-[#64748b]">التاريخ: </span><strong>{data.evaluation_date}</strong></div> : null}
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-[0.82rem]">
+          <thead>
+            <tr className="bg-[#fef3c7]">
+              <th className="p-2 text-center w-[44px]">#</th>
+              <th className="p-2 text-right">المؤشر</th>
+              <th className="p-2 text-center w-[72px]">1–5</th>
+            </tr>
+          </thead>
+          <tbody>
+            {criteria.map((c, idx) => (
+              <tr key={c.id || idx} className="border-t border-[#fde68a]">
+                <td className="p-2 text-center text-[#64748b]">{idx + 1}</td>
+                <td className="p-2 text-right text-[#334155]">{c.label}</td>
+                <td className="p-2 text-center font-bold">{scores[c.id] ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.general_notes ? (
+        <div className="mt-4 p-3 bg-white rounded-lg border border-[#fde68a]">
+          <div className="font-bold mb-[0.35rem] text-[#92400e]">ملاحظات عامة</div>
+          <div className="text-[#475569] leading-[1.6] whitespace-pre-wrap">{data.general_notes}</div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function PsychologistInstitutionPortfolioReadOnly({ data }) {
   const criteria = Array.isArray(data.criteria) ? data.criteria : [];
   const scores = data.scores && typeof data.scores === "object" ? data.scores : {};
@@ -255,6 +369,11 @@ export default function Portfolio() {
   const [replacingFileId, setReplacingFileId] = useState(null);
   const [replacementFile, setReplacementFile] = useState(null);
   const [previewEntry, setPreviewEntry] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files?.[0] || null);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -524,6 +643,9 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
     if (entry?.category === "psychologist_institution_evaluation" || t.includes("مشرف المؤسسة")) {
       return { icon: FileCheck, color: "#7c3aed", gradient: "linear-gradient(135deg, #7c3aed, #a78bfa)", bg: "#faf5ff" };
     }
+    if (entry?.category === "school_manager_evaluation" || tIncludesSchoolManagerEval(t)) {
+      return { icon: FileCheck, color: "#d97706", gradient: "linear-gradient(135deg, #d97706, #fbbf24)", bg: "#fffbeb" };
+    }
     if (t.includes('جدول الحصص الأسبوعي') || t.includes('جدول الحصص الأسبوعية') || t.includes('برنامج التدريب')) return { icon: Calendar, color: '#667eea', gradient: 'linear-gradient(135deg, #667eea, #764ba2)', bg: '#f5f3ff' };
     if (t.includes('حضور') || t.includes('غياب')) return { icon: ClipboardCheck, color: '#0891b2', gradient: 'linear-gradient(135deg, #0891b2, #06b6d4)', bg: '#ecfeff' };
     if (t.includes('نقد خبرات') || t.includes('خبرات التعلم')) return { icon: BookOpen, color: '#059669', gradient: 'linear-gradient(135deg, #059669, #34d399)', bg: '#ecfdf5' };
@@ -535,11 +657,11 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
   };
 
   return (
-    <>
+    <div className="portfolio-page max-w-[960px] mx-auto w-full">
       <style>{fadeInStyles}</style>
       <div className="content-header">
         <div className="content-header-icon">
-          <FolderOpen size={26} />
+          <FolderOpen size={20} />
         </div>
         <div className="content-header-content">
           <h1 className="page-title">ملف الإنجاز</h1>
@@ -548,89 +670,120 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
       </div>
 
       {success ? (
-        <div className="alert-custom alert-success mb-3 animate-[fadeIn_0.3s_ease]">{success}</div>
+        <div className="alert-custom alert-success mb-2.5 animate-[fadeIn_0.3s_ease] text-[0.88rem] py-2 px-3">{success}</div>
       ) : null}
       {error ? (
-        <div className="alert-custom alert-danger mb-3 animate-[fadeIn_0.3s_ease]">{error}</div>
+        <div className="alert-custom alert-danger mb-2.5 animate-[fadeIn_0.3s_ease] text-[0.88rem] py-2 px-3">{error}</div>
       ) : null}
 
-      <div className="bg-white rounded-b-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-8 border border-[#e8e8e8] mb-8 animate-[fadeIn_0.4s_ease-out]">
-        <form onSubmit={handleAdd}>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6 mb-6">
-            {/* Title Field */}
-            <div className="flex flex-col">
-              <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">عنوان المدخل *</label>
-              <input type="text" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} required placeholder="مثال: تقرير تدريس الصف الرابع..."
-                className="w-full py-3 px-4 border-2 border-[#e0e0e0] rounded-[10px] text-[1rem] transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
+      <section className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#e8e8e8] p-4 sm:p-5 mb-4 animate-[fadeIn_0.4s_ease-out]">
+        <div className="mb-3 pb-3 border-b border-[#eef2f6]">
+          <h2 className="m-0 text-[1rem] font-bold text-[#1e293b]">إضافة مدخل جديد</h2>
+          <p className="m-0 mt-1 text-[0.8rem] text-[#64748b]">أضف شاهدًا أو ملفًا متعلقًا بتدريبك الميداني</p>
+        </div>
+
+        <form onSubmit={handleAdd} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+            <div className="flex flex-col min-w-0">
+              <label className="text-[0.82rem] font-semibold text-[#475569] mb-1.5">عنوان المدخل *</label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                required
+                placeholder="مثال: تقرير تدريس الصف الرابع..."
+                className="w-full py-2 px-3 border border-[#e2e8f0] rounded-lg text-[0.9rem] transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.12)] focus:outline-none"
               />
             </div>
 
-            {/* File Upload */}
-            <div className="flex flex-col">
-              <label className="text-[0.9rem] font-semibold text-[#495057] mb-2">مرفق (PDF / صور / Word)</label>
-              <div onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-[10px] py-3 px-4 cursor-pointer transition-all flex items-center gap-3 ${dragActive ? 'border-[var(--primary,#007bff)] bg-[rgba(0,123,255,0.05)]' : 'border-[#ccc] bg-white'}`}
+            <div className="flex flex-col min-w-0">
+              <label className="text-[0.82rem] font-semibold text-[#475569] mb-1.5">مرفق</label>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                className={`relative flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed py-3 px-3 cursor-pointer transition-all text-center min-h-[72px] ${
+                  dragActive
+                    ? "border-[var(--primary,#007bff)] bg-[rgba(0,123,255,0.05)]"
+                    : "border-[#cbd5e1] bg-[#f8fafc] hover:border-[#94a3b8] hover:bg-[#f1f5f9]"
+                }`}
               >
-                <Upload size={20} color={dragActive ? "var(--primary, #007bff)" : "#666"} />
-                <input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)}
-                  className="flex-1 border-none bg-transparent text-[0.9rem]"
-                />
+                <input ref={fileInputRef} type="file" className="portfolio-file-input" onChange={handleFileChange} />
+                <Upload size={18} color={dragActive ? "var(--primary, #007bff)" : "#64748b"} />
+                <span className="text-[0.82rem] font-semibold text-[#334155]">اختر ملفًا أو اسحبه هنا</span>
+                <span className="text-[0.72rem] text-[#94a3b8]">PDF أو Word أو صور</span>
               </div>
-              {file && (
-                <div className="mt-2 py-2 px-3 bg-[#e8f5e9] rounded-md text-[0.85rem] text-[#2e7d32] flex items-center gap-2">
-                  <FileText size={16} />
-                  تم اختيار: {file.name}
+              {file ? (
+                <div className="mt-1.5 py-1.5 px-2.5 bg-[#ecfdf5] rounded-md text-[0.78rem] text-[#166534] flex items-center gap-1.5 border border-[#bbf7d0] min-w-0">
+                  <FileText size={14} className="shrink-0" />
+                  <span className="truncate" title={file.name}>{file.name}</span>
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {/* Description Field */}
-          <div className="mb-6">
-            <label className="text-[0.9rem] font-semibold text-[#495057] mb-2 block">وصف أو ملاحظات</label>
-            <textarea rows={4} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} placeholder="اكتب وصفًا تفصيليًا للعمل أو المرفق..."
-              className="w-full py-3 px-4 border-2 border-[#e0e0e0] rounded-[10px] text-[1rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_3px_rgba(0,123,255,0.1)]"
+          <div className="flex flex-col">
+            <label className="text-[0.82rem] font-semibold text-[#475569] mb-1.5">وصف أو ملاحظات</label>
+            <textarea
+              value={form.content}
+              onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+              placeholder="اكتب وصفًا تفصيليًا للعمل أو المرفق..."
+              className="w-full py-2 px-3 border border-[#e2e8f0] rounded-lg text-[0.9rem] resize-y transition-all bg-white font-inherit focus:border-[var(--primary,#007bff)] focus:shadow-[0_0_0_2px_rgba(0,123,255,0.12)] focus:outline-none"
+              style={{ height: "128px" }}
             />
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end">
-            <button type="submit" disabled={saving}
-              className="py-[0.875rem] px-8 text-white border-none rounded-[10px] flex items-center gap-2 text-[1rem] font-semibold transition-all shadow-[0_2px_8px_rgba(0,123,255,0.3)] hover:shadow-[0_4px_12px_rgba(0,123,255,0.4)] hover:-translate-y-px" style={{ backgroundColor: "var(--primary, #007bff)", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.6 : 1 }}
+          <div className="flex justify-stretch sm:justify-end pt-1">
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 py-2 px-5 text-white border-none rounded-lg text-[0.88rem] font-semibold transition-all shadow-[0_1px_6px_rgba(0,123,255,0.25)] hover:shadow-[0_2px_10px_rgba(0,123,255,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "var(--primary, #007bff)" }}
             >
-              {saving ? <LoadingSpinner size="button" /> : <Plus size={20} />}
+              {saving ? <LoadingSpinner size="button" /> : <Plus size={16} />}
               {saving ? "جاري الحفظ..." : "إضافة مدخل"}
             </button>
           </div>
         </form>
-      </div>
+      </section>
 
-      {/* Entries Section */}
-      <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,0,0.08)] p-6 border border-[#e8e8e8] animate-[fadeIn_0.4s_ease-out]">
-        <h4 className="m-0 text-[1.2rem] font-bold text-[#495057] mb-6 flex items-center gap-2">
-          <FolderOpen size={22} color="var(--primary, #007bff)" />
-          مدخلاتك ({entries.length})
-        </h4>
+      <section className="bg-white rounded-xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] border border-[#e8e8e8] p-4 sm:p-5 animate-[fadeIn_0.4s_ease-out]">
+        <h2 className="m-0 text-[1rem] font-bold text-[#1e293b] mb-3 flex items-center gap-2">
+          <FolderOpen size={18} color="var(--primary, #007bff)" />
+          مدخلاتي السابقة
+          <span className="text-[0.78rem] font-semibold text-[#94a3b8]">({entries.length})</span>
+        </h2>
 
         {loading ? (
           <LoadingSpinner size="section" text="جاري التحميل..." />
         ) : entries.length === 0 ? (
-          <div className="text-center py-12 bg-[#f8f9fa] rounded-xl border-2 border-dashed border-[#dee2e6]">
-            <FolderOpen size={60} color="#adb5bd" className="mb-4" />
-            <h5 className="text-[#495057] m-0 mb-2">لا توجد مدخلات بعد</h5>
-            <p className="text-[#6c757d] m-0">ابدأ بإضافة أول عمل أو شاهد لتوثيق تدريبك</p>
+          <div className="text-center py-8 bg-[#f8fafc] rounded-lg border border-dashed border-[#e2e8f0]">
+            <FolderOpen size={40} color="#94a3b8" className="mx-auto mb-2" />
+            <p className="text-[#64748b] m-0 text-[0.88rem] font-medium">لا توجد مدخلات بعد</p>
+            <p className="text-[#94a3b8] m-0 mt-1 text-[0.78rem]">ابدأ بإضافة أول شاهد من النموذج أعلاه</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             {entries.map((en) => {
               const counselorPayload = parseCounselorPortfolioPayload(en);
               const mentorVisitPayload = parseMentorClassroomVisitPayload(en);
               const psychInstitutionPayload = parsePsychologistInstitutionPayload(en);
+              const schoolManagerPayload = parseSchoolManagerPortfolioPayload(en);
               const style = getEntryStyle(en);
               const EntryIcon = style.icon;
               return (
                 <div key={en.id}
-                  className="bg-white rounded-[14px] border border-[#e9ecef] transition-all duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-[3px]"
+                  className="bg-white rounded-lg border border-[#e9ecef] transition-all duration-200 shadow-[0_1px_4px_rgba(0,0,0,0.04)] overflow-hidden hover:-translate-y-px"
                   onMouseEnter={(e) => {
                     e.currentTarget.style.boxShadow = `0 10px 24px ${style.color}20`;
                     e.currentTarget.style.borderColor = `${style.color}55`;
@@ -643,7 +796,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                   {/* شريط لوني علوي */}
                   <div className="h-1" style={{ background: style.gradient }} />
 
-                  <div className="py-[1.1rem] px-[1.25rem]">
+                  <div className="py-3 px-4">
                     {editingId === en.id ? (
                       /* وضع التعديل */
                       <div className="flex flex-col gap-3">
@@ -707,7 +860,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                               <FileText size={14} />
                               عرض الملف
                             </button>
-                          ) : (counselorPayload || psychInstitutionPayload) ? (
+                          ) : (counselorPayload || psychInstitutionPayload || schoolManagerPayload) ? (
                             <button type="button"
                               onClick={() => setPreviewEntry(en)}
                               className="inline-flex items-center gap-[0.35rem] text-[0.82rem] font-semibold py-[0.35rem] px-[0.7rem] rounded-lg transition-all border-none cursor-pointer"
@@ -752,7 +905,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                               </button>
                             </div>
                           )}
-                          {!counselorPayload && !mentorVisitPayload && !psychInstitutionPayload ? (
+                          {!counselorPayload && !mentorVisitPayload && !psychInstitutionPayload && !schoolManagerPayload ? (
                             <>
                               <button type="button" onClick={() => startEdit(en)}
                                 className="bg-transparent border-none cursor-pointer text-[#94a3b8] p-1 rounded-md transition-all hover:text-[#3b82f6] hover:bg-[#eff6ff]"
@@ -775,6 +928,9 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
                     {counselorPayload && editingId !== en.id ? <CounselorPortfolioReadOnly data={counselorPayload} /> : null}
                     {psychInstitutionPayload && editingId !== en.id ? (
                       <PsychologistInstitutionPortfolioReadOnly data={psychInstitutionPayload} />
+                    ) : null}
+                    {schoolManagerPayload && editingId !== en.id ? (
+                      <SchoolManagerPortfolioReadOnly data={schoolManagerPayload} />
                     ) : null}
 
                     {/* نموذج استبدال الملف */}
@@ -865,7 +1021,7 @@ ${data.general_notes ? `<div class="notes"><strong>ملاحظات عامة:</str
             })}
           </div>
         )}
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

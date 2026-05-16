@@ -15,7 +15,7 @@ class OfficialLetterPolicy
         if ($user->role?->name === 'education_directorate' && $letter->type === 'to_directorate') return true;
         if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true) && $letter->type === 'to_school') {
             if (! $user->training_site_id || ! $letter->training_site_id) {
-                return true;
+                return false;
             }
 
             return (int) $letter->training_site_id === (int) $user->training_site_id;
@@ -40,7 +40,11 @@ class OfficialLetterPolicy
         }
 
         if (in_array($user->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true) && $letter->type === 'to_school') {
-            return true;
+            if (! $user->training_site_id || ! $letter->training_site_id) {
+                return false;
+            }
+
+            return (int) $letter->training_site_id === (int) $user->training_site_id;
         }
 
         return $user->id === $letter->received_by;
@@ -58,8 +62,9 @@ class OfficialLetterPolicy
         // مدير المدرسة يمكنه الموافقة/رفض الكتب الموجهة لمدرسته
         if (in_array($user->role?->name, ['school_manager', 'principal', 'psychology_center_manager'], true) && $letter->type === 'to_school') {
             if (! $user->training_site_id || ! $letter->training_site_id) {
-                return true;
+                return false;
             }
+
             return (int) $letter->training_site_id === (int) $user->training_site_id;
         }
         return false;

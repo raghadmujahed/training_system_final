@@ -90,6 +90,8 @@ const ROUTE_ICON = {
   "/principal/trainee-students": "graduation",
   "/principal/student-evaluation": "star",
   "/principal/attendance-approval": "clipboardCheck",
+  "/principal/official-letters": "document",
+  "/principal/school-teachers": "users",
 
   "/psychology-center/dashboard": "home",
   "/psychology-center/profile": "user",

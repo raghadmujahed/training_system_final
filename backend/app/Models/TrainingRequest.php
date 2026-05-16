@@ -59,6 +59,11 @@ class TrainingRequest extends Model
         return $this->hasMany(TrainingRequestStudent::class);
     }
 
+    public function trainingAssignments()
+    {
+        return $this->hasMany(TrainingAssignment::class);
+    }
+
     public function officialLetters()
     {
         return $this->hasMany(OfficialLetter::class);

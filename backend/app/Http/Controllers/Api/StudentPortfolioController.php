@@ -8,9 +8,11 @@ use App\Http\Requests\UpdateStudentPortfolioRequest;
 use App\Http\Requests\StorePortfolioEntryRequest;
 use App\Http\Requests\UpdatePortfolioEntryRequest;
 use App\Http\Resources\StudentPortfolioResource;
+use App\Models\StudentEvaluation;
 use App\Models\StudentPortfolio;
 use App\Models\PortfolioEntry;
 use App\Models\Notification;
+use App\Services\StudentEvaluationPortfolioService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
@@ -60,7 +62,16 @@ class StudentPortfolioController extends Controller
 
         $this->authorize('view', $portfolio);
 
-        return new StudentPortfolioResource($portfolio->load('entries.reviewer'));
+        StudentEvaluation::query()
+            ->where('student_id', $user->id)
+            ->with(['student', 'evaluator.role', 'evaluator.trainingSite', 'trainingRequestStudent.trainingRequest.trainingSite'])
+            ->orderBy('id')
+            ->get()
+            ->each(fn (StudentEvaluation $evaluation) => StudentEvaluationPortfolioService::syncToPortfolio($evaluation));
+
+        $portfolio->refresh()->load('entries.reviewer');
+
+        return new StudentPortfolioResource($portfolio);
     }
 
     /**

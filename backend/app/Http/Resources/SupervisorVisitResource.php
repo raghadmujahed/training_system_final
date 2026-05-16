@@ -17,7 +17,13 @@ class SupervisorVisitResource extends JsonResource
             'notes' => $this->notes,
             'rating' => $this->rating,
             'status' => $this->status,
-            'status_label' => SupervisorVisitStatus::tryFrom($this->status)?->label() ?? $this->status,
+            'status_label' => SupervisorVisitStatus::tryFrom((string) $this->status)?->label()
+                ?? match ((string) $this->status) {
+                    'planned', 'scheduled' => 'مجدولة',
+                    'completed' => 'منفذة',
+                    'cancelled' => 'ملغية',
+                    default => (string) $this->status,
+                },
             'training_assignment' => new TrainingAssignmentResource($this->whenLoaded('trainingAssignment')),
             'supervisor' => new UserResource($this->whenLoaded('supervisor')),
             'created_at' => $this->created_at?->toDateTimeString(),

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Department;
+use App\Models\TeacherSchoolAssignment;
 use App\Models\TrainingAssignment;
 use App\Models\TrainingSite;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Models\Role;
 use App\Models\FieldSupervisorProfile;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class UsersSeeder extends Seeder
 {
@@ -165,6 +167,12 @@ class UsersSeeder extends Seeder
             $teacherIndex++;
         }
 
+        foreach ($allSchools as $school) {
+            if (Schema::hasTable('teacher_school_assignments')) {
+                TeacherSchoolAssignment::syncLegacyTeachersForSchool($school->id);
+            }
+        }
+
         // ربط تعيينات التدريب النشطة بمعلم المرشد الرسمي لكل مدرسة (مثل assigned_teacher_id عند الموافقة)
         $teacherIndex = 1;
         foreach ($allSchools as $school) {
@@ -242,7 +250,7 @@ class UsersSeeder extends Seeder
             }
 
             $email = 'schoolmanager.' . $schoolIndex . '@hebron.edu.ps';
-            User::firstOrCreate(
+            $manager = User::firstOrCreate(
                 ['email' => $email],
                 [
                     'name' => 'مدير ' . $school->name,
@@ -253,8 +261,18 @@ class UsersSeeder extends Seeder
                     'phone' => $school->phone ?? $school->mobile ?? null,
                 ]
             );
+            if ($manager->training_site_id === null) {
+                $manager->update(['training_site_id' => $school->id]);
+            }
+            \App\Support\SchoolManagerSiteResolver::syncSiteManagerId($manager);
             $schoolIndex++;
         }
+
+        // مزامنة manager_id لكل مدير مدرسة موجود مسبقاً
+        User::query()
+            ->whereNotNull('training_site_id')
+            ->whereHas('role', fn ($q) => $q->whereIn('name', ['school_manager', 'principal']))
+            ->each(fn (User $u) => \App\Support\SchoolManagerSiteResolver::syncSiteManagerId($u));
 
         // 7. أخصائي نفسي
         $psychologistRole = Role::where('name', 'psychologist')->first();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SupervisorVisitStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Concerns\HidesArchived;
 use Illuminate\Database\Eloquent\Model;
@@ -32,5 +33,15 @@ class SupervisorVisit extends Model
     public function supervisor()
     {
         return $this->belongsTo(User::class, 'supervisor_id');
+    }
+
+    public static function initialStatus(): string
+    {
+        return SupervisorVisitStatus::defaultForNewVisit();
+    }
+
+    public function isUpcoming(): bool
+    {
+        return in_array($this->status, ['planned', 'scheduled'], true);
     }
 }

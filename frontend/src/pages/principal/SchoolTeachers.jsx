@@ -45,10 +45,14 @@ export default function SchoolTeachers() {
     setError("");
     try {
       const response = await getSchoolTeachers();
-      setTeachers(response.data || []);
+      const list = Array.isArray(response?.data) ? response.data : [];
+      setTeachers(list);
+      if (list.length === 0 && response?.message) {
+        setError(response.message);
+      }
     } catch (err) {
       console.error(err);
-      setError("تعذر تحميل معلمي المدرسة، يرجى المحاولة لاحقاً");
+      setError(err.response?.data?.message || "تعذر تحميل معلمي المدرسة، يرجى المحاولة لاحقاً");
     } finally {
       setLoading(false);
     }

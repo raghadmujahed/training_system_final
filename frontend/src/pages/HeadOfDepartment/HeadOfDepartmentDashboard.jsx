@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { LayoutDashboard } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  ClipboardList,
+  BarChart3,
+  GraduationCap,
+  UserCheck,
+  FileText,
+} from "lucide-react";
 import { getHeadDepartmentDashboardStats } from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import PageHeader from "../../components/common/PageHeader";

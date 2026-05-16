@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getSection, createSection, updateSection, getUsers, getActiveTrainingPeriod } from "../../services/api";
-import { useCourses, useRoles } from "../../hooks/useSharedData";
+import { useCourses } from "../../hooks/useSharedData";
 import useAppToast from "../../hooks/useAppToast";
 import { apiCache } from "../../services/apiCache";
 import { hasFormChanged } from "../../utils/formChanged";
@@ -12,8 +12,6 @@ export default function HeadOfDepartmentSectionForm() {
   const toast = useAppToast();
   const [loading, setLoading] = useState(false);
   const { data: courses } = useCourses();
-  const { data: allRoles } = useRoles();
-  const supervisorRoleId = allRoles.find((r) => r.name === "academic_supervisor")?.id;
 
   const [supervisors, setSupervisors] = useState([]);
   const [supervisorsLoading, setSupervisorsLoading] = useState(false);
@@ -72,7 +70,7 @@ export default function HeadOfDepartmentSectionForm() {
 
   // ── Load supervisors filtered by course department ────────────────────
   useEffect(() => {
-    if (!form.course_id || !supervisorRoleId) {
+    if (!form.course_id) {
       setSupervisors([]);
       return;
     }
@@ -83,11 +81,11 @@ export default function HeadOfDepartmentSectionForm() {
       return;
     }
     setSupervisorsLoading(true);
-    getUsers({ role_id: supervisorRoleId, department_id: deptId, per_page: 200 })
+    getUsers({ role: "academic_supervisor", department_id: deptId, per_page: 200 })
       .then((res) => setSupervisors(res.data || []))
       .catch(() => setSupervisors([]))
       .finally(() => setSupervisorsLoading(false));
-  }, [form.course_id, courses, supervisorRoleId]);
+  }, [form.course_id, courses]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

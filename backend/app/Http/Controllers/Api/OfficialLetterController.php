@@ -10,6 +10,7 @@ use App\Http\Requests\ApproveOfficialLetterRequest;
 use App\Http\Resources\OfficialLetterResource;
 use App\Models\OfficialLetter;
 use App\Services\OfficialLetterService;
+use App\Support\SchoolManagerSiteResolver;
 use Illuminate\Http\Request;
 
 class OfficialLetterController extends Controller
@@ -34,11 +35,9 @@ class OfficialLetterController extends Controller
             $query->where('status', $request->status);
         }
 
-        if (in_array($user?->role?->name, ['school_manager', 'psychology_center_manager', 'principal'], true)) {
-            $query->where('type', 'to_school');
-            if (! empty($user->training_site_id)) {
-                $query->where('training_site_id', $user->training_site_id);
-            }
+        if (SchoolManagerSiteResolver::isSiteManager($user)) {
+            $siteId = SchoolManagerSiteResolver::requireTrainingSiteId($user);
+            $query->where('type', 'to_school')->where('training_site_id', $siteId);
         }
         if ($user?->role?->name === 'education_directorate' && !empty($user->directorate)) {
             $query->whereHas('trainingRequest.trainingSite', function ($sq) use ($user) {

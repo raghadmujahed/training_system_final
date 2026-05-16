@@ -157,8 +157,10 @@ const menus = {
   school_manager: [
     { name: "\u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629", path: "/principal/dashboard" },
     { name: "\u0637\u0644\u0628\u0627\u062a \u0627\u0644\u062a\u062f\u0631\u064a\u0628", path: "/principal/training-requests" },
+    { name: "الكتب الرسمية", path: "/principal/official-letters" },
     { name: "\u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u062d\u0636\u0648\u0631", path: "/principal/attendance-approval" },
     { name: "تقييم الطلبة", path: "/principal/student-evaluation" },
+    { name: "معلمو المدرسة", path: "/principal/school-teachers" },
   ],
   
   field_supervisor: buildFieldSupervisorMenu(),
@@ -199,8 +201,10 @@ const menus = {
   principal: [
     { name: "الرئيسية", path: "/principal/dashboard" },
     { name: "طلبات التدريب", path: "/principal/training-requests" },
+    { name: "الكتب الرسمية", path: "/principal/official-letters" },
     { name: "اعتماد الحضور", path: "/principal/attendance-approval" },
     { name: "التقييمات", path: "/principal/student-evaluation" },
+    { name: "معلمو المدرسة", path: "/principal/school-teachers" },
   ],
 
   psychology_center_manager: [

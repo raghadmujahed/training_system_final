@@ -133,25 +133,105 @@ class TeacherSchoolAssignment extends Model
             ->pluck('teacher_id')
             ->toArray();
 
+        $legacyLinkedIds = User::query()
+            ->whereHas('role', fn ($q) => $q->where('name', 'teacher'))
+            ->whereNotNull('training_site_id')
+            ->pluck('id')
+            ->all();
+
+        $excludeIds = array_unique(array_merge($assignedTeacherIds, $legacyLinkedIds));
+
         return User::whereHas('role', function ($query) {
                 $query->where('name', 'teacher');
             })
-            ->whereNotIn('id', $assignedTeacherIds)
+            ->where('status', 'active')
+            ->whereNotIn('id', $excludeIds)
+            ->orderBy('name')
             ->get();
+    }
+
+    /**
+     * مزامنة المعلمين المرتبطين سابقاً عبر users.training_site_id إلى جدول التعيينات.
+     */
+    public static function syncLegacyTeachersForSchool(int $schoolId, ?int $createdBy = null): int
+    {
+        $teachers = User::query()
+            ->where('training_site_id', $schoolId)
+            ->where('status', 'active')
+            ->whereHas('role', fn ($q) => $q->where('name', 'teacher'))
+            ->get();
+
+        $synced = 0;
+
+        foreach ($teachers as $teacher) {
+            $hasActive = static::query()
+                ->active()
+                ->forTeacher($teacher->id)
+                ->exists();
+
+            if ($hasActive) {
+                continue;
+            }
+
+            static::create([
+                'teacher_id' => $teacher->id,
+                'school_id' => $schoolId,
+                'academic_year' => (string) now()->year,
+                'start_date' => now()->toDateString(),
+                'is_active' => true,
+                'status' => 'active',
+                'action_type' => 'legacy_sync',
+                'notes' => 'مزامنة تلقائية من ربط الموقع السابق',
+                'created_by' => $createdBy,
+            ]);
+
+            $synced++;
+        }
+
+        return $synced;
+    }
+
+    public static function formatTeacherListItem(self $assignment): ?array
+    {
+        $teacher = $assignment->teacher;
+        if (! $teacher) {
+            return null;
+        }
+
+        return [
+            'id' => $teacher->id,
+            'name' => $teacher->name,
+            'email' => $teacher->email,
+            'phone' => $teacher->phone,
+            'university_id' => $teacher->university_id,
+            'start_date' => $assignment->start_date?->format('Y-m-d'),
+            'academic_year' => $assignment->academic_year,
+            'status' => $assignment->status,
+            'assignment_id' => $assignment->id,
+        ];
     }
 
     public static function canTeacherBeAssignedToSchool($teacherId, $schoolId)
     {
         $activeAssignment = static::getActiveAssignmentForTeacher($teacherId);
-        
-        if (!$activeAssignment) {
-            return ['can_assign' => true, 'message' => ''];
+
+        if ($activeAssignment) {
+            if ((int) $activeAssignment->school_id === (int) $schoolId) {
+                return ['can_assign' => false, 'message' => 'هذا المعلم مضاف بالفعل إلى مدرستك.'];
+            }
+
+            return ['can_assign' => false, 'message' => 'لا يمكن إضافة هذا المعلم لأنه مرتبط حاليًا بمدرسة أخرى.'];
         }
 
-        if ($activeAssignment->school_id == $schoolId) {
-            return ['can_assign' => false, 'message' => 'هذا المعلم مضاف بالفعل إلى مدرستك.'];
+        $teacher = User::query()->find($teacherId);
+        if ($teacher?->training_site_id) {
+            if ((int) $teacher->training_site_id === (int) $schoolId) {
+                return ['can_assign' => false, 'message' => 'هذا المعلم مضاف بالفعل إلى مدرستك.'];
+            }
+
+            return ['can_assign' => false, 'message' => 'لا يمكن إضافة هذا المعلم لأنه مرتبط حاليًا بمدرسة أخرى.'];
         }
 
-        return ['can_assign' => false, 'message' => 'لا يمكن إضافة هذا المعلم لأنه مرتبط حاليًا بمدرسة أخرى.'];
+        return ['can_assign' => true, 'message' => ''];
     }
 }
