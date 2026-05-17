@@ -20,6 +20,7 @@ import {
   getUniversityIdErrorMessage,
   isDigitsOnly,
   getDigitsOnlyErrorMessage,
+  sanitizeUniversityIdInput,
   trimInput,
 } from "../../../utils/validation";
 
@@ -71,14 +72,49 @@ export default function UserForm() {
     }
   }, [id]);
 
+  // إزالة تعبئة المتصفح الخاطئة (البريد في حقل الرقم الجامعي)
+  useEffect(() => {
+    if (id) return;
+    const timer = window.setTimeout(() => {
+      setForm((prev) => {
+        const raw = prev.university_id;
+        if (!raw || !String(raw).includes("@")) return prev;
+        const role = roles.find((r) => String(r.id) === String(prev.role_id));
+        return {
+          ...prev,
+          university_id: role?.name === "student" ? sanitizeUniversityIdInput(raw) : "",
+        };
+      });
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [id, roles]);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+
+    if (name === "university_id") {
+      value = sanitizeUniversityIdInput(value);
+    }
+
+    if (name === "role_id") {
+      const role = roles.find((r) => String(r.id) === String(value));
+      const isStudent = role?.name === "student";
+      setForm((prev) => ({
+        ...prev,
+        role_id: value,
+        university_id: isStudent ? sanitizeUniversityIdInput(prev.university_id) : "",
+      }));
+      if (errors.role_id) setErrors({ ...errors, role_id: null });
+      if (errors.university_id) setErrors({ ...errors, university_id: null });
+      validateField("role_id", value);
+      return;
+    }
+
     setForm({ ...form, [name]: value });
-    // إزالة الخطأ عند التعديل
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
     }
-    // Real-time validation for specific fields
     validateField(name, value);
   };
 
@@ -236,11 +272,13 @@ export default function UserForm() {
 
     try {
       // Trim text fields before sending
+      const selectedRole = roles.find((r) => String(r.id) === String(form.role_id));
+      const isStudent = selectedRole?.name === "student";
       const trimmedForm = {
         ...form,
         name: trimInput(form.name),
         email: trimInput(form.email),
-        university_id: trimInput(form.university_id),
+        university_id: isStudent ? sanitizeUniversityIdInput(form.university_id) : "",
         phone: trimInput(form.phone),
       };
 
@@ -297,7 +335,7 @@ export default function UserForm() {
         <button onClick={() => navigate("/admin/users")} className="btn-secondary">رجوع</button>
       </div>
 
-      <form onSubmit={handleSubmit} className="form">
+      <form onSubmit={handleSubmit} className="form" autoComplete="off">
         <div className="form-row">
           <div className="form-group">
             <label>الاسم الكامل *</label>
@@ -307,13 +345,14 @@ export default function UserForm() {
 
           <div className="form-group">
             <label>البريد الإلكتروني *</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              value={form.email} 
-              onChange={handleChange} 
-              required 
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+              autoComplete="email"
               placeholder={getEmailPlaceholder()}
             />
             {errors.email && <span className="error">{errors.email[0]}</span>}
@@ -325,15 +364,22 @@ export default function UserForm() {
             <label>الرقم الجامعي <span style={{ color: "#dc2626", display: isStudentRole() ? 'inline' : 'none' }}>*</span></label>
             <input
               type="text"
-              id="university_id"
+              id="student-university-number"
               name="university_id"
               value={form.university_id}
               onChange={handleChange}
-              placeholder={isStudentRole() ? 'أرقام فقط (6-20 رقم)' : 'مخصص للطلاب فقط'}
-              disabled={!isStudentRole() && getSelectedRole()}
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              data-lpignore="true"
+              data-1p-ignore="true"
+              placeholder={isStudentRole() ? "أرقام فقط (6-20 رقم)" : "مخصص للطلاب فقط"}
+              disabled={!isStudentRole() && !!getSelectedRole()}
               style={{
-                backgroundColor: !isStudentRole() && getSelectedRole() ? '#f5f5f5' : 'white',
-                cursor: !isStudentRole() && getSelectedRole() ? 'not-allowed' : 'text'
+                backgroundColor: !isStudentRole() && getSelectedRole() ? "#f5f5f5" : "white",
+                cursor: !isStudentRole() && getSelectedRole() ? "not-allowed" : "text",
               }}
             />
             {errors.university_id && <span className="error">{errors.university_id}</span>}
@@ -386,6 +432,7 @@ export default function UserForm() {
               value={form.password}
               onChange={handleChange}
               required={!id}
+              autoComplete="new-password"
               placeholder={!id ? "8 أحرف على الأقل" : ""}
             />
             {errors.password && <span className="error">{errors.password}</span>}
@@ -400,6 +447,7 @@ export default function UserForm() {
               value={form.password_confirmation}
               onChange={handleChange}
               required={!id}
+              autoComplete="new-password"
               placeholder="أعد إدخال كلمة المرور"
             />
             {errors.password_confirmation && <span className="error">{errors.password_confirmation}</span>}

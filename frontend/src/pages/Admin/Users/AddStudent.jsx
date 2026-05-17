@@ -14,6 +14,7 @@ import {
   getPasswordErrorMessage,
   isValidUniversityId,
   getUniversityIdErrorMessage,
+  sanitizeUniversityIdInput,
   trimInput,
 } from "../../../utils/validation";
 
@@ -68,7 +69,12 @@ export default function AddStudent() {
   const availableMajors = getMajorsForDepartment(form.department_id, departments);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+
+    if (name === "university_id") {
+      value = sanitizeUniversityIdInput(value);
+    }
 
     if (name === "department_id") {
       const majors = getMajorsForDepartment(value, departments);
@@ -201,7 +207,7 @@ export default function AddStudent() {
 
     const formToSend = {
       ...form,
-      university_id: String(form.university_id || ""),
+      university_id: sanitizeUniversityIdInput(form.university_id),
       name: trimInput(form.name),
       email: trimInput(form.email),
       major: trimInput(form.major),
@@ -359,7 +365,7 @@ export default function AddStudent() {
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />{errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}</div>
           <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required placeholder="يجب أن ينتهي بـ @students.hebron.edu" />{errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}</div>
-          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} onBlur={handleChange} className={errors.university_id ? 'border-red-500' : ''} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{Array.isArray(errors.university_id) ? errors.university_id[0] : errors.university_id}</span>}</div>
+          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="student-university-number" name="university_id" value={form.university_id} onChange={handleChange} onBlur={handleChange} inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoCorrect="off" spellCheck={false} data-lpignore="true" data-1p-ignore="true" className={errors.university_id ? 'border-red-500' : ''} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{Array.isArray(errors.university_id) ? errors.university_id[0] : errors.university_id}</span>}</div>
           <div className="form-group"><label>القسم</label><select id="department_id" name="department_id" value={form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.department_id ? 'border-red-500' : ''}><option value="">اختر القسم</option>{departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>{errors.department_id && <span className="error">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</span>}</div>
           <div className="form-group"><label>التخصص *</label><MajorSelect value={form.major} majors={availableMajors} disabled={!form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.major ? "border-red-500" : ""} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
           <div className="form-group"><label>كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} placeholder="8 أحرف على الأقل" />{errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}</div>
@@ -384,7 +390,7 @@ export default function AddStudent() {
         <form onSubmit={handleSubmit} className="form">
           <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />{errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}</div>
           <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required placeholder="يجب أن ينتهي بـ @students.hebron.edu" />{errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}</div>
-          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} onBlur={handleChange} className={errors.university_id ? 'border-red-500' : ''} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{Array.isArray(errors.university_id) ? errors.university_id[0] : errors.university_id}</span>}</div>
+          <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="student-university-number" name="university_id" value={form.university_id} onChange={handleChange} onBlur={handleChange} inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoCorrect="off" spellCheck={false} data-lpignore="true" data-1p-ignore="true" className={errors.university_id ? 'border-red-500' : ''} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{Array.isArray(errors.university_id) ? errors.university_id[0] : errors.university_id}</span>}</div>
           <div className="form-group"><label>القسم *</label><select id="department_id" name="department_id" value={form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.department_id ? 'border-red-500' : ''} required><option value="">اختر القسم</option>{departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>{errors.department_id && <span className="error">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</span>}</div>
           <div className="form-group"><label>التخصص *</label><MajorSelect value={form.major} majors={availableMajors} disabled={!form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.major ? "border-red-500" : ""} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
           <div className="form-group"><label>كلمة المرور *</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} required placeholder="8 أحرف على الأقل" />{errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}</div>

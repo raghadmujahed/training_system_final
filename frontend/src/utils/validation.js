@@ -135,6 +135,14 @@ export const getDigitsOnlyErrorMessage = () => {
   return "يج أن يحتوي على أرقام فقط";
 };
 
+/** يزيل التعبئة التلقائية الخاطئة (مثل البريد) ويبقي الأرقام فقط */
+export const sanitizeUniversityIdInput = (value) => {
+  if (value == null || value === "") return "";
+  const trimmed = String(value).trim();
+  if (trimmed.includes("@")) return "";
+  return trimmed.replace(/\D/g, "");
+};
+
 // Required field validation
 export const isRequired = (value) => {
   if (typeof value === "string") {
