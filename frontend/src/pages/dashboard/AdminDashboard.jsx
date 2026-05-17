@@ -23,6 +23,7 @@ import {
   Database,
   Bell,
   ClipboardCheck,
+  ChevronLeft,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -57,7 +58,6 @@ export default function AdminDashboard() {
 
         const announcementData = await getLatestAnnouncement();
         setAnnouncement(announcementData || null);
-
       } catch (err) {
         console.error(err);
         setError("حدث خطأ أثناء تحميل البيانات");
@@ -70,7 +70,13 @@ export default function AdminDashboard() {
   }, []);
 
   if (loading) return <LoadingSpinner size="page" text="جاري تحميل البيانات..." />;
-  if (error) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-[16px] p-6 text-center">حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى.</div>;
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 text-red-700 rounded-[12px] p-4 text-center text-sm">
+        حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى.
+      </div>
+    );
+  }
 
   const statCards = [
     { title: "إجمالي المستخدمين", value: stats.total_users, icon: Users, color: "border-r-info", bg: "bg-info/8" },
@@ -95,62 +101,76 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <>
-      <PageHeader title="لوحة تحكم مدير النظام" subtitle="نظرة عامة على عمليات التدريب الميداني والأنشطة داخل النظام" icon={LayoutDashboard} />
+    <div className="admin-dashboard mx-auto w-full max-w-[1400px] min-w-0 space-y-3 sm:space-y-4">
+      <PageHeader
+        title="لوحة تحكم مدير النظام"
+        subtitle="نظرة عامة على عمليات التدريب الميداني والأنشطة داخل النظام"
+        icon={LayoutDashboard}
+        className="!py-5 !px-6 !mb-0 !min-h-[80px]"
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {statCards.map((card, i) => (
-          <div key={i} className={`bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5 border-r-4 ${card.color} hover:shadow-md transition-shadow`}>
-            <div className="flex items-center gap-3 mb-2">
-              <div className={`w-10 h-10 rounded-[10px] ${card.bg} flex items-center justify-center`}>
-                <card.icon size={20} className="text-secondary" />
+          <div
+            key={i}
+            className={`bg-white border border-border rounded-[14px] p-3 sm:p-3.5 border-r-4 ${card.color} shadow-sm`}
+          >
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-text-faint text-[0.78rem] sm:text-[0.82rem] font-bold leading-snug">{card.title}</span>
+              <div className={`w-8 h-8 rounded-[8px] ${card.bg} flex items-center justify-center shrink-0`}>
+                <card.icon size={17} className="text-secondary" />
               </div>
-              <div className="stat-title text-text-faint text-[0.85rem] font-bold">{card.title}</div>
             </div>
-            <div className="text-[1.8rem] font-extrabold text-secondary">{card.value}</div>
+            <div className="text-[1.45rem] sm:text-[1.6rem] font-extrabold text-secondary leading-none">{card.value}</div>
           </div>
         ))}
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-lg font-extrabold text-secondary mb-4">الوصول السريع</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="bg-white border border-border rounded-[14px] p-3 sm:p-4 shadow-sm">
+        <h3 className="text-[0.95rem] sm:text-base font-extrabold text-secondary mb-2.5 sm:mb-3">الوصول السريع</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
           {quickActions.map((action, i) => (
             <Link
               key={i}
               to={action.path}
-              className="bg-gradient-to-br from-white to-[#f8fafc] border border-border rounded-[16px] p-5 hover:shadow-lg hover:border-accent/30 transition-all duration-200 group"
+              className="flex items-center gap-2.5 rounded-[10px] border border-[#e8edf3] bg-[#f8fafc] px-2.5 py-2 sm:py-2.5 no-underline transition-colors hover:border-accent/35 hover:bg-white hover:shadow-sm group min-w-0"
             >
-              <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                <action.icon size={24} className="text-white" />
+              <div
+                className={`w-9 h-9 rounded-[9px] bg-gradient-to-br ${action.color} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}
+              >
+                <action.icon size={17} className="text-white" />
               </div>
-              <h4 className="font-bold text-secondary mb-1">{action.title}</h4>
-              <p className="text-sm text-text-faint">{action.description}</p>
+              <div className="min-w-0 flex-1">
+                <h4 className="m-0 text-[0.82rem] sm:text-[0.85rem] font-bold text-secondary leading-snug line-clamp-2">
+                  {action.title}
+                </h4>
+                <p className="m-0 mt-0.5 text-[0.72rem] text-text-faint line-clamp-1 hidden md:block">{action.description}</p>
+              </div>
+              <ChevronLeft size={14} className="text-text-faint shrink-0 opacity-60 group-hover:opacity-100 hidden sm:block" />
             </Link>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
-          <h4 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">آخر الأنشطة</h4>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2.5 sm:gap-3 pb-1">
+        <div className="bg-white border border-border rounded-[14px] p-3 sm:p-4 shadow-sm min-h-0">
+          <h4 className="m-0 mb-2.5 text-secondary font-extrabold text-[0.95rem]">آخر الأنشطة</h4>
           {activities.length === 0 ? (
             <EmptyState
+              compact
               title="لا توجد أنشطة حديثة"
               description="لم يتم تسجيل أي أنشطة في النظام مؤخراً"
               icon={Clock}
             />
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col divide-y divide-[#edf2f7]">
               {activities.slice(0, 4).map((activity, idx) => (
-                <div key={idx} className="border-b border-[#edf2f7] pb-3 last:border-0 last:pb-0 hover:bg-gray-50 rounded-lg px-2 py-1 transition-colors">
-                  <div className="font-bold text-text text-[0.95rem]">
+                <div key={idx} className="py-2 first:pt-0 last:pb-0">
+                  <div className="font-bold text-text text-[0.88rem] leading-snug">
                     {activity.description || activity.action || "نشاط"}
                   </div>
-                  <small className="text-text-faint">
-                    {activity.created_at
-                      ? new Date(activity.created_at).toLocaleString('ar-EG')
-                      : ""}
+                  <small className="text-text-faint text-[0.78rem]">
+                    {activity.created_at ? new Date(activity.created_at).toLocaleString("ar-EG") : ""}
                   </small>
                 </div>
               ))}
@@ -158,20 +178,19 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        <div className="bg-gradient-to-b from-bg-paper to-[#f8fafc] border border-border rounded-[18px] p-5">
-          <h5 className="m-0 mb-4 text-secondary font-extrabold text-[1.05rem]">آخر إعلان</h5>
+        <div className="bg-white border border-border rounded-[14px] p-3 sm:p-4 shadow-sm min-h-0">
+          <h5 className="m-0 mb-2.5 text-secondary font-extrabold text-[0.95rem]">آخر إعلان</h5>
           {announcement ? (
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-100">
-              <div className="font-bold text-text mb-2 text-lg">{announcement.title}</div>
-              <p className="text-text-soft text-[0.92rem] m-0 mb-2">{announcement.content}</p>
-              <small className="text-text-faint">
-                {announcement.created_at
-                  ? new Date(announcement.created_at).toLocaleString('ar-EG')
-                  : ""}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-[10px] p-3 border border-blue-100">
+              <div className="font-bold text-text mb-1.5 text-[0.95rem] leading-snug">{announcement.title}</div>
+              <p className="text-text-soft text-[0.85rem] m-0 mb-1.5 line-clamp-3">{announcement.content}</p>
+              <small className="text-text-faint text-[0.78rem]">
+                {announcement.created_at ? new Date(announcement.created_at).toLocaleString("ar-EG") : ""}
               </small>
             </div>
           ) : (
             <EmptyState
+              compact
               title="لا توجد إعلانات حالية"
               description="لم يتم نشر أي إعلانات في النظام"
               icon={Bell}
@@ -179,6 +198,6 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
