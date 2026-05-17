@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Support\AcademicMajors;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,7 @@ class UpdateUserRequest extends FormRequest
             'department_id' => 'sometimes|nullable|exists:departments,id',
             'training_site_id' => 'sometimes|nullable|exists:training_sites,id',
             'phone' => 'sometimes|nullable|string|max:20',
-            'major' => 'sometimes|nullable|string|max:255',
+            'major' => ['sometimes', 'nullable', 'string', Rule::in(AcademicMajors::all())],
             'directorate' => 'sometimes|nullable|in:وسط,شمال,جنوب,يطا',
         ];
     }
@@ -163,11 +164,20 @@ class UpdateUserRequest extends FormRequest
                 }
             }
 
-            // ===== 5) التخصص إلزامي للطلاب =====
-            if ($role->name === 'student') {
-                $major = $this->input('major', $current?->major);
-                if (empty($major)) {
-                    $validator->errors()->add('major', 'التخصص مطلوب للطلاب.');
+            // ===== 5) التخصص إلزامي ومن القائمة للطلاب والمعلمين =====
+            $rolesNeedingMajor = ['student', 'teacher', 'adviser'];
+            if (in_array($role->name, $rolesNeedingMajor, true)) {
+                $majorRaw = $this->has('major') ? $this->input('major') : $current?->major;
+                $major = AcademicMajors::normalize($majorRaw);
+                if ($major === null) {
+                    $validator->errors()->add('major', 'التخصص مطلوب. اختر تخصصاً صالحاً من القائمة.');
+                } elseif ($role->name === 'student') {
+                    $departmentId = (int) ($this->has('department_id')
+                        ? $this->input('department_id')
+                        : $current?->department_id);
+                    if ($departmentId && ! AcademicMajors::isValidForDepartment($major, $departmentId)) {
+                        $validator->errors()->add('major', 'التخصص غير مطابق للقسم المختار.');
+                    }
                 }
             }
         });

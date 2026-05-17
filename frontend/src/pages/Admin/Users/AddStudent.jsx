@@ -4,6 +4,8 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useDepartments } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import MajorSelect from "../../../components/common/MajorSelect";
+import { getMajorsForDepartment, isValidMajor, resolveMajor } from "../../../constants/academicMajors";
 import {
   isValidEmail,
   isValidStudentEmail,
@@ -50,8 +52,8 @@ export default function AddStudent() {
             password: "",
             password_confirmation: "",
             university_id: userData.university_id || "",
-            major: userData.major || "",
             department_id: userData.department_id || "",
+            major: resolveMajor(userData.major, userData.department_id, departments),
             role_id: userData.role_id || 2,
             status: userData.status || "active",
           });
@@ -61,13 +63,28 @@ export default function AddStudent() {
       };
       fetchUser();
     }
-  }, [id]);
+  }, [id, departments]);
+
+  const availableMajors = getMajorsForDepartment(form.department_id, departments);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+
+    if (name === "department_id") {
+      const majors = getMajorsForDepartment(value, departments);
+      setForm((prev) => ({
+        ...prev,
+        department_id: value,
+        major: majors.includes(prev.major) ? prev.major : "",
+      }));
+    } else {
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+
     if (errors[name]) setErrors({ ...errors, [name]: null });
-    // Real-time validation
+    if (name === "department_id" && errors.major) {
+      setErrors((prev) => ({ ...prev, major: null }));
+    }
     validateField(name, value);
   };
 
@@ -132,8 +149,14 @@ export default function AddStudent() {
       newErrors.department_id = "القسم مطلوب";
     }
 
-    if (!form.major.trim()) {
+    if (!form.department_id) {
+      // department_id error already set
+    } else if (!availableMajors.length) {
+      newErrors.major = "لا تتوفر تخصصات لهذا القسم";
+    } else if (!form.major.trim()) {
       newErrors.major = "التخصص مطلوب";
+    } else if (!isValidMajor(form.major, form.department_id, departments)) {
+      newErrors.major = "اختر تخصصاً مناسباً للقسم المختار";
     }
 
     // Password validation for new students
@@ -266,8 +289,8 @@ export default function AddStudent() {
             password: clean["كلمة المرور"] || clean["password"] || "12345678",
             password_confirmation: clean["كلمة المرور"] || clean["password"] || "12345678",
             university_id: String(clean["الرقم الجامعي"] || clean["university_id"] || ""),
-            major: clean["التخصص"] || clean["major"] || "",
             department_id: deptId,
+            major: resolveMajor(clean["التخصص"] || clean["major"] || "", deptId, departments),
             role_id: 2,
             status: "active",
           };
@@ -338,7 +361,7 @@ export default function AddStudent() {
           <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required placeholder="يجب أن ينتهي بـ @students.hebron.edu" />{errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}</div>
           <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} onBlur={handleChange} className={errors.university_id ? 'border-red-500' : ''} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{Array.isArray(errors.university_id) ? errors.university_id[0] : errors.university_id}</span>}</div>
           <div className="form-group"><label>القسم</label><select id="department_id" name="department_id" value={form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.department_id ? 'border-red-500' : ''}><option value="">اختر القسم</option>{departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>{errors.department_id && <span className="error">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</span>}</div>
-          <div className="form-group"><label>التخصص</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} onBlur={handleChange} className={errors.major ? 'border-red-500' : ''} />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
+          <div className="form-group"><label>التخصص *</label><MajorSelect value={form.major} majors={availableMajors} disabled={!form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.major ? "border-red-500" : ""} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
           <div className="form-group"><label>كلمة المرور (اتركها فارغة إذا لم ترد التغيير)</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} placeholder="8 أحرف على الأقل" />{errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}</div>
           <div className="form-group"><label>تأكيد كلمة المرور</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} onBlur={handleChange} className={errors.password_confirmation ? 'border-red-500' : ''} />{errors.password_confirmation && <span className="error">{Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}</span>}</div>
           <div className="form-actions"><button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "تحديث"}</button><button type="button" onClick={() => navigate("/admin/users")}>إلغاء</button></div>
@@ -363,7 +386,7 @@ export default function AddStudent() {
           <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required placeholder="يجب أن ينتهي بـ @students.hebron.edu" />{errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}</div>
           <div className="form-group"><label>الرقم الجامعي *</label><input type="text" id="university_id" name="university_id" value={form.university_id} onChange={handleChange} onBlur={handleChange} className={errors.university_id ? 'border-red-500' : ''} required placeholder="أرقام فقط (6-20 رقم)" />{errors.university_id && <span className="error">{Array.isArray(errors.university_id) ? errors.university_id[0] : errors.university_id}</span>}</div>
           <div className="form-group"><label>القسم *</label><select id="department_id" name="department_id" value={form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.department_id ? 'border-red-500' : ''} required><option value="">اختر القسم</option>{departments.map(dept => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select>{errors.department_id && <span className="error">{Array.isArray(errors.department_id) ? errors.department_id[0] : errors.department_id}</span>}</div>
-          <div className="form-group"><label>التخصص *</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} onBlur={handleChange} className={errors.major ? 'border-red-500' : ''} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
+          <div className="form-group"><label>التخصص *</label><MajorSelect value={form.major} majors={availableMajors} disabled={!form.department_id} onChange={handleChange} onBlur={handleChange} className={errors.major ? "border-red-500" : ""} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
           <div className="form-group"><label>كلمة المرور *</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} required placeholder="8 أحرف على الأقل" />{errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}</div>
           <div className="form-group"><label>تأكيد كلمة المرور *</label><input type="password" id="password_confirmation" name="password_confirmation" value={form.password_confirmation} onChange={handleChange} onBlur={handleChange} className={errors.password_confirmation ? 'border-red-500' : ''} required />{errors.password_confirmation && <span className="error">{Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}</span>}</div>
           <div className="form-actions"><button type="submit" disabled={loading}>{loading ? "جاري الحفظ..." : "إضافة"}</button><button type="button" onClick={() => navigate("/admin/users")}>إلغاء</button></div>
@@ -377,7 +400,7 @@ export default function AddStudent() {
             <li><strong>البريد الإلكتروني</strong> (مطلوب)</li>
             <li><strong>الرقم الجامعي</strong> (مطلوب)</li>
             <li><strong>القسم</strong> (مطلوب)</li>
-            <li><strong>التخصص</strong> (مطلوب)</li>
+            <li><strong>التخصص</strong> (مطلوب — حسب القسم: أصول التربية أو علم النفس)</li>
             <li><strong>كلمة المرور</strong> (اختياري، افتراضي 12345678)</li>
           </ul>
           <input type="file" id="bulk-file" name="bulk_file" accept=".xlsx, .xls" onChange={handleFileChange} />

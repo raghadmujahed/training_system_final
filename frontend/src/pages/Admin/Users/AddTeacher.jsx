@@ -4,6 +4,8 @@ import { getUser, createUser, updateUser } from "../../../services/api";
 import { useTrainingSites, useRoles } from "../../../hooks/useSharedData";
 import * as XLSX from "xlsx";
 import useAppToast from "../../../hooks/useAppToast";
+import MajorSelect from "../../../components/common/MajorSelect";
+import { isValidMajor, resolveMajor } from "../../../constants/academicMajors";
 import { isValidMobilePhone, getMobilePhoneErrorMessage, isValidSchoolFieldEmail, getSchoolFieldEmailErrorMessage, isValidPassword, getPasswordErrorMessage } from "../../../utils/validation";
 
 export default function AddTeacher() {
@@ -32,7 +34,7 @@ export default function AddTeacher() {
           const userData = await getUser(id);
           setForm({
             name: userData.name || "", email: userData.email || "", password: "", password_confirmation: "",
-            major: userData.major || "", phone: userData.phone || "",
+            major: resolveMajor(userData.major), phone: userData.phone || "",
             training_site_id: userData.training_site_id || "", role_id: userData.role_id || "", status: userData.status || "active",
           });
         } catch (err) { console.error(err); }
@@ -99,6 +101,8 @@ export default function AddTeacher() {
 
     if (!form.major.trim()) {
       newErrors.major = "التخصص مطلوب";
+    } else if (!isValidMajor(form.major)) {
+      newErrors.major = "اختر تخصصاً من القائمة";
     }
 
     if (!form.training_site_id) {
@@ -193,10 +197,17 @@ export default function AddTeacher() {
         const teachers = rows.map(row => {
           const clean = {}; Object.keys(row).forEach(k => { clean[k.trim()] = row[k]; });
           const siteName = (clean["مكان التدريب"] || clean["المدرسة"] || clean["school"] || "").trim();
-          return { name: clean["الاسم الكامل"] || clean["الاسم"] || clean["name"] || "", email: clean["البريد الإلكتروني"] || clean["email"] || "", password: clean["كلمة المرور"] || "12345678", password_confirmation: clean["كلمة المرور"] || "12345678", major: clean["التخصص"] || clean["major"] || "", phone: clean["الهاتف"] || clean["phone"] || "", training_site_id: siteMap[siteName] || siteMap[siteName.toLowerCase()] || "", role_id: teacherRoleId, status: "active" };
+          return { name: clean["الاسم الكامل"] || clean["الاسم"] || clean["name"] || "", email: clean["البريد الإلكتروني"] || clean["email"] || "", password: clean["كلمة المرور"] || "12345678", password_confirmation: clean["كلمة المرور"] || "12345678", major: resolveMajor(clean["التخصص"] || clean["major"] || ""), phone: clean["الهاتف"] || clean["phone"] || "", training_site_id: siteMap[siteName] || siteMap[siteName.toLowerCase()] || "", role_id: teacherRoleId, status: "active" };
         });
         const valid = [], invalid = [];
-        teachers.forEach((t, i) => { const m = []; if (!t.name) m.push("الاسم"); if (!t.email) m.push("البريد"); m.length === 0 ? valid.push(t) : invalid.push({ row: i + 2, email: t.email, missing: m }); });
+        teachers.forEach((t, i) => {
+          const m = [];
+          if (!t.name) m.push("الاسم");
+          if (!t.email) m.push("البريد");
+          if (!t.major) m.push("التخصص");
+          if (!t.training_site_id) m.push("مكان التدريب");
+          m.length === 0 ? valid.push(t) : invalid.push({ row: i + 2, email: t.email, missing: m });
+        });
         if (invalid.length) toast.warning(`${invalid.length} صف يحتوي بيانات ناقصة وتم تجاهله`);
         if (!valid.length) { setBulkLoading(false); return; }
         const ok = [], fail = [];
@@ -238,7 +249,7 @@ export default function AddTeacher() {
     <>
       <div className="form-group"><label>الاسم الكامل *</label><input type="text" id="name" name="name" value={form.name} onChange={handleChange} onBlur={handleChange} className={errors.name ? 'border-red-500' : ''} required />{errors.name && <span className="error">{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>}</div>
       <div className="form-group"><label>البريد الإلكتروني *</label><input type="email" id="email" name="email" value={form.email} onChange={handleChange} onBlur={handleChange} className={errors.email ? 'border-red-500' : ''} required />{errors.email && <span className="error">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>}</div>
-      <div className="form-group"><label>التخصص *</label><input type="text" id="major" name="major" value={form.major} onChange={handleChange} onBlur={handleChange} className={errors.major ? 'border-red-500' : ''} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
+      <div className="form-group"><label>التخصص *</label><MajorSelect value={form.major} onChange={handleChange} onBlur={handleChange} className={errors.major ? "border-red-500" : ""} required />{errors.major && <span className="error">{Array.isArray(errors.major) ? errors.major[0] : errors.major}</span>}</div>
       <div className="form-group"><label>مكان التدريب *</label><select id="training_site_id" name="training_site_id" value={form.training_site_id} onChange={handleChange} onBlur={handleChange} className={errors.training_site_id ? 'border-red-500' : ''} required><option value="">اختر مكان التدريب</option>{trainingSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>{errors.training_site_id && <span className="error">{Array.isArray(errors.training_site_id) ? errors.training_site_id[0] : errors.training_site_id}</span>}</div>
       <div className="form-group"><label>الهاتف</label><input type="text" id="phone" name="phone" value={form.phone} onChange={handleChange} onBlur={handleChange} className={errors.phone ? 'border-red-500' : ''} />{errors.phone && <span className="error">{Array.isArray(errors.phone) ? errors.phone[0] : errors.phone}</span>}</div>
       <div className="form-group"><label>كلمة المرور {!isEditMode && "*"}</label><input type="password" id="password" name="password" value={form.password} onChange={handleChange} onBlur={handleChange} className={errors.password ? 'border-red-500' : ''} {...(!isEditMode && { required: true })} />{errors.password && <span className="error">{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>}</div>
@@ -266,7 +277,7 @@ export default function AddTeacher() {
       {activeTab === "bulk" && (
         <div className="bulk-section">
           <p>قم بتحميل ملف Excel يحتوي على الأعمدة التالية:</p>
-          <ul><li><strong>الاسم الكامل</strong></li><li><strong>البريد الإلكتروني</strong></li><li><strong>التخصص</strong></li><li><strong>مكان التدريب / المدرسة</strong></li><li><strong>الهاتف</strong> (اختياري)</li><li><strong>كلمة المرور</strong> (اختياري)</li></ul>
+          <ul><li><strong>الاسم الكامل</strong></li><li><strong>البريد الإلكتروني</strong></li><li><strong>التخصص</strong> (من القائمة المعتمدة)</li><li><strong>مكان التدريب / المدرسة</strong></li><li><strong>الهاتف</strong> (اختياري)</li><li><strong>كلمة المرور</strong> (اختياري)</li></ul>
           <input type="file" id="bulk-file" name="bulk_file" accept=".xlsx, .xls" onChange={handleFileChange} />
           <button onClick={processExcel} disabled={bulkLoading} className="btn-primary">{bulkLoading ? "جاري الرفع..." : "رفع والإضافة"}</button>
           {bulkResults.success.length > 0 && <div className="success-box">✅ تمت إضافة {bulkResults.success.length} معلم بنجاح</div>}

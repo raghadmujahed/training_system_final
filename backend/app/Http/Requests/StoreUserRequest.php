@@ -2,12 +2,12 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
-use App\Enums\UserStatus;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\AcademicMajors;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
@@ -34,7 +34,7 @@ class StoreUserRequest extends FormRequest
                 'max:20',
                 'regex:/^0(56|59)\d{7}$/'
             ],
-            'major' => 'required_if:role_id,' . $studentRoleId . '|nullable|string|max:255',
+            'major' => ['nullable', 'string', Rule::in(AcademicMajors::all())],
             'training_site_id' => 'nullable|exists:training_sites,id',
             'directorate' => 'nullable|in:وسط,شمال,جنوب,يطا',
         ];
@@ -48,6 +48,7 @@ class StoreUserRequest extends FormRequest
             'university_id.digits_between' => 'الرقم الجامعي يجب أن يكون بين 6 و 20 رقم.',
             'university_id.unique' => 'الرقم الجامعي مستخدم مسبقاً.',
             'major.required_if' => 'التخصص مطلوب للطلاب.',
+            'major.in' => 'التخصص غير صالح. اختر قيمة من القائمة المعتمدة.',
             'email.unique' => 'البريد الإلكتروني مستخدم مسبقاً.',
             'department_id.required_if' => 'القسم مطلوب للطلاب.',
             'phone.regex' => 'رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059',
@@ -168,6 +169,20 @@ class StoreUserRequest extends FormRequest
                     'phone',
                     'رقم المحمول غير صحيح. يجب أن يتكون من 10 أرقام ويبدأ بـ 056 أو 059'
                 );
+            }
+
+            // ===== التخصص إلزامي ومن القائمة للطلاب والمعلمين =====
+            $rolesNeedingMajor = ['student', 'teacher', 'adviser'];
+            if (in_array($role->name, $rolesNeedingMajor, true)) {
+                $major = AcademicMajors::normalize($this->input('major'));
+                if ($major === null) {
+                    $validator->errors()->add('major', 'التخصص مطلوب. اختر تخصصاً صالحاً من القائمة.');
+                } elseif ($role->name === 'student') {
+                    $departmentId = (int) $this->input('department_id');
+                    if ($departmentId && ! AcademicMajors::isValidForDepartment($major, $departmentId)) {
+                        $validator->errors()->add('major', 'التخصص غير مطابق للقسم المختار.');
+                    }
+                }
             }
 
             // ===== 6) التحقق من الرقم الجامعي للطلاب فقط =====
