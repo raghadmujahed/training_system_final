@@ -400,7 +400,7 @@ export default function AddStudent() {
             <li><strong>البريد الإلكتروني</strong> (مطلوب)</li>
             <li><strong>الرقم الجامعي</strong> (مطلوب)</li>
             <li><strong>القسم</strong> (مطلوب)</li>
-            <li><strong>التخصص</strong> (مطلوب — حسب القسم: أصول التربية أو علم النفس)</li>
+            <li><strong>التخصص</strong> (مطلوب — حسب القسم: أساليب تدريس / مرحلة أساسية أو علم نفس)</li>
             <li><strong>كلمة المرور</strong> (اختياري، افتراضي 12345678)</li>
           </ul>
           <input type="file" id="bulk-file" name="bulk_file" accept=".xlsx, .xls" onChange={handleFileChange} />
